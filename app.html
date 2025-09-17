@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>felotus v1.0.0</title>
+    <!-- 引入 Font Awesome 6 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- 引入你的外部 CSS 文件 -->
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+    <div class="game-container">
+        
+        <!-- ① 左上角：名片区域 (修改：整体变为可点击链接) -->
+        <a href="./features/user-setting/user-setting.html" class="profile-link">
+            <div class="area top-left-profile">
+                <img src="https://picsum.photos/seed/felotus/100/100" alt="Avatar" class="avatar">
+                <div class="user-info">
+                    <span class="username">Felotus</span>
+                    <span class="gender-symbol">♀</span>
+                </div>
+            </div>
+        </a>
+
+        <!-- ② 右上角：菜单区域 (修改：链接指向menu) -->
+        <div class="area top-right-menu">
+            <a href="./features/menu/menu.html" class="capsule-btn with-bg" title="菜单"><i class="fa-solid fa-bars"></i></a>
+        </div>
+
+        <!-- ③ 名片区域下方菜单 (修改：链接指向对应功能) -->
+        <div class="area left-menu-top">
+            <a href="./features/activity/activity.html" class="capsule-btn" title="活动"><i class="fa-solid fa-champagne-glasses"></i></a>
+            <a href="./features/anniversary/anniversary.html" class="capsule-btn" title="纪念日"><i class="fa-solid fa-calendar-check"></i></a>
+            <a href="./features/capsule-toy/capsule-toy.html" class="capsule-btn" title="扭蛋"><i class="fa-solid fa-egg"></i></a>
+            <a href="./features/memory-achieve/memory-achieve.html" class="capsule-btn" title="记忆馆"><i class="fa-solid fa-camera-retro"></i></a>
+        </div>
+
+        <!-- ④ 余额区域下方菜单 (修改：链接指向对应功能) -->
+        <div class="area right-menu-top">
+            <a href="./features/developer-guide/developer-guide.html" class="capsule-btn" title="Felotus向导"><i class="fa-solid fa-cat"></i></a>
+            <a href="./features/forum/forum.html" class="capsule-btn" title="论坛"><i class="fa-solid fa-comments"></i></a>
+            <a href="./features/mailbox/mailbox.html" class="capsule-btn" title="邮箱"><i class="fa-solid fa-envelope"></i></a>
+            <a href="./features/friend-npc/friend-npc.html" class="capsule-btn" title="与NPC交友"><i class="fa-solid fa-users"></i></a>
+            <a href="./features/notification/notification.html" class="capsule-btn" title="公告"><i class="fa-solid fa-bullhorn"></i></a>
+            <a href="./features/personality/personality.html" class="capsule-btn" title="个性化"><i class="fa-solid fa-palette"></i></a>
+            <a href="./features/system-setting/system-setting.html" class="capsule-btn" title="设置"><i class="fa-solid fa-gear"></i></a>
+        </div>
+        
+        <!-- ⑤ 左下角信息区域 (修改：链接指向对应功能) -->
+        <div class="area bottom-left-nav">
+            <a href="./features/api-management/api-management.html" class="capsule-btn with-bg" title="配置"><i class="fa-solid fa-plug"></i></a>
+            <a href="./features/rule-management/rule-management.html" class="capsule-btn with-bg" title="规则"><i class="fa-solid fa-scroll"></i></a>
+            <a href="./features/global-management/global-management.html" class="capsule-btn with-bg" title="世界观"><i class="fa-solid fa-globe"></i></a>
+            <a href="./features/char-management/char-management.html" class="capsule-btn with-bg" title="角色"><i class="fa-solid fa-address-book"></i></a>
+            <a href="./features/inventory/inventory.html" class="capsule-btn with-bg" title="背包"><i class="fa-solid fa-briefcase"></i></a>
+        </div>
+
+        <!-- ⑥ 信息区域上方菜单 (修改：链接指向对应功能) -->
+        <div class="area left-menu-bottom">
+            <a href="./features/relia-chat/relia-chat.html" class="capsule-btn phone-icon-link" title="手机"><i class="fa-solid fa-mobile-screen-button"></i></a>
+            <a href="./features/read/read.html" class="capsule-btn" title="阅读"><i class="fa-solid fa-book-open"></i></a>
+            <a href="./features/diary/diary.html" class="capsule-btn" title="日记"><i class="fa-solid fa-book-journal-whills"></i></a>
+        </div>
+
+        <!-- ⑦ 右下角陪伴区域 (修改：链接指向accompany) -->
+        <div class="area bottom-right-companion">
+            <a href="./features/accompany/accompany.html" class="capsule-btn companion-btn with-bg" title="陪伴"><i class="fa-solid fa-hand-holding-heart"></i></a>
+        </div>
+
+        <!-- ⑧ 陪伴区域上方菜单 (修改：链接指向对应功能) -->
+        <div class="area right-menu-bottom">
+            <a href="./features/stellar-totem/stellar-totem.html" class="capsule-btn" title="星图"><i class="fa-solid fa-circle-nodes"></i></a>
+            <a href="./features/serene-clock/serene-clock.html" class="capsule-btn" title="静谧时钟"><i class="fa-solid fa-clock"></i></a>
+        </div>
+
+    </div>
+
+    <!-- (修改：app.js 已空，可以移除引用) -->
+    <!-- <script src="app.js"></script> -->
+
+</body>
+</html>
