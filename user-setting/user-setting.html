@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户设定 - felotus</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="user-setting.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+</head>
+<body>
+
+    <!-- ====================【V3: 顶部集成切换按钮的侧栏】==================== -->
+    <div class="profile-switcher-panel" id="profile-switcher-panel">
+        <div class="switcher-header-v2">
+            <button class="sidebar-toggle-btn" id="sidebar-toggle-btn" title="收起侧栏">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+        </div>
+        <div class="switcher-body">
+            <ul class="switcher-list" id="switcher-list">
+                <!-- 用户列表将由 JS 动态生成 -->
+            </ul>
+            <button class="create-new-user-btn" id="create-new-user-btn" title="新建用户设定">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+        </div>
+        <div class="switcher-footer">
+            <button class="settings-btn" id="settings-btn" title="设置">
+                <i class="fa-solid fa-gear"></i>
+                <span>设置</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ====================【主内容容器】==================== -->
+    <div class="main-container" id="main-container">
+
+        <a href="../../app.html" class="options-button" title="关闭">
+            <i class="fa-solid fa-xmark"></i>
+        </a>
+
+        <div class="character-banner">
+            <img src="https://sharkpan.xyz/f/VEKNcY/good.png" alt="用户主图">
+        </div>
+
+        <main class="character-content">
+            <div class="profile-header">
+                <img src="https://sharkpan.xyz/f/xZ04UX/a-felotus.png" alt="用户头像" class="profile-avatar">
+                <div class="user-header">
+                    <h1 class="user-name">用户名</h1>
+                    <span class="gender-symbol">♀</span>
+                </div>
+            </div>
+            <div class="user-signature">这里是个性签名。</div>
+            <div class="tabs-nav">
+                <button class="tab-button active" data-tab="home">主页</button>
+                <button class="tab-button" data-tab="profile">档案</button>
+            </div>
+            <div class="tabs-content">
+                <div id="home" class="tab-pane active">
+                    <div class="info-card">
+                        <h3 class="card-title">简介</h3>
+                        <p class="description" id="home-bio-content">这里是用户的个人简介，可以写一些更详细的介绍。</p>
+                    </div>
+                </div>
+                <div id="profile" class="tab-pane">
+                    <!-- JS 动态填充 -->
+                </div>
+            </div>
+        </main>
+
+        <button id="edit-profile-btn" class="edit-fab" title="档案">
+            <i class="fa-solid fa-pencil"></i>
+        </button>
+        
+        <!-- 编辑档案的弹出面板 -->
+        <div class="modal-overlay" id="edit-modal-overlay">
+            <div class="modal-panel">
+                <div class="modal-header">
+                    <h3 class="modal-title">档案</h3>
+                    <div class="modal-header-actions">
+                        <button class="btn-help" id="help-btn" title="帮助"><i class="fa-solid fa-question"></i></button>
+                        <button class="modal-close" id="close-modal-btn" title="关闭">&times;</button>
+                        <button class="btn-save" id="save-btn" title="保存"><i class="fa-solid fa-check"></i></button>
+                    </div>
+                </div>
+                <div id="help-tooltip" class="help-tooltip">
+                    <p>用户名为必填内容，其余信息可全部填入简介，也可分栏分条填写，档案面板请自由探索</p>
+                </div>
+                <div class="modal-body">
+                    <div class="modal-sidebar">
+                        <div class="sidebar-nav-list">
+                            <button class="modal-nav-button fixed-nav-button active" data-target="modal-section-visuals"><span>头像背景</span></button>
+                            <button class="modal-nav-button fixed-nav-button" data-target="modal-section-basic-info"><span>基础信息</span></button>
+                            <button class="modal-nav-button fixed-nav-button" data-target="modal-section-relationship"><span>关系范围</span></button>
+                        </div>
+                        <button class="add-section-btn" id="add-section-btn"><i class="fa-solid fa-plus"></i><span>添加栏目</span></button>
+                    </div>
+                    <div class="modal-main-content">
+                        <div id="modal-section-visuals" class="modal-section-pane active">
+                            <div class="visual-edit-item">
+                                <div class="form-row">
+                                    <label for="edit-avatar-url">头像</label>
+                                    <input type="text" id="edit-avatar-url" placeholder="输入图片 URL 或点击下方图片上传">
+                                </div>
+                                <img src="" alt="Avatar Preview" id="avatar-preview-img" class="visual-preview avatar-preview">
+                                <input type="file" id="avatar-upload-input" accept="image/*" style="display: none;">
+                            </div>
+                            <div class="visual-edit-item">
+                                <div class="form-row">
+                                    <label for="edit-banner-url">背景</label>
+                                    <input type="text" id="edit-banner-url" placeholder="输入图片 URL 或点击下方图片上传">
+                                </div>
+                                <img src="" alt="Banner Preview" id="banner-preview-img" class="visual-preview banner-preview">
+                                <input type="file" id="banner-upload-input" accept="image/*" style="display: none;">
+                            </div>
+                        </div>
+                        <div id="modal-section-basic-info" class="modal-section-pane">
+                            <div class="form-group"><label for="edit-username">用户名</label><input type="text" id="edit-username" placeholder="用户名限1-10字符" minlength="1" maxlength="10"></div>
+                            <div class="form-group"><label for="edit-gender">性别</label><input type="text" id="edit-gender" value="♀（女）" readonly></div>
+                            <div class="form-group"><label>年龄</label><div class="form-group-clickable" id="edit-age-trigger"><span class="value-display placeholder">请填写年龄、生日或描述</span><i class="fa-solid fa-chevron-right"></i></div></div>
+                            <div class="form-group"><label>种族</label><div class="form-group-clickable" id="edit-race-trigger"><span class="value-display placeholder">请填写种族</span><i class="fa-solid fa-chevron-right"></i></div></div>
+                            <div class="form-group"><label>职业</label><div class="form-group-clickable" id="edit-occupation-trigger"><span class="value-display placeholder">请填写职业</span><i class="fa-solid fa-chevron-right"></i></div></div>
+                            <div class="form-group"><label>简介</label><div class="form-group-clickable" id="edit-bio-trigger"><span class="value-display placeholder">请填写简介</span><i class="fa-solid fa-chevron-right"></i></div></div>
+                        </div>
+                        <div id="modal-section-relationship" class="modal-section-pane"><div class="pane-header-container"><h4 class="pane-title-capsule">关系</h4></div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="sub-editor-panel" id="sub-editor-panel">
+                <div class="sep-header"><button class="sep-btn" id="sep-back-btn"><i class="fa-solid fa-chevron-left"></i></button><h3 class="sep-title" id="sep-title">编辑</h3><button class="sep-btn sep-btn-save" id="sep-save-btn"><i class="fa-solid fa-check"></i></button></div>
+                <div class="sep-body"><textarea id="sep-textarea" placeholder="在此输入内容..."></textarea></div>
+            </div>
+            <div class="sub-editor-panel" id="item-editor-panel">
+                <div class="sep-header"><button class="sep-btn" id="item-editor-back-btn"><i class="fa-solid fa-chevron-left"></i></button><h3 class="sep-title" id="item-editor-title-header">编辑条目</h3><button class="sep-btn sep-btn-save" id="item-editor-save-btn"><i class="fa-solid fa-check"></i></button></div>
+                <div class="sep-body iep-body"><input type="text" id="item-editor-title-input" placeholder="在此填入标题" maxlength="10"><textarea id="item-editor-value-textarea" placeholder="在此输入内容..."></textarea></div>
+            </div>
+        </div>
+
+        <div class="prompt-overlay" id="name-prompt-overlay">
+            <div class="prompt-box">
+                <h4>为新栏目命名</h4><input type="text" id="new-section-name-input" placeholder="请输入 2-4 个字符" maxlength="4">
+                <div class="prompt-actions"><button id="cancel-prompt-btn" class="prompt-btn prompt-btn-cancel">取消</button><button id="confirm-prompt-btn" class="prompt-btn prompt-btn-confirm">确认</button></div>
+            </div>
+        </div>
+
+        <div class="bottom-sheet-overlay" id="custom-section-options-overlay">
+            <div class="bottom-sheet" id="custom-section-options-sheet">
+                <div class="bottom-sheet-header"><span class="bottom-sheet-title">栏目操作</span></div>
+                <ul class="bottom-sheet-actions">
+                    <li><button class="action-button" data-action="rename">编辑栏目名称</button></li>
+                    <li><button class="action-button" data-action="save-preset">存为预设栏目</button></li>
+                    <li><button class="action-button" data-action="load-content">加载条目内容</button></li>
+                    <li><button class="action-button action-delete" data-action="delete">删除此栏目</button></li>
+                </ul>
+                <button class="bottom-sheet-cancel" id="cancel-options-sheet-btn">取消</button>
+            </div>
+        </div>
+
+        <div class="bottom-sheet-overlay" id="add-section-sheet-overlay">
+            <div class="bottom-sheet" id="add-section-sheet">
+                <div class="bottom-sheet-header"><span class="bottom-sheet-title">添加新栏目</span></div>
+                <div class="preset-tags-container" id="preset-tags-container"><button class="preset-tag preset-tag-custom" data-action="custom"><i class="fa-solid fa-plus"></i><span>自定义栏目</span></button></div>
+                <button class="bottom-sheet-cancel" id="cancel-add-sheet-btn">取消</button>
+            </div>
+        </div>
+
+        <!-- ▼▼▼ 用户设定管理面板 (V2 - 已更新) ▼▼▼ -->
+<div class="modal-overlay" id="switcher-settings-modal-overlay">
+    <div class="modal-panel settings-modal-panel">
+        <div class="modal-header">
+            <!-- 头部左侧容器 -->
+            <div class="modal-header-content">
+                <h3 class="modal-title">设定管理</h3>
+                
+            </div>
+            <!-- 新增的关闭按钮 -->
+            <button class="modal-close" id="settings-close-btn" title="关闭">&times;</button>
+        </div>
+        <div class="modal-body settings-modal-body">
+            <ul class="settings-user-list" id="settings-user-list">
+                <!-- JS 动态生成用户列表 -->
+            </ul>
+        </div>
+        <!-- 更新后的底部按钮 -->
+        <div class="settings-modal-footer v2">
+            <button class="footer-action-btn" id="settings-import-btn" title="暂未开放"><i class="fa-solid fa-upload"></i>导入</button>
+            <button class="footer-action-btn" id="settings-export-btn" title="暂未开放"><i class="fa-solid fa-download"></i>导出</button>
+            <button class="footer-action-btn" id="settings-multi-select-btn"><i class="fa-solid fa-check-double"></i>多选</button>
+            <button class="footer-action-btn btn-danger" id="settings-delete-btn" disabled><i class="fa-solid fa-trash-can"></i>删除</button>
+        </div>
+    </div>
+</div>
+
+    </div> 
+
+    <!-- 图片裁剪 Modal -->
+    <div class="cropper-overlay" id="cropper-overlay">
+        <div class="cropper-container">
+            <div class="cropper-image-container"><img id="cropper-image" src="" alt="Image to crop"></div>
+            <div class="cropper-actions"><button id="cancel-crop-btn" class="prompt-btn prompt-btn-cancel">取消</button><button id="confirm-crop-btn" class="prompt-btn prompt-btn-confirm">确认</button></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    <!-- ▼▼▼ 新增：引入 Dexie.js ▼▼▼ -->
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <script src="user-setting.js"></script>
+</body>
+</html>
