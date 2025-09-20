@@ -925,7 +925,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     createNewUserBtn?.addEventListener('click', async () => {
         const newUser = {
             // 【修改点】ID前缀改为 'char-' 以示区分
-            id: `char-${Date.now()}`, name: '', gender: '♀（女）', signature: '这里是个性签名。', bio: '', age: '', race: '', occupation: '',
+            id: `char-${Date.now()}`, name: '', gender: '♀（女）', signature: '这里是个性签名', bio: '', age: '', race: '', occupation: '',
             avatar: 'https://sharkpan.xyz/f/xZ04UX/a-felotus.png', banner: 'https://sharkpan.xyz/f/VEKNcY/good.png'
         };
         profileData.push(newUser);
@@ -952,7 +952,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             // 首次使用的默认数据
             profileData = [{
                 // 【修改点】创建独立的默认角色数据
-                id: DEFAULT_CHAR_ID, name: '示例角色', gender: '♀（女）', signature: '这里是角色的个性签名', bio: '', age: '', race: '', occupation: '',
+                id: DEFAULT_CHAR_ID, name: '示例角色', gender: '♀（女）', signature: '这里是个性签名', bio: '', age: '', race: '', occupation: '',
                 avatar: 'https://sharkpan.xyz/f/xZ04UX/a-felotus.png', banner: 'https://sharkpan.xyz/f/VEKNcY/good.png'
             }];
             await dbStorage.setItem('charProfileData', profileData);
