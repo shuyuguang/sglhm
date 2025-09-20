@@ -912,7 +912,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     createNewUserBtn?.addEventListener('click', async () => {
         const newUser = {
-            id: `user-${Date.now()}`, name: '', gender: '♀（女）', signature: '这里是个性签名。', bio: '', age: '', race: '', occupation: '',
+            id: `user-${Date.now()}`, name: '', gender: '♀（女）', signature: '这里是个性签名', bio: '', age: '', race: '', occupation: '',
             avatar: 'https://i.postimg.cc/PqjNjtZV/a-felotus.jpg', banner: 'https://i.postimg.cc/QMjdKsTS/a-good.jpg'
         };
         profileData.push(newUser);
@@ -938,7 +938,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         } else {
             // 首次使用的默认数据
             profileData = [{
-                id: 'felotus', name: 'Felotus', gender: '♀（女）', signature: '这里是个性签名。', bio: '', age: '', race: '', occupation: '',
+                id: 'felotus', name: 'Felotus', gender: '♀（女）', signature: '这里是个性签名', bio: '', age: '', race: '', occupation: '',
                 avatar: 'https://i.postimg.cc/PqjNjtZV/a-felotus.jpg', banner: 'https://i.postimg.cc/QMjdKsTS/a-good.jpg'
             }];
             await dbStorage.setItem('userProfileData', profileData);
