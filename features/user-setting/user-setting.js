@@ -770,7 +770,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         
         const updateDisplay = (trigger, value, placeholder) => {
             const display = trigger.querySelector('.value-display');
-            trigger.setAttribute('data-placeholder', placeholder);
+            display.setAttribute('data-placeholder', placeholder);
             display.textContent = value || placeholder;
             display.classList.toggle('placeholder', !value);
         };
@@ -810,8 +810,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // ▼▼▼ 全新的设定管理面板交互逻辑 (支持多选) ▼▼▼
 
+    // =======================================================
+    // ▼▼▼ BUG修复点：确保此函数操作的是 settingsUserList ▼▼▼
+    // =======================================================
     function renderSettingsUserList() {
+        // 1. 检查变量是否正确，应该是 settingsUserList，而不是 switcherList
         if (!settingsUserList) return;
+        // 2. 清空的是 settingsUserList 的内容
         settingsUserList.innerHTML = '';
         profileData.forEach(profile => {
             const li = document.createElement('li');
@@ -821,6 +826,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 <img src="${profile.avatar}" alt="${profile.name}" class="avatar">
                 <span class="name">${profile.name || '未命名'}</span>
             `;
+            // 3. 将新元素添加到 settingsUserList
             settingsUserList.appendChild(li);
         });
     }
