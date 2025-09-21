@@ -59,82 +59,145 @@ html, body {
     color: #fff;
 }
 
-/* --- 区域样式 --- */
-
-/* ① 左上角：名片区域 */
-.top-left-profile {
-    top: 20px;
-    left: 15px;
-    align-items: flex-start; /* 修改：改为顶部对齐 */
-}
-
-.avatar {
-    width: 56px; 
-    height: 56px;
-    border-radius: 50%; 
-    border: 2px solid rgba(255, 255, 255, 0.7);
-    object-fit: cover; 
-    margin-right: 10px;
-}
-
-.user-info {
-    display: flex;
-    flex-direction: column;
-    padding-top: 10px; /* 新增：向下推移10px，使其与右侧菜单顶部对齐 (20px + 10px = 30px) */
-}
-
+/* --- 区域样式 (这部分无变化) --- */
+.top-left-profile { top: 20px; left: 15px; align-items: flex-start; }
+.avatar { width: 56px; height: 56px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.7); object-fit: cover; margin-right: 10px; }
+.user-info { display: flex; flex-direction: column; padding-top: 10px; }
 .username { font-size: 16px; font-weight: bold; }
-
-
-/* ② 右上角：菜单区域 */
 .top-right-menu { top: 30px; right: 0; align-items: center; }
-
-.top-right-menu .capsule-btn {
-    height: 36px;
-    width: 56px;
-    border-radius: 24px 0 0 24px;
-}
-
-/* ③ 名片区域下方菜单 */
+.top-right-menu .capsule-btn { height: 36px; width: 56px; border-radius: 24px 0 0 24px; }
 .left-menu-top { top: 90px; left: 5px; flex-direction: column; }
-
-/* ④ 余额区域下方菜单 */
 .right-menu-top { top: 90px; right: 5px; flex-direction: column; align-items: flex-end; }
-
-/* ⑤ 左下角信息区域 */
 .bottom-left-nav { bottom: 20px; left: 15px; gap: 10px; }
-.bottom-left-nav .capsule-btn {
-    width: 38px;
-    height: 38px;
-    font-size: 15px;
-}
-
-/* ⑥ 信息区域上方菜单 */
+.bottom-left-nav .capsule-btn { width: 38px; height: 38px; font-size: 15px; }
 .left-menu-bottom { bottom: 72px; left: 5px; flex-direction: column; }
-
-/* ⑦ 右下角陪伴区域 */
 .bottom-right-companion { bottom: 20px; right: 25px; }
 .companion-btn { width: 60px; height: 60px; font-size: 25px; }
-
-/* ⑧ 陪伴区域上方菜单 */
 .right-menu-bottom { bottom: 100px; right: 5px; flex-direction: column; align-items: flex-end; }
+.left-menu-top > a:not(:first-child), .right-menu-top > a:not(:first-child), .left-menu-bottom > a:not(:first-child), .right-menu-bottom > a:not(:first-child) { margin-top: 2px; }
+.phone-icon-link i { font-size: 22px; }
+.profile-link, .profile-link:visited { text-decoration: none; color: inherit; }
 
-/* --- 调整图标间隙 --- */
-.left-menu-top > a:not(:first-child),
-.right-menu-top > a:not(:first-child),
-.left-menu-bottom > a:not(:first-child),
-.right-menu-bottom > a:not(:first-child) {
-    margin-top: 2px; /* 将负边距改为正边距以增加间隙 */
+/* --- 星图面板样式 --- */
+.panel-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
 }
 
-/* --- 单独放大手机图标 --- */
-.phone-icon-link i {
+.panel-overlay.visible {
+    display: flex;
+    opacity: 1;
+}
+
+.panel-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 90%;
+    max-width: 1200px;
+    height: 60%;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3px;
+    padding: 0 20px;
+}
+
+.panel-title {
     font-size: 22px;
+    font-weight: 600;
+    color: #e0e0e0;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
-/* --- 新增：让名片区域作为链接时样式保持不变 --- */
-.profile-link,
-.profile-link:visited {
-    text-decoration: none; /* 移除下划线 */
-    color: inherit;       /* 继承父元素的颜色（白色） */
+.panel-action-btn {
+    background: none;
+    border: none;
+    color: #b0b0b0;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.panel-action-btn:hover {
+    color: #ffffff;
+    transform: scale(1.1);
+}
+
+.panel-content {
+    position: relative;
+    flex-grow: 1;
+    background-color: rgba(25, 28, 40, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* --- 面板导航按钮样式 --- */
+.panel-navigation {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+/* 【修改点】调整按钮样式以适应新结构 */
+.nav-button {
+    background-color: rgba(40, 45, 60, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: #e0e0e0;
+    cursor: pointer;
+    padding: 20px; /* 调整内边距 */
+    width: 280px; /* 适当加宽 */
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column; /* 垂直排列主区域和描述 */
+    align-items: center; /* 居中对齐 */
+    gap: 8px; /* 主区域和描述的间距 */
+    text-decoration: none; /* 【新增】移除链接的下划线 */
+}
+
+.nav-button:hover {
+    background-color: rgba(60, 65, 80, 0.9);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* 【新增】按钮主区域（图标+标题）样式 */
+.button-main {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* 图标和标题的间距 */
+}
+
+/* 【新增】按钮标题样式 */
+.button-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #e0e0e0;
+}
+
+/* 【新增】按钮描述文本样式 */
+.button-description {
+    font-size: 14px;
+    color: #a0a8b4;
+    font-weight: normal;
 }

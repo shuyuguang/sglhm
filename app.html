@@ -17,7 +17,7 @@
 
     <div class="game-container">
         
-        <!-- ① 左上角：名片区域 (修改：整体变为可点击链接) -->
+        <!-- ① 左上角：名片区域 -->
         <a href="./features/user-setting/user-setting.html" class="profile-link">
             <div class="area top-left-profile">
                 <img src="https://picsum.photos/seed/felotus/100/100" alt="Avatar" class="avatar">
@@ -27,12 +27,12 @@
             </div>
         </a>
 
-        <!-- ② 右上角：菜单区域 (修改：链接指向menu) -->
+        <!-- ② 右上角：菜单区域 -->
         <div class="area top-right-menu">
             <a href="./features/menu/menu.html" class="capsule-btn with-bg" title="菜单"><i class="fa-solid fa-bars"></i></a>
         </div>
 
-        <!-- ③ 名片区域下方菜单 (修改：链接指向对应功能) -->
+        <!-- ③ 名片区域下方菜单 -->
         <div class="area left-menu-top">
             <a href="./features/activity/activity.html" class="capsule-btn" title="活动"><i class="fa-solid fa-champagne-glasses"></i></a>
             <a href="./features/anniversary/anniversary.html" class="capsule-btn" title="纪念日"><i class="fa-solid fa-calendar-check"></i></a>
@@ -40,7 +40,7 @@
             <a href="./features/memory-achieve/memory-achieve.html" class="capsule-btn" title="记忆馆"><i class="fa-solid fa-camera-retro"></i></a>
         </div>
 
-        <!-- ④ 余额区域下方菜单 (修改：链接指向对应功能) -->
+        <!-- ④ 余额区域下方菜单 -->
         <div class="area right-menu-top">
             <a href="./features/developer-guide/developer-guide.html" class="capsule-btn" title="Felotus向导"><i class="fa-solid fa-cat"></i></a>
             <a href="./features/forum/forum.html" class="capsule-btn" title="论坛"><i class="fa-solid fa-comments"></i></a>
@@ -51,7 +51,7 @@
             <a href="./features/system-setting/system-setting.html" class="capsule-btn" title="设置"><i class="fa-solid fa-gear"></i></a>
         </div>
         
-        <!-- ⑤ 左下角信息区域 (修改：链接指向对应功能) -->
+        <!-- ⑤ 左下角信息区域 -->
         <div class="area bottom-left-nav">
             <a href="./features/api-management/api-management.html" class="capsule-btn with-bg" title="配置"><i class="fa-solid fa-plug"></i></a>
             <a href="./features/rule-management/rule-management.html" class="capsule-btn with-bg" title="规则"><i class="fa-solid fa-scroll"></i></a>
@@ -60,28 +60,66 @@
             <a href="./features/inventory/inventory.html" class="capsule-btn with-bg" title="背包"><i class="fa-solid fa-briefcase"></i></a>
         </div>
 
-        <!-- ⑥ 信息区域上方菜单 (修改：链接指向对应功能) -->
+        <!-- ⑥ 信息区域上方菜单 -->
         <div class="area left-menu-bottom">
             <a href="./features/relia-chat/relia-chat.html" class="capsule-btn phone-icon-link" title="手机"><i class="fa-solid fa-mobile-screen-button"></i></a>
             <a href="./features/read/read.html" class="capsule-btn" title="阅读"><i class="fa-solid fa-book-open"></i></a>
             <a href="./features/diary/diary.html" class="capsule-btn" title="日记"><i class="fa-solid fa-book-journal-whills"></i></a>
         </div>
 
-        <!-- ⑦ 右下角陪伴区域 (修改：链接指向accompany) -->
+        <!-- ⑦ 右下角陪伴区域 -->
         <div class="area bottom-right-companion">
             <a href="./features/accompany/accompany.html" class="capsule-btn companion-btn with-bg" title="陪伴"><i class="fa-solid fa-hand-holding-heart"></i></a>
         </div>
 
-        <!-- ⑧ 陪伴区域上方菜单 (修改：链接指向对应功能) -->
+        <!-- ⑧ 陪伴区域上方菜单 -->
         <div class="area right-menu-bottom">
-            <a href="./features/stellar-totem/stellar-totem.html" class="capsule-btn" title="星图"><i class="fa-solid fa-circle-nodes"></i></a>
+            <a href="#" id="open-stellar-totem-btn" class="capsule-btn" title="星图"><i class="fa-solid fa-circle-nodes"></i></a>
             <a href="./features/serene-clock/serene-clock.html" class="capsule-btn" title="静谧时钟"><i class="fa-solid fa-clock"></i></a>
         </div>
 
     </div>
 
-    <!-- (修改：app.js 已空，可以移除引用) -->
-    <!-- <script src="app.js"></script> -->
+    <!-- 星图面板 (初始隐藏) -->
+    <div id="stellar-totem-panel" class="panel-overlay">
+        <div class="panel-wrapper">
+            
+            <div class="panel-header">
+                <h2 class="panel-title">星图·去处</h2>
+                <!-- 【修改点】羽毛笔编辑按钮已被删除 -->
+            </div>
+
+            <!-- 面板内容区 -->
+            <div class="panel-content">
+                <div class="panel-navigation">
+                    <a href="./features/stellar-totem/depart.html" class="nav-button">
+                        <div class="button-main">
+                            <i class="fa-solid fa-globe"></i>
+                            <span class="button-title">出门</span>
+                        </div>
+                        <p class="button-description">游玩、经营等交互系统</p>
+                    </a>
+                    <a href="./features/stellar-totem/pet.html" class="nav-button">
+                        <div class="button-main">
+                            <i class="fa-solid fa-paw"></i>
+                            <span class="button-title">宠物</span>
+                        </div>
+                        <p class="button-description">一起养宠物</p>
+                    </a>
+                    <a href="./features/stellar-totem/home.html" class="nav-button">
+                        <div class="button-main">
+                            <i class="fa-solid fa-seedling"></i>
+                            <span class="button-title">家园</span>
+                        </div>
+                        <p class="button-description">一起养花种田</p>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="app.js"></script>
 
 </body>
 </html>
