@@ -1,1 +1,146 @@
+/* rule-management.css */
 
+/* --- 基础与重置样式 --- */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #f4f7f9;
+    color: #333;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* --- 页面头部样式 --- */
+.page-header {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.page-title {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.page-title::before {
+    content: '\f004';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    color: #B9A2E9;
+    font-size: 0.9em;
+    margin-right: 10px;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-actions button,
+.header-actions a {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-help { background-color: #FCE4EC; color: #FFA7C4; font-size: 16px; }
+.btn-help:hover { background-color: #FFA7C4; color: #ffffff; transform: scale(1.1); }
+.btn-back { background-color: #f1f3f5; color: #868e96; font-size: 20px; }
+.btn-back:hover { background-color: #e9ecef; color: #495057; }
+.btn-save { background-color: #B9A2E9; color: #ffffff; font-size: 16px; }
+.btn-save:hover { background-color: #a68ed6; transform: scale(1.1); }
+
+/* --- Tab 导航栏样式 --- */
+.tabs-nav {
+    background-color: #ffffff;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-bottom: 1px solid #e9ecef;
+    position: sticky;
+    top: 62px;
+    z-index: 99;
+}
+.tabs-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.tabs-container {
+    display: flex;
+    padding: 0 10px;
+    white-space: nowrap;
+    padding-bottom: 10px;
+}
+
+.tab-button {
+    padding: 12px 15px;
+    font-size: 1em;
+    font-weight: 500;
+    color: #6c757d;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.3s ease;
+    flex-shrink: 0;
+}
+
+.tab-button:hover {
+    color: #343a40;
+}
+
+.tab-button.active {
+    color: #343a40;
+    font-weight: 600;
+}
+
+.tab-button.active::after {
+    content: '\f004';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    color: #B9A2E9;
+    position: absolute;
+    bottom: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+}
+
+/* Tab 内容面板 */
+.tab-pane {
+    display: none;
+}
+.tab-pane.active {
+    display: block;
+}
+
+/* --- 主体内容容器 --- */
+.main-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* --- 主体内容区域 --- */
+.content-body {
+    padding: 20px 15px;
+}
