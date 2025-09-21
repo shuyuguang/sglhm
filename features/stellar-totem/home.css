@@ -1,4 +1,4 @@
-/* depart.css */
+/* home.css */
 
 /* --- 基础与重置样式 --- */
 * {
@@ -36,10 +36,10 @@ body {
 }
 
 .page-title::before {
-    content: '\f0ac'; /* 地球图标 */
+    content: '\f4d8'; /* 修改点：换成幼苗图标 */
     font-family: 'Font Awesome 6 Free';
     font-weight: 900;
-    color: #4FC3F7; 
+    color: #7CB342; /* 修改点：换成自然的绿色 */
     font-size: 0.9em;
     margin-right: 10px;
 }
@@ -67,7 +67,6 @@ body {
 .btn-help { background-color: #FCE4EC; color: #FFA7C4; font-size: 16px; }
 .btn-help:hover { background-color: #FFA7C4; color: #ffffff; transform: scale(1.1); }
 
-/* 【修改点】恢复了原有的绿色配色方案，并调整回原始图标大小 */
 .btn-edit { background-color: #E8F5E9; color: #81C784; font-size: 16px; }
 .btn-edit:hover { background-color: #81C784; color: #ffffff; transform: scale(1.1); }
 
