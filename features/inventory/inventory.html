@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物品</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="inventory.css">
+</head>
+<body>
+
+    <header class="page-header">
+        <h1 class="page-title">物品</h1>
+        <!-- ▼▼▼ 修改点：移除了新增(+)按钮 ▼▼▼ -->
+        <div class="header-actions">
+            <button class="btn-help" id="help-btn" title="帮助"><i class="fa-solid fa-question"></i></button>
+            <a href="../../app.html" class="btn-back" title="返回"><i class="fa-solid fa-chevron-right"></i></a>
+        </div>
+        <!-- ▲▲▲ 修改点 ▲▲▲ -->
+    </header>
+
+    <!-- Tab 导航栏 -->
+    <nav class="tabs-nav">
+        <div class="tabs-container">
+            <button class="tab-button active" data-tab="warehouse">仓库</button>
+            <button class="tab-button" data-tab="received">收到</button>
+            <button class="tab-button" data-tab="sent">送出</button>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <main class="content-body">
+            <!-- Tab 内容面板 -->
+            <div class="tabs-content">
+                <div id="warehouse" class="tab-pane active">
+                    <p>这里是【仓库】的编辑区。</p>
+                </div>
+                <div id="received" class="tab-pane">
+                    <p>这里是【收到】的编辑区。</p>
+                </div>
+                <div id="sent" class="tab-pane">
+                    <p>这里是【送出】的编辑区。</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="inventory.js"></script>
+</body>
+</html>
