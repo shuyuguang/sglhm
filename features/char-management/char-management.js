@@ -103,6 +103,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     let croppingContext = {};
     let selectedProfileIds = []; 
     let isMultiSelectMode = false;
+    // ▼▼▼ 新增：性别选项常量和点击事件 ▼▼▼
+    const GENDER_OPTIONS = ['⚲（？）', '♀（女）', '♂（男）'];
+    const editGenderTrigger = document.getElementById('edit-gender-trigger');
+
+    editGenderTrigger?.addEventListener('click', () => {
+        const valueDisplay = editGenderTrigger.querySelector('.value-display');
+        const currentValue = valueDisplay.textContent;
+        const currentIndex = GENDER_OPTIONS.indexOf(currentValue);
+        // 使用取模运算实现循环
+        const nextIndex = (currentIndex + 1) % GENDER_OPTIONS.length;
+        valueDisplay.textContent = GENDER_OPTIONS[nextIndex];
+    });
 
     // ▼▼▼ 数据现在从数据库加载，这里只做初始化声明 ▼▼▼
     let profileData = [];
@@ -235,7 +247,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         };
     
         const username = document.getElementById('edit-username')?.value;
-        const gender = document.getElementById('edit-gender')?.value;
+        const gender = document.getElementById('edit-gender-trigger').querySelector('.value-display').textContent;
         const ageDisplay = document.getElementById('edit-age-trigger')?.querySelector('.value-display');
         const age = ageDisplay && !ageDisplay.classList.contains('placeholder') ? ageDisplay.textContent : '';
         const raceDisplay = document.getElementById('edit-race-trigger')?.querySelector('.value-display');
@@ -338,7 +350,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             const currentProfile = profileData.find(p => p.id === currentProfileId);
             if (currentProfile) {
                 currentProfile.name = document.getElementById('edit-username').value;
-                currentProfile.gender = document.getElementById('edit-gender').value;
+                currentProfile.gender = document.getElementById('edit-gender-trigger').querySelector('.value-display').textContent;
                 currentProfile.signature = document.querySelector('.user-signature').textContent;
                 currentProfile.avatar = document.getElementById('edit-avatar-url').value;
                 currentProfile.banner = document.getElementById('edit-banner-url').value;
@@ -776,11 +788,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         document.getElementById('edit-banner-url').value = profile.banner;
         document.getElementById('banner-preview-img').src = profile.banner;
         document.getElementById('edit-username').value = profile.name;
-        document.getElementById('edit-gender').value = profile.gender;
+        const genderDisplay = document.getElementById('edit-gender-trigger').querySelector('.value-display');
+        // 确保加载的值是有效的，如果不是，则使用默认值
+        genderDisplay.textContent = GENDER_OPTIONS.includes(profile.gender) ? profile.gender : GENDER_OPTIONS[1]; // 默认显示女性
         
         const updateDisplay = (trigger, value, placeholder) => {
             const display = trigger.querySelector('.value-display');
-            trigger.setAttribute('data-placeholder', placeholder);
+            display.setAttribute('data-placeholder', placeholder);
             display.textContent = value || placeholder;
             display.classList.toggle('placeholder', !value);
         };
@@ -820,18 +834,23 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // ▼▼▼ 角色管理面板交互逻辑 (支持多选) ▼▼▼
 
+    // =======================================================
+    // ▼▼▼ BUG修复点：确保此函数操作的是 settingsUserList ▼▼▼
+    // =======================================================
     function renderSettingsUserList() {
+        // 1. 检查变量是否正确，应该是 settingsUserList
         if (!settingsUserList) return;
+        // 2. 清空的是 settingsUserList 的内容
         settingsUserList.innerHTML = '';
         profileData.forEach(profile => {
             const li = document.createElement('li');
             li.dataset.profileId = profile.id;
-            // 【修改点】检查是否是默认角色ID，而不是'felotus'
             if (profile.id === DEFAULT_CHAR_ID) li.classList.add('disabled');
             li.innerHTML = `
                 <img src="${profile.avatar}" alt="${profile.name}" class="avatar">
                 <span class="name">${profile.name || '未命名'}</span>
             `;
+            // 3. 将新元素添加到 settingsUserList
             settingsUserList.appendChild(li);
         });
     }
@@ -952,7 +971,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             // 首次使用的默认数据
             profileData = [{
                 // 【修改点】创建独立的默认角色数据
-                id: DEFAULT_CHAR_ID, name: '示例角色', gender: '♀（女）', signature: '这里是个性签名', bio: '', age: '', race: '', occupation: '',
+                id: DEFAULT_CHAR_ID, name: 'Felotus', gender: '♀（女）', signature: '这里是个性签名', bio: '', age: '', race: '', occupation: '',
                 avatar: 'https://sharkpan.xyz/f/xZ04UX/a-felotus.png', banner: 'https://sharkpan.xyz/f/VEKNcY/good.png'
             }];
             await dbStorage.setItem('charProfileData', profileData);

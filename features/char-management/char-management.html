@@ -74,7 +74,7 @@
         </main>
 
         <button id="edit-profile-btn" class="edit-fab" title="编辑档案">
-            <i class="fa-solid fa-pencil"></i>
+            <i class="fa-solid fa-feather-pointed"></i>
         </button>
         
         <!-- 编辑档案的弹出面板 -->
@@ -121,7 +121,13 @@
                         </div>
                         <div id="modal-section-basic-info" class="modal-section-pane">
                             <div class="form-group"><label for="edit-username">角色名</label><input type="text" id="edit-username" placeholder="角色名限1-10字符" minlength="1" maxlength="10"></div>
-                            <div class="form-group"><label for="edit-gender">性别</label><input type="text" id="edit-gender" value="♀（女）" readonly></div>
+                            <div class="form-group">
+    <label>性别</label>
+    <div class="form-group-clickable" id="edit-gender-trigger">
+        <span class="value-display">♀（女）</span>
+        <i class="fa-solid fa-arrows-rotate"></i>
+    </div>
+</div>
                             <div class="form-group"><label>年龄</label><div class="form-group-clickable" id="edit-age-trigger"><span class="value-display placeholder">请填写年龄、生日或描述</span><i class="fa-solid fa-chevron-right"></i></div></div>
                             <div class="form-group"><label>种族</label><div class="form-group-clickable" id="edit-race-trigger"><span class="value-display placeholder">请填写种族</span><i class="fa-solid fa-chevron-right"></i></div></div>
                             <div class="form-group"><label>职业</label><div class="form-group-clickable" id="edit-occupation-trigger"><span class="value-display placeholder">请填写职业</span><i class="fa-solid fa-chevron-right"></i></div></div>
