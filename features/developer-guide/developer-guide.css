@@ -1,1 +1,88 @@
+/* developer-guide.css */
 
+/* --- 基础与重置样式 --- */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #f4f7f9;
+    color: #333;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* --- 页面头部样式 --- */
+.page-header {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    
+}
+
+.page-title {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.page-title::before {
+    content: '\f6be'; /* Font Awesome 小猫图标 (fa-cat) */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    color: #B9A2E9;
+    font-size: 0.9em;
+    margin-right: 10px;
+
+    /* --- 新增：修复加载时文本位移问题 --- */
+    display: inline-block;  /* 使 width 属性生效 */
+    width: 1.2em;           /* 预留一个固定的宽度，略大于图标本身 */
+    text-align: center;     /* 确保图标加载后在其预留空间内居中 */
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-actions button,
+.header-actions a {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-help { background-color: #FCE4EC; color: #FFA7C4; font-size: 16px; }
+.btn-help:hover { background-color: #FFA7C4; color: #ffffff; transform: scale(1.1); }
+
+.btn-back { background-color: #f1f3f5; color: #868e96; font-size: 18px; }
+.btn-back:hover { background-color: #e9ecef; color: #495057; }
+
+/* --- 主体内容容器 --- */
+.main-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* --- 主体内容区域 --- */
+.content-body {
+    padding: 20px 15px;
+}
