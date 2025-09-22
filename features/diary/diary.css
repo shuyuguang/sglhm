@@ -35,12 +35,17 @@ body {
 }
 
 .page-title::before {
-    content: '\f004'; /* 修改点：换成 Font Awesome 爱心图标 */
+    content: '\f66a'; /* 页面标题：使用 Font Awesome 日记图标 */
     font-family: 'Font Awesome 6 Free';
     font-weight: 900;
     color: #B9A2E9;
     font-size: 0.9em;
     margin-right: 10px;
+
+    /* --- 修复加载时文本位移问题 --- */
+    display: inline-block;
+    width: 1.2em;
+    text-align: center;
 }
 
 .header-actions {
@@ -75,7 +80,7 @@ body {
     background-color: #ffffff;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    border-bottom: 1px solid #e9ecef;
+    
     position: sticky;
     top: 62px;
     z-index: 99;
@@ -116,7 +121,7 @@ body {
 }
 
 .tab-button.active::after {
-    content: '\f004'; /* 修改点：换成 Font Awesome 爱心图标 */
+    content: '\f004'; /* 改回：这里使用 Font Awesome 爱心图标 */
     font-family: 'Font Awesome 6 Free';
     font-weight: 900;
     color: #B9A2E9;
