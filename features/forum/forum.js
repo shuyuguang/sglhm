@@ -1,4 +1,4 @@
-import { dbStorage } from '../../db.js';// 导入共享的 dbStorage
+import { dbStorage } from '../../db.js'; // 导入共享的 dbStorage
 
 /**
  * 从 IndexedDB 同步当前用户数据到 forum.html 的 "我" 界面
@@ -11,8 +11,9 @@ async function syncForumProfile() {
     const bannerDiv = meContent.querySelector('.profile-banner');
     const avatarImg = meContent.querySelector('.profile-avatar');
     const usernameDiv = meContent.querySelector('.profile-username');
+    const bioDiv = meContent.querySelector('.profile-bio'); // 顺便把简介也加上
 
-    if (!bannerDiv || !avatarImg || !usernameDiv) {
+    if (!bannerDiv || !avatarImg || !usernameDiv || !bioDiv) {
         console.error('无法在 forum.html 的 "我" 界面中找到所需元素。');
         return;
     }
@@ -21,14 +22,13 @@ async function syncForumProfile() {
     const currentProfileId = await dbStorage.getItem('userCurrentProfileId') || 'felotus';
     const allProfiles = await dbStorage.getItem('userProfileData');
 
+    // ▼▼▼ 修改这里的后备逻辑 ▼▼▼
     if (!allProfiles || allProfiles.length === 0) {
         console.warn('数据库中没有用户数据。');
-        // 可选：设置默认值
-        usernameDiv.textContent = 'Felotus';
-        avatarImg.src = 'https://picsum.photos/seed/felotus-me/200/200';
-        bannerDiv.style.backgroundImage = "url('https://i.postimg.cc/768WYVvR/ocean.jpg')";
+        // HTML里已经有默认内容了，这里直接返回即可，不做任何操作
         return;
     }
+    // ▲▲▲ 修改结束 ▲▲▲
 
     // 3. 查找当前用户
     const currentProfile = allProfiles.find(p => p.id === currentProfileId);
@@ -37,13 +37,14 @@ async function syncForumProfile() {
     if (currentProfile) {
         usernameDiv.textContent = currentProfile.name || '未命名';
         avatarImg.src = currentProfile.avatar;
-        // 背景是 background-image
         bannerDiv.style.backgroundImage = `url('${currentProfile.banner}')`;
+        bioDiv.textContent = currentProfile.bio || '热爱生活，探索未知。'; // 更新简介
     } else {
         const fallbackProfile = allProfiles[0];
         usernameDiv.textContent = fallbackProfile.name || '未命名';
         avatarImg.src = fallbackProfile.avatar;
         bannerDiv.style.backgroundImage = `url('${fallbackProfile.banner}')`;
+        bioDiv.textContent = fallbackProfile.bio || '热爱生活，探索未知。'; // 更新简介
     }
 }
 
