@@ -78,8 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 初始化“星图”面板
     initializePanel('open-stellar-totem-btn', 'stellar-totem-panel');
 
-    // 初始化“公告”面板
-    initializePanel('open-announcement-btn', 'announcement-panel');
+    // [删除] 初始化“公告”面板的调用已被移除
 
 
     // --- 【新增】侧边菜单面板的控制逻辑 ---
