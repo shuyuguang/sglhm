@@ -946,7 +946,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             // 【修改点】ID前缀改为 'char-' 以示区分
             // ▼▼▼ 修改点：删除了 signature 属性 ▼▼▼
             id: `char-${Date.now()}`, name: '', gender: '♀（女）', bio: '', age: '', race: '', occupation: '',
-            avatar: 'https://sharkpan.xyz/f/xZ04UX/a-felotus.png', banner: 'https://sharkpan.xyz/f/VEKNcY/good.png'
+            avatar: 'https://i.postimg.cc/PqjNjtZV/a-felotus.jpg', banner: 'https://i.postimg.cc/QMjdKsTS/a-good.jpg'
         };
         profileData.push(newUser);
         
@@ -974,7 +974,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 // 【修改点】创建独立的默认角色数据
                 // ▼▼▼ 修改点：删除了 signature 属性 ▼▼▼
                 id: DEFAULT_CHAR_ID, name: 'Felotus', gender: '♀（女）', bio: '', age: '', race: '', occupation: '',
-                avatar: 'https://sharkpan.xyz/f/xZ04UX/a-felotus.png', banner: 'https://sharkpan.xyz/f/VEKNcY/good.png'
+                avatar: 'https://i.postimg.cc/PqjNjtZV/a-felotus.jpg', banner: 'https://i.postimg.cc/QMjdKsTS/a-good.jpg'
             }];
             await dbStorage.setItem('charProfileData', profileData);
         }
