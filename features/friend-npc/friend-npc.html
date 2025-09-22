@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NPC交友</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="friend-npc.css">
+</head>
+<body>
+
+    <header class="page-header">
+        <h1 class="page-title">NPC交友</h1>
+        <div class="header-actions">
+            <button class="btn-help" id="help-btn" title="帮助"><i class="fa-solid fa-question"></i></button>
+            <a href="../../app.html" class="btn-back" title="返回"><i class="fa-solid fa-xmark"></i></a>
+            <button class="btn-save" id="save-btn" title="保存"><i class="fa-solid fa-check"></i></button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <main class="content-body">
+            <div class="entry-list">
+                <a href="#" class="add-entry-btn">
+                    <span>新朋友</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </a>
+            </div>
+
+            <div class="friend-list-container">
+                <div class="list-header">
+                    <h2 class="list-title">好友列表</h2>
+                    <div class="list-actions">
+                        <!-- 【修改点】更换为“两个对勾”图标 -->
+                        <button class="action-btn" title="多选">
+                            <i class="fa-solid fa-check-double"></i>
+                        </button>
+                        <button class="action-btn action-btn-delete" title="删除">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="list-content">
+                    <p class="placeholder-text">暂无好友</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="friend-npc.js"></script>
+</body>
+</html>

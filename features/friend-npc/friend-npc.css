@@ -1,1 +1,186 @@
+/* friend-npc.css */
 
+/* --- 基础与重置样式 --- */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #f4f7f9;
+    color: #333;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* --- 页面头部样式 --- */
+.page-header {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.page-title {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.page-title::before {
+    content: '\f0c0'; /* Font Awesome fa-users 用户组图标 */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    color: #B9A2E9;
+    font-size: 0.9em;
+    margin-right: 10px;
+
+    /* --- 新增：修复加载时文本位移问题 --- */
+    display: inline-block;
+    width: 1.2em;
+    text-align: center;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-actions button,
+.header-actions a {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-help { background-color: #FCE4EC; color: #FFA7C4; font-size: 16px; }
+.btn-help:hover { background-color: #FFA7C4; color: #ffffff; transform: scale(1.1); }
+.btn-back { background-color: #f1f3f5; color: #868e96; font-size: 20px; }
+.btn-back:hover { background-color: #e9ecef; color: #495057; }
+.btn-save { background-color: #B9A2E9; color: #ffffff; font-size: 16px; }
+.btn-save:hover { background-color: #a68ed6; transform: scale(1.1); }
+
+/* --- 主体内容容器 --- */
+.main-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* --- 主体内容区域 --- */
+.content-body {
+    padding: 20px 15px;
+}
+
+/* --- 条目列表与按钮样式 --- */
+.entry-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.add-entry-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; 
+    padding: 15px 20px;
+    background-color: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #495057;
+    transition: all 0.2s ease;
+}
+
+.add-entry-btn:hover {
+    border-color: #ced4da;
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.add-entry-btn i {
+    font-size: 1em;
+    color: #adb5bd;
+    margin-right: 0;
+}
+
+.add-entry-btn span {
+    font-size: 1em;
+    font-weight: 500;
+}
+
+/* --- 好友列表样式 --- */
+.friend-list-container {
+    background-color: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    margin-top: 20px;
+    padding: 15px 20px;
+}
+
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f3f5;
+    margin-bottom: 12px;
+}
+
+.list-title {
+    font-size: 1em; 
+    font-weight: 600;
+    color: #495057; 
+    margin: 0;
+}
+
+.list-actions {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: #868e96;
+    font-size: 1.1em;
+    transition: color 0.2s ease;
+}
+
+.action-btn:hover {
+    color: #343a40;
+}
+
+.action-btn-delete {
+    color: #FF9699;
+}
+
+.action-btn-delete:hover {
+    color: #f783ac;
+}
+
+.placeholder-text {
+    text-align: center;
+    color: #adb5bd;
+    padding: 20px 0;
+    font-size: 0.9em;
+}
