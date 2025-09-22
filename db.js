@@ -8,7 +8,7 @@ db.version(1).stores({
 });
 
 // 封装好数据库的 get 和 set 方法，并导出
-export const dbStorage = {
+const dbStorage = {
     async setItem(key, value) {
         try {
             // 使用 structuredClone 来处理复杂对象，避免 "DataCloneError"
@@ -28,3 +28,6 @@ export const dbStorage = {
         }
     }
 };
+
+// ▼▼▼ 修改点：同时导出 db 实例和 dbStorage 对象 ▼▼▼
+export { db, dbStorage };
