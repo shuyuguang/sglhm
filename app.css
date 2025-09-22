@@ -136,30 +136,40 @@ html, body {
     justify-content: center;
 }
 
-/* --- 星图面板特定样式 --- */
+/* --- 星图面板特定样式 (v2) --- */
 #stellar-totem-panel .panel-wrapper {
-    height: 300px;
+    /* 【修改】移除固定高度，宽度调整为更紧凑以适应内容 */
+    height: auto;
+    max-width: 580px;
 }
 
 .panel-navigation {
     display: flex;
-    flex-direction: column;
-    gap: 25px;
+    /* 【修改】改为水平排列 */
+    flex-direction: row;
+    justify-content: center;
+    gap: 20px;
 }
 
 .nav-button {
     background-color: rgba(40, 45, 60, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
+    /* 【修改】圆角更明显 */
+    border-radius: 12px;
     color: #e0e0e0;
     cursor: pointer;
     padding: 20px;
-    width: 280px;
+    /* 【修改】改为固定宽高，使其更方正 */
+    width: 160px;
+    height: 160px;
     transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    /* 【修改】垂直居中内容 */
+    justify-content: center;
+    /* 【修改】调整元素间距 */
+    gap: 12px;
     text-decoration: none;
 }
 
@@ -170,9 +180,34 @@ html, body {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-.button-main { display: flex; align-items: center; gap: 12px; }
-.button-title { font-size: 20px; font-weight: 600; color: #e0e0e0; }
-.button-description { font-size: 14px; color: #a0a8b4; font-weight: normal; }
+.button-main {
+    /* 【修改】改为垂直堆叠图标和标题 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 【新增】图标样式 */
+.nav-button i {
+    font-size: 32px;
+}
+
+.button-title {
+    /* 【修改】调整字体大小 */
+    font-size: 18px;
+    font-weight: 600;
+    color: #e0e0e0;
+}
+
+.button-description {
+    font-size: 14px;
+    color: #a0a8b4;
+    font-weight: normal;
+    /* 【新增】确保多行描述也能居中 */
+    text-align: center;
+}
+
 
 /* --- 公告面板特定样式 --- */
 #announcement-panel .panel-wrapper {
