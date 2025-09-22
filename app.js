@@ -17,13 +17,15 @@ async function syncProfileData() {
     const currentProfileId = await dbStorage.getItem('userCurrentProfileId') || 'felotus';
     const allProfiles = await dbStorage.getItem('userProfileData');
 
+    // ▼▼▼ 修改这里的后备逻辑 ▼▼▼
     if (!allProfiles || allProfiles.length === 0) {
         console.warn('数据库中没有用户数据。');
-        // 可选：设置默认值
-        usernameSpan.textContent = 'Felotus';
-        avatarImg.src = 'https://picsum.photos/seed/felotus/100/100';
+        // 将后备方案也设置为空内容，这样就不会加载任何图片
+        usernameSpan.innerHTML = '&nbsp;'; // 使用空格占位
+        // 头像的 src 在 HTML 中已经是透明图片了，这里无需再设置
         return;
     }
+    // ▲▲▲ 修改结束 ▲▲▲
 
     // 3. 查找当前用户
     const currentProfile = allProfiles.find(p => p.id === currentProfileId);
