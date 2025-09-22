@@ -12,5 +12,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // 【修改点】更新了日志信息
-    console.log("出门页面加载完成，并已为编辑按钮绑定事件。");
+    console.log("休闲页面加载完成，并已为编辑按钮绑定事件。");
 });
