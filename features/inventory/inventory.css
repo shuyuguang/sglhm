@@ -35,12 +35,17 @@ body {
 }
 
 .page-title::before {
-    content: '\f004';
+    content: '\f0b1'; /* Font Awesome 手提包图标 (fa-briefcase) */
     font-family: 'Font Awesome 6 Free';
     font-weight: 900;
     color: #B9A2E9;
     font-size: 0.9em;
     margin-right: 10px;
+
+    /* --- 新增：修复加载时文本位移问题 --- */
+    display: inline-block;
+    width: 1.2em;
+    text-align: center;
 }
 
 .header-actions {
@@ -76,7 +81,7 @@ body {
     background-color: #ffffff;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    border-bottom: 1px solid #e9ecef;
+    
     position: sticky;
     top: 62px;
     z-index: 99;
@@ -126,6 +131,12 @@ body {
     left: 50%;
     transform: translateX(-50%);
     font-size: 14px;
+
+    /* --- 新增：修复Tab下方图标跳动问题 --- */
+    display: inline-block;
+    width: 20px;
+    height: 14px;
+    text-align: center;
 }
 
 /* Tab 内容面板 */
