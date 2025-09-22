@@ -90,25 +90,7 @@ body {
     font-weight: bold;
 }
 
-/* --- 个性签名样式 --- */
-.user-signature {
-    text-align: left;
-    padding: 0 5px 2px 5px;
-    margin-bottom: 2px;
-    font-size: 1em;
-    color: #000000;
-    cursor: pointer;
-}
-
-/* --- 新增：简介样式 --- */
-.user-bio {
-    text-align: left;
-    padding: 0 5px;
-    margin: 5px 0 15px 0; /* 调整外边距，与下方Tab拉开距离 */
-    font-size: 0.9em;
-    color: #6c757d; /* 使用较柔和的灰色 */
-    line-height: 1.5;
-}
+/* --- ▼▼▼ 修改点：删除了个性签名样式 ▼▼▼ --- */
 
 /* --- Tab 切换样式 --- */
 .tabs-nav {
@@ -119,7 +101,7 @@ body {
 }
 
 .tab-button {
-    padding: 12px 10px;
+    padding: 0px 10px 12px 10px;
     font-size: 1em;
     font-weight: 500;
     text-align: center;
@@ -1239,7 +1221,7 @@ body {
 .switcher-footer {
     padding: 15px;
     flex-shrink: 0;
-    border-top: 1px solid #f0f0f0;
+    
 }
 
 .create-new-user-btn {

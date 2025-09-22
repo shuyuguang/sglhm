@@ -351,7 +351,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (currentProfile) {
                 currentProfile.name = document.getElementById('edit-username').value;
                 currentProfile.gender = document.getElementById('edit-gender-trigger').querySelector('.value-display').textContent;
-                currentProfile.signature = document.querySelector('.user-signature').textContent;
+                // ▼▼▼ 修改点：删除了 signature 的保存逻辑 ▼▼▼
                 currentProfile.avatar = document.getElementById('edit-avatar-url').value;
                 currentProfile.banner = document.getElementById('edit-banner-url').value;
 
@@ -780,7 +780,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         document.querySelector('.profile-avatar').src = profile.avatar;
         document.querySelector('.user-name').textContent = profile.name || '未命名';
         document.querySelector('.gender-symbol').textContent = profile.gender.charAt(0);
-        document.querySelector('.user-signature').textContent = profile.signature;
+        // ▼▼▼ 修改点：删除了 signature 的加载逻辑 ▼▼▼
         if(homeBioContent) homeBioContent.textContent = profile.bio || '这里是角色的个人简介，可以写一些更详细的介绍。';
 
         document.getElementById('edit-avatar-url').value = profile.avatar;
@@ -944,7 +944,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     createNewUserBtn?.addEventListener('click', async () => {
         const newUser = {
             // 【修改点】ID前缀改为 'char-' 以示区分
-            id: `char-${Date.now()}`, name: '', gender: '♀（女）', signature: '这里是个性签名', bio: '', age: '', race: '', occupation: '',
+            // ▼▼▼ 修改点：删除了 signature 属性 ▼▼▼
+            id: `char-${Date.now()}`, name: '', gender: '♀（女）', bio: '', age: '', race: '', occupation: '',
             avatar: 'https://sharkpan.xyz/f/xZ04UX/a-felotus.png', banner: 'https://sharkpan.xyz/f/VEKNcY/good.png'
         };
         profileData.push(newUser);
@@ -971,7 +972,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             // 首次使用的默认数据
             profileData = [{
                 // 【修改点】创建独立的默认角色数据
-                id: DEFAULT_CHAR_ID, name: 'Felotus', gender: '♀（女）', signature: '这里是个性签名', bio: '', age: '', race: '', occupation: '',
+                // ▼▼▼ 修改点：删除了 signature 属性 ▼▼▼
+                id: DEFAULT_CHAR_ID, name: 'Felotus', gender: '♀（女）', bio: '', age: '', race: '', occupation: '',
                 avatar: 'https://sharkpan.xyz/f/xZ04UX/a-felotus.png', banner: 'https://sharkpan.xyz/f/VEKNcY/good.png'
             }];
             await dbStorage.setItem('charProfileData', profileData);
