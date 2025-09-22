@@ -20,13 +20,17 @@
         <!-- ① 左上角：名片区域 -->
         <a href="./features/user-setting/user-setting.html" class="profile-link">
             <div class="area top-left-profile">
-                <img src="https://picsum.photos/seed/felotus/100/100" alt="Avatar" class="avatar">
+                <!-- ▼▼▼ 修改点 1：src 使用一个1x1的透明像素占位图，避免闪烁 ▼▼▼ -->
+                <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Avatar" class="avatar">
                 <div class="user-info">
-                    <span class="username">Felotus</span>
+                    <!-- ▼▼▼ 修改点 2：移除硬编码的用户名，用一个空格占位符防止布局移动 ▼▼▼ -->
+                    <span class="username">&nbsp;</span>
                 </div>
             </div>
         </a>
 
+        
+        
         <!-- ② 右上角：菜单区域 -->
         <div class="area top-right-menu">
             <!-- 【修改点】修改了a标签，用于打开侧边菜单 -->
