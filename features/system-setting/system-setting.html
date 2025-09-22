@@ -38,9 +38,30 @@
                 <div id="background-sound" class="tab-pane">
                     <p>这里是【背景音】的编辑区。</p>
                 </div>
+                <!-- ▼▼▼ 修改点：更新数据库面板内容 ▼▼▼ -->
                 <div id="database" class="tab-pane">
-                    <p>这里是【数据库】的编辑区。</p>
+                    <div class="settings-group">
+                        <h3 class="group-title">本地数据</h3>
+                        <p class="group-description">管理存储在您浏览器中的所有数据。</p>
+                        <div class="button-grid">
+                            <button class="action-button" id="export-local-btn"><i class="fa-solid fa-download"></i>导出本地数据</button>
+                            <button class="action-button" id="import-local-btn"><i class="fa-solid fa-upload"></i>导入本地数据</button>
+                            <button class="action-button btn-danger" id="clear-local-btn"><i class="fa-solid fa-trash-can"></i>清除本地数据</button>
+                        </div>
+                    </div>
+                    <div class="settings-group">
+                        <h3 class="group-title">云端同步</h3>
+                        <p class="group-description">（功能暂未开放）</p>
+                        <div class="button-grid">
+                            <button class="action-button" disabled title="功能暂未开放"><i class="fa-solid fa-cloud-arrow-down"></i>导出云端数据</button>
+                            <button class="action-button" disabled title="功能暂未开放"><i class="fa-solid fa-cloud-arrow-up"></i>导入云端数据</button>
+                            <button class="action-button btn-danger" disabled title="功能暂未开放"><i class="fa-solid fa-server"></i>清除云端数据</button>
+                        </div>
+                    </div>
+                    <!-- 用于文件导入的隐藏 input -->
+                    <input type="file" id="import-file-input" accept=".json" style="display: none;">
                 </div>
+                <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                 <div id="more" class="tab-pane">
                     <p>这里是【更多】的编辑区。</p>
                 </div>
@@ -48,6 +69,7 @@
         </main>
     </div>
 
-    <script src="system-setting.js"></script>
+    <!-- ▼▼▼ 修改点：脚本改为 module 类型以支持 import ▼▼▼ -->
+    <script src="system-setting.js" type="module"></script>
 </body>
 </html>

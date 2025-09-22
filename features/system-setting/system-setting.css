@@ -156,3 +156,77 @@ body {
 .content-body {
     padding: 20px 15px;
 }
+
+/* ▼▼▼ 新增：数据库设置区域样式 ▼▼▼ */
+.settings-group {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.group-title {
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-size: 1.1em;
+    color: #343a40;
+}
+
+.group-description {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+    color: #868e96;
+}
+
+.button-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.action-button {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    color: #495057;
+    border-radius: 6px;
+    font-size: 1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.action-button:hover {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+}
+
+.action-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #f8f9fa;
+}
+
+.action-button.btn-danger {
+    color: #e03131;
+    border-color: #f0c3c3;
+}
+
+.action-button.btn-danger:hover:not(:disabled) {
+    background-color: #fff5f5;
+    color: #c92a2a;
+    border-color: #ffc9c9;
+}
+
+.action-button i {
+    width: 18px; /* 固定图标宽度，让文本对齐 */
+    text-align: center;
+}
+/* ▲▲▲ 新增样式结束 ▲▲▲ */
