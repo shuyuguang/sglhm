@@ -1,29 +1,9 @@
 /* user-setting.js (Updated with namespaced keys for independent storage) */
+import { dbStorage } from '../../db.js';// 导入共享的 dbStorage
+
 document.addEventListener('DOMContentLoaded', async function() {
     // ====================【Dexie.js 数据库封装】====================
-    const db = new Dexie('userSettingsDB');
-    db.version(1).stores({
-        keyValueStore: 'key' 
-    });
-
-    const dbStorage = {
-        async setItem(key, value) {
-            try {
-                await db.keyValueStore.put({ key, value: JSON.parse(JSON.stringify(value)) });
-            } catch (error) {
-                console.error(`[dbStorage] Failed to set item '${key}':`, error);
-            }
-        },
-        async getItem(key) {
-            try {
-                const item = await db.keyValueStore.get(key);
-                return item ? item.value : null;
-            } catch (error) {
-                console.error(`[dbStorage] Failed to get item '${key}':`, error);
-                return null;
-            }
-        }
-    };
+    // ▲▲▲ 原有的数据库定义代码已被删除，并由上面的 import 语句替代 ▲▲▲
 
 
     // --- 定义常量 (DOM元素) ---
@@ -336,7 +316,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (currentProfile) {
                 currentProfile.name = document.getElementById('edit-username').value;
                 currentProfile.gender = document.getElementById('edit-gender').value;
-                currentProfile.signature = document.querySelector('.user-signature').textContent;
+                // ▼▼▼ 已删除个人签名保存逻辑 ▼▼▼
                 currentProfile.avatar = document.getElementById('edit-avatar-url').value;
                 currentProfile.banner = document.getElementById('edit-banner-url').value;
 
@@ -758,7 +738,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         document.querySelector('.profile-avatar').src = profile.avatar;
         document.querySelector('.user-name').textContent = profile.name || '未命名';
         document.querySelector('.gender-symbol').textContent = profile.gender.charAt(0);
-        document.querySelector('.user-signature').textContent = profile.signature;
+        // ▼▼▼ 已删除个人签名加载逻辑 ▼▼▼
         if(homeBioContent) homeBioContent.textContent = profile.bio || '这里是用户的个人简介，可以写一些更详细的介绍。';
 
         document.getElementById('edit-avatar-url').value = profile.avatar;
@@ -918,7 +898,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     createNewUserBtn?.addEventListener('click', async () => {
         const newUser = {
-            id: `user-${Date.now()}`, name: '', gender: '♀（女）', signature: '这里是个性签名', bio: '', age: '', race: '', occupation: '',
+            id: `user-${Date.now()}`, name: '', gender: '♀（女）', bio: '', age: '', race: '', occupation: '',
             avatar: 'https://i.postimg.cc/PqjNjtZV/a-felotus.jpg', banner: 'https://i.postimg.cc/QMjdKsTS/a-good.jpg'
         };
         profileData.push(newUser);
@@ -944,7 +924,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         } else {
             // 首次使用的默认数据
             profileData = [{
-                id: 'felotus', name: 'Felotus', gender: '♀（女）', signature: '这里是个性签名', bio: '', age: '', race: '', occupation: '',
+                id: 'felotus', name: 'Felotus', gender: '♀（女）', bio: '', age: '', race: '', occupation: '',
                 avatar: 'https://i.postimg.cc/PqjNjtZV/a-felotus.jpg', banner: 'https://i.postimg.cc/QMjdKsTS/a-good.jpg'
             }];
             await dbStorage.setItem('userProfileData', profileData);
