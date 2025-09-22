@@ -71,21 +71,22 @@
 
             <!-- 我的内容 -->
             <div id="me-content" class="tab-content">
-                <!-- ▼▼▼ 结构调整开始 ▼▼▼ -->
                 <div class="profile-page">
                     <div class="profile-banner"></div>
-                    <img src="https://picsum.photos/seed/felotus-me/200/200" alt="Avatar" class="profile-avatar">
+                    <!-- ▼▼▼ 修改点1：替换头像为透明占位符，避免加载不认识的图片 ▼▼▼ -->
+                    <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Avatar" class="profile-avatar">
                     <div class="profile-details">
-                        <div class="profile-username">Felotus</div>
-                        <div class="profile-bio">热爱生活，探索未知。</div>
+                        <!-- ▼▼▼ 修改点2：清空硬编码的用户名和简介，用占位符防止布局移动 ▼▼▼ -->
+                        <div class="profile-username">&nbsp;</div>
+                        <div class="profile-bio"></div>
                         <div class="profile-stats">
-                            <div class="stat-item"><span>1</span> 正在关注</div>
-                            <div class="stat-item"><span>520k</span> 关注者</div>
+                            <!-- ▼▼▼ 修改点3：将关注数据也清空或设为占位符 ▼▼▼ -->
+                            <div class="stat-item"><span>-</span> 正在关注</div>
+                            <div class="stat-item"><span>-</span> 关注者</div>
                         </div>
                     </div>
-                </div> <!-- ▲▲▲ .profile-page 这个白色的卡片在这里结束 ▲▲▲ -->
+                </div>
                 
-                <!-- ▼▼▼ Tab 导航和内容现在位于 profile-page 外部 ▼▼▼ -->
                 <nav class="sub-tab-nav">
                     <button class="sub-tab-item active" data-sub-tab="posts">帖子</button>
                     <button class="sub-tab-item" data-sub-tab="replies-me">回复</button>
@@ -107,9 +108,7 @@
         <a href="#" class="tab-item" data-tab="notifications"><i class="fa-solid fa-bell"></i></a>
         <a href="#" class="tab-item" data-tab="me"><i class="fa-solid fa-user"></i></a>
     </nav>
-    <!-- ▼▼▼ 新增 Dexie.js 引入 ▼▼▼ -->
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
-    <!-- ▼▼▼ 修改下面这行 ▼▼▼ -->
     <script src="forum.js" type="module"></script>
 </body>
 </html>
