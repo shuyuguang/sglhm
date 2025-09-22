@@ -23,7 +23,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
-    border-bottom: 1px solid #e9ecef;
+    
 }
 
 .page-title {
@@ -36,12 +36,17 @@ body {
 }
 
 .page-title::before {
-    content: '\f004'; /* Font Awesome 爱心图标 */
+    content: '\f518'; /* Font Awesome 摊开的书本图标 (fa-book-open) */
     font-family: 'Font Awesome 6 Free';
     font-weight: 900;
     color: #B9A2E9;
     font-size: 0.9em;
     margin-right: 10px;
+
+    /* --- 新增：修复加载时文本位移问题 --- */
+    display: inline-block;
+    width: 1.2em;
+    text-align: center;
 }
 
 .header-actions {
@@ -64,8 +69,6 @@ body {
     text-decoration: none;
     font-size: 15px; /* 统一图标大小 */
 }
-
-/* ▼▼▼ 样式修改点 ▼▼▼ */
 
 /* 灰色系按钮 (选书, 配置, 设置, 返回) */
 .btn-select-book,
@@ -94,7 +97,6 @@ body {
 .btn-back {
     font-size: 20px;
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
 
 
 /* --- 主体内容容器 --- */
