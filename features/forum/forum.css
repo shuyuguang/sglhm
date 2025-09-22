@@ -1,1 +1,303 @@
+/* forum.css */
 
+/* --- 基础与重置样式 --- */
+* { box-sizing: border-box; }
+body { background-color: #f4f7f9; color: #333; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; line-height: 1.6; padding-bottom: 65px; }
+
+/* --- 页面头部样式 --- */
+.page-header {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.page-title { font-size: 1.2em; font-weight: 600; color: #495057; display: flex; align-items: center; margin: 0; }
+.page-title::before {
+    content: '\f086';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    color: #B9A2E9;
+    font-size: 0.9em;
+    margin-right: 10px;
+    
+    /* --- 新增：修复1 - 为标题图标预留空间 --- */
+    display: inline-block;
+    width: 1.2em;
+    text-align: center;
+}
+.header-actions { display: flex; align-items: center; gap: 10px; }
+.header-actions button, .header-actions a { width: 32px; height: 32px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; text-decoration: none; }
+.btn-help { background-color: #FCE4EC; color: #FFA7C4; font-size: 16px; }
+.btn-help:hover { background-color: #FFA7C4; color: #ffffff; transform: scale(1.1); }
+.btn-back { background-color: #f1f3f5; color: #868e96; font-size: 18px; }
+.btn-back:hover { background-color: #e9ecef; color: #495057; }
+
+/* --- 主体内容容器 --- */
+.main-container { width: 100%; max-width: 800px; margin: 0 auto; }
+.content-body { padding: 0; }
+
+/* --- 一级 Tab 内容样式 --- */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* --- 二级 Tab 导航样式 --- */
+.sub-tab-nav {
+    display: flex;
+    justify-content: center;
+    background-color: #ffffff;
+    padding-bottom: 10px;
+    position: sticky;
+    top: 62px;
+    z-index: 99;
+}
+
+.sub-tab-item {
+    padding: 12px 15px;
+    font-size: 1em;
+    font-weight: 500;
+    color: #6c757d;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.sub-tab-item:hover {
+    color: #343a40;
+}
+
+.sub-tab-item.active {
+    color: #343a40;
+    font-weight: 600;
+}
+
+.sub-tab-item.active::after {
+    content: '\f004';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    color: #B9A2E9;
+    position: absolute;
+    bottom: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+
+    /* --- 新增：修复2 - 为Tab下方图标预留空间 --- */
+    display: inline-block;
+    width: 20px; /* 给予一个固定的宽度 */
+    height: 14px; /* 给予一个固定的高度，与font-size匹配 */
+    text-align: center;
+}
+
+/* --- 二级 Tab 内容样式 --- */
+.sub-tab-content-wrapper {
+    padding: 20px 15px;
+}
+.sub-tab-content { display: none; }
+.sub-tab-content.active { display: block; }
+
+/* --- “我”的页面样式 --- */
+.profile-page {
+    position: relative;
+    background-color: #ffffff;
+}
+.profile-banner {
+    height: 180px;
+    background-image: url('https://i.postimg.cc/768WYVvR/ocean.jpg');
+    background-size: cover;
+    background-position: center;
+}
+
+.profile-avatar {
+    position: absolute;
+    top: 130px; 
+    left: 15px;
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    border: 4px solid #ffffff;
+    object-fit: cover;
+}
+
+.profile-details {
+    padding: 60px 20px 20px 20px;
+}
+
+.profile-username {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 5px;
+    margin-top: -15px; 
+}
+
+.profile-bio {
+    font-size: 0.95em;
+    color: #6c757d;
+    margin-bottom: 15px;
+}
+.profile-stats {
+    display: flex;
+    gap: 20px;
+    font-size: 0.9em;
+    color: #495047;
+}
+.profile-stats .stat-item span {
+    font-weight: 600;
+    margin-right: 4px;
+}
+
+#me-content .sub-tab-nav {
+    padding-left: 15px;
+    padding-right: 15px;
+    justify-content: flex-start;
+    gap: 15px;
+}
+
+/* --- 底部 Tab 导航栏样式 --- */
+.bottom-tab-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 55px;
+    background-color: #ffffff;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+}
+
+.tab-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 100%;
+    text-decoration: none;
+    color: #868e96;
+    transition: color 0.2s ease-in-out;
+}
+
+.tab-item i {
+    font-size: 20px;
+    margin-bottom: 0;
+}
+
+.tab-item.active {
+    color: #B9A2E9;
+}
+
+/* ▼▼▼ 悬浮按钮及菜单样式 (无变化) ▼▼▼ */
+.fab-container {
+    position: fixed;
+    bottom: 75px; 
+    right: 20px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.create-post-fab {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #B9A2E9;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    font-size: 22px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    z-index: 101;
+    text-decoration: none;
+}
+
+.create-post-fab:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.create-post-fab .icon-pen { display: none; }
+.create-post-fab.active {
+    background-color: #a389d3;
+    transform: rotate(45deg);
+}
+.create-post-fab.active .icon-plus { display: none; }
+.create-post-fab.active .icon-pen {
+    display: block;
+    transform: rotate(-45deg);
+}
+
+.fab-options {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.fab-label {
+    background-color: #ffffff;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    font-weight: 500;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    white-space: nowrap;
+}
+
+.fab-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: #333;
+    opacity: 0;
+    transform: translateY(20px);
+    visibility: hidden;
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+}
+
+.fab-option i {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    color: #B9A2E9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-right: 5px;
+}
+
+.fab-main-action {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.fab-main-action .main-label {
+    opacity: 0;
+    transform: translateX(10px);
+    visibility: hidden;
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+}
+
+.fab-container.active .fab-option,
+.fab-container.active .fab-main-action .main-label {
+    opacity: 1;
+    transform: translateY(0) translateX(0);
+    visibility: visible;
+}
