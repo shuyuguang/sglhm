@@ -136,21 +136,20 @@ html, body {
     justify-content: center;
 }
 
-/* --- 星图面板特定样式 (v3 - 四宫格) --- */
+/* --- 星图面板特定样式 (v4 - 尺寸优化) --- */
 #stellar-totem-panel .panel-wrapper {
     height: auto;
-    /* 【修改】宽度调整为更紧凑以适应内容 */
-    max-width: 420px; 
+    /* 【修改】面板最大宽度进一步缩小以适应内容 */
+    max-width: 380px; 
 }
 
 .panel-navigation {
     display: flex;
-    /* 【修改】允许换行，形成网格 */
     flex-wrap: wrap;
     justify-content: center;
     gap: 20px;
-    /* 【新增】设置容器宽度以控制每行2个项目 */
-    width: calc(160px * 2 + 20px); /* (按钮宽度 * 2) + 间隙 */
+    /* 【修改】根据新的按钮宽度重新计算容器宽度 */
+    width: calc(140px * 2 + 20px);
 }
 
 .nav-button {
@@ -160,14 +159,16 @@ html, body {
     color: #e0e0e0;
     cursor: pointer;
     padding: 20px;
-    width: 160px;
-    height: 160px;
+    /* 【修改】减小按钮的宽高 */
+    width: 140px;
+    height: 140px;
     transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    /* 【修改】减小元素间距 */
+    gap: 10px;
     text-decoration: none;
 }
 
@@ -182,21 +183,25 @@ html, body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    /* 【修改】减小图标和标题的间距 */
+    gap: 8px;
 }
 
 .nav-button i {
-    font-size: 32px;
+    /* 【修改】减小图标大小 */
+    font-size: 28px;
 }
 
 .button-title {
-    font-size: 18px;
+    /* 【修改】减小标题字号 */
+    font-size: 16px;
     font-weight: 600;
     color: #e0e0e0;
 }
 
 .button-description {
-    font-size: 14px;
+    /* 【修改】减小描述字号 */
+    font-size: 13px;
     color: #a0a8b4;
     font-weight: normal;
     text-align: center;
