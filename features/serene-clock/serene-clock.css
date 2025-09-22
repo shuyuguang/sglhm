@@ -23,7 +23,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
-    border-bottom: 1px solid #e9ecef;
+    
 }
 
 .page-title {
@@ -36,12 +36,18 @@ body {
 }
 
 .page-title::before {
-    content: '\f004'; /* 修改点：换回 Font Awesome 爱心图标 */
+    /* --- 修改点: 将爱心图标更换为时钟图标 --- */
+    content: '\f017'; /* Font Awesome fa-clock (时钟) */
     font-family: 'Font Awesome 6 Free';
     font-weight: 900;
     color: #B9A2E9;
     font-size: 0.9em;
     margin-right: 10px;
+
+    /* --- 新增：修复加载时文本位移问题 --- */
+    display: inline-block;
+    width: 1.2em;
+    text-align: center;
 }
 
 .header-actions {
