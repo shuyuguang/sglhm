@@ -35,11 +35,10 @@ body {
 }
 
 .page-title::before {
-    /* [修改] 使用公告的喇叭图标 */
     content: '\f0a1'; /* Font Awesome fa-bullhorn */
     font-family: 'Font Awesome 6 Free';
     font-weight: 900;
-    color: #84D9BF; /* 一个新的柔和颜色 */
+    color: #84D9BF;
     font-size: 0.9em;
     margin-right: 10px;
     display: inline-block;
@@ -73,46 +72,44 @@ body {
 .main-container {
     width: 100%;
     max-width: 800px;
-    margin: 20px auto;
+    margin: 0 auto;
 }
 
 /* --- 主体内容区域 --- */
 .content-body {
-    padding: 20px;
-    background-color: #ffffff;
-    border: 1px solid #e0e0e0;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
-    border-radius: 12px;
+    padding: 20px 15px; /* 移除白色背景和阴影，让卡片自己负责 */
 }
 
-/* --- 公告列表样式 (从 app.css 迁移并简化) --- */
-.announcement-list { 
-    list-style: none; 
-    padding: 0;
+/* --- 新增：公告卡片样式 --- */
+.announcement-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* 卡片之间的间距 */
+}
+
+.announcement-card {
+    background-color: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.announcement-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+.card-date {
+    font-size: 0.85em;
+    color: #868e96;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.card-content {
+    font-size: 1em;
+    color: #495057;
     margin: 0;
-}
-.announcement-item { 
-    padding: 15px 10px; 
-    border-bottom: 1px solid #eeeeee; 
-    display: flex; 
-    align-items: baseline; 
-    gap: 15px; 
-    transition: background-color 0.2s ease; 
-}
-.announcement-item:hover { 
-    background-color: #f5f5f5; 
-}
-.announcement-item:last-child { 
-    border-bottom: none; 
-}
-.announcement-date { 
-    font-size: 14px; 
-    color: #888888; 
-    white-space: nowrap; 
-}
-.announcement-title { 
-    font-size: 16px; 
-    color: #333333; 
-    line-height: 1.5; 
-    margin: 0;
+    line-height: 1.7;
 }
