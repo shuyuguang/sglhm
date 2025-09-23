@@ -1,4 +1,5 @@
-import { dbStorage } from './db.js'; // 导入共享的 dbStorage
+// ▼▼▼ 核心修正：确保 import 路径正确，并与 db.js 的导出项一致 ▼▼▼
+import { db, dbStorage } from './db.js';
 
 /**
  * 从 IndexedDB 同步当前用户数据到 app.html 的 UI
