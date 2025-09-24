@@ -1,8 +1,7 @@
-/* user-setting.js (Updated with namespaced keys for independent storage) */
-import { dbStorage } from '../../db.js';// 导入共享的 dbStorage
+// ▼▼▼ 核心修正：确保 import 路径正确，并与 db.js 的导出项一致 ▼▼▼
+import { db, dbStorage } from '../../db.js';
 
 document.addEventListener('DOMContentLoaded', async function() {
-    // ====================【Dexie.js 数据库封装】====================
     // ▲▲▲ 原有的数据库定义代码已被删除，并由上面的 import 语句替代 ▲▲▲
 
 
