@@ -93,6 +93,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     const switcherSettingsTitle = document.getElementById('switcher-settings-title');
     const characterBannerImg = document.getElementById('character-banner-img');
     const profileAvatarImg = document.getElementById('profile-avatar-img');
+    // 新增开始
+    const characterToggleContainer = document.getElementById('character-toggle-container');
+    // 新增结束
 
     // --- 功能状态变量 ---
     let activeCustomPane = null;
@@ -153,6 +156,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
 
         // 新增/修改开始
+        // 控制开关按钮的显示与隐藏
+        if (characterToggleContainer) {
+            characterToggleContainer.style.display = isYouMode ? 'none' : 'block';
+        }
+        // 新增/修改结束
+        
         if (editGenderTrigger) {
             const icon = editGenderTrigger.querySelector('i');
             if (isYouMode) {
@@ -167,15 +176,12 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
             }
         }
-        // 新增/修改结束
     }
 
     // ====================【事件监听】====================
 
     editGenderTrigger?.addEventListener('click', () => {
-        // 新增/修改开始
         if (currentMode === 'YOU') return; // 在 YOU 模式下禁用点击
-        // 新增/修改结束
 
         const valueDisplay = editGenderTrigger.querySelector('.value-display');
         if (!valueDisplay) return;
@@ -414,14 +420,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (currentProfile) {
             currentProfile.name = document.getElementById('edit-username')?.value || '';
 
-            // 新增/修改开始
             if (currentMode === 'YOU') {
                 currentProfile.gender = '♀（女）';
             } else {
                 const genderTrigger = document.getElementById('edit-gender-trigger');
                 currentProfile.gender = genderTrigger?.querySelector('.value-display')?.textContent || GENDER_OPTIONS[1];
             }
-            // 新增/修改结束
             
             currentProfile.avatar = document.getElementById('edit-avatar-url')?.value || '';
             currentProfile.banner = document.getElementById('edit-banner-url')?.value || '';
@@ -871,13 +875,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (genderTrigger) {
             const genderDisplay = genderTrigger.querySelector('.value-display');
             if (genderDisplay) {
-                // 新增/修改开始
                 if (currentMode === 'YOU') {
                     genderDisplay.textContent = '♀（女）';
                 } else {
                     genderDisplay.textContent = GENDER_OPTIONS.includes(profile.gender) ? profile.gender : GENDER_OPTIONS[1];
                 }
-                // 新增/修改结束
             }
         }
         

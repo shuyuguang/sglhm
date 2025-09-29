@@ -90,12 +90,64 @@ body {
     font-weight: bold;
 }
 
+/* 新增开始：为新开关添加样式 */
+.profile-toggle-switch {
+    display: none; /* 默认隐藏，由 JS 控制显示 */
+    flex-shrink: 0; /* 防止开关被压缩 */
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+
+    top: -15px;        /* 从底部推高5像素，效果就是向上移动5像素 */
+    /* --- 新增结束 --- */
+}
+
+.toggle-checkbox {
+    display: none; /* 隐藏原始的 checkbox */
+}
+
+.toggle-label {
+    display: block;
+    width: 44px;
+    height: 24px;
+    background-color: #ccc;
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.toggle-label::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: white;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.2s ease-in-out;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.toggle-checkbox:checked + .toggle-label {
+    background-color: #B9A2E9; /* 激活时使用主题色 */
+}
+
+.toggle-checkbox:checked + .toggle-label::after {
+    transform: translateX(20px);
+}
+/* 新增结束 */
+
 /* --- Tab 切换样式 --- */
 .tabs-nav {
     display: flex;
     justify-content: center;
     gap: 30px;
     margin-bottom: 12px;
+    align-items: center;
+    position: relative; /* <-- 修改点 */
 }
 
 .tab-button {
@@ -1542,7 +1594,7 @@ body {
     display: flex;        /* 新增：启用flex布局，用于居中 */
     align-items: center;  /* 新增：垂直居中 */
     justify-content: center; /* 新增：水平居中 */
-    /* padding: 6px 16px; <-- 删除或注释掉 */
+    /*padding: 6px 16px; <-- 删除或注释掉 */
     /* min-width: 50px;   <-- 删除或注释掉 */
 
     /* 1. 修改颜色 */
