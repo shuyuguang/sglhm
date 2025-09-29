@@ -93,9 +93,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     const switcherSettingsTitle = document.getElementById('switcher-settings-title');
     const characterBannerImg = document.getElementById('character-banner-img');
     const profileAvatarImg = document.getElementById('profile-avatar-img');
-    // 新增开始
-    const characterToggleContainer = document.getElementById('character-toggle-container');
-    // 新增结束
+// 新增开始
+const characterToggleContainer = document.getElementById('character-toggle-container');
+const characterToggleSwitch = document.getElementById('character-toggle-switch'); // <--- 新增这一行
+// 新增结束
+
 
     // --- 功能状态变量 ---
     let activeCustomPane = null;
@@ -191,7 +193,17 @@ document.addEventListener('DOMContentLoaded', async function() {
         valueDisplay.textContent = GENDER_OPTIONS[nextIndex];
     });
 
-    tabButtons.forEach(button => {
+    characterToggleSwitch?.addEventListener('change', async function() {
+    if (currentMode !== 'TA') return; // 确保只在角色模式下生效
+
+    const currentProfile = profileData.find(p => p.id === currentProfileId);
+    if (currentProfile) {
+        currentProfile.isToggleOn = this.checked; // 更新当前角色的开关状态
+        await dbStorage.setItem(getDbKey('profileData'), profileData); // 立即保存
+    }
+});
+
+tabButtons.forEach(button => {
         button.addEventListener('click', () => {
             tabButtons.forEach(btn => btn.classList.remove('active'));
             tabPanes.forEach(pane => pane.classList.remove('active'));
@@ -896,8 +908,16 @@ document.addEventListener('DOMContentLoaded', async function() {
         updateDisplay(editOccupationTrigger, profile.occupation, '请填写职业');
         updateDisplay(editBioTrigger, profile.bio, '请填写简介');
 
-        updateSwitcherActiveState();
-        renderProfileTab();
+    // 新增/修改开始
+    // 加载并设置当前角色的开关状态
+    if (characterToggleSwitch) {
+        // 使用 profile.isToggleOn 的值，如果不存在则默认为 false
+        characterToggleSwitch.checked = profile.isToggleOn || false; 
+    }
+    // 新增/修改结束
+
+    updateSwitcherActiveState();
+    renderProfileTab();
     }
 
     function renderSwitcherList() {
@@ -924,6 +944,30 @@ document.addEventListener('DOMContentLoaded', async function() {
             loadProfileData(targetLi.dataset.profileId);
         }
     });
+
+    // 新增开始：为头像列表启用拖拽排序
+    if (switcherList) {
+        new Sortable(switcherList, {
+            animation: 150, // 动画效果
+            ghostClass: 'avatar-sortable-ghost', // 拖拽时占位符的 CSS 类名
+            delay: 200, // 延迟200毫秒启动拖拽，实现长按效果
+            delayOnTouchOnly: true, // 仅在触摸设备上延迟
+            async onEnd() {
+                // 拖拽结束后触发
+                // 1. 从 DOM 获取最新的 ID 顺序
+                const newOrderedIds = Array.from(switcherList.children).map(li => li.dataset.profileId);
+
+                // 2. 根据新顺序重新排列 profileData 数组
+                const profileMap = new Map(profileData.map(p => [p.id, p]));
+                const newProfileData = newOrderedIds.map(id => profileMap.get(id));
+                profileData = newProfileData;
+
+                // 3. 将新的数组顺序保存到数据库
+                await dbStorage.setItem(getDbKey('profileData'), profileData);
+            }
+        });
+    }
+    // 新增结束
 
     // ====================【管理面板逻辑】====================
 
@@ -1034,9 +1078,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             gender: isYouMode ? '♀（女）' : '♀（女）', // 新用户默认为女
             bio: '', age: '', race: '', occupation: '',
             avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg', 
-            banner: 'https://i.postimg.cc/NjRJ5qdx/a-good.jpg'
-        };
-        profileData.push(newUser);
+            banner: 'https://i.postimg.cc/NjRJ5qdx/a-good.jpg',
+        isToggleOn: false // <--- 新增这一行，默认为关闭
+    };
+    profileData.push(newUser);
         
         await dbStorage.setItem(getDbKey('profileData'), profileData);
 
@@ -1074,8 +1119,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             } else { // 'TA' mode
                 profileData = [{
                     id: getDefaultProfileId(), name: 'Felotus', gender: '♀（女）', bio: '', age: '', race: '', occupation: '',
-                    avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg', banner: 'https://i.postimg.cc/NjRJ5qdx/a-good.jpg'
-                }];
+                    avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg', banner: 'https://i.postimg.cc/NjRJ5qdx/a-good.jpg',
+                isToggleOn: false // <--- 新增这一行
+            }];
             }
             await dbStorage.setItem(getDbKey('profileData'), profileData);
         }

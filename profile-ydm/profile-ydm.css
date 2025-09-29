@@ -1202,7 +1202,7 @@ body {
 
 .options-button {
     position: absolute;
-    top: 15px;
+    top: 12px;
     right: 12px;
     display: flex;
     align-items: center;
@@ -1265,7 +1265,21 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
+    cursor: grab; /* <--- 新增这一行 */
 }
+
+/* 可以再加一个拖动中的手势 */
+.switcher-list li:active {
+    cursor: grabbing; /* <--- 新增这个选择器 */
+}
+
+/* 新增开始：头像拖拽占位符样式 */
+.avatar-sortable-ghost {
+    opacity: 0.4;
+    background-color: #e9ecef;
+    border-radius: 50%; /* 保持圆形 */
+}
+/* 新增结束 */
 
 .switcher-avatar {
     width: 50px;  
