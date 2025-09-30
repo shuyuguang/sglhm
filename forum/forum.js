@@ -1,6 +1,5 @@
-// forum.js (无需修改)
-
-import { dbStorage } from '../../db.js'; // 导入共享的 dbStorage
+// ▼▼▼ [核心修正] 将导入路径从 ../../db.js 改为 ../db.js ▼▼▼
+import { dbStorage } from '../db.js'; // 导入共享的 dbStorage
 
 /**
  * 从 IndexedDB 同步当前用户数据到 forum.html 的 "我" 界面
@@ -11,7 +10,7 @@ async function syncForumProfile() {
     if (!meContent) return; // 如果没有 "我" 的面板，则不执行
 
     const bannerDiv = meContent.querySelector('.profile-banner');
-    const avatarImg = meContent.querySelector('.profile-avatar');
+    const avatarImg = me-content.querySelector('.profile-avatar');
     const usernameDiv = meContent.querySelector('.profile-username');
     const bioDiv = meContent.querySelector('.profile-bio'); // 顺便把简介也加上
 
