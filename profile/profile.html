@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设定集 - felotus</title>
+    
+    <link rel="preload" href="https://i.postimg.cc/NjRJ5qdx/a-good.jpg" as="image">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+    <link rel="stylesheet" href="profile.css">
+</head>
+<body>
+
+    <!-- ====================【新增：全局控制按钮】==================== -->
+    <div class="profile-global-controls">
+        <button id="ui-switch-btn" class="control-btn" title="切换UI布局">
+            <i class="fa-solid fa-arrows-rotate"></i>
+        </button>
+        <a href="../app.html" class="control-btn" title="返回">
+            <i class="fa-solid fa-xmark"></i>
+        </a>
+    </div>
+
+    <!-- ====================【UI 容器 1: YDN 风格 (默认显示)】==================== -->
+    <div id="ydn-ui-wrapper">
+        <!-- V-YDN: 设定选择页面 -->
+        <div class="switcher-page" id="switcher-page">
+            <div class="switcher-page-header">
+                <button id="mode-toggle-btn-ydn" class="mode-btn" title="切换模式">YOU</button>
+            </div>
+            <div class="switcher-content">
+                <div class="switcher-grid-list" id="switcher-grid-list"></div>
+                <button class="switcher-add-btn" id="switcher-add-btn" title="添加新设定"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            <button class="switcher-settings-btn" id="switcher-settings-btn-ydn" title="用户/角色管理"><i class="fa-solid fa-gear"></i></button>
+        </div>
+
+        <!-- V-YDN: 主内容容器（默认隐藏） -->
+        <div class="profile-view-page hidden" id="profile-view-page">
+            <div class="main-container" id="main-container-ydn">
+                <button class="options-button" id="back-to-switcher-btn" title="返回选择页"><i class="fa-solid fa-chevron-left"></i></button>
+                <div class="character-banner"><img src="https://i.postimg.cc/NjRJ5qdx/a-good.jpg" alt="主图" id="character-banner-img-ydn"></div>
+                <main class="character-content">
+                    <!-- ↓↓↓ 新的用户信息卡片结构 ↓↓↓ -->
+<div class="profile-info-card">
+    <img src="https://i.postimg.cc/7hCmXR0s/a-felotus.jpg" alt="头像" class="profile-avatar" id="profile-avatar-img-ydn"> <!-- ID保持不变 -->
+    <div class="user-details">
+        <div class="user-header">
+            <h1 class="user-name" id="user-name-ydn">&nbsp;</h1> <!-- ID保持不变 -->
+            <span class="gender-symbol" id="gender-symbol-ydn">♀</span> <!-- ID保持不变 -->
+        </div>
+    </div>
+</div>
+<!-- ↑↑↑ 结束 ↑↑↑ -->
+                    <div class="tabs-nav">
+                        <button class="tab-button active" data-tab="home-ydn">主页</button>
+                        <button class="tab-button" data-tab="profile-ydn">档案</button>
+                        <!-- --- 注意：开关已从此位置移除 --- -->
+                    </div>
+                    <div class="tabs-content">
+                        <div id="home-ydn" class="tab-pane active">
+                            <div class="info-card">
+                                <!-- --- 新增 card-header 包裹层 --- -->
+                                <div class="card-header">
+                                    <h3 class="card-title">简介</h3>
+                                    <!-- --- 开关移动到此处 --- -->
+                                    <div class="profile-toggle-switch" id="character-toggle-container-ydn"><input type="checkbox" id="character-toggle-switch-ydn" class="toggle-checkbox"><label for="character-toggle-switch-ydn" class="toggle-label"></label></div>
+                                </div>
+                                <p class="description" id="home-bio-content-ydn"></p>
+                            </div>
+                        </div>
+                        <div id="profile-ydn" class="tab-pane"></div>
+                    </div>
+                </main>
+                <button id="edit-profile-btn-ydn" class="edit-fab" title="编辑档案"><i class="fa-solid fa-feather-pointed"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================【UI 容器 2: YDM 风格 (默认隐藏)】==================== -->
+    <div id="ydm-ui-wrapper" style="display: none;">
+        <!-- V-YDM: 侧边栏 -->
+        <div class="profile-switcher-panel" id="profile-switcher-panel">
+            <div class="switcher-header-v2">
+                <div class="mode-switcher"><button id="mode-toggle-btn-ydm" class="mode-btn" title="切换模式">YOU</button></div>
+                <button class="sidebar-toggle-btn" id="sidebar-toggle-btn" title="收起侧栏"><i class="fa-solid fa-chevron-left"></i></button>
+            </div>
+            <div class="switcher-body">
+                <ul class="switcher-list" id="switcher-list"></ul>
+                <button class="create-new-user-btn" id="create-new-user-btn" title="新建"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            <div class="switcher-footer"><button class="settings-btn" id="settings-btn-ydm" title="设置"><i class="fa-solid fa-gear"></i><span>设置</span></button></div>
+        </div>
+
+        <!-- V-YDM: 主内容容器 -->
+        <div class="main-container" id="main-container-ydm" data-current-profile-id="">
+            <div class="character-banner"><img src="https://i.postimg.cc/NjRJ5qdx/a-good.jpg" alt="主图" id="character-banner-img-ydm"></div>
+            <main class="character-content">
+                <!-- ↓↓↓ 新的用户信息卡片结构 ↓↓↓ -->
+<div class="profile-info-card">
+    <img src="https://i.postimg.cc/7hCmXR0s/a-felotus.jpg" alt="头像" class="profile-avatar" id="profile-avatar-img-ydm"> <!-- ID保持不变 -->
+    <div class="user-details">
+        <div class="user-header">
+            <h1 class="user-name" id="user-name-ydm">&nbsp;</h1> <!-- ID保持不变 -->
+            <span class="gender-symbol" id="gender-symbol-ydm">♀</span> <!-- ID保持不变 -->
+        </div>
+    </div>
+</div>
+<!-- ↑↑↑ 结束 ↑↑↑ -->
+                <div class="tabs-nav">
+                    <button class="tab-button active" data-tab="home-ydm">主页</button>
+                    <button class="tab-button" data-tab="profile-ydm">档案</button>
+                    <!-- --- 注意：开关已从此位置移除 --- -->
+                </div>
+                <div class="tabs-content">
+                    <div id="home-ydm" class="tab-pane active">
+                        <div class="info-card">
+                            <!-- --- 新增 card-header 包裹层 --- -->
+                            <div class="card-header">
+                                <h3 class="card-title">简介</h3>
+                                <!-- --- 开关移动到此处 --- -->
+                                <div class="profile-toggle-switch" id="character-toggle-container-ydm"><input type="checkbox" id="character-toggle-switch-ydm" class="toggle-checkbox"><label for="character-toggle-switch-ydm" class="toggle-label"></label></div>
+                            </div>
+                            <p class="description" id="home-bio-content-ydm"></p>
+                        </div>
+                    </div>
+                    <div id="profile-ydm" class="tab-pane"></div>
+                </div>
+            </main>
+            <button id="edit-profile-btn-ydm" class="edit-fab" title="编辑档案"><i class="fa-solid fa-feather-pointed"></i></button>
+        </div>
+    </div>
+
+
+    <!-- ====================【共用 Modals 和 Overlays】==================== -->
+    <!-- 编辑面板 -->
+    <div class="modal-overlay" id="edit-modal-overlay">
+        <div class="modal-panel">
+            <div class="modal-header">
+                <h3 class="modal-title">编辑档案</h3>
+                <div class="modal-header-actions">
+                    <button class="btn-help" id="help-btn" title="帮助"><i class="fa-solid fa-question"></i></button>
+                    <button class="modal-close" id="close-modal-btn" title="关闭">&times;</button>
+                    <button class="btn-save" id="save-btn" title="保存"><i class="fa-solid fa-check"></i></button>
+                </div>
+            </div>
+            <div id="help-tooltip" class="help-tooltip"><p>YOU为用户设，TA为角色设定，可点击切换，可本地上传图片，可操作栏目/条目，请自由探索</p></div>
+            <div class="modal-body">
+                <div class="modal-sidebar">
+                    <div class="sidebar-nav-list">
+                        <button class="modal-nav-button fixed-nav-button active" data-target="modal-section-visuals"><span>头像背景</span></button>
+                        <button class="modal-nav-button fixed-nav-button" data-target="modal-section-basic-info"><span>基础信息</span></button>
+                        <button class="modal-nav-button fixed-nav-button" data-target="modal-section-relationship"><span>关系范围</span></button>
+                    </div>
+                    <button class="add-section-btn" id="add-section-btn"><i class="fa-solid fa-plus"></i><span>添加栏目</span></button>
+                </div>
+                <div class="modal-main-content">
+                    <div id="modal-section-visuals" class="modal-section-pane active">
+                        <div class="visual-edit-item"><div class="form-row"><label for="edit-avatar-url">头像</label><input type="text" id="edit-avatar-url" placeholder="输入图片 URL 或点击下方图片上传"></div><img src="" alt="Avatar Preview" id="avatar-preview-img" class="visual-preview avatar-preview"><input type="file" id="avatar-upload-input" accept="image/*" style="display: none;"></div>
+                        <div class="visual-edit-item"><div class="form-row"><label for="edit-banner-url">背景</label><input type="text" id="edit-banner-url" placeholder="输入图片 URL 或点击下方图片上传"></div><img src="" alt="Banner Preview" id="banner-preview-img" class="visual-preview banner-preview"><input type="file" id="banner-upload-input" accept="image/*" style="display: none;"></div>
+                    </div>
+                    <div id="modal-section-basic-info" class="modal-section-pane">
+                        <div class="form-group"><label for="edit-username" id="username-label">用户名</label><input type="text" id="edit-username" placeholder="名称限1-10字符" minlength="1" maxlength="10"></div>
+                        <div class="form-group"><label>性别</label><div class="form-group-clickable" id="edit-gender-trigger"><span class="value-display">♀（女）</span><i class="fa-solid fa-arrows-rotate"></i></div></div>
+                        <div class="form-group"><label>年龄</label><div class="form-group-clickable" id="edit-age-trigger"><span class="value-display placeholder">请填写年龄、生日或描述</span><i class="fa-solid fa-chevron-right"></i></div></div>
+                        <div class="form-group"><label>种族</label><div class="form-group-clickable" id="edit-race-trigger"><span class="value-display placeholder">请填写种族</span><i class="fa-solid fa-chevron-right"></i></div></div>
+                        <div class="form-group"><label>职业</label><div class="form-group-clickable" id="edit-occupation-trigger"><span class="value-display placeholder">请填写职业</span><i class="fa-solid fa-chevron-right"></i></div></div>
+                        <div class="form-group"><label>简介</label><div class="form-group-clickable" id="edit-bio-trigger"><span class="value-display placeholder">请填写简介</span><i class="fa-solid fa-chevron-right"></i></div></div>
+                    </div>
+                    <div id="modal-section-relationship" class="modal-section-pane"><div class="pane-header-container"><h4 class="pane-title-capsule">关系</h4></div></div>
+                </div>
+            </div>
+            <div class="sub-editor-panel" id="sub-editor-panel"><div class="sep-header"><button class="sep-btn" id="sep-back-btn"><i class="fa-solid fa-chevron-left"></i></button><h3 class="sep-title" id="sep-title">编辑</h3><button class="sep-btn sep-btn-save" id="sep-save-btn"><i class="fa-solid fa-check"></i></button></div><div class="sep-body"><textarea id="sep-textarea" placeholder="在此输入内容..."></textarea></div></div>
+            <div class="sub-editor-panel" id="item-editor-panel"><div class="sep-header"><button class="sep-btn" id="item-editor-back-btn"><i class="fa-solid fa-chevron-left"></i></button><h3 class="sep-title" id="item-editor-title-header">编辑条目</h3><button class="sep-btn sep-btn-save" id="item-editor-save-btn"><i class="fa-solid fa-check"></i></button></div><div class="sep-body iep-body"><input type="text" id="item-editor-title-input" placeholder="在此填入标题" maxlength="10"><textarea id="item-editor-value-textarea" placeholder="在此输入内容..."></textarea></div></div>
+        </div>
+    </div>
+    <!-- 命名框 -->
+    <div class="prompt-overlay" id="name-prompt-overlay"><div class="prompt-box"><h4>为新栏目命名</h4><input type="text" id="new-section-name-input" placeholder="请输入 2-4 个字符" maxlength="4"><div class="prompt-actions"><button id="cancel-prompt-btn" class="prompt-btn prompt-btn-cancel">取消</button><button id="confirm-prompt-btn" class="prompt-btn prompt-btn-confirm">确认</button></div></div></div>
+    <!-- 底部操作表 -->
+    <div class="bottom-sheet-overlay" id="custom-section-options-overlay"><div class="bottom-sheet" id="custom-section-options-sheet"><div class="bottom-sheet-header"><span class="bottom-sheet-title">栏目操作</span></div><ul class="bottom-sheet-actions"><li><button class="action-button" data-action="rename">编辑栏目名称</button></li><li><button class="action-button" data-action="save-preset">存为预设栏目</button></li><li><button class="action-button" data-action="load-content">加载条目内容</button></li><li><button class="action-button action-delete" data-action="delete">删除此栏目</button></li></ul><button class="bottom-sheet-cancel" id="cancel-options-sheet-btn">取消</button></div></div>
+    <div class="bottom-sheet-overlay" id="add-section-sheet-overlay"><div class="bottom-sheet" id="add-section-sheet"><div class="bottom-sheet-header"><span class="bottom-sheet-title">添加新栏目</span></div><div class="preset-tags-container" id="preset-tags-container"><button class="preset-tag preset-tag-custom" data-action="custom"><i class="fa-solid fa-plus"></i><span>自定义栏目</span></button></div><button class="bottom-sheet-cancel" id="cancel-add-sheet-btn">取消</button></div></div>
+    <!-- 管理面板 -->
+    <div class="modal-overlay" id="switcher-settings-modal-overlay"><div class="modal-panel settings-modal-panel"><div class="modal-header"><div class="modal-header-content"><h3 class="modal-title" id="switcher-settings-title">管理</h3></div><button class="modal-close" id="settings-close-btn" title="关闭">&times;</button></div><div class="modal-body settings-modal-body"><ul class="settings-user-list" id="settings-user-list"></ul></div><div class="settings-modal-footer v2"><button class="footer-action-btn" id="settings-import-btn" title="暂未开放"><i class="fa-solid fa-upload"></i>导入</button><button class="footer-action-btn" id="settings-export-btn" title="暂未开放"><i class="fa-solid fa-download"></i>导出</button><button class="footer-action-btn" id="settings-multi-select-btn"><i class="fa-solid fa-check-double"></i>多选</button><button class="footer-action-btn btn-danger" id="settings-delete-btn" disabled><i class="fa-solid fa-trash-can"></i>删除</button></div></div></div>
+    <!-- 图片裁剪 -->
+    <div class="cropper-overlay" id="cropper-overlay"><div class="cropper-container"><div class="cropper-image-container"><img id="cropper-image" src="" alt="Image to crop"></div><div class="cropper-actions"><button id="cancel-crop-btn" class="prompt-btn prompt-btn-cancel">取消</button><button id="confirm-crop-btn" class="prompt-btn prompt-btn-confirm">确认</button></div></div></div>
+
+    <!-- ====================【JS 库】==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    
+    <!-- --- 注意：新增了 common.js 并且必须在 profile.js 之前 --- -->
+    <script src="profile.common.js"></script>
+    <script src="profile.js"></script>
+</body>
+</html>
