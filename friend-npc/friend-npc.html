@@ -1,1 +1,270 @@
-friend-npc.html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NPC交友</title>
+    
+    <!-- 引入公共资源 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="../common/template.css">
+
+    <!-- 内联专属样式 (原 friend-npc.css) -->
+    <style>
+        /* --- 基础与重置样式 --- */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f4f7f9;
+            color: #333;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        /* --- 页面头部样式 --- */
+        .page-header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #ffffff;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .page-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions button,
+        .header-actions a {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-help { background-color: #FCE4EC; color: #FFA7C4; font-size: 16px; }
+        .btn-help:hover { background-color: #FFA7C4; color: #ffffff; transform: scale(1.1); }
+        .btn-back { background-color: #f1f3f5; color: #868e96; font-size: 20px; }
+        .btn-back:hover { background-color: #e9ecef; color: #495057; }
+        .btn-save { background-color: #B9A2E9; color: #ffffff; font-size: 16px; }
+        .btn-save:hover { background-color: #a68ed6; transform: scale(1.1); }
+
+        /* --- 主体内容容器 --- */
+        .main-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* --- 主体内容区域 --- */
+        .content-body {
+            padding: 20px 15px;
+        }
+
+        /* --- 条目列表与按钮样式 --- */
+        .entry-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .add-entry-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between; 
+            padding: 15px 20px;
+            background-color: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #495057;
+            transition: all 0.2s ease;
+        }
+
+        .add-entry-btn:hover {
+            border-color: #ced4da;
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .add-entry-btn i {
+            font-size: 1em;
+            color: #adb5bd;
+            margin-right: 0;
+        }
+
+        .add-entry-btn span {
+            font-size: 1em;
+            font-weight: 500;
+        }
+
+        /* --- 好友列表样式 --- */
+        .friend-list-container {
+            background-color: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-top: 20px;
+            padding: 15px 20px;
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f1f3f5;
+            margin-bottom: 12px;
+        }
+
+        .list-title {
+            font-size: 1em; 
+            font-weight: 600;
+            color: #495057; 
+            margin: 0;
+        }
+
+        .list-actions {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            color: #868e96;
+            font-size: 1.1em;
+            transition: color 0.2s ease;
+        }
+
+        .action-btn:hover {
+            color: #343a40;
+        }
+
+        .action-btn-delete {
+            color: #FF9699;
+        }
+        
+        /* --- 修改点 --- */
+        .action-btn-delete:hover {
+            color: #f56c6c; /* 将原来的粉色 #f783ac 修改为这个更鲜明的红色 */
+        }
+
+        .placeholder-text {
+            text-align: center;
+            color: #adb5bd;
+            padding: 20px 0;
+            font-size: 0.9em;
+        }
+    </style>
+
+</head>
+<body>
+    <!-- 引入通用的模板脚本，它会负责生成页面的基本骨架 -->
+    <script src="../common/template.js"></script>
+    
+    <!-- 这个页面的专属逻辑 -->
+    <script>
+        // --- 页面生成逻辑 ---
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // 定义“NPC交友”页面的专属内容
+            const friendNpcPageContent = `
+                <div class="entry-list">
+                    <a href="#" class="add-entry-btn">
+                        <span>新朋友</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                </div>
+
+                <div class="friend-list-container">
+                    <div class="list-header">
+                        <h2 class="list-title">好友列表</h2>
+                        <div class="list-actions">
+                            <button class="action-btn" title="多选">
+                                <i class="fa-solid fa-check-double"></i>
+                            </button>
+                            <button class="action-btn action-btn-delete" title="删除">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="list-content">
+                        <p class="placeholder-text">暂无好友</p>
+                    </div>
+                </div>
+            `;
+
+            // 定义羽毛笔按钮的专属功能 (如果模板中有这个按钮)
+            const handleFriendNpcFeatherClick = () => {
+                console.log('NPC交友页面的羽毛笔被点击，准备添加新朋友。');
+                alert('“添加新NPC好友”功能正在开发中！');
+            };
+
+            // 调用 createPageLayout 生成页面，并注入我们的内容
+            createPageLayout({
+                title: 'NPC交友',
+                contentHtml: friendNpcPageContent,
+                onFeatherClick: handleFriendNpcFeatherClick,
+                // 根据模板，这里可以添加其他配置，比如是否显示返回按钮等
+                showBackButton: true, // 假设模板支持这个配置
+                showSaveButton: true  // 假设模板支持这个配置
+            });
+        });
+
+        // --- 页面交互逻辑 (原 friend-npc.js) ---
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // 使用 MutationObserver 来确保模板生成的按钮能够被监听到
+            const observer = new MutationObserver((mutationsList, obs) => {
+                const saveButton = document.getElementById('save-btn');
+                if (saveButton) {
+                    saveButton.addEventListener('click', function() {
+                        
+                        // --- 这里是未来的保存逻辑 ---
+                        console.log("正在保存NPC交友信息...");
+
+                        // 保存操作（模拟）后，立即跳转回主页
+                        window.location.href = '../../app.html';
+
+                    });
+                    
+                    console.log("保存按钮已找到并绑定事件。");
+                    obs.disconnect(); // 找到并绑定后，停止观察
+                }
+            });
+
+            // 开始观察 body 元素下的子元素变化
+            observer.observe(document.body, { childList: true, subtree: true });
+            
+            console.log("NPC交友页面加载完成，开始监视动态生成的按钮。");
+        });
+    </script>
+</body>
+</html>
