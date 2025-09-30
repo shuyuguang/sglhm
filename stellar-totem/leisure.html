@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>家园</title>
+    <title>休闲</title>
     
     <!-- 引入公共资源 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -18,22 +18,21 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
-            // 定义“家园”页面的专属内容
-            const homePageContent = `
-                <p>这里是家园页面</p>
+            // 定义“休闲”页面的专属内容
+            const leisurePageContent = `
+                <p>这里是休闲页面</p>
             `;
 
-            // 定义“家园”页面羽毛笔按钮的专属功能
-            const handleHomeFeatherClick = () => {
-                console.log('家园页面的羽毛笔被点击，准备布置家园。');
-                alert('“布置家园”功能正在开发中！');
+            // 定义“休闲”页面羽毛笔按钮的专属功能
+            const handleLeisureFeatherClick = () => {
+                console.log('休闲页面的羽毛笔被点击，但当前无功能。');
             };
 
             // 调用 createPageLayout 生成页面
             createPageLayout({
-                title: '家园',
-                contentHtml: homePageContent,
-                onFeatherClick: handleHomeFeatherClick
+                title: '休闲',
+                contentHtml: leisurePageContent,
+                onFeatherClick: handleLeisureFeatherClick
             });
         });
     </script>
