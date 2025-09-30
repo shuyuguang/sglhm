@@ -10,7 +10,8 @@ async function syncForumProfile() {
     if (!meContent) return; // 如果没有 "我" 的面板，则不执行
 
     const bannerDiv = meContent.querySelector('.profile-banner');
-    const avatarImg = me-content.querySelector('.profile-avatar');
+    // ▼▼▼ 【错误修正】这里之前写成了 me-content，导致JS报错 ▼▼▼
+    const avatarImg = meContent.querySelector('.profile-avatar');
     const usernameDiv = meContent.querySelector('.profile-username');
     const bioDiv = meContent.querySelector('.profile-bio'); // 顺便把简介也加上
 
