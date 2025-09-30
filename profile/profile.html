@@ -158,9 +158,31 @@
                 </div>
                 <div class="modal-main-content">
                     <div id="modal-section-visuals" class="modal-section-pane active">
-                        <div class="visual-edit-item"><div class="form-row"><label for="edit-avatar-url">头像</label><input type="text" id="edit-avatar-url" placeholder="输入图片 URL 或点击下方图片上传"></div><img src="" alt="Avatar Preview" id="avatar-preview-img" class="visual-preview avatar-preview"><input type="file" id="avatar-upload-input" accept="image/*" style="display: none;"></div>
-                        <div class="visual-edit-item"><div class="form-row"><label for="edit-banner-url">背景</label><input type="text" id="edit-banner-url" placeholder="输入图片 URL 或点击下方图片上传"></div><img src="" alt="Banner Preview" id="banner-preview-img" class="visual-preview banner-preview"><input type="file" id="banner-upload-input" accept="image/*" style="display: none;"></div>
-                    </div>
+    <div class="visual-edit-item">
+        <div class="form-row"><label for="edit-avatar-url">头像</label><input type="text" id="edit-avatar-url" placeholder="输入图片 URL 或点击下方图片上传"></div>
+        <!-- 修改: 新增一个 positioning container -->
+        <div class="visual-preview-container">
+            <div class="visual-preview-wrapper avatar-wrapper">
+                <img src="" alt="Avatar Preview" id="avatar-preview-img" class="visual-preview">
+            </div>
+            <!-- 图标现在是 wrapper 的兄弟元素，而不是子元素 -->
+            <div class="edit-icon-overlay"><i class="fa-solid fa-pencil"></i></div>
+        </div>
+        <input type="file" id="avatar-upload-input" accept="image/*" style="display: none;">
+    </div>
+    <div class="visual-edit-item">
+        <div class="form-row"><label for="edit-banner-url">背景</label><input type="text" id="edit-banner-url" placeholder="输入图片 URL 或点击下方图片上传"></div>
+        <!-- 修改: 新增一个 positioning container -->
+        <div class="visual-preview-container">
+            <div class="visual-preview-wrapper banner-wrapper">
+                <img src="" alt="Banner Preview" id="banner-preview-img" class="visual-preview">
+            </div>
+            <!-- 图标现在是 wrapper 的兄弟元素，而不是子元素 -->
+            <div class="edit-icon-overlay"><i class="fa-solid fa-pencil"></i></div>
+        </div>
+        <input type="file" id="banner-upload-input" accept="image/*" style="display: none;">
+    </div>
+</div>
                     <div id="modal-section-basic-info" class="modal-section-pane">
                         <div class="form-group"><label for="edit-username" id="username-label">用户名</label><input type="text" id="edit-username" placeholder="名称限1-10字符" minlength="1" maxlength="10"></div>
                         <div class="form-group"><label>性别</label><div class="form-group-clickable" id="edit-gender-trigger"><span class="value-display">♀（女）</span><i class="fa-solid fa-arrows-rotate"></i></div></div>

@@ -43,7 +43,7 @@ body {
     transition: all 0.3s ease;
     font-size: 16px;
     border: none;
-    text-shadow: 0 0 6px rgba(255, 248, 220, 0.35);
+    
 }
 
 .control-btn:hover {
@@ -726,10 +726,78 @@ body {
 .form-row label { flex-shrink: 0; width: 45px; font-size: 0.9em; font-weight: 500; color: #6c757d; }
 .form-row input { flex-grow: 1; width: 100%; padding: 5px 5px 2px; border: none; border-radius: 0; border-bottom: 1px solid #ddd; font-size: 1em; font-family: inherit; background-color: transparent; transition: border-bottom 0.3s ease; }
 .form-row input:focus { outline: none; border-bottom: 2px solid #B9A2E9; }
-.visual-preview { display: block; object-fit: cover; background-color: #f0f0f0; margin: auto; cursor: pointer; transition: opacity 0.2s ease, transform 0.2s ease; }
-.visual-preview:hover { opacity: 0.85; transform: scale(1.02); }
-.avatar-preview { width: 80px; height: 80px; border-radius: 50%; }
-.banner-preview { width: 180px; height: 180px; border-radius: 8px; }
+
+/* --- 修改: 视觉预览项样式重构以支持图标 --- */
+/* 新增：这是新的定位容器 */
+.visual-preview-container {
+    position: relative; /* 让图标相对于它定位 */
+    display: inline-block; /* 让容器大小自适应内容 */
+    /* 为了让 margin: auto 生效，需要把它放在父级的 flex/grid 布局中，
+       或者让它的父级 text-align: center。
+       但更简单的办法是直接让它自己居中 */
+    display: block;
+    width: fit-content;
+    margin: auto;
+}
+
+.visual-preview-wrapper {
+    /* position: relative 和 margin: auto 已移到父容器 */
+    display: block;
+    cursor: pointer;
+    overflow: hidden; /* 关键：这个只负责剪裁图片 */
+}
+
+/* 将尺寸和圆角应用到 wrapper (这部分不变) */
+.visual-preview-wrapper.avatar-wrapper {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+}
+.visual-preview-wrapper.banner-wrapper {
+    width: 180px;
+    height: 180px;
+    border-radius: 8px;
+}
+
+.visual-preview {
+    display: block;
+    object-fit: cover;
+    background-color: #f0f0f0;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.2s ease;
+}
+
+.visual-preview-container:hover .visual-preview {
+    transform: scale(1.05);
+}
+
+.edit-icon-overlay {
+    position: absolute;
+    /* 修改: 定位到右下角，0,0 确保它贴着边 */
+    bottom: 0;
+    right: 0;
+    width: 22px;
+    height: 22px;
+    background-color: rgba(0, 0, 0, 0.55);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 11px;
+    pointer-events: none;
+    z-index: 2;
+    /* 新增: 轻微的 transform 让它在圆形头像上位置更好看 */
+    transform: translate(15%, 15%);
+}
+
+/* 对 banner 的图标位置进行微调，因为它是方形的 */
+.banner-wrapper + .edit-icon-overlay {
+    transform: translate(0, 0);
+    bottom: 4px; /* 留一点边距 */
+    right: 4px;
+}
 
 /* --- “添加栏目”按钮 --- */
 .add-section-btn {
