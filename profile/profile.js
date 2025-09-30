@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isYdn) {
             ydmWrapper.style.display = 'none';
             ydnWrapper.style.display = 'block';
-            document.title = "YDN 设定管理 - felotus";
+            document.title = "设定集 - felotus";
             localStorage.setItem(UI_PREFERENCE_KEY, 'YDN');
             if (!ydnAppInitialized) {
                 initYdnApp();
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             ydnWrapper.style.display = 'none';
             ydmWrapper.style.display = 'flex'; // YDM uses flex display
-            document.title = "用户/角色管理 - felotus";
+            document.title = "设定集 - felotus";
             localStorage.setItem(UI_PREFERENCE_KEY, 'YDM');
             if (!ydmAppInitialized) {
                 initYdmApp();
