@@ -7,6 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const ydnWrapper = document.getElementById('ydn-ui-wrapper');
     const ydmWrapper = document.getElementById('ydm-ui-wrapper');
 
+    // ▼▼▼ 标志位依然保留，但现在只用于真正共享的组件 ▼▼▼
+    let sharedEventsBound = false;
+    // ▲▲▲ 标志位依然保留，但现在只用于真正共享的组件 ▲▲▲
+
     // --- 修改开始: 增加 UI 偏好保存与加载机制 ---
     const UI_PREFERENCE_KEY = 'profileUiPreference';
     let preferredUi = localStorage.getItem(UI_PREFERENCE_KEY) || 'YDN'; // 默认 YDN
@@ -126,8 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
             modeToggleBtn: document.getElementById('mode-toggle-btn-ydn'),
             characterBannerImg: document.getElementById('character-banner-img-ydn'),
             profileAvatarImg: document.getElementById('profile-avatar-img-ydn'),
-            characterToggleContainer: document.getElementById('character-toggle-container-ydn'),
-            characterToggleSwitch: document.getElementById('character-toggle-switch-ydn'),
+            
             userNameEl: document.getElementById('user-name-ydn'),
             genderSymbolEl: document.getElementById('gender-symbol-ydn'),
             showSwitcherPage: () => { ydnElements.profileViewPage?.classList.add('hidden'); ydnElements.switcherPage?.classList.remove('hidden'); renderSwitcherGrid(); },
@@ -154,6 +157,16 @@ document.addEventListener('DOMContentLoaded', () => {
             renderSwitcher: renderSwitcherGrid,
             onProfileSave: () => {} // YDN doesn't need a specific save callback
         });
+
+        // ▼▼▼ 修改开始 ▼▼▼
+        // 绑定共享组件事件（只执行一次）
+        if (!sharedEventsBound) {
+            manager.bindSharedEvents();
+            sharedEventsBound = true;
+        }
+        // 绑定此UI独有的组件事件（每次初始化都执行）
+        manager.bindUiSpecificEvents();
+        // ▲▲▲ 修改结束 ▲▲▲
 
         // YDN-specific event listeners
         ydnElements.backToSwitcherBtn?.addEventListener('click', ydnElements.showSwitcherPage);
@@ -202,8 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
             homeBioContent: document.getElementById('home-bio-content-ydm'),
             characterBannerImg: document.getElementById('character-banner-img-ydm'),
             profileAvatarImg: document.getElementById('profile-avatar-img-ydm'),
-            characterToggleContainer: document.getElementById('character-toggle-container-ydm'),
-            characterToggleSwitch: document.getElementById('character-toggle-switch-ydm'),
+            
             userNameEl: document.getElementById('user-name-ydm'),
             genderSymbolEl: document.getElementById('gender-symbol-ydm'),
         };
@@ -240,6 +252,16 @@ document.addEventListener('DOMContentLoaded', () => {
             onProfileSave: onProfileSaveCallback
         });
         
+        // ▼▼▼ 修改开始 ▼▼▼
+        // 绑定共享组件事件（只执行一次）
+        if (!sharedEventsBound) {
+            manager.bindSharedEvents();
+            sharedEventsBound = true;
+        }
+        // 绑定此UI独有的组件事件（每次初始化都执行）
+        manager.bindUiSpecificEvents();
+        // ▲▲▲ 修改结束 ▲▲▲
+
         // YDM-specific event listeners
         ydmElements.settingsBtn?.addEventListener('click', () => manager.openSwitcherSettingsModal());
         ydmElements.createNewUserBtn?.addEventListener('click', () => manager.addNewProfile());

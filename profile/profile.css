@@ -1,13 +1,86 @@
-/* profile.css */
+/* profile.css (Refactored & Fixed) */
 
-/* ====================【基础与全局样式】==================== */
+/* ==========================================================================
+   1. VARIABLES & ROOT
+   ========================================================================== */
+
+:root {
+  /* Colors */
+  --color-primary: #B9A2E9;
+  --color-primary-hover: #a68ed6;
+  --color-primary-text: #8c7ab8;
+  --color-primary-bg-light: #f1eefc;
+  --color-primary-border: #e2dcf5;
+  --color-primary-border-dashed: #c5b9e8;
+  
+  --color-accent: #FFA7C4;
+  --color-accent-bg: #FCE4EC;
+
+  --color-danger: #ff3b30;
+  --color-danger-text: #ff6b6b;
+  --color-danger-bg: #ffe3e3;
+  --color-danger-hover-text: #fa5252;
+  --color-danger-hover-bg: #ffc9c9;
+  
+  --color-text-dark: #343a40;
+  --color-text-medium: #495057;
+  --color-text-light: #6c757d;
+  --color-text-lighter: #868e96;
+  --color-text-white: #ffffff;
+  --color-text-placeholder: #aaa;
+  --color-text-link: #007aff;
+
+  --color-bg-body: #f4f7f9;
+  --color-bg-light: #ffffff;
+  --color-bg-grey: #f8f9fa;
+  --color-bg-grey-hover: #e9ecef;
+  --color-bg-grey- L2: #f1f3f5;
+  --color-bg-overlay: rgba(0, 0, 0, 0.6);
+  --color-bg-overlay-light: rgba(0, 0, 0, 0.4);
+  --color-bg-overlay-dark: rgba(0, 0, 0, 0.75);
+  --color-bg-control: rgba(0, 0, 0, 0.45);
+
+  --color-border: #e9ecef;
+  --color-border-medium: #ddd;
+
+  /* Z-Index Stack */
+  --z-base: 1;
+  --z-content: 10;
+  --z-content-overlay: 11;
+  --z-floating-control: 20;
+  --z-page-overlay: 30;
+  --z-global-control: 40;
+  --z-modal-backdrop: 50;
+  --z-modal-panel: 51;
+  --z-secondary-backdrop: 60;
+  --z-secondary-panel: 61;
+  --z-tooltip: 70;
+  --z-sub-editor: 1001;
+
+  /* Sizing & Radius */
+  --radius-m: 12px;
+  --radius-l: 16px;
+  --radius-xl: 20px;
+  --radius-round: 50%;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-m: 0 4px 15px rgba(0, 0, 0, 0.15);
+  --shadow-l: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+
+/* ==========================================================================
+   2. GENERAL & RESET
+   ========================================================================== */
+
 * {
     box-sizing: border-box;
 }
 
 body {
-    background-color: #f4f7f9;
-    color: #333;
+    background-color: var(--color-bg-body);
+    color: var(--color-text-dark);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     margin: 0;
     line-height: 1.7;
@@ -18,12 +91,17 @@ body {
     display: none !important;
 }
 
-/* ====================【新增：全局控制按钮样式】==================== */
+
+/* ==========================================================================
+   3. GLOBAL LAYOUT & COMPONENTS
+   ========================================================================== */
+
+/* --- Global Controls (UI Switch, etc.) --- */
 .profile-global-controls {
     position: fixed;
     top: 12px;
     right: 12px;
-    z-index: 2001;
+    z-index: var(--z-global-control);
     display: flex;
     gap: 10px;
 }
@@ -34,16 +112,15 @@ body {
     justify-content: center;
     width: 32px;
     height: 32px;
-    background-color: rgba(0, 0, 0, 0.45);
+    background-color: var(--color-bg-control);
     backdrop-filter: blur(8px);
-    border-radius: 50%;
+    border-radius: var(--radius-round);
     text-decoration: none;
-    color: #f0f0f0;
+    color: var(--color-text-white);
     cursor: pointer;
     transition: all 0.3s ease;
     font-size: 16px;
     border: none;
-    
 }
 
 .control-btn:hover {
@@ -51,28 +128,120 @@ body {
     color: #fff;
 }
 
+/* --- Shared Main Layout --- */
+.main-container {
+    height: 100svh;
+    overflow-y: scroll;
+    position: relative;
+}
 
-/* ================================================================
-   ====================【UI 1: YDN 风格样式】====================
-   ================================================================ */
+.character-banner {
+    width: 100%;
+    height: 50vh;
+    max-height: 450px;
+    overflow: hidden;
+    position: relative;
+}
 
+.character-banner::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: linear-gradient(to top, var(--color-bg-body) 70%, transparent);
+    pointer-events: none;
+}
+
+.character-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.character-content {
+    background-color: var(--color-bg-body);
+    padding: 20px 18px;
+    margin-top: -80px;
+    position: relative;
+    z-index: var(--z-content);
+}
+
+/* --- Shared Mode Button --- */
+.mode-btn {
+    width: 40px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-primary);
+    color: var(--color-text-white);
+    border: none;
+    outline: none;
+    border-radius: 8px;
+    font-size: 0.8em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.mode-btn:hover {
+    background-color: var(--color-primary-hover);
+}
+
+
+/* ==========================================================================
+   4. UI-SPECIFIC STYLES
+   ========================================================================== */
+
+/* --- 4.1 YDN UI --- */
 #ydn-ui-wrapper {
     width: 100%;
     height: 100%;
 }
 
-/* --- YDN 选择页面 --- */
+#ydn-ui-wrapper .profile-view-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: var(--z-base);
+}
+
+#ydn-ui-wrapper .options-button {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background-color: var(--color-bg-control);
+    backdrop-filter: blur(8px);
+    border-radius: var(--radius-round);
+    text-decoration: none;
+    color: #f0f0f0;
+    font-size: 16px;
+    transition: transform 0.3s ease;
+    z-index: var(--z-floating-control);
+    border: none;
+    cursor: pointer;
+}
+
 #ydn-ui-wrapper .switcher-page {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: #f8f9fa;
+    background-color: var(--color-bg-grey);
     display: flex;
     flex-direction: column;
     padding: 13px 9.5px;
-    z-index: 2000;
+    z-index: var(--z-page-overlay);
 }
 
 #ydn-ui-wrapper .switcher-page-header {
@@ -104,14 +273,14 @@ body {
     text-decoration: none;
     color: inherit;
     padding: 10px;
-    border-radius: 12px;
+    border-radius: var(--radius-m);
     transition: background-color 0.2s;
 }
 #ydn-ui-wrapper .switcher-profile-item:active {
     cursor: grabbing;
 }
 #ydn-ui-wrapper .switcher-profile-item:hover {
-    background-color: #e9ecef;
+    background-color: var(--color-bg-grey-hover);
 }
 
 #ydn-ui-wrapper .switcher-profile-item .avatar {
@@ -135,10 +304,10 @@ body {
     width: 70px;
     height: 70px;
     font-size: 1.8em;
-    border-radius: 12px;
-    border: 2px dashed #c5b9e8;
-    background-color: #f1eefc;
-    color: #8c7ab8;
+    border-radius: var(--radius-m);
+    border: 2px dashed var(--color-primary-border-dashed);
+    background-color: var(--color-primary-bg-light);
+    color: var(--color-primary-text);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -149,14 +318,8 @@ body {
 #ydn-ui-wrapper .switcher-add-btn:hover {
     background-color: #e9e4fa;
     border-style: solid;
-    color: #B9A2E9;
+    color: var(--color-primary);
     transform: scale(1.05);
-}
-
-#ydn-ui-wrapper .avatar-sortable-ghost {
-    opacity: 0.4;
-    background-color: #e9ecef;
-    border-radius: 12px;
 }
 
 #ydn-ui-wrapper .switcher-settings-btn {
@@ -165,121 +328,19 @@ body {
     left: 15px;
     background-color: transparent;
     border: none;
-    color: #868e96;
+    color: var(--color-text-lighter);
     font-size: 1.2em;
     cursor: pointer;
     padding: 10px;
     transition: color 0.2s ease, transform 0.2s ease;
 }
-
 #ydn-ui-wrapper .switcher-settings-btn:hover {
-    color: #495057;
+    color: var(--color-text-medium);
     transform: scale(1.1);
     background-color: transparent;
 }
 
-/* --- YDN 主页面布局 --- */
-#ydn-ui-wrapper .profile-view-page {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1999;
-}
-
-#ydn-ui-wrapper .main-container {
-    height: 100svh;
-    overflow-y: auto;
-    position: relative;
-    
-}
-
-#ydn-ui-wrapper .options-button {
-    position: fixed;
-    top: 12px;
-    left: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background-color: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(8px);
-    border-radius: 50%;
-    text-decoration: none;
-    color: #f0f0f0;
-    font-size: 16px;
-    transition: transform 0.3s ease;
-    z-index: 100;
-    border: none;
-    cursor: pointer;
-}
-
-#ydn-ui-wrapper .character-banner {
-    width: 100%;
-    height: 50vh;
-    max-height: 450px;
-    overflow: hidden;
-    position: relative;
-}
-
-#ydn-ui-wrapper .character-banner::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 120px;
-    background: linear-gradient(to top, #f4f7f9 70%, transparent);
-    pointer-events: none;
-}
-
-#ydn-ui-wrapper .character-banner img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-#ydn-ui-wrapper .character-content {
-    /* - 修改：背景从白色改为浅灰色 */
-    background-color: #f4f7f9;
-    padding: 20px 18px;
-    margin-top: -80px;
-    position: relative;
-    z-index: 10;
-}
-
-
-
-
-
-#ydn-ui-wrapper .mode-btn {
-    width: 40px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #B9A2E9;
-    color: #ffffff;
-    border: none;
-    outline: none;
-    border-radius: 8px;
-    font-size: 0.8em;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-}
-
-#ydn-ui-wrapper .mode-btn:hover {
-    background-color: #a68ed6;
-}
-
-
-/* ================================================================
-   ====================【UI 2: YDM 风格样式】====================
-   ================================================================ */
-
+/* --- 4.2 YDM UI --- */
 #ydm-ui-wrapper {
     display: flex;
     width: 100%;
@@ -288,19 +349,16 @@ body {
 
 #ydm-ui-wrapper .main-container {
     flex-grow: 1;
-    height: 100svh;
-    overflow-y: auto;
-    position: relative;
 }
 
 #ydm-ui-wrapper .profile-switcher-panel {
     flex-shrink: 0;
     width: 70px;
     height: 100svh;
-    background-color: #ffffff;
+    background-color: var(--color-bg-light);
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #e9ecef;
+    border-right: 1px solid var(--color-border);
     position: relative;
     transition: width 0.3s ease-in-out, border-right-width 0.3s ease-in-out;
 }
@@ -319,13 +377,13 @@ body {
     position: absolute;
     top: 12px;
     right: -14px;
-    z-index: 110;
+    z-index: var(--z-floating-control);
     width: 32px;
     height: 32px;
-    border-radius: 50%;
-    background-color: #f1f3f5;
-    border: 1px solid #e9ecef;
-    color: #868e96;
+    border-radius: var(--radius-round);
+    background-color: var(--color-bg-grey- L2);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-lighter);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -333,8 +391,8 @@ body {
     transition: all 0.3s ease-in-out;
 }
 #ydm-ui-wrapper .sidebar-toggle-btn:hover {
-    background-color: #e9ecef;
-    color: #495057;
+    background-color: var(--color-bg-grey-hover);
+    color: var(--color-text-medium);
 }
 #ydm-ui-wrapper .sidebar-toggle-btn i {
     transition: transform 0.3s ease-in-out;
@@ -354,7 +412,7 @@ body {
 }
 #ydm-ui-wrapper .profile-switcher-panel.collapsed .sidebar-toggle-btn {
     right: -15px;
-    background-color: rgba(0, 0, 0, 0.45);
+    background-color: var(--color-bg-control);
     backdrop-filter: blur(8px);
     color: #f0f0f0;
     border: none;
@@ -381,7 +439,7 @@ body {
 
 #ydm-ui-wrapper .switcher-list li {
     padding: 2px; 
-    border-radius: 50%;
+    border-radius: var(--radius-round);
     cursor: grab;
     transition: all 0.2s ease;
     position: relative;
@@ -390,16 +448,10 @@ body {
     cursor: grabbing;
 }
 
-#ydm-ui-wrapper .avatar-sortable-ghost {
-    opacity: 0.4;
-    background-color: #e9ecef;
-    border-radius: 50%;
-}
-
 #ydm-ui-wrapper .switcher-avatar {
     width: 50px;  
     height: 50px; 
-    border-radius: 50%;
+    border-radius: var(--radius-round);
     object-fit: cover;
     display: block;
     transition: box-shadow 0.2s ease, border-radius 0.2s ease;
@@ -408,7 +460,7 @@ body {
 
 #ydm-ui-wrapper .switcher-list li.active .switcher-avatar {
     border-radius: 32%; 
-    border-color: #B9A2E9; 
+    border-color: var(--color-primary); 
 }
 
 #ydm-ui-wrapper .switcher-footer {
@@ -419,10 +471,10 @@ body {
 #ydm-ui-wrapper .create-new-user-btn {
     width: 45px;
     height: 45px;
-    border-radius: 50%;
-    border: 1.5px dashed #c5b9e8;
+    border-radius: var(--radius-round);
+    border: 1.5px dashed var(--color-primary-border-dashed);
     background-color: transparent;
-    color: #8c7ab8;
+    color: var(--color-primary-text);
     font-size: 1.2em;
     cursor: pointer;
     display: flex;
@@ -432,9 +484,9 @@ body {
     transition: all 0.2s ease;
 }
 #ydm-ui-wrapper .create-new-user-btn:hover {
-    background-color: #f1eefc;
+    background-color: var(--color-primary-bg-light);
     border-style: solid;
-    color: #B9A2E9;
+    color: var(--color-primary);
     transform: scale(1.05);
 }
 
@@ -448,7 +500,7 @@ body {
     border-radius: 6px;
     border: none;
     background-color: transparent;
-    color: #868e96;
+    color: var(--color-text-lighter);
     font-size: 1.2em;
     cursor: pointer;
     transition: background-color 0.2s ease;
@@ -456,103 +508,34 @@ body {
 #ydm-ui-wrapper .settings-btn span { display: none; }
 #ydm-ui-wrapper .settings-btn:hover { background-color: #f5f5f5; }
 
-#ydm-ui-wrapper .mode-switcher { width: auto; }
-#ydm-ui-wrapper .mode-btn {
-    width: 40px;
-    height: 30px;
+
+/* ==========================================================================
+   5. SHARED COMPONENTS
+   ========================================================================== */
+
+/* --- 5.1 Profile Info Card --- */
+.profile-info-card {
+    background-color: var(--color-bg-light);
+    border-radius: var(--radius-xl);
+    padding: 13px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    background-color: #B9A2E9;
-    color: #ffffff;
-    border: none;
-    outline: none;
-    border-radius: 8px;
-    font-size: 0.8em;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-}
-#ydm-ui-wrapper .mode-btn:hover { background-color: #a68ed6; }
-
-#ydm-ui-wrapper .character-banner {
-    width: 100%;
-    height: 50vh;
-    max-height: 450px;
-    overflow: hidden;
-    position: relative;
-}
-#ydm-ui-wrapper .character-banner::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 120px;
-    
-    background: linear-gradient(to top, #f4f7f9 70%, transparent);
-    pointer-events: none;
-}
-#ydm-ui-wrapper .character-banner img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-#ydm-ui-wrapper .character-content {
-    /* - 修改：背景从白色改为浅灰色 */
-    background-color: #f4f7f9;
-    padding: 20px 18px;
-    margin-top: -80px;
-    position: relative;
-    z-index: 10;
-}
-
-
-/* 修改后 (YDN) */
-#ydn-ui-wrapper .profile-toggle-switch {
-    display: none; 
-    flex-shrink: 0; 
-}
-
-/* 修改后 (YDM) */
-#ydm-ui-wrapper .profile-toggle-switch {
-    display: none;
-    flex-shrink: 0;
-}
-
-
-/* ================================================================
-   ====================【共用组件样式 (Modals, Tabs, etc.)】====================
-   ================================================================ */
-
-/* --- 新增：用户信息卡片 (修改版) --- */
-.profile-info-card {
-    background-color: #ffffff;
-    border-radius: 20px;
-    padding: 13px; /* 增加了上下的内边距，让卡片更高 */
-    display: flex;
-    align-items: center; /* 改为垂直居中对齐 */
     gap: 15px;
-    margin: -80px 5px 20px 5px; /* 调整了负外边距以适应更高的卡片 */
+    margin: -80px 5px 20px 5px;
     position: relative;
-    z-index: 11;
-    
+    z-index: var(--z-content-overlay);
 }
 
 .profile-info-card .profile-avatar {
     width: 65px;
     height: 65px;
-    border-radius: 50%; /* 50% 变为正圆形 */
+    border-radius: var(--radius-round);
     object-fit: cover;
-    /* border: 4px solid #fff; (已移除) */
     flex-shrink: 0;
-    /* margin-bottom: -25px; (已移除，不再探出) */
-    /* box-shadow: 0 4px 10px rgba(0,0,0,0.15); (已移除) */
 }
 
 .profile-info-card .user-details {
     flex-grow: 1;
-    /* padding-bottom: 5px; (已移除，flex居中会自动处理) */
 }
 
 .profile-info-card .user-header {
@@ -564,107 +547,189 @@ body {
 .profile-info-card .user-name {
     font-size: 1.3em;
     margin: 0;
-    color: #2c3e50; /* 在白色背景上需要深色字体 */
+    color: var(--color-text-dark);
     font-weight: 600;
 }
 
 .profile-info-card .gender-symbol {
     font-size: 1.2em;
-    color: #B9A2E9;
+    color: var(--color-primary);
     font-weight: bold;
 }
-/* --- 结束：用户信息卡片 --- */
 
 
 
-
-/* --- 开关 --- */
-.toggle-checkbox { display: none; }
-.toggle-label {
-    display: block; width: 44px; height: 24px;
-    background-color: #ccc; border-radius: 12px;
-    position: relative; cursor: pointer;
-    transition: background-color 0.2s ease-in-out;
+/* --- 5.2 Tabs Navigation --- */
+.tabs-nav { 
+    display: flex; 
+    justify-content: center; 
+    gap: 30px; 
+    margin-bottom: 12px; 
+    align-items: center; 
+    position: relative; 
 }
-.toggle-label::after {
-    content: ''; position: absolute;
-    width: 20px; height: 20px; border-radius: 50%;
-    background-color: white; top: 2px; left: 2px;
-    transition: transform 0.2s ease-in-out;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-.toggle-checkbox:checked + .toggle-label { background-color: #B9A2E9; }
-.toggle-checkbox:checked + .toggle-label::after { transform: translateX(20px); }
-
-/* --- Tabs --- */
-.tabs-nav { display: flex; justify-content: center; gap: 30px; margin-bottom: 12px; align-items: center; position: relative; }
 .tab-button {
-    padding: 0px 10px 12px 10px; font-size: 1em; font-weight: 500;
-    text-align: center; color: #6c757d; background-color: transparent;
-    border: none; cursor: pointer; position: relative; transition: color 0.3s ease;
+    padding: 0px 10px 12px 10px; 
+    font-size: 1em; 
+    font-weight: 500;
+    text-align: center; 
+    color: var(--color-text-light); 
+    background-color: transparent;
+    border: none; 
+    cursor: pointer; 
+    position: relative; 
+    transition: color 0.3s ease;
 }
-.tab-button:hover { color: #343a40; }
-.tab-button.active { color: #343a40; font-weight: 600; }
+.tab-button:hover { color: var(--color-text-dark); }
+.tab-button.active { 
+    color: var(--color-text-dark); 
+    font-weight: 600; 
+}
 .tab-button.active::after {
-    content: '\f004'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
-    color: #B9A2E9; position: absolute; bottom: -7px; left: 50%;
-    transform: translateX(-50%); font-size: 14px;
+    content: '\f004'; 
+    font-family: 'Font Awesome 6 Free'; 
+    font-weight: 900;
+    color: var(--color-primary); 
+    position: absolute; 
+    bottom: -7px; 
+    left: 50%;
+    transform: translateX(-50%); 
+    font-size: 14px;
 }
 .tab-pane { display: none; }
 .tab-pane.active { display: block; }
-.tabs-content .description { font-size: 1em; color: #34495e; text-align: justify; padding: 0; margin: 0; }
+.tabs-content .description { 
+    font-size: 1em; 
+    color: var(--color-text-dark); 
+    text-align: justify; 
+    padding: 0; 
+    margin: 0; 
+}
 
-/* --- 信息卡片 --- */
-/* - 修改：卡片背景从浅灰色改为白色 */
-.info-card { background-color: #ffffff; border-radius: 12px; padding: 18px; margin-top: 15px; }
-/* --- 新增此段代码 --- */
+/* --- 5.3 Info Cards & Content --- */
+.info-card { 
+    background-color: var(--color-bg-light); 
+    border-radius: var(--radius-m); 
+    padding: 18px; 
+    margin-top: 15px; 
+}
 .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px; /* 将 card-title 的下外边距移到这里 */
+    margin-bottom: 15px;
 }
-
-/* --- 修改此段代码 (移除了 margin-bottom) --- */
+.card-header .card-title {
+    margin-bottom: 0;
+}
 .card-title {
-    font-size: 0.95em; font-weight: 600; color: #495057;
-    margin: 0; /* 移除了下外边距 */
-    border-left: 3px solid #B9A2E9; padding-left: 10px;
+    font-size: 0.95em; 
+    font-weight: 600; 
+    color: var(--color-text-medium);
+    margin: 0 0 15px 0;
+    border-left: 3px solid var(--color-primary); 
+    padding-left: 10px;
 }
-.info-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.info-list { 
+    list-style: none; 
+    padding: 0; 
+    margin: 0; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 12px; 
+}
 .info-list li { font-size: 0.9em; }
-.info-label { color: #6c757d; }
+.info-label { color: var(--color-text-light); }
 .info-label::after { content: '：'; margin-right: 8px; }
-.info-value { color: #344a40; font-weight: 500; }
+.info-value { color: var(--color-text-dark); font-weight: 500; }
 
-/* --- 悬浮编辑按钮 --- */
+/* --- 5.4 Floating Action Button (FAB) --- */
 .edit-fab {
-    position: fixed; bottom: 25px; right: 20px; z-index: 100;
-    width: 50px; height: 50px; border-radius: 50%; background-color: #B9A2E9;
-    color: #ffffff; display: flex; align-items: center; justify-content: center;
-    border: none; cursor: pointer; font-size: 22px;
+    position: fixed; 
+    bottom: 25px; 
+    right: 20px;
+    z-index: var(--z-floating-control);
+    width: 50px; 
+    height: 50px; 
+    border-radius: var(--radius-round); 
+    background-color: var(--color-primary);
+    color: var(--color-text-white); 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    border: none; 
+    cursor: pointer; 
+    font-size: 22px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-.edit-fab:hover { transform: scale(1.05); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25); }
+.edit-fab:hover { 
+    transform: scale(1.05); 
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25); 
+}
 
-/* --- 编辑 Modal --- */
+
+/* ==========================================================================
+   6. MODALS & OVERLAYS
+   ========================================================================== */
+
+/* --- 6.1 General Modal Styles --- */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px);
-    z-index: 2001; display: flex; align-items: center; justify-content: center;
-    opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+    background-color: var(--color-bg-overlay); 
+    backdrop-filter: blur(5px);
+    z-index: var(--z-modal-backdrop);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden; 
+    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 .modal-overlay.active { opacity: 1; visibility: visible; }
+
 .modal-panel {
-    background-color: #ffffff; border-radius: 16px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-    width: 95%; max-width: 750px; height: 95svh; transform: scale(0.95);
-    transition: transform 0.3s ease; display: flex; flex-direction: column;
+    background-color: var(--color-bg-light); 
+    border-radius: var(--radius-l); 
+    box-shadow: var(--shadow-l);
+    width: 95%; max-width: 750px; height: 95svh; 
+    transform: scale(0.95);
+    transition: transform 0.3s ease; 
+    display: flex; flex-direction: column;
     overflow: hidden; position: relative;
 }
 .modal-overlay.active .modal-panel { transform: scale(1); }
+
+.modal-header {
+    padding: 15px 20px; 
+    border-bottom: 1px solid var(--color-border);
+    display: flex; justify-content: space-between; align-items: center; 
+    flex-shrink: 0;
+}
+.modal-title {
+    font-size: 1.1em; font-weight: 600; color: var(--color-text-medium); 
+    display: flex; align-items: center; border-left: none; padding-left: 0; margin: 0;
+}
+.modal-title::before {
+    content: '\f004'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+    color: var(--color-primary); font-size: 0.9em; margin-right: 10px;
+}
+.modal-header-actions { display: flex; align-items: center; gap: 10px; }
+
+.btn-save, .btn-help, .modal-close {
+    width: 30px; height: 30px; border-radius: var(--radius-round); border: none;
+    font-size: 16px; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; transition: all 0.2s;
+}
+.btn-save { background-color: var(--color-primary); color: var(--color-text-white); }
+.btn-save:hover { background-color: var(--color-primary-hover); transform: scale(1.1); }
+.modal-close { background-color: var(--color-bg-grey- L2); color: var(--color-text-lighter); font-size: 22px; font-weight: bold; line-height: 1; padding: 0; }
+.modal-close:hover { background-color: var(--color-bg-grey-hover); color: var(--color-text-medium); }
+.btn-help { background-color: var(--color-accent-bg); color: var(--color-accent); }
+.btn-help:hover { background-color: var(--color-accent); color: var(--color-text-white); transform: scale(1.1); }
+
 .modal-body { flex-grow: 1; display: flex; align-items: stretch; overflow: hidden; }
+
+/* --- 6.2 Edit Modal Content --- */
 .modal-sidebar {
-    flex: 0 0 100px; background-color: #f8f9fa; border-right: 1px solid #e9ecef;
+    flex: 0 0 100px; background-color: var(--color-bg-grey); 
+    border-right: 1px solid var(--color-border);
     padding: 15px 0; display: flex; flex-direction: column; align-items: center;
 }
 .sidebar-nav-list {
@@ -672,93 +737,107 @@ body {
     display: flex; flex-direction: column; align-items: center; gap: 5px; padding-bottom: 5px;
 }
 .modal-main-content { flex-grow: 1; padding: 15px 15px; overflow-y: overlay; }
+
 .modal-nav-button {
     width: 85%; text-align: center; padding: 10px 12px; border-radius: 8px;
     border: none; background-color: transparent; font-size: 0.9em; font-weight: 500;
-    color: #495057; cursor: pointer; transition: background-color 0.2s, color 0.2s;
+    color: var(--color-text-medium); cursor: pointer; 
+    transition: background-color 0.2s, color 0.2s;
     flex-shrink: 0; white-space: nowrap;
 }
 .fixed-nav-button { cursor: default; }
 .modal-nav-button:not(.fixed-nav-button) { cursor: grab; }
-.modal-nav-button:hover { background-color: #e9ecef; }
-.modal-nav-button.active { background-color: #B9A2E9; color: #ffffff; }
+.modal-nav-button:hover { background-color: var(--color-bg-grey-hover); }
+.modal-nav-button.active { background-color: var(--color-primary); color: var(--color-text-white); }
+
 .modal-section-pane { display: none; }
 .modal-section-pane.active { display: block; }
-.modal-header {
-    padding: 15px 20px; border-bottom: 1px solid #e9ecef; margin-bottom: 0;
-    display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
-}
-.modal-title {
-    font-size: 1.1em; font-weight: 600; color: #495057; display: flex;
-    align-items: center; border-left: none; padding-left: 0; margin: 0;
-}
-.modal-title::before {
-    content: '\f004'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
-    color: #B9A2E9; font-size: 0.9em; margin-right: 10px;
-}
-.modal-header-actions { display: flex; align-items: center; gap: 10px; }
-.btn-save, .btn-help, .modal-close {
-    width: 30px; height: 30px; border-radius: 50%; border: none;
-    font-size: 16px; cursor: pointer; display: flex; align-items: center;
-    justify-content: center; transition: all 0.2s;
-}
-.btn-save { background-color: #B9A2E9; color: #ffffff; }
-.btn-save:hover { background-color: #a68ed6; transform: scale(1.1); }
-.modal-close { background-color: #f1f3f5; color: #868e96; font-size: 22px; font-weight: bold; line-height: 1; padding: 0; }
-.modal-close:hover { background-color: #e9ecef; color: #495057; }
-.btn-help { background-color: #FCE4EC; color: #FFA7C4; }
-.btn-help:hover { background-color: #FFA7C4; color: #ffffff; transform: scale(1.1); }
 
-/* --- 表单组 --- */
+.add-section-btn {
+    width: 85%; text-align: center; padding: 10px 12px; border-radius: 8px;
+    border: 1px dashed var(--color-primary-border-dashed); background-color: transparent; 
+    font-size: 0.9em; font-weight: 500; color: var(--color-primary-text); 
+    cursor: pointer; transition: all 0.2s;
+    margin-top: 10px; flex-shrink: 0; display: flex; align-items: center; 
+    justify-content: center; gap: 6px;
+}
+.add-section-btn:hover { 
+    background-color: var(--color-primary-bg-light); 
+    border-style: solid; 
+    color: var(--color-primary); 
+}
+
+/* --- 6.3 Form Groups & Inputs --- */
 .form-group { margin-bottom: 15px; }
-.form-group label { display: block; font-size: 0.9em; font-weight: 500; color: #6c757d; margin-bottom: 5px; }
+.form-group label { 
+    display: block; font-size: 0.9em; font-weight: 500; 
+    color: var(--color-text-light); margin-bottom: 5px; 
+}
 .form-group input, .form-group textarea {
     width: 100%; padding: 5px 5px 2px; border: none; border-radius: 0;
-    border-bottom: 1px solid #ddd; font-size: 1em; font-family: inherit;
-    background-color: transparent; transition: border-bottom 0.3s ease;
+    border-bottom: 1px solid var(--color-border-medium); font-size: 1em; 
+    font-family: inherit; background-color: transparent; 
+    transition: border-bottom 0.3s ease;
 }
-.form-group input:focus, .form-group textarea:focus { outline: none; border-bottom: 2px solid #B9A2E9; }
+.form-group input:focus, .form-group textarea:focus { 
+    outline: none; border-bottom: 2px solid var(--color-primary); 
+}
 .form-group textarea { resize: vertical; }
 
-/* --- 视觉编辑项 --- */
+.form-group-clickable {
+    width: 100%; padding: 5px 5px 2px; 
+    border-bottom: 1px solid var(--color-border-medium);
+    font-size: 1em; display: flex; justify-content: space-between;
+    align-items: center; cursor: pointer; 
+    transition: border-bottom 0.3s ease;
+}
+.form-group-clickable:hover { border-bottom: 2px solid var(--color-primary); }
+.form-group-clickable .value-display { 
+    flex-grow: 1; white-space: nowrap; overflow: hidden; 
+    text-overflow: ellipsis; color: var(--color-text-dark); 
+}
+.form-group-clickable .value-display.placeholder { color: var(--color-text-placeholder); }
+.form-group-clickable i { color: #ccc; font-size: 0.8em; margin-left: 10px; }
+.form-group-clickable.locked { cursor: not-allowed; }
+.form-group-clickable.locked:hover { border-bottom: 1px solid var(--color-border-medium); }
+.form-group-clickable.locked i { color: #adb5bd; }
+
+/* --- 6.4 Visual Edit Items --- */
 .visual-edit-item { margin-bottom: 25px; }
 .form-row { display: flex; align-items: center; margin-bottom: 12px; }
-.form-row label { flex-shrink: 0; width: 45px; font-size: 0.9em; font-weight: 500; color: #6c757d; }
-.form-row input { flex-grow: 1; width: 100%; padding: 5px 5px 2px; border: none; border-radius: 0; border-bottom: 1px solid #ddd; font-size: 1em; font-family: inherit; background-color: transparent; transition: border-bottom 0.3s ease; }
-.form-row input:focus { outline: none; border-bottom: 2px solid #B9A2E9; }
+.form-row label { 
+    flex-shrink: 0; width: 45px; font-size: 0.9em; 
+    font-weight: 500; color: var(--color-text-light); 
+}
+.form-row input { 
+    flex-grow: 1; width: 100%; padding: 5px 5px 2px; border: none; 
+    border-radius: 0; border-bottom: 1px solid var(--color-border-medium); 
+    font-size: 1em; font-family: inherit; background-color: transparent; 
+    transition: border-bottom 0.3s ease; 
+}
+.form-row input:focus { outline: none; border-bottom: 2px solid var(--color-primary); }
 
-/* --- 修改: 视觉预览项样式重构以支持图标 --- */
-/* 新增：这是新的定位容器 */
 .visual-preview-container {
-    position: relative; /* 让图标相对于它定位 */
-    display: inline-block; /* 让容器大小自适应内容 */
-    /* 为了让 margin: auto 生效，需要把它放在父级的 flex/grid 布局中，
-       或者让它的父级 text-align: center。
-       但更简单的办法是直接让它自己居中 */
+    position: relative;
     display: block;
     width: fit-content;
     margin: auto;
 }
-
 .visual-preview-wrapper {
-    /* position: relative 和 margin: auto 已移到父容器 */
     display: block;
     cursor: pointer;
-    overflow: hidden; /* 关键：这个只负责剪裁图片 */
+    overflow: hidden;
 }
-
-/* 将尺寸和圆角应用到 wrapper (这部分不变) */
 .visual-preview-wrapper.avatar-wrapper {
     width: 80px;
     height: 80px;
-    border-radius: 50%;
+    border-radius: var(--radius-round);
 }
 .visual-preview-wrapper.banner-wrapper {
     width: 180px;
     height: 180px;
     border-radius: 8px;
 }
-
 .visual-preview {
     display: block;
     object-fit: cover;
@@ -767,171 +846,59 @@ body {
     height: 100%;
     transition: transform 0.2s ease;
 }
-
 .visual-preview-container:hover .visual-preview {
     transform: scale(1.05);
 }
-
 .edit-icon-overlay {
     position: absolute;
-    /* 修改: 定位到右下角，0,0 确保它贴着边 */
     bottom: 0;
     right: 0;
     width: 22px;
     height: 22px;
     background-color: rgba(0, 0, 0, 0.55);
-    border-radius: 50%;
+    border-radius: var(--radius-round);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: var(--color-text-white);
     font-size: 11px;
     pointer-events: none;
     z-index: 2;
-    /* 新增: 轻微的 transform 让它在圆形头像上位置更好看 */
     transform: translate(15%, 15%);
 }
-
-/* 对 banner 的图标位置进行微调，因为它是方形的 */
 .banner-wrapper + .edit-icon-overlay {
     transform: translate(0, 0);
-    bottom: 4px; /* 留一点边距 */
+    bottom: 4px;
     right: 4px;
 }
 
-/* --- “添加栏目”按钮 --- */
-.add-section-btn {
-    width: 85%; text-align: center; padding: 10px 12px; border-radius: 8px;
-    border: 1px dashed #c5b9e8; background-color: transparent; font-size: 0.9em;
-    font-weight: 500; color: #8c7ab8; cursor: pointer; transition: all 0.2s;
-    margin-top: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 6px;
-}
-.add-section-btn:hover { background-color: #f1eefc; border-style: solid; color: #B9A2E9; }
+/* --- 6.5 Custom Sections & Items --- */
+.pane-header-container { display: flex; justify-content: flex-start; margin-bottom: 5px; }
+.pane-header-container .pane-title-capsule { margin: 0; cursor: default; }
+.pane-header-container .pane-title-capsule:hover { background-color: var(--color-primary-bg-light); }
 
-/* --- 命名弹出框 --- */
-.prompt-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); z-index: 2002; display: none;
-    align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease;
-}
-.prompt-overlay.active { display: flex; opacity: 1; }
-.prompt-box {
-    background-color: #ffffff; padding: 20px 25px; border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); width: 90%; max-width: 300px;
-    text-align: center; transform: scale(0.95); transition: transform 0.2s ease;
-}
-.prompt-overlay.active .prompt-box { transform: scale(1); }
-.prompt-box h4 { margin: 0 0 15px 0; font-size: 1.1em; color: #333; }
-.prompt-box input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; margin-bottom: 20px; }
-.prompt-box input:focus { outline: none; border-color: #B9A2E9; box-shadow: 0 0 0 2px rgba(185, 162, 233, 0.3); }
-.prompt-actions { display: flex; justify-content: space-between; gap: 15px; }
-.prompt-btn { flex-grow: 1; padding: 16px; font-size: 1em; border-radius: 8px; border: none; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
-.prompt-btn-cancel { background-color: #f1f3f5; color: #495057; }
-.prompt-btn-cancel:hover { background-color: #e9ecef; }
-.prompt-btn-confirm { background-color: #B9A2E9; color: #ffffff; }
-.prompt-btn-confirm:hover { background-color: #a68ed6; }
-
-/* --- 拖拽 --- */
-.sortable-ghost { opacity: 0.4; background-color: #e9ecef; border: 1px dashed #B9A2E9; }
-
-/* --- 胶囊标题 --- */
 .pane-title-capsule {
     display: inline-block; font-size: 0.9em; font-weight: 600; padding: 6px 14px;
-    margin: 0 0 10px 0; background-color: #f1eefc; color: #8c7ab8;
-    border-radius: 999px; cursor: pointer; transition: background-color 0.2s;
+    margin: 0 0 10px 0; background-color: var(--color-primary-bg-light); 
+    color: var(--color-primary-text);
+    border-radius: var(--radius-pill); cursor: pointer; 
+    transition: background-color 0.2s;
 }
 .pane-title-capsule:hover { background-color: #e9e4fa; }
 
-/* --- 底部操作表 --- */
-.bottom-sheet-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.4); z-index: 2002; display: flex;
-    align-items: flex-end; justify-content: center; opacity: 0; visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-.bottom-sheet-overlay.active { opacity: 1; visibility: visible; }
-.bottom-sheet {
-    width: 100%; max-width: 500px; background-color: #f4f7f9;
-    border-top-left-radius: 16px; border-top-right-radius: 16px;
-    padding: 8px 8px 20px 8px; transform: translateY(100%);
-    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-.bottom-sheet-overlay.active .bottom-sheet { transform: translateY(0); }
-.bottom-sheet-header { text-align: center; padding: 8px 0 12px 0; }
-.bottom-sheet-title { font-size: 0.8em; color: #6c757d; }
-.bottom-sheet-actions { list-style: none; padding: 0; margin: 0; background-color: #ffffff; border-radius: 12px; overflow: hidden; }
-.bottom-sheet-actions li:not(:last-child) .action-button { border-bottom: 1px solid #f0f0f0; }
-.action-button { width: 100%; background-color: transparent; border: none; padding: 15px; font-size: 1em; color: #007aff; cursor: pointer; text-align: center; transition: background-color 0.2s; }
-.action-button:hover { background-color: #f5f5f5; }
-.action-button.action-delete { color: #ff3b30; }
-.bottom-sheet-cancel { width: 100%; background-color: #ffffff; border: none; padding: 15px; font-size: 1em; font-weight: 600; color: #007aff; cursor: pointer; text-align: center; margin-top: 8px; border-radius: 12px; transition: background-color 0.2s; }
-.bottom-sheet-cancel:hover { background-color: #f5f5f5; }
-
-/* --- 预设栏目 --- */
-.preset-tags-container { padding: 10px; display: flex; flex-wrap: wrap; gap: 10px; background-color: #ffffff; border-radius: 12px; }
-.preset-tag {
-    display: flex; align-items: center; gap: 6px; padding: 8px 14px;
-    border-radius: 999px; border: 1px solid transparent; font-size: 0.9em;
-    font-weight: 500; cursor: pointer; transition: all 0.2s ease;
-    background-color: #f1eefc; color: #8c7ab8; border-color: #e2dcf5;
-}
-.preset-tag:hover { background-color: #e9e4fa; border-color: #c5b9e8; }
-.preset-tag-custom { background-color: transparent; color: #8c7ab8; border: 1px dashed #c5b9e8; }
-.preset-tag-custom:hover { background-color: #f1eefc; border-style: solid; color: #B9A2E9; }
-
-/* --- 可点击表单组 --- */
-.form-group-clickable {
-    width: 100%; padding: 5px 5px 2px; border-bottom: 1px solid #ddd;
-    font-size: 1em; display: flex; justify-content: space-between;
-    align-items: center; cursor: pointer; transition: border-bottom 0.3s ease;
-}
-.form-group-clickable:hover { border-bottom: 2px solid #B9A2E9; }
-.form-group-clickable .value-display { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #333; }
-.form-group-clickable .value-display.placeholder { color: #aaa; }
-.form-group-clickable i { color: #ccc; font-size: 0.8em; margin-left: 10px; }
-.form-group-clickable.locked { cursor: not-allowed; }
-.form-group-clickable.locked:hover { border-bottom: 1px solid #ddd; }
-.form-group-clickable.locked i { color: #adb5bd; }
-
-/* --- 子编辑器 --- */
-.sub-editor-panel {
-    background-color: #f4f7f9; border-radius: 16px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-    width: 95%; max-width: 750px; height: 95svh; display: flex; flex-direction: column;
-    overflow: hidden; position: absolute; z-index: 2002; transform: translateX(105%);
-    transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); visibility: hidden;
-}
-.sub-editor-panel.active { transform: translateX(0); visibility: visible; }
-.sep-header {
-    flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 15px; background-color: #ffffff; border-bottom: 1px solid #e9ecef; height: 56px;
-}
-.sep-title { font-size: 1.1em; font-weight: 600; margin: 0; color: #333; }
-.sep-btn {
-    background: none; border: none; font-size: 20px; color: #555; cursor: pointer;
-    width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
-    border-radius: 50%; transition: background-color 0.2s;
-}
-.sep-btn:hover { background-color: #f0f0f0; }
-.sep-btn-save { color: #B9A2E9; font-size: 22px; }
-.sep-body { flex-grow: 1; padding: 15px; display: flex; overflow-y: auto; }
-#sep-textarea, #item-editor-value-textarea {
-    width: 100%; height: 100%; border: none; outline: none; resize: none;
-    font-family: inherit; font-size: 1.1em; line-height: 1.6; background-color: transparent;
-}
-.iep-body { flex-direction: column; }
-#item-editor-title-input {
-    width: 100%; border: none; outline: none; background-color: transparent; font-size: 1.1em;
-    font-weight: 600; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid #e0e0e0; flex-shrink: 0;
-}
-
-/* --- 自定义条目 --- */
 .add-item-btn {
     display: flex; align-items: center; justify-content: center; gap: 8px;
-    width: 100%; padding: 10px; border-radius: 999px; border: 1px dashed #c5b9e8;
-    background-color: transparent; color: #8c7ab8; font-size: 0.9em; font-weight: 500;
+    width: 100%; padding: 10px; border-radius: var(--radius-pill); 
+    border: 1px dashed var(--color-primary-border-dashed);
+    background-color: transparent; color: var(--color-primary-text); 
+    font-size: 0.9em; font-weight: 500;
     cursor: pointer; transition: all 0.2s; margin-top: 5px;
 }
-.add-item-btn:hover { background-color: #f1eefc; border-style: solid; color: #B9A2E9; }
+.add-item-btn:hover { 
+    background-color: var(--color-primary-bg-light); 
+    border-style: solid; 
+    color: var(--color-primary); 
+}
 .custom-items-container { display: flex; flex-direction: column; gap: 5px; }
 .modal-section-pane .custom-item-group { margin-bottom: 5px; }
 .custom-item-group { display: flex; flex-wrap: wrap; align-items: center; padding: 2px 0; }
@@ -939,85 +906,326 @@ body {
 .custom-item-group > label:active { cursor: grabbing; }
 .custom-item-group .form-group-clickable { flex-basis: 100%; margin-top: 0; width: 100%; padding-top: 2px; padding-bottom: 0px; }
 .item-actions-btn {
-    flex-shrink: 0; background: none; border: none; cursor: pointer; color: #adb5bd;
-    font-size: 1em; padding: 5px 8px; border-radius: 50%; transition: color 0.2s, background-color 0.2s;
+    flex-shrink: 0; background: none; border: none; cursor: pointer; 
+    color: #adb5bd; font-size: 1em; padding: 5px 8px; 
+    border-radius: var(--radius-round); 
+    transition: color 0.2s, background-color 0.2s;
 }
-.item-actions-btn:hover { color: #495057; background-color: #f1f3f5; }
-.item-sortable-ghost { opacity: 0.4; background-color: #e9ecef; border: 1px dashed #B9A2E9; }
-.pane-header-container { display: flex; justify-content: flex-start; margin-bottom: 5px; }
-.pane-header-container .pane-title-capsule { margin: 0; cursor: default; }
-.pane-header-container .pane-title-capsule:hover { background-color: #f1eefc; }
+.item-actions-btn:hover { color: var(--color-text-medium); background-color: var(--color-bg-grey- L2); }
 
-/* --- 帮助提示 --- */
-.help-tooltip {
-    position: absolute; top: 58px; right: 50px; width: 260px;
-    background-color: #ffffff; color: #000000; padding: 12px 15px;
-    border-radius: 8px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
-    font-size: 1em; line-height: 1.6; z-index: 2003; opacity: 0;
-    visibility: hidden; transform: translateY(-10px);
-    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s 0.2s;
+/* --- 6.6 Sub-Editor Panel --- */
+.sub-editor-panel {
+    background-color: var(--color-bg-body);
+    border-radius: var(--radius-l);
+    box-shadow: var(--shadow-l);
+    /* ▼▼▼ 修改点 ▼▼▼ */
+    width: 100%;
+    height: 100%;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
+    max-width: 750px;
+    display: flex; flex-direction: column; overflow: hidden;
+    position: absolute;
+    z-index: var(--z-sub-editor); 
+    transform: translateX(105%);
+    transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+    visibility: hidden;
 }
-.help-tooltip.active { opacity: 1; visibility: visible; transform: translateY(0); transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s; }
-.help-tooltip p { margin: 0; }
-.help-tooltip::after {
-    content: ''; position: absolute; top: -8px; right: 58px;
-    width: 0; height: 0; border-left: 8px solid transparent;
-    border-right: 8px solid transparent; border-bottom: 8px solid #ffffff;
+.sub-editor-panel.active { transform: translateX(0); visibility: visible; }
+.sep-header {
+    flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 15px; background-color: var(--color-bg-light); 
+    border-bottom: 1px solid var(--color-border); height: 56px;
+}
+.sep-title { font-size: 1.1em; font-weight: 600; margin: 0; color: var(--color-text-dark); }
+.sep-btn {
+    background: none; border: none; font-size: 20px; color: #555; cursor: pointer;
+    width: 40px; height: 40px; display: flex; align-items: center; 
+    justify-content: center; border-radius: var(--radius-round); 
+    transition: background-color 0.2s;
+}
+.sep-btn:hover { background-color: #f0f0f0; }
+.sep-btn-save { color: var(--color-primary); font-size: 22px; }
+/* ▼▼▼ 修改点 1 ▼▼▼ */
+.sep-body { flex-grow: 1; padding: 15px; overflow-y: auto; }
+#sep-textarea, #item-editor-value-textarea {
+    width: 100%;
+    border: none; outline: none; resize: none;
+    font-family: inherit; font-size: 1.1em; line-height: 1.6; 
+    background-color: transparent;
+}
+#sep-textarea {
+    height: 100%;
+}
+/* ▼▼▼ 修改点 2 ▼▼▼ */
+.iep-body { display: flex; flex-direction: column; }
+#item-editor-value-textarea {
+    flex-grow: 1; /* 使用flex-grow填充剩余空间 */
+    height: auto; /* 覆盖掉共享的height: 100% */
+}
+/* ▲▲▲ 修改结束 ▲▲▲ */
+#item-editor-title-input {
+    width: 100%; border: none; outline: none; background-color: transparent; 
+    font-size: 1.1em; font-weight: 600; padding-bottom: 10px; margin-bottom: 10px; 
+    border-bottom: 1px solid #e0e0e0; flex-shrink: 0;
 }
 
-/* --- 图片裁剪 --- */
-.cropper-overlay {
+/* --- 6.7 Prompt Overlay --- */
+.prompt-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.75); backdrop-filter: blur(5px);
-    z-index: 2002; display: none; align-items: center; justify-content: center;
-    opacity: 0; transition: opacity 0.3s ease;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: var(--z-secondary-backdrop);
+    display: none; align-items: center; justify-content: center; 
+    opacity: 0; transition: opacity 0.2s ease;
 }
-.cropper-overlay.active { display: flex; opacity: 1; }
-.cropper-container {
-    background-color: #ffffff; padding: 20px; border-radius: 12px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2); width: 90%; max-width: 500px;
-    transform: scale(0.95); transition: transform 0.3s ease;
+.prompt-overlay.active { display: flex; opacity: 1; }
+.prompt-box {
+    background-color: var(--color-bg-light); padding: 20px 25px; 
+    border-radius: var(--radius-m); box-shadow: var(--shadow-m); 
+    width: 90%; max-width: 300px; text-align: center; 
+    transform: scale(0.95); transition: transform 0.2s ease;
 }
-.cropper-overlay.active .cropper-container { transform: scale(1); }
-.cropper-image-container { width: 100%; height: 300px; margin-bottom: 20px; background-color: #f0f0f0; }
-#cropper-image { display: block; max-width: 100%; }
-.cropper-actions { display: flex; justify-content: space-between; gap: 15px; }
+.prompt-overlay.active .prompt-box { transform: scale(1); }
+.prompt-box h4 { margin: 0 0 15px 0; font-size: 1.1em; color: var(--color-text-dark); }
+.prompt-box input { 
+    width: 100%; padding: 10px; border: 1px solid var(--color-border-medium); 
+    border-radius: 6px; font-size: 1em; margin-bottom: 20px; 
+}
+.prompt-box input:focus { 
+    outline: none; border-color: var(--color-primary); 
+    box-shadow: 0 0 0 2px rgba(185, 162, 233, 0.3); 
+}
+.prompt-actions { display: flex; justify-content: space-between; gap: 15px; }
+.prompt-btn { 
+    flex-grow: 1; padding: 16px; font-size: 1em; border-radius: 8px; 
+    border: none; font-weight: 500; cursor: pointer; 
+    transition: background-color 0.2s; 
+}
+.prompt-btn-cancel { background-color: var(--color-bg-grey- L2); color: var(--color-text-medium); }
+.prompt-btn-cancel:hover { background-color: var(--color-bg-grey-hover); }
+.prompt-btn-confirm { background-color: var(--color-primary); color: var(--color-text-white); }
+.prompt-btn-confirm:hover { background-color: var(--color-primary-hover); }
 
-/* --- 管理面板 --- */
+/* --- 6.8 Bottom Sheet Overlay --- */
+.bottom-sheet-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: var(--color-bg-overlay-light);
+    z-index: var(--z-secondary-backdrop);
+    display: flex; align-items: flex-end; justify-content: center; 
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.bottom-sheet-overlay.active { opacity: 1; visibility: visible; }
+.bottom-sheet {
+    width: 100%; max-width: 500px; background-color: var(--color-bg-body);
+    border-top-left-radius: var(--radius-l); 
+    border-top-right-radius: var(--radius-l);
+    padding: 8px 8px 20px 8px; transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.bottom-sheet-overlay.active .bottom-sheet { transform: translateY(0); }
+.bottom-sheet-header { text-align: center; padding: 8px 0 12px 0; }
+.bottom-sheet-title { font-size: 0.8em; color: var(--color-text-light); }
+.bottom-sheet-actions { 
+    list-style: none; padding: 0; margin: 0; 
+    background-color: var(--color-bg-light); 
+    border-radius: var(--radius-m); overflow: hidden; 
+}
+.bottom-sheet-actions li:not(:last-child) .action-button { border-bottom: 1px solid #f0f0f0; }
+.action-button { 
+    width: 100%; background-color: transparent; border: none; padding: 15px; 
+    font-size: 1em; color: var(--color-text-link); cursor: pointer; 
+    text-align: center; transition: background-color 0.2s; 
+}
+.action-button:hover { background-color: #f5f5f5; }
+.action-button.action-delete { color: var(--color-danger); }
+.bottom-sheet-cancel { 
+    width: 100%; background-color: var(--color-bg-light); border: none; 
+    padding: 15px; font-size: 1em; font-weight: 600; 
+    color: var(--color-text-link); cursor: pointer; text-align: center; 
+    margin-top: 8px; border-radius: var(--radius-m); 
+    transition: background-color 0.2s; 
+}
+.bottom-sheet-cancel:hover { background-color: #f5f5f5; }
+
+.preset-tags-container { 
+    padding: 10px; display: flex; flex-wrap: wrap; gap: 10px; 
+    background-color: var(--color-bg-light); border-radius: var(--radius-m); 
+}
+.preset-tag {
+    display: flex; align-items: center; gap: 6px; padding: 8px 14px;
+    border-radius: var(--radius-pill); border: 1px solid transparent; 
+    font-size: 0.9em; font-weight: 500; cursor: pointer; 
+    transition: all 0.2s ease;
+    background-color: var(--color-primary-bg-light); 
+    color: var(--color-primary-text); 
+    border-color: var(--color-primary-border);
+}
+.preset-tag:hover { background-color: #e9e4fa; border-color: var(--color-primary-border-dashed); }
+.preset-tag-custom { 
+    background-color: transparent; color: var(--color-primary-text); 
+    border: 1px dashed var(--color-primary-border-dashed); 
+}
+.preset-tag-custom:hover { 
+    background-color: var(--color-primary-bg-light); 
+    border-style: solid; color: var(--color-primary); 
+}
+
+/* --- 6.9 Settings/Management Modal --- */
 .settings-modal-panel { max-width: 400px; height: auto; max-height: 95svh; }
-.settings-modal-panel .modal-header { flex-direction: row; justify-content: space-between; align-items: center; }
+.settings-modal-panel .modal-header { 
+    flex-direction: row; justify-content: space-between; align-items: center; 
+}
 .modal-header-content { display: flex; flex-direction: column; align-items: flex-start; }
 .settings-modal-body { padding: 8px; overflow-y: auto; }
-.settings-user-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 5px; }
+.settings-user-list { 
+    list-style: none; padding: 0; margin: 0; 
+    display: flex; flex-direction: column; gap: 5px; 
+}
 .settings-user-list li {
     display: flex; align-items: center; gap: 12px; padding: 10px;
     border-radius: 8px; border: 2px solid transparent; cursor: pointer;
     transition: background-color 0.2s, border-color 0.2s;
 }
-.settings-user-list li:hover { background-color: #f8f9fa; }
-.settings-user-list li.selected { background-color: #f1eefc; border-color: #B9A2E9; }
+.settings-user-list li:hover { background-color: var(--color-bg-grey); }
+.settings-user-list li.selected { 
+    background-color: var(--color-primary-bg-light); 
+    border-color: var(--color-primary); 
+}
 .settings-user-list li.disabled { cursor: not-allowed; opacity: 0.6; }
 .settings-user-list li.disabled:hover { background-color: transparent; }
-.settings-user-list .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-.settings-user-list .name { font-weight: 500; flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.settings-user-list .avatar { 
+    width: 40px; height: 40px; border-radius: var(--radius-round); 
+    object-fit: cover; flex-shrink: 0; 
+}
+.settings-user-list .name { 
+    font-weight: 500; flex-grow: 1; white-space: nowrap; 
+    overflow: hidden; text-overflow: ellipsis; 
+}
 .settings-modal-footer.v2 {
-    flex-shrink: 0; padding: 15px; border-top: 1px solid #e9ecef;
+    flex-shrink: 0; padding: 15px; border-top: 1px solid var(--color-border);
     display: flex; gap: 10px; justify-content: flex-end;
 }
 .footer-action-btn {
     display: flex; align-items: center; justify-content: center; gap: 8px;
     padding: 10px; border: none; border-radius: 8px; font-size: 0.9em;
-    font-weight: 500; cursor: pointer; background-color: #f1f3f5; color: #495057;
+    font-weight: 500; cursor: pointer; 
+    background-color: var(--color-bg-grey- L2); color: var(--color-text-medium);
     transition: background-color 0.2s, color 0.2s;
 }
-.footer-action-btn:hover { background-color: #e9ecef; }
-#settings-multi-select-btn.active { background-color: #B9A2E9; color: #ffffff; }
-.footer-action-btn.btn-danger { background-color: #ffe3e3; color: #ff6b6b; }
-.footer-action-btn.btn-danger:hover { background-color: #ffc9c9; color: #fa5252; }
-.footer-action-btn:disabled { background-color: #f1f3f5 !important; color: #adb5bd !important; cursor: not-allowed; opacity: 0.7; }
+.footer-action-btn:hover { background-color: var(--color-bg-grey-hover); }
+#settings-multi-select-btn.active { 
+    background-color: var(--color-primary); 
+    color: var(--color-text-white); 
+}
+.footer-action-btn.btn-danger { 
+    background-color: var(--color-danger-bg); 
+    color: var(--color-danger-text); 
+}
+.footer-action-btn.btn-danger:hover { 
+    background-color: var(--color-danger-hover-bg); 
+    color: var(--color-danger-hover-text); 
+}
+.footer-action-btn:disabled { 
+    background-color: var(--color-bg-grey- L2) !important; 
+    color: #adb5bd !important; 
+    cursor: not-allowed; opacity: 0.7; 
+}
 
-/* --- 滚动条 --- */
-.sidebar-nav-list::-webkit-scrollbar, .switcher-body::-webkit-scrollbar, #ydn-ui-wrapper .switcher-content::-webkit-scrollbar { width: 6px; }
-.sidebar-nav-list::-webkit-scrollbar-track, .switcher-body::-webkit-scrollbar-track, #ydn-ui-wrapper .switcher-content::-webkit-scrollbar-track { background: transparent; }
-.sidebar-nav-list::-webkit-scrollbar-thumb, .switcher-body::-webkit-scrollbar-thumb, #ydn-ui-wrapper .switcher-content::-webkit-scrollbar-thumb { background-color: transparent; border-radius: 10px; transition: background-color 0.3s ease; }
-.sidebar-nav-list:hover::-webkit-scrollbar-thumb, .switcher-body:hover::-webkit-scrollbar-thumb, #ydn-ui-wrapper .switcher-content:hover::-webkit-scrollbar-thumb { background-color: #c5b9e8; }
+/* --- 6.10 Help Tooltip --- */
+.help-tooltip {
+    position: absolute; top: 58px; right: 50px; width: 260px;
+    background-color: var(--color-bg-light); color: #000000; padding: 12px 15px;
+    border-radius: 8px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
+    font-size: 1em; line-height: 1.6;
+    z-index: var(--z-tooltip);
+    opacity: 0; visibility: hidden; transform: translateY(-10px);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s 0.2s;
+}
+.help-tooltip.active { 
+    opacity: 1; visibility: visible; transform: translateY(0); 
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s; 
+}
+.help-tooltip p { margin: 0; }
+.help-tooltip::after {
+    content: ''; position: absolute; top: -8px; right: 58px;
+    width: 0; height: 0; border-left: 8px solid transparent;
+    border-right: 8px solid transparent; 
+    border-bottom: 8px solid var(--color-bg-light);
+}
+
+/* --- 6.11 Cropper Overlay --- */
+.cropper-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: var(--color-bg-overlay-dark); 
+    backdrop-filter: blur(5px);
+    z-index: var(--z-secondary-backdrop);
+    display: none; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.3s ease;
+}
+.cropper-overlay.active { display: flex; opacity: 1; }
+.cropper-container {
+    background-color: var(--color-bg-light); padding: 20px; 
+    border-radius: var(--radius-m);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2); width: 90%; max-width: 500px;
+    transform: scale(0.95); transition: transform 0.3s ease;
+}
+.cropper-overlay.active .cropper-container { transform: scale(1); }
+.cropper-image-container { 
+    width: 100%; height: 300px; margin-bottom: 20px; 
+    background-color: #f0f0f0; 
+}
+#cropper-image { display: block; max-width: 100%; }
+.cropper-actions { display: flex; justify-content: space-between; gap: 15px; }
+
+
+/* ==========================================================================
+   7. UTILITIES & HELPERS
+   ========================================================================== */
+
+/* --- 7.1 SortableJS Ghost Classes --- */
+.sortable-ghost,
+.item-sortable-ghost,
+#ydn-ui-wrapper .avatar-sortable-ghost,
+#ydm-ui-wrapper .avatar-sortable-ghost {
+    opacity: 0.4;
+    background-color: var(--color-bg-grey-hover);
+}
+
+#ydn-ui-wrapper .avatar-sortable-ghost {
+    border-radius: var(--radius-m);
+}
+
+#ydm-ui-wrapper .avatar-sortable-ghost {
+    border-radius: var(--radius-round);
+}
+
+.sortable-ghost, .item-sortable-ghost {
+    border: 1px dashed var(--color-primary);
+}
+
+/* --- 7.2 Custom Scrollbars --- */
+.sidebar-nav-list::-webkit-scrollbar, 
+.switcher-body::-webkit-scrollbar, 
+#ydn-ui-wrapper .switcher-content::-webkit-scrollbar { 
+    width: 6px; 
+}
+
+.sidebar-nav-list::-webkit-scrollbar-track, 
+.switcher-body::-webkit-scrollbar-track, 
+#ydn-ui-wrapper .switcher-content::-webkit-scrollbar-track { 
+    background: transparent; 
+}
+
+.sidebar-nav-list::-webkit-scrollbar-thumb, 
+.switcher-body::-webkit-scrollbar-thumb, 
+#ydn-ui-wrapper .switcher-content::-webkit-scrollbar-thumb { 
+    background-color: transparent; 
+    border-radius: 10px; 
+    transition: background-color 0.3s ease; 
+}
+
+.sidebar-nav-list:hover::-webkit-scrollbar-thumb, 
+.switcher-body:hover::-webkit-scrollbar-thumb, 
+#ydn-ui-wrapper .switcher-content:hover::-webkit-scrollbar-thumb { 
+    background-color: var(--color-primary-border-dashed); 
+}

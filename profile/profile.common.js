@@ -19,7 +19,7 @@ function createProfileManager(config) {
         itemEditorPanel, itemEditorTitleHeader, itemEditorTitleInput, itemEditorValueTextarea,
         itemEditorBackBtn, itemEditorSaveBtn, switcherSettingsModal, settingsUserList,
         settingsCloseBtn, settingsImportBtn, settingsExportBtn, settingsMultiSelectBtn,
-        settingsDeleteBtn, editGenderTrigger, characterToggleSwitch, characterBannerImg,
+        settingsDeleteBtn, editGenderTrigger, characterBannerImg,
         profileAvatarImg, userNameEl, genderSymbolEl, homeBioContent, usernameLabel,
         switcherSettingsTitle
     } = elements;
@@ -80,7 +80,7 @@ function createProfileManager(config) {
         }
 
         if (elements.modeToggleBtn) elements.modeToggleBtn.textContent = currentMode;
-        if (elements.characterToggleContainer) elements.characterToggleContainer.style.display = isYouMode ? 'none' : 'block';
+        
         if (elements.createNewUserBtn) elements.createNewUserBtn.title = isYouMode ? '新建用户' : '新建角色';
 
         if (editGenderTrigger) {
@@ -151,11 +151,23 @@ function createProfileManager(config) {
         updateDisplay(editOccupationTrigger, profile.occupation, '请填写职业');
         updateDisplay(editBioTrigger, profile.bio, '请填写简介');
 
-        if (characterToggleSwitch) {
-            characterToggleSwitch.checked = profile.isToggleOn || false;
-        }
         
-        // 调用UI特定的渲染/更新函数
+        
+        // 加载自定义栏目
+        modalMainContent?.querySelectorAll('.modal-section-pane[id^="modal-section-custom-"]').forEach(pane => pane.remove());
+        sidebarNavList?.querySelectorAll('.modal-nav-button:not(.fixed-nav-button)').forEach(btn => btn.remove());
+
+        if (profile.customSections && Array.isArray(profile.customSections)) {
+            profile.customSections.forEach(sectionData => {
+                const newPane = createNewSection(sectionData.title, false);
+                if (newPane && sectionData.items && Array.isArray(sectionData.items)) {
+                    sectionData.items.forEach(itemData => {
+                        createAndAppendCustomItem(newPane, itemData.title, itemData.value);
+                    });
+                }
+            });
+        }
+
         if (typeof renderSwitcher === 'function') {
             renderSwitcher();
         }
@@ -189,7 +201,6 @@ function createProfileManager(config) {
 
     function closeSwitcherSettingsModal() {
         switcherSettingsModal?.classList.remove('active');
-        // YDN需要在关闭后重新渲染网格
         if (uiStyle === 'YDN' && typeof renderSwitcher === 'function') {
             renderSwitcher();
         }
@@ -204,7 +215,8 @@ function createProfileManager(config) {
             bio: '', age: '', race: '', occupation: '',
             avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg',
             banner: 'https://i.postimg.cc/NjRJ5qdx/a-good.jpg',
-            isToggleOn: false
+            
+            customSections: []
         };
         profileData.push(newProfile);
         await dbStorage.setItem(getDbKey('profileData'), profileData);
@@ -277,24 +289,20 @@ function createProfileManager(config) {
             }
         };
 
-        const username = document.getElementById('edit-username')?.value;
-        const gender = document.getElementById('edit-gender-trigger')?.querySelector('.value-display')?.textContent || '';
-        const getDisplayValue = (trigger) => {
-            const display = trigger?.querySelector('.value-display');
-            return (display && !display.classList.contains('placeholder')) ? display.textContent : '';
-        };
-        
-        addInfoItem(currentMode === 'YOU' ? '用户名' : '角色名', username);
-        addInfoItem('性别', gender);
-        addInfoItem('年龄', getDisplayValue(editAgeTrigger));
-        addInfoItem('种族', getDisplayValue(editRaceTrigger));
-        addInfoItem('职业', getDisplayValue(editOccupationTrigger));
+        const currentProfile = profileData.find(p => p.id === currentProfileId);
+        if (!currentProfile) return;
+
+        addInfoItem(currentMode === 'YOU' ? '用户名' : '角色名', currentProfile.name);
+        addInfoItem('性别', currentProfile.gender);
+        addInfoItem('年龄', currentProfile.age);
+        addInfoItem('种族', currentProfile.race);
+        addInfoItem('职业', currentProfile.occupation);
         
         if (basicInfoList.children.length > 0) {
             basicInfoCard.appendChild(basicInfoList);
         }
 
-        const bio = getDisplayValue(editBioTrigger);
+        const bio = currentProfile.bio;
         if (bio) {
             const bioListItem = document.createElement('li');
             bioListItem.style.flexDirection = 'column'; bioListItem.style.alignItems = 'flex-start'; bioListItem.style.gap = '4px';
@@ -305,39 +313,32 @@ function createProfileManager(config) {
         }
 
         profileTabPane.appendChild(basicInfoCard);
+        
+        if (currentProfile.customSections && currentProfile.customSections.length > 0) {
+            currentProfile.customSections.forEach(section => {
+                const card = document.createElement('div'); card.className = 'info-card';
+                const cardTitle = document.createElement('h3'); cardTitle.className = 'card-title'; cardTitle.textContent = section.title;
+                card.appendChild(cardTitle);
 
-        const customSections = modalMainContent?.querySelectorAll('.modal-section-pane[id^="modal-section-custom-"]');
-        customSections?.forEach(section => {
-            const sectionTitle = section.querySelector('.pane-title-capsule')?.textContent;
-            const items = section.querySelectorAll('.custom-item-group');
-            const card = document.createElement('div'); card.className = 'info-card';
-            const cardTitle = document.createElement('h3'); cardTitle.className = 'card-title'; cardTitle.textContent = sectionTitle;
-            card.appendChild(cardTitle);
+                const itemsWithContent = section.items.filter(item => item.value && item.value.trim());
 
-            if (items.length === 0) {
-                const emptyText = document.createElement('p'); emptyText.textContent = '暂无内容'; emptyText.style.color = '#999';
-                card.appendChild(emptyText);
-            } else {
-                const list = document.createElement('ul'); list.className = 'info-list';
-                items.forEach(item => {
-                    const labelText = item.querySelector('label')?.textContent;
-                    const valueDisplay = item.querySelector('.value-display');
-                    if (valueDisplay && !valueDisplay.classList.contains('placeholder')) {
-                        const valueText = valueDisplay.textContent;
-                        const listItem = document.createElement('li');
-                        const labelSpan = document.createElement('span'); labelSpan.className = 'info-label'; labelSpan.textContent = labelText;
-                        const valueSpan = document.createElement('span'); valueSpan.className = 'info-value'; valueSpan.textContent = valueText;
-                        listItem.appendChild(labelSpan); listItem.appendChild(valueSpan);
-                        list.appendChild(listItem);
-                    }
-                });
-                if (list.children.length > 0) { card.appendChild(list); } else {
+                if (itemsWithContent.length === 0) {
                     const emptyText = document.createElement('p'); emptyText.textContent = '暂无内容'; emptyText.style.color = '#999';
                     card.appendChild(emptyText);
+                } else {
+                    const list = document.createElement('ul'); list.className = 'info-list';
+                    itemsWithContent.forEach(item => {
+                        const listItem = document.createElement('li');
+                        const labelSpan = document.createElement('span'); labelSpan.className = 'info-label'; labelSpan.textContent = item.title;
+                        const valueSpan = document.createElement('span'); valueSpan.className = 'info-value'; valueSpan.textContent = item.value;
+                        listItem.appendChild(labelSpan); listItem.appendChild(valueSpan);
+                        list.appendChild(listItem);
+                    });
+                    card.appendChild(list);
                 }
-            }
-            profileTabPane.appendChild(card);
-        });
+                profileTabPane.appendChild(card);
+            });
+        }
     }
 
     function openSubEditor(config) { if (!sepTitle || !sepTextarea || !subEditorPanel) return; sepTitle.textContent = config.title; sepTextarea.value = config.initialValue || ''; sepTextarea.placeholder = config.placeholder || '在此输入内容...'; currentSaveCallback = config.onSave; subEditorPanel.classList.add('active'); sepTextarea.focus(); }
@@ -347,16 +348,21 @@ function createProfileManager(config) {
     function openItemEditor(pane, item = null) { if (!itemEditorPanel || !itemEditorTitleHeader || !itemEditorTitleInput || !itemEditorValueTextarea) return; currentItemEditingContext = { pane, item }; if (item) { itemEditorTitleHeader.textContent = '编辑条目'; const label = item.querySelector('label')?.textContent; const valueDisplay = item.querySelector('.value-display'); const value = (valueDisplay && !valueDisplay.classList.contains('placeholder')) ? valueDisplay.textContent : ''; itemEditorTitleInput.value = label || ''; itemEditorValueTextarea.value = value; } else { itemEditorTitleHeader.textContent = '添加条目'; itemEditorTitleInput.value = ''; itemEditorValueTextarea.value = ''; itemEditorTitleInput.focus(); } itemEditorPanel.classList.add('active'); }
     function closeItemEditor() { itemEditorPanel?.classList.remove('active'); currentItemEditingContext = { pane: null, item: null }; }
     
-    function createNewSection(name) {
+    function createNewSection(name, activateOnClick = true) {
         const newId = `modal-section-custom-${Date.now()}`;
         const newNavButton = document.createElement('button'); newNavButton.className = 'modal-nav-button'; newNavButton.setAttribute('data-target', newId); newNavButton.innerHTML = `<span>${name}</span>`;
-        const newContentPane = document.createElement('div'); newContentPane.id = newId; newContentPane.className = 'modal-section-pane'; newContentPane.innerHTML = `<div class="pane-header-container"><h4 class="pane-title-capsule">${name}</h4></div><div class="custom-items-container"></div><button class="add-item-btn"><i class="fa-solid fa-plus"></i><span>添加条目</span></button>`;
+        const newContentPane = document.createElement('div'); newContentPane.id = newId; newContentPane.className = 'modal-section-pane';
+        newContentPane.innerHTML = `<div class="pane-header-container"><h4 class="pane-title-capsule">${name}</h4></div><div class="custom-items-container"></div><button class="add-item-btn"><i class="fa-solid fa-plus"></i><span>添加条目</span></button>`;
         sidebarNavList?.appendChild(newNavButton);
         modalMainContent?.appendChild(newContentPane);
         const itemsContainer = newContentPane.querySelector('.custom-items-container');
         if (itemsContainer) { new Sortable(itemsContainer, { handle: 'label', animation: 150, ghostClass: 'item-sortable-ghost' }); }
-        newNavButton.click();
-        if (presetContentStore[name]) { presetContentStore[name].forEach(item => createAndAppendCustomItem(newContentPane, item.title, item.value)); }
+        
+        if (activateOnClick) {
+            newNavButton.click();
+        }
+        
+        return newContentPane;
     }
     
     function openAddSectionSheet() { addSectionSheetOverlay?.classList.add('active'); }
@@ -366,9 +372,13 @@ function createProfileManager(config) {
     function closeNamePrompt() { namePromptOverlay?.classList.remove('active'); currentPromptAction = null; elementBeingEdited = null; }
     
     function handleConfirmAddSection() { const name = newSectionNameInput?.value.trim(); if (!name || name.length < 2 || name.length > 4) { alert('栏目名称必须为 2-4 个字符！'); return; } const isDuplicate = [...(sidebarNavList?.querySelectorAll('[data-target] span') || [])].some(span => span.textContent === name) || [...(presetTagsContainer?.querySelectorAll('[data-preset-name]') || [])].some(tag => tag.dataset.presetName === name); if (isDuplicate) { alert('该名称已存在，请换一个！'); return; } createNewSection(name); closeNamePrompt(); }
-    async function handleConfirmRenameSection() { if (!elementBeingEdited || !newSectionNameInput) return; const newName = newSectionNameInput.value.trim(); const oldName = elementBeingEdited.querySelector('.pane-title-capsule')?.textContent; if (newName === oldName) { closeNamePrompt(); return; } if (newName.length < 2 || newName.length > 4) { alert('栏目名称必须为 2-4 个字符！'); return; } const isDuplicate = [...(sidebarNavList?.querySelectorAll('[data-target] span') || [])].some(span => span.textContent === newName); if (isDuplicate) { alert('该名称已存在，请换一个！'); return; } const titleEl = elementBeingEdited.querySelector('.pane-title-capsule'); if (titleEl) titleEl.textContent = newName; const navButtonSpan = sidebarNavList?.querySelector(`[data-target="${elementBeingEdited.id}"] span`); if (navButtonSpan) navButtonSpan.textContent = newName; const presetTag = presetTagsContainer?.querySelector(`[data-preset-name="${oldName}"]`); if (presetTag) { presetTag.dataset.presetName = newName; presetTag.textContent = newName; } if (presetContentStore.hasOwnProperty(oldName)) { presetContentStore[newName] = presetContentStore[oldName]; delete presetContentStore[oldName]; await dbStorage.setItem(getDbKey('presetContentStore'), presetContentStore); } closeNamePrompt(); }
+    async function handleConfirmRenameSection() { if (!elementBeingEdited || !newSectionNameInput) return; const newName = newSectionNameInput.value.trim(); const oldName = elementBeingEdited.querySelector('.pane-title-capsule')?.textContent; if (newName === oldName) { closeNamePrompt(); return; } if (newName.length < 2 || newName.length > 4) { alert('栏目名称必须为 2-4 个字符！'); return; } const isDuplicate = [...(sidebarNavList?.querySelectorAll('[data-target] span') || [])].some(span => span.textContent === newName); if (isDuplicate) { alert('该名称已存在，请换一个！'); return; } const titleEl = elementBeingEdited.querySelector('.pane-title-capsule'); if (titleEl) titleEl.textContent = newName; const navButtonSpan = sidebarNavList?.querySelector(`[data-target="${elementBeingEdited.id}"] span`); if (navButtonSpan) navButtonSpan.textContent = newName; const presetTag = presetTagsContainer?.querySelector(`[data-preset-name="${oldName}"]`); if (presetTag) { presetTag.dataset.presetName = newName; presetTag.textContent = newName; } if (presetContentStore.hasOwnProperty(oldName)) { presetContentStore[newName] = presetContentStore[oldName]; delete presetContentStore[oldName]; 
+    await dbStorage.setItem('globalPresetContentStore', presetContentStore); 
+    } closeNamePrompt(); }
     
-    async function handlePressStart(event) { const targetTag = event.target.closest('.preset-tag:not(.preset-tag-custom)'); if (!targetTag) return; isLongPress = false; longPressTimer = setTimeout(async () => { isLongPress = true; event.preventDefault(); const presetName = targetTag.dataset.presetName; if (confirm(`确定要删除预设栏目“${presetName}”吗？`)) { targetTag.remove(); delete presetContentStore[presetName]; await dbStorage.setItem(getDbKey('presetContentStore'), presetContentStore); } }, LONG_PRESS_DURATION); }
+    async function handlePressStart(event) { const targetTag = event.target.closest('.preset-tag:not(.preset-tag-custom)'); if (!targetTag) return; isLongPress = false; longPressTimer = setTimeout(async () => { isLongPress = true; event.preventDefault(); const presetName = targetTag.dataset.presetName; if (confirm(`确定要删除预设栏目“${presetName}”吗？`)) { targetTag.remove(); delete presetContentStore[presetName]; 
+    await dbStorage.setItem('globalPresetContentStore', presetContentStore); 
+    } }, LONG_PRESS_DURATION); }
     function handlePressEnd() { clearTimeout(longPressTimer); }
     
     function openOptionsBottomSheet(paneElement) { activeCustomPane = paneElement; customSectionOptionsOverlay?.classList.add('active'); }
@@ -390,15 +400,28 @@ function createProfileManager(config) {
             profileData = loadedProfiles;
         } else {
             if (currentMode === 'YOU') {
-                profileData = [{ id: getDefaultProfileId(), name: 'User', gender: '♀（女）', bio: '', age: '', race: '', occupation: '', avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg', banner: 'https://i.postimg.cc/NjRJ5qdx/a-good.jpg' }];
+                profileData = [{ id: getDefaultProfileId(), name: 'User', gender: '♀（女）', bio: '', age: '', race: '', occupation: '', avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg', banner: 'https://i.postimg.cc/NjRJ5qdx/a-good.jpg', customSections: [] }];
             } else {
-                profileData = [{ id: getDefaultProfileId(), name: 'Felotus', gender: '♀（女）', bio: '', age: '', race: '', occupation: '', avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg', banner: 'https://i.postimg.cc/NjRJ5qdx/a-good.jpg', isToggleOn: false }];
+                profileData = [{ id: getDefaultProfileId(), name: 'Felotus', gender: '♀（女）', bio: '', age: '', race: '', occupation: '', avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg', banner: 'https://i.postimg.cc/NjRJ5qdx/a-good.jpg', customSections: [] }];
             }
             await dbStorage.setItem(getDbKey('profileData'), profileData);
         }
-
-        const loadedPresets = await dbStorage.getItem(getDbKey('presetContentStore'));
+        
+        const loadedPresets = await dbStorage.getItem('globalPresetContentStore');
         presetContentStore = loadedPresets || {};
+        
+        if (presetTagsContainer) {
+            presetTagsContainer.querySelectorAll('.preset-tag:not(.preset-tag-custom)').forEach(tag => tag.remove());
+            Object.keys(presetContentStore).forEach(name => {
+                if (!presetTagsContainer.querySelector(`[data-preset-name="${name}"]`)) {
+                    const newPresetTag = document.createElement('button');
+                    newPresetTag.className = 'preset-tag';
+                    newPresetTag.dataset.presetName = name;
+                    newPresetTag.textContent = name;
+                    presetTagsContainer.appendChild(newPresetTag);
+                }
+            });
+        }
 
         const loadedProfileId = await dbStorage.getItem(getDbKey('currentProfileId'));
         if (loadedProfileId && profileData.some(p => p.id === loadedProfileId)) {
@@ -418,12 +441,16 @@ function createProfileManager(config) {
         }
     }
 
-    // 绑定一次性事件
-    (function bindSharedEvents() {
-        editGenderTrigger?.addEventListener('click', () => { if (currentMode === 'YOU') return; const valueDisplay = editGenderTrigger.querySelector('.value-display'); if (!valueDisplay) return; const currentValue = valueDisplay.textContent; const currentIndex = GENDER_OPTIONS.indexOf(currentValue); const nextIndex = (currentIndex + 1) % GENDER_OPTIONS.length; valueDisplay.textContent = GENDER_OPTIONS[nextIndex]; });
-        characterToggleSwitch?.addEventListener('change', async function () { if (currentMode !== 'TA') return; const currentProfile = profileData.find(p => p.id === currentProfileId); if (currentProfile) { currentProfile.isToggleOn = this.checked; await dbStorage.setItem(getDbKey('profileData'), profileData); } });
+    // ▼▼▼ 修改开始 ▼▼▼
+    function bindUiSpecificEvents() {
         elements.tabButtons.forEach(button => { button.addEventListener('click', () => { elements.tabButtons.forEach(btn => btn.classList.remove('active')); elements.tabPanes.forEach(pane => pane.classList.remove('active')); button.classList.add('active'); const tabId = button.dataset.tab; const targetPane = document.getElementById(tabId); if (targetPane) targetPane.classList.add('active'); }); });
         elements.editFabButton?.addEventListener('click', openModal);
+        elements.modeToggleBtn?.addEventListener('click', async () => { const newMode = currentMode === 'YOU' ? 'TA' : 'YOU'; currentMode = newMode; await dbStorage.setItem(`profile${uiStyle}Mode`, currentMode); await initializeApp(); });
+        
+    }
+
+    function bindSharedEvents() {
+        editGenderTrigger?.addEventListener('click', () => { if (currentMode === 'YOU') return; const valueDisplay = editGenderTrigger.querySelector('.value-display'); if (!valueDisplay) return; const currentValue = valueDisplay.textContent; const currentIndex = GENDER_OPTIONS.indexOf(currentValue); const nextIndex = (currentIndex + 1) % GENDER_OPTIONS.length; valueDisplay.textContent = GENDER_OPTIONS[nextIndex]; });
         closeModalButton?.addEventListener('click', closeModal);
         modalOverlay?.addEventListener('click', (event) => { if (event.target === modalOverlay) closeModal(); });
         modalSidebar?.addEventListener('click', (event) => { const button = event.target.closest('.modal-nav-button'); if (!button) return; modalSidebar.querySelectorAll('.modal-nav-button').forEach(btn => btn.classList.remove('active')); button.classList.add('active'); modalMainContent.querySelectorAll('.modal-section-pane').forEach(pane => pane.classList.remove('active')); const targetPaneId = button.dataset.target; const targetPane = document.getElementById(targetPaneId); if (targetPane) targetPane.classList.add('active'); });
@@ -445,6 +472,24 @@ function createProfileManager(config) {
                 currentProfile.race = getDisplayValue(editRaceTrigger);
                 currentProfile.occupation = getDisplayValue(editOccupationTrigger);
                 currentProfile.bio = getDisplayValue(editBioTrigger);
+
+                currentProfile.customSections = [];
+                modalMainContent?.querySelectorAll('.modal-section-pane[id^="modal-section-custom-"]').forEach(pane => {
+                    const sectionTitle = pane.querySelector('.pane-title-capsule')?.textContent;
+                    if (sectionTitle) {
+                        const sectionData = { title: sectionTitle, items: [] };
+                        pane.querySelectorAll('.custom-item-group').forEach(itemEl => {
+                            const itemTitle = itemEl.querySelector('label')?.textContent;
+                            const valueDisplay = itemEl.querySelector('.value-display');
+                            const itemValue = (valueDisplay && !valueDisplay.classList.contains('placeholder')) ? valueDisplay.textContent : '';
+                            if (itemTitle) {
+                                sectionData.items.push({ title: itemTitle, value: itemValue });
+                            }
+                        });
+                        currentProfile.customSections.push(sectionData);
+                    }
+                });
+
                 if (userNameEl) userNameEl.textContent = currentProfile.name;
                 if (genderSymbolEl) genderSymbolEl.textContent = currentProfile.gender.charAt(0);
                 if (profileAvatarImg) profileAvatarImg.src = currentProfile.avatar;
@@ -470,7 +515,42 @@ function createProfileManager(config) {
         cancelPromptBtn?.addEventListener('click', closeNamePrompt);
         namePromptOverlay?.addEventListener('click', (event) => { if (event.target === namePromptOverlay) closeNamePrompt(); });
         confirmPromptBtn?.addEventListener('click', () => { if (typeof currentPromptAction === 'function') currentPromptAction(); });
-        presetTagsContainer?.addEventListener('click', (event) => { if (isLongPress) { isLongPress = false; return; } const button = event.target.closest('.preset-tag'); if (!button) return; if (button.dataset.action === 'custom') { openNamePrompt({ title: '为新栏目命名', onConfirm: handleConfirmAddSection }); } else if (button.dataset.presetName) { createNewSection(button.dataset.presetName); } closeAddSectionSheet(); });
+        
+        presetTagsContainer?.addEventListener('click', (event) => { 
+            if (isLongPress) { 
+                isLongPress = false; 
+                return; 
+            } 
+            const button = event.target.closest('.preset-tag'); 
+            if (!button) return; 
+
+            if (button.dataset.action === 'custom') { 
+                openNamePrompt({ title: '为新栏目命名', onConfirm: handleConfirmAddSection }); 
+            } else if (button.dataset.presetName) { 
+                const presetName = button.dataset.presetName;
+                
+                // ▼▼▼ 唯一修改点：在这里加入重复性检查 ▼▼▼
+                const existingSectionNames = Array.from(sidebarNavList.querySelectorAll('.modal-nav-button:not(.fixed-nav-button) span'))
+                                                  .map(span => span.textContent);
+                if (existingSectionNames.includes(presetName)) {
+                    alert('该栏目已存在，请勿重复添加');
+                    closeAddSectionSheet(); // 直接关闭并退出
+                    return;
+                }
+                // ▲▲▲ 修改结束 ▲▲▲
+
+                const newPane = createNewSection(presetName);
+                const itemsToCreate = JSON.parse(JSON.stringify(presetContentStore[presetName] || []));
+
+                if (newPane && itemsToCreate) {
+                    itemsToCreate.forEach(item => {
+                        createAndAppendCustomItem(newPane, item.title, item.value || '');
+                    });
+                }
+            } 
+            closeAddSectionSheet(); 
+        });
+
         presetTagsContainer?.addEventListener('mousedown', handlePressStart);
         presetTagsContainer?.addEventListener('touchstart', handlePressStart, { passive: true });
         ['mouseup', 'mouseleave', 'touchend', 'touchmove'].forEach(evt => presetTagsContainer?.addEventListener(evt, handlePressEnd));
@@ -478,7 +558,13 @@ function createProfileManager(config) {
         modalMainContent?.addEventListener('click', (event) => { const pane = event.target.closest('.modal-section-pane'); if (!pane) return; if (event.target.closest('.item-actions-btn')) { if (confirm('确定要删除这个条目吗？')) event.target.closest('.custom-item-group')?.remove(); } else if (event.target.closest('.pane-title-capsule') && pane.id.startsWith('modal-section-custom-')) { openOptionsBottomSheet(pane); } else if (event.target.closest('.add-item-btn')) { openItemEditor(pane, null); } else if (event.target.closest('.custom-item-group')) { openItemEditor(pane, event.target.closest('.custom-item-group')); } });
         cancelOptionsSheetBtn?.addEventListener('click', closeOptionsBottomSheet);
         customSectionOptionsOverlay?.addEventListener('click', (event) => { if (event.target === customSectionOptionsOverlay) closeOptionsBottomSheet(); });
-        customSectionOptionsSheet?.addEventListener('click', async (event) => { const button = event.target.closest('.action-button'); if (!button || !activeCustomPane) return; const action = button.dataset.action; const sectionName = activeCustomPane.querySelector('.pane-title-capsule')?.textContent; if (!sectionName) return; switch (action) { case 'rename': openNamePrompt({ title: '重命名栏目', defaultValue: sectionName, onConfirm: handleConfirmRenameSection, element: activeCustomPane }); break; case 'save-preset': if (presetTagsContainer?.querySelector(`[data-preset-name="${sectionName}"]`)) { alert(`预设“${sectionName}”已存在！`); } else { const newPresetTag = document.createElement('button'); newPresetTag.className = 'preset-tag'; newPresetTag.dataset.presetName = sectionName; newPresetTag.textContent = sectionName; presetTagsContainer?.appendChild(newPresetTag); alert(`已将“${sectionName}”保存为预设栏目！`); } break; case 'load-content': if (!presetTagsContainer?.querySelector(`[data-preset-name="${sectionName}"]`)) { alert(`请先将“${sectionName}”存为预设栏目后再加载内容！`); break; } const itemsToLoad = [...activeCustomPane.querySelectorAll('.custom-item-group')].map(itemEl => ({ title: itemEl.querySelector('label')?.textContent || '', value: '' })); presetContentStore[sectionName] = itemsToLoad; await dbStorage.setItem(getDbKey('presetContentStore'), presetContentStore); alert(`已将 ${itemsToLoad.length} 个条目标题加载到预设“${sectionName}”中！`); break; case 'delete': if (confirm('确定要删除这个栏目吗？此操作不可撤销。')) { const paneId = activeCustomPane.id; const navButton = sidebarNavList?.querySelector(`[data-target="${paneId}"]`); activeCustomPane.remove(); navButton?.remove(); sidebarNavList?.querySelector('.fixed-nav-button')?.click(); } break; } closeOptionsBottomSheet(); });
+        customSectionOptionsSheet?.addEventListener('click', async (event) => { const button = event.target.closest('.action-button'); if (!button || !activeCustomPane) return; const action = button.dataset.action; const sectionName = activeCustomPane.querySelector('.pane-title-capsule')?.textContent; if (!sectionName) return; switch (action) { case 'rename': openNamePrompt({ title: '重命名栏目', defaultValue: sectionName, onConfirm: handleConfirmRenameSection, element: activeCustomPane }); break; case 'save-preset': if (presetTagsContainer?.querySelector(`[data-preset-name="${sectionName}"]`)) { alert(`预设“${sectionName}”已存在！`); } else { const newPresetTag = document.createElement('button'); newPresetTag.className = 'preset-tag'; newPresetTag.dataset.presetName = sectionName; newPresetTag.textContent = sectionName; presetTagsContainer?.appendChild(newPresetTag); alert(`已将“${sectionName}”保存为预设栏目！`); 
+        const itemsToSaveAsPreset = [...activeCustomPane.querySelectorAll('.custom-item-group')].map(itemEl => ({ title: itemEl.querySelector('label')?.textContent || '', value: '' }));
+        presetContentStore[sectionName] = itemsToSaveAsPreset;
+        await dbStorage.setItem('globalPresetContentStore', presetContentStore);
+        } break; case 'load-content': if (!presetTagsContainer?.querySelector(`[data-preset-name="${sectionName}"]`)) { alert(`请先将“${sectionName}”存为预设栏目后再加载内容！`); break; } const itemsToLoad = [...activeCustomPane.querySelectorAll('.custom-item-group')].map(itemEl => ({ title: itemEl.querySelector('label')?.textContent || '', value: '' })); presetContentStore[sectionName] = itemsToLoad; 
+        await dbStorage.setItem('globalPresetContentStore', presetContentStore); 
+        alert(`已将 ${itemsToLoad.length} 个条目标题加载到预设“${sectionName}”中！`); break; case 'delete': if (confirm('确定要删除这个栏目吗？此操作不可撤销。')) { const paneId = activeCustomPane.id; const navButton = sidebarNavList?.querySelector(`[data-target="${paneId}"]`); activeCustomPane.remove(); navButton?.remove(); sidebarNavList?.querySelector('.fixed-nav-button')?.click(); } break; } closeOptionsBottomSheet(); });
         settingsUserList?.addEventListener('click', (event) => { const targetLi = event.target.closest('li[data-profile-id]'); if (!targetLi || targetLi.classList.contains('disabled')) return; const profileId = targetLi.dataset.profileId; const isSelected = selectedProfileIds.includes(profileId); if (isMultiSelectMode) { if (isSelected) { selectedProfileIds = selectedProfileIds.filter(id => id !== profileId); targetLi.classList.remove('selected'); } else { selectedProfileIds.push(profileId); targetLi.classList.add('selected'); } } else { settingsUserList.querySelectorAll('li').forEach(li => li.classList.remove('selected')); if (isSelected) { selectedProfileIds = []; } else { selectedProfileIds = [profileId]; targetLi.classList.add('selected'); } } updateDeleteButtonState(); });
         settingsDeleteBtn?.addEventListener('click', async () => { if (selectedProfileIds.length === 0) return; const noun = currentMode === 'YOU' ? '用户' : '角色'; const confirmMessage = `确定要删除 ${selectedProfileIds.length} 个选定的${noun}吗？\n此操作不可撤销。`; if (confirm(confirmMessage)) { profileData = profileData.filter(p => !selectedProfileIds.includes(p.id)); await dbStorage.setItem(getDbKey('profileData'), profileData); if (selectedProfileIds.includes(currentProfileId)) { if (uiStyle === 'YDN') { currentProfileId = null; } else { await loadProfileData(getDefaultProfileId()); } } if (uiStyle === 'YDM') { renderSwitcher(); } closeSwitcherSettingsModal(); } });
         settingsCloseBtn?.addEventListener('click', closeSwitcherSettingsModal);
@@ -486,8 +572,8 @@ function createProfileManager(config) {
         settingsImportBtn?.addEventListener('click', () => alert('导入功能暂未开放'));
         settingsExportBtn?.addEventListener('click', () => alert('导出功能暂未开放'));
         settingsMultiSelectBtn?.addEventListener('click', (event) => { isMultiSelectMode = !isMultiSelectMode; event.currentTarget.classList.toggle('active', isMultiSelectMode); if (!isMultiSelectMode) { settingsUserList?.querySelectorAll('li').forEach(li => li.classList.remove('selected')); selectedProfileIds = []; updateDeleteButtonState(); } });
-        elements.modeToggleBtn?.addEventListener('click', async () => { const newMode = currentMode === 'YOU' ? 'TA' : 'YOU'; currentMode = newMode; await dbStorage.setItem(`profile${uiStyle}Mode`, currentMode); await initializeApp(); });
-    })();
+    }
+    // ▲▲▲ 修改结束 ▲▲▲
 
     // ====================【暴露公共接口】====================
     return {
@@ -498,5 +584,7 @@ function createProfileManager(config) {
         getDbKey,
         getProfileData: () => profileData,
         setProfileData: (newData) => { profileData = newData; },
+        bindSharedEvents,
+        bindUiSpecificEvents
     };
 }
