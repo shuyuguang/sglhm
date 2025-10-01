@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>纪念日</title>
+    
+    <!-- 引入公共资源 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="../common/template.css">
+
+</head>
+<body>
+    <!-- 引入通用的模板脚本 -->
+    <script src="../common/template.js"></script>
+    
+    <!-- 这个页面的专属逻辑 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // 定义“纪念日”页面的专属内容
+            const anniversaryPageContent = `
+                <p>这里是纪念日页面</p>
+            `;
+
+            // 定义“纪念日”页面羽毛笔按钮的专属功能
+            const handleAnniversaryFeatherClick = () => {
+                console.log('纪念日页面的羽毛笔被点击，准备添加新的纪念日。');
+                alert('“新增纪念日”功能正在开发中！');
+            };
+
+            // 调用 createPageLayout 生成页面
+            createPageLayout({
+                title: '纪念日',
+                contentHtml: anniversaryPageContent,
+                onFeatherClick: handleAnniversaryFeatherClick
+            });
+        });
+    </script>
+</body>
+</html>
