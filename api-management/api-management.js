@@ -1,0 +1,57 @@
+// api-management.js
+
+document.addEventListener('DOMContentLoaded', function() {
+    
+    function updateIndicatorPosition() {
+        const indicator = document.querySelector('.active-tab-indicator');
+        const activeButton = document.querySelector('.tab-button.active');
+        const tabsNav = document.querySelector('.tabs-nav');
+
+        if (!indicator || !activeButton || !tabsNav) {
+            if(indicator) indicator.style.opacity = '0';
+            return;
+        }
+
+        const buttonRect = activeButton.getBoundingClientRect();
+        const buttonCenter = buttonRect.left + buttonRect.width / 2;
+        const indicatorLeft = buttonCenter - (indicator.offsetWidth / 2);
+
+        indicator.style.left = `${indicatorLeft}px`;
+        indicator.style.opacity = '1';
+
+        const tabsNavRect = tabsNav.getBoundingClientRect();
+        
+        // --- 让爱心上移 4px ---
+        indicator.style.top = `${tabsNavRect.top + tabsNav.offsetHeight - indicator.offsetHeight / 2 - 4}px`;
+
+        indicator.style.position = 'fixed';
+    }
+
+    document.body.addEventListener('click', function(event) {
+        if (event.target.matches('.tab-button')) {
+            const clickedButton = event.target;
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+
+            clickedButton.classList.add('active');
+            const targetPane = document.getElementById(clickedButton.dataset.tab);
+            if (targetPane) {
+                targetPane.classList.add('active');
+            }
+            
+            updateIndicatorPosition();
+        }
+    });
+
+    // 使用 requestAnimationFrame 来确保在最佳时机更新位置
+    requestAnimationFrame(updateIndicatorPosition); 
+
+    const tabsContainer = document.querySelector('.tabs-container');
+    if (tabsContainer) {
+        tabsContainer.addEventListener('scroll', updateIndicatorPosition);
+    }
+    window.addEventListener('scroll', updateIndicatorPosition);
+    window.addEventListener('resize', updateIndicatorPosition);
+
+    console.log("配置页面JS加载，Tab指示器逻辑已启动。");
+});

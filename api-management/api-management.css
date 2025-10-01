@@ -1,0 +1,176 @@
+/* api-management.css */
+
+/* ==========================================================================
+   1. VARIABLES & ROOT
+   ========================================================================== */
+
+:root {
+  /* Colors */
+  --color-primary: #B9A2E9;
+  --color-primary-hover: #a68ed6;
+  --color-accent: #FFA7C4;
+  --color-accent-bg: #FCE4EC;
+  
+  --color-text-dark: #343a40;
+  --color-text-medium: #495057;
+  --color-text-light: #6c757d;
+  --color-text-white: #ffffff;
+
+  --color-bg-body: #f4f7f9;
+  --color-bg-light: #ffffff;
+  --color-bg-grey: #f1f3f5;
+  --color-bg-grey-hover: #e9ecef;
+
+
+
+  /* Layout */
+  --header-height: 62px;
+  --tabs-nav-height: 41px; /* Approximate height for calculation */
+}
+
+
+/* ==========================================================================
+   2. GENERAL & RESET
+   ========================================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.6;
+  color: var(--color-text-dark);
+  background-color: var(--color-bg-body);
+}
+
+
+/* ==========================================================================
+   3. PAGE LAYOUT
+   ========================================================================== */
+
+.page-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  height: var(--header-height);
+  background-color: var(--color-bg-light);
+}
+
+.main-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.content-body {
+  padding: 20px 15px;
+}
+
+
+/* ==========================================================================
+   4. COMPONENTS
+   ========================================================================== */
+
+/* --- Page Title --- */
+.page-title { display: flex; align-items: center; margin: 0; font-size: 1.2em; font-weight: 600; color: var(--color-text-medium); }
+.page-title::before { 
+  content: '\f004'; 
+  font-family: 'Font Awesome 6 Free'; 
+  font-weight: 900; 
+  font-size: 0.9em; 
+  text-align: center; 
+  width: 1.2em; 
+  margin-right: 10px; 
+  color: var(--color-primary); 
+}
+/* --- Header Action Buttons (省略) --- */
+.header-actions { display: flex; align-items: center; gap: 10px; }
+.header-actions button, .header-actions a { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: none; border-radius: 50%; cursor: pointer; text-decoration: none; transition: all 0.2s ease; }
+.btn-help { font-size: 16px; color: var(--color-accent); background-color: var(--color-accent-bg); }
+.btn-help:hover { color: var(--color-text-white); background-color: var(--color-accent); transform: scale(1.1); }
+.btn-back { font-size: 20px; color: var(--color-text-light); background-color: var(--color-bg-grey); }
+.btn-back:hover { color: var(--color-text-medium); background-color: var(--color-bg-grey-hover); }
+.btn-save { font-size: 16px; color: var(--color-text-white); background-color: var(--color-primary); }
+.btn-save:hover { background-color: var(--color-primary-hover); transform: scale(1.1); }
+
+/* --- Tabs Navigation --- */
+.tabs-nav {
+  position: sticky;
+  top: calc(var(--header-height) - 15px);
+  z-index: 10;
+  
+  background-color: var(--color-bg-light);
+  border-bottom: 1px solid var(--color-border);
+  
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.tabs-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.tabs-container {
+  display: flex;
+  padding: 0 10px;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.tab-button {
+  padding: 12px 15px;
+  border: none;
+  flex-shrink: 0;
+  font-size: 1em;
+  font-weight: 500;
+  color: var(--color-text-light);
+  background-color: transparent;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  flex: 1;
+  text-align: center;
+}
+.tab-button:hover {
+  color: var(--color-text-dark);
+}
+.tab-button.active {
+  color: var(--color-text-dark);
+  font-weight: 600;
+}
+
+/* --- Active Tab Indicator (The Heart) --- */
+.active-tab-indicator {
+  position: sticky;
+  top: calc(var(--header-height) - 10px + var(--tabs-nav-height) - 7px - 4px);
+  z-index: 30;
+  
+  width: 20px;
+  height: 14px;
+  
+  font-size: 14px;
+  text-align: center;
+  color: var(--color-primary);
+  
+  pointer-events: none;
+  opacity: 0;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
+}
+
+.active-tab-indicator::before {
+  content: '\f004';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+}
+
+/* --- Tab Content Panes --- */
+.tab-pane {
+  display: none;
+}
+.tab-pane.active {
+  display: block;
+}
