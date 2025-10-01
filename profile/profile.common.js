@@ -55,8 +55,8 @@ function createProfileManager(config) {
 
         const modeText = {
             docTitle: isYdn
-                ? '设定集 - felotus'
-                : (isYouMode ? '设定集 - felotus' : '设定集 - felotus'),
+                ? '设定集'
+                : (isYouMode ? '设定集' : '设定集'),
             settingsTitle: isYouMode ? '用户管理' : '角色管理',
             usernameLabel: isYouMode ? '用户名' : '角色名',
             bannerAlt: isYouMode ? '用户主图' : '角色主图',
