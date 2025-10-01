@@ -1,1 +1,77 @@
-1
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统设置</title>
+    
+    <!-- 引入公共资源 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="../common/template.css">
+    
+    <!-- 引入此页面的专属样式 -->
+    <link rel="stylesheet" href="system-setting.css">
+
+</head>
+<body>
+    <!-- 引入通用的模板脚本 -->
+    <script src="../common/template.js"></script>
+    
+    <!-- 这个页面的专属逻辑脚本 -->
+    <script src="system-setting.js"></script>
+    
+    <!-- 页面内容生成脚本 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // 定义“系统设置”页面的专属内容
+            const systemSettingPageContent = `
+                <!-- Tab 导航栏 -->
+                <nav class="tabs-nav">
+                    <div class="tabs-container">
+                        <button class="tab-button active" data-tab="main-interface">主界面</button>
+                        <button class="tab-button" data-tab="theme-ui">主题UI</button>
+                        <button class="tab-button" data-tab="background-sound">背景音</button>
+                        <button class="tab-button" data-tab="other">其它</button>
+                    </div>
+                </nav>
+
+                <!-- 用于显示小爱心的独立元素，放置在裁剪容器外部 -->
+                <div class="active-tab-indicator"></div>
+
+                <div class="main-container">
+                    <main class="content-body">
+                        <!-- Tab 内容面板 -->
+                        <div class="tabs-content">
+                            <div id="main-interface" class="tab-pane active">
+                                <p>这里是【主界面】的编辑区。</p>
+                            </div>
+                            <div id="theme-ui" class="tab-pane">
+                                <p>这里是【主题UI】的编辑区。</p>
+                            </div>
+                            <div id="background-sound" class="tab-pane">
+                                <p>这里是【背景音】的编辑区。</p>
+                            </div>
+                            <div id="other" class="tab-pane">
+                                <p>这里是【其它】的编辑区。</p>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            `;
+
+            // 定义羽毛笔按钮的功能
+            const handleSystemSettingFeatherClick = () => {
+                console.log('羽毛笔被点击，可以在这里执行保存系统设置的逻辑。');
+            };
+
+            // 调用 createPageLayout 生成页面
+            createPageLayout({
+                title: '系统设置',
+                contentHtml: systemSettingPageContent,
+                onFeatherClick: handleSystemSettingFeatherClick
+            });
+        });
+    </script>
+</body>
+</html>
