@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>活动</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="../common/template.css">
+
+    <!-- ▼▼▼ 专属样式 ▼▼▼ -->
+    <style>
+        /* 【修复第1步】给按钮的直接父容器设置相对定位，作为提示框的定位锚点 */
+        .header-actions {
+            position: relative;
+        }
+
+        /* 提示框核心样式 */
+        .help-tooltip {
+            /* 【修复第2步】改为绝对定位，它将相对于 .header-actions 定位 */
+            position: absolute; 
+            /* 从父容器顶部 100% 的位置开始，再往下推一点点 */
+            top: calc(100% + 8px); 
+            /* 对齐到父容器的右边缘 */
+            right: 0; 
+            width: 270px;
+            
+            background-color: #ffffff;
+            color: #000000;
+            padding: 12px 15px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
+            font-size: 1em;
+            line-height: 1.6;
+            z-index: 101;
+            
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s 0.2s;
+        }
+
+        /* 提示框激活状态样式 */
+        .help-tooltip.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s;
+        }
+
+        .help-tooltip p { margin: 0; }
+
+        /* 使用 ::after 伪元素创建小三角 */
+        .help-tooltip::after {
+            content: '';
+            position: absolute;
+            top: -8px;      
+            /* 【修复第3步】调整小三角位置，使其对准问号按钮的中心 */
+            right: 92px; 
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <script src="../common/template.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const activityPageContent = `<p>这里是活动页面</p>`;
+            const handleFeatherClick = () => {
+                console.log('活动页面的羽毛笔被点击，但当前无功能。');
+            };
+
+            const initializePageSpecificFeatures = () => {
+                // a. 获取由 template.js 创建的帮助按钮及其父容器
+                const helpButton = document.getElementById('help-btn');
+                const headerActions = helpButton.closest('.header-actions'); // 找到最近的 .header-actions 祖先
+                if (!helpButton || !headerActions) return;
+
+                // b. 动态创建此页面专属的提示框
+                const tooltip = document.createElement('div');
+                tooltip.id = 'help-tooltip';
+                tooltip.className = 'help-tooltip';
+                tooltip.innerHTML = `<p>这里是<strong>活动页面</strong>的专属帮助提示，介绍活动相关功能。</p>`;
+                
+                // c. 【修复第4步】将提示框添加到 headerActions 容器中，而不是 body
+                headerActions.appendChild(tooltip);
+
+                // d. 简化后的交互逻辑
+                helpButton.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    // 不再需要复杂的计算，只需切换 class 即可！
+                    tooltip.classList.toggle('active');
+                });
+
+                document.addEventListener('click', (event) => {
+                    if (tooltip.classList.contains('active') && !tooltip.contains(event.target)) {
+                        tooltip.classList.remove('active');
+                    }
+                });
+            };
+
+            createPageLayout({
+                title: '活动',
+                contentHtml: activityPageContent,
+                onFeatherClick: handleFeatherClick,
+                onPageLoad: initializePageSpecificFeatures
+            });
+        });
+    </script>
+</body>
+</html>
