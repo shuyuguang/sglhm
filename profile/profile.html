@@ -10,8 +10,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
     
-    <!-- 注意这里的路径 "css/main.css" -->
-    <link rel="stylesheet" href="css/main.css">
+    <!-- ▼▼▼ 修改开始：加载模块化CSS ▼▼▼ -->
+    <!-- 1. 基础变量和重置 -->
+    <link rel="stylesheet" href="base.css">
+    <!-- 2. 页面主要布局 -->
+    <link rel="stylesheet" href="layout.css">
+    <!-- 3. 可复用的UI组件 -->
+    <link rel="stylesheet" href="components.css">
+    <!-- 4. 特定UI风格 -->
+    <link rel="stylesheet" href="ui-ydn.css">
+    <link rel="stylesheet" href="ui-ydm.css">
+    <!-- 5. 模态框和浮层 -->
+    <link rel="stylesheet" href="modals.css">
+    <!-- 6. 工具和辅助类 -->
+    <link rel="stylesheet" href="utilities.css">
+    <!-- ▲▲▲ 修改结束 ▲▲▲ -->
 </head>
 <body>
 
@@ -59,7 +72,7 @@
                     <div class="tabs-nav">
                         <button class="tab-button active" data-tab="home-ydn">主页</button>
                         <button class="tab-button" data-tab="profile-ydn">档案</button>
-                        <!-- --- 注意：开关已移除 --- -->
+                        <!-- --- 注意：开关已从此位置移除 --- -->
                     </div>
                     <div class="tabs-content">
                         <div id="home-ydn" class="tab-pane active">

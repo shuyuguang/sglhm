@@ -1,0 +1,145 @@
+/* ui-ydn.css */
+
+#ydn-ui-wrapper {
+    width: 100%;
+    height: 100%;
+}
+
+#ydn-ui-wrapper .profile-view-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: var(--z-base);
+}
+
+#ydn-ui-wrapper .options-button {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background-color: var(--color-bg-control);
+    backdrop-filter: blur(8px);
+    border-radius: var(--radius-round);
+    text-decoration: none;
+    color: #f0f0f0;
+    font-size: 16px;
+    transition: transform 0.3s ease;
+    z-index: var(--z-floating-control);
+    border: none;
+    cursor: pointer;
+}
+
+#ydn-ui-wrapper .switcher-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-bg-grey);
+    display: flex;
+    flex-direction: column;
+    padding: 13px 9.5px;
+    z-index: var(--z-page-overlay);
+}
+
+#ydn-ui-wrapper .switcher-page-header {
+    flex-shrink: 0;
+    padding: 0 5px 15px 5px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+#ydn-ui-wrapper .switcher-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+#ydn-ui-wrapper .switcher-grid-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 12px;
+}
+
+#ydn-ui-wrapper .switcher-profile-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: grab;
+    text-decoration: none;
+    color: inherit;
+    padding: 10px;
+    border-radius: var(--radius-m);
+    transition: background-color 0.2s;
+}
+#ydn-ui-wrapper .switcher-profile-item:active {
+    cursor: grabbing;
+}
+#ydn-ui-wrapper .switcher-profile-item:hover {
+    background-color: var(--color-bg-grey-hover);
+}
+
+#ydn-ui-wrapper .switcher-profile-item .avatar {
+    width: 75px;
+    height: 75px;
+    border-radius: 15px;
+    object-fit: cover;
+}
+
+#ydn-ui-wrapper .switcher-profile-item .name {
+    font-size: 0.9em;
+    font-weight: 500;
+    text-align: center;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#ydn-ui-wrapper .switcher-add-btn {
+    width: 70px;
+    height: 70px;
+    font-size: 1.8em;
+    border-radius: var(--radius-m);
+    border: 2px dashed var(--color-primary-border-dashed);
+    background-color: var(--color-primary-bg-light);
+    color: var(--color-primary-text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    margin: 10px auto;
+}
+#ydn-ui-wrapper .switcher-add-btn:hover {
+    background-color: #e9e4fa;
+    border-style: solid;
+    color: var(--color-primary);
+    transform: scale(1.05);
+}
+
+#ydn-ui-wrapper .switcher-settings-btn {
+    position: absolute;
+    bottom: 12.5px;
+    left: 15px;
+    background-color: transparent;
+    border: none;
+    color: var(--color-text-lighter);
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 10px;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+#ydn-ui-wrapper .switcher-settings-btn:hover {
+    color: var(--color-text-medium);
+    transform: scale(1.1);
+    background-color: transparent;
+}
