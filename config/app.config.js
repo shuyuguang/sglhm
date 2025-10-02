@@ -6,15 +6,15 @@
  */
 
 // 假设未来你还会有 chat.config.js 等文件
-// const ALL_CHAT_DB_KEYS = ['chatHistory', 'chatSettings']; 
+// const ALL_CHAT_DB_KEYS = ['chatHistory', 'chatSettings']; // 这是旧的示例，将被替换
 // const ALL_DIARY_DB_KEYS = ['diaryEntries', 'diaryTags'];
 
 const ALL_APP_DB_KEYS = [
     // 1. 从 Profile 模块导入
     ...ALL_PROFILE_DB_KEYS,
 
-    // 2. 从 Chat 模块导入 (未来扩展)
-    // ...ALL_CHAT_DB_KEYS,
+    // 2. 从 Chat 模块导入 (▼▼▼ 修改点 ▼▼▼)
+    ...ALL_CHAT_DB_KEYS,
 
     // 3. 从 Diary 模块导入 (未来扩展)
     // ...ALL_DIARY_DB_KEYS
