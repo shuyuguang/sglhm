@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>聊天中</title>
+    
+    <!-- 引入公共资源 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- 引入本页面的专属 CSS -->
+    <link rel="stylesheet" href="chat-room.css">
+</head>
+<body>
+    <!-- 所有内容将由 chat-room.js 动态生成 -->
+
+    <!-- 依赖脚本 -->
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+
+    <!-- ▼▼▼ 修改点：加载所有需要的配置文件 ▼▼▼ -->
+    <script src="../config/profile.config.js"></script>
+    <script src="../config/chat.config.js"></script> <!-- 新增这一行 -->
+
+    <!-- 引入本页面的专属 JS 逻辑 -->
+    <script src="chat-room.js" type="module"></script>
+</body>
+</html>

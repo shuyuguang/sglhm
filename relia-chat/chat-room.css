@@ -1,0 +1,152 @@
+/* relia-chat/chat-room.css */
+
+:root {
+    --page-bg: #f4f7f9;
+    --header-bg: #ffffff;
+    --bubble-user-bg: #D1EBF5;
+    --bubble-char-bg: #FBEEC1;
+    --text-dark: #333;
+    --text-light: #fff;
+    --text-meta: #adb5bd;
+    --border-color: #e9ecef;
+    --send-btn-bg: #B9A2E9; 
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--page-bg);
+    overflow: hidden;
+}
+
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+}
+
+/* --- 聊天室头部 (无变化) --- */
+.chat-header {
+    display: flex;
+    align-items: center;
+    padding: 7px 22px 7px 20px;
+    background-color: var(--header-bg);
+    flex-shrink: 0;
+    gap: 10px;
+}
+
+.chat-header-btn {
+    background: none; border: none; font-size: 1.2rem; color: var(--text-dark);
+    cursor: pointer; padding: 5px; text-decoration: none; flex-shrink: 0;
+}
+
+.char-info {
+    flex-grow: 1; display: flex; align-items: center; gap: 12px;
+    min-width: 0; padding-left: 13px;
+}
+
+.char-info-avatar {
+    width: 46px; height: 46px; border-radius: 50%; object-fit: cover; flex-shrink: 0;
+}
+
+.char-info-text {
+    display: flex; flex-direction: column; justify-content: space-between;
+    height: 43px; padding: 1px 0; min-width: 0;
+}
+
+.char-info-name {
+    font-size: 1.2em; font-weight: 600; line-height: 1.2;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.char-info-status { font-size: 0.8em; color: var(--text-meta); line-height: 1.2; }
+
+
+/* --- 聊天消息区域 (无变化) --- */
+.chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background-color: #ffffff;
+}
+
+.message-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    max-width: 80%;
+}
+
+.message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.chat-bubble {
+    padding: 10px 15px;
+    border-radius: 18px;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.message-row.character { align-self: flex-start; }
+.chat-bubble.character { background-color: var(--bubble-char-bg); color: var(--text-dark); border-top-left-radius: 4px; }
+
+.message-row.user { align-self: flex-end; flex-direction: row-reverse; }
+.chat-bubble.user {
+    background-color: var(--bubble-user-bg);
+    color: var(--text-dark);
+    border-top-right-radius: 4px;
+}
+
+
+
+/* --- 底部输入区域 --- */
+.chat-input-area {
+    display: flex;
+    align-items: flex-end;
+    padding: 12px 15px;
+    background-color: var(--header-bg);
+    flex-shrink: 0;
+    gap: 10px;
+}
+
+#chat-input {
+    flex-grow: 1;
+    border: none;
+    background-color: var(--page-bg);
+    border-radius: 20px;
+    padding: 10px 15px 8px 15px;
+    font-size: 1.1em;
+    resize: none;
+    outline: none;
+    min-height: 20px;
+    max-height: 100px;
+    line-height: 1.5;
+    overflow-y: auto;
+}
+
+#send-btn {
+    background-color: var(--send-btn-bg);
+    color: var(--text-light);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+}
+
+#send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

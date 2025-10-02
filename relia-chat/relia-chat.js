@@ -1,8 +1,7 @@
 // relia-chat.js
 
-// ▼▼▼ 核心修改：从我们创建的公共模块中导入 dbStorage 和 createPageLayout ▼▼▼
 import { dbStorage } from '../common/db.js';
-import { createPageLayout } from '../common/template.js'; // 新增这一行
+import { createPageLayout } from '../common/template.js';
 
 document.addEventListener('DOMContentLoaded', function() {
 
@@ -42,6 +41,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let ui; // 用来存放所有DOM元素的引用
 
+    /**
+     * ▼▼▼ 修改：渲染聊天列表的函数，以支持显示最新消息 ▼▼▼
+     */
     function renderChatList(chatList) {
         const container = document.getElementById('chat-list-area');
         if (!container) return;
@@ -56,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <img src="${char.avatar}" alt="${char.name}" class="chat-card-avatar">
                 <div class="chat-card-main">
                     <div class="chat-card-name">${char.name || '未命名'}</div>
-                    <div class="chat-card-preview">...</div>
+                    <div class="chat-card-preview">${char.lastMessage || '...'}</div>
                 </div>
                 <div class="chat-card-meta">
                     <div class="chat-card-time">10:30</div>
@@ -65,11 +67,36 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `).join('');
     }
+    // ▲▲▲ 修改结束 ▲▲▲
 
+    /**
+     * ▼▼▼ 修改：加载并渲染初始聊天列表，增加获取最新消息的逻辑 ▼▼▼
+     */
     async function loadAndRenderInitialChats() {
-        const savedChatList = await dbStorage.getItem(CHAT_DB_KEYS.ACTIVE_CHAT_LIST);
-        renderChatList(savedChatList);
+        const savedChatList = await dbStorage.getItem(CHAT_DB_KEYS.ACTIVE_CHAT_LIST) || [];
+        if (savedChatList.length === 0) {
+            renderChatList([]);
+            return;
+        }
+
+        // 并行查询所有聊天列表的历史记录，以获取最后一条消息
+        const enhancedChatList = await Promise.all(
+            savedChatList.map(async (char) => {
+                const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${char.id}`;
+                const history = await dbStorage.getItem(historyKey);
+                
+                if (history && history.length > 0) {
+                    const lastMsg = history[history.length - 1];
+                    // 将最后一条消息附加到角色对象上
+                    return { ...char, lastMessage: lastMsg.text };
+                }
+                return char; // 如果没有历史记录，返回原对象
+            })
+        );
+        
+        renderChatList(enhancedChatList);
     }
+    // ▲▲▲ 修改结束 ▲▲▲
 
     function switchTab(targetTabId) {
         if (!ui) return;
@@ -139,13 +166,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         await dbStorage.setItem(CHAT_DB_KEYS.ACTIVE_CHAT_LIST, selectedChars);
-        renderChatList(selectedChars);
+        // 确认后，重新加载整个列表以获取最新消息
+        await loadAndRenderInitialChats();
         closePanel();
     }
 
     // ==================== 3. 执行页面渲染和事件绑定 ====================
 
-    // 现在 createPageLayout 是通过 import 进来的，可以安全调用
     createPageLayout({
         title: '聊天',
         contentHtml: chatPageContent,
@@ -154,7 +181,6 @@ document.addEventListener('DOMContentLoaded', function() {
         onPageLoad: loadAndRenderInitialChats
     });
 
-    // 获取所有UI元素
     ui = {
         overlay: document.getElementById('char-select-overlay'),
         listContainer: document.getElementById('char-list-container'),
@@ -162,10 +188,10 @@ document.addEventListener('DOMContentLoaded', function() {
         cancelBtn: document.getElementById('cancel-selection-btn'),
         tabsContainer: document.querySelector('.modal-tabs'),
         tabs: document.querySelectorAll('.modal-tab'),
-        tabContents: document.querySelectorAll('.modal-tab-content')
+        tabContents: document.querySelectorAll('.modal-tab-content'),
+        chatListArea: document.getElementById('chat-list-area')
     };
 
-    // 绑定事件监听
     ui.cancelBtn.addEventListener('click', closePanel);
     ui.confirmBtn.addEventListener('click', handleConfirm);
     ui.overlay.addEventListener('click', (event) => {
@@ -184,4 +210,16 @@ document.addEventListener('DOMContentLoaded', function() {
             switchTab(target.dataset.tab);
         }
     });
+
+    if (ui.chatListArea) {
+        ui.chatListArea.addEventListener('click', (event) => {
+            const card = event.target.closest('.chat-card');
+            if (card) {
+                const charId = card.dataset.charId;
+                if (charId) {
+                    window.location.href = `./chat-room.html?id=${charId}`;
+                }
+            }
+        });
+    }
 });

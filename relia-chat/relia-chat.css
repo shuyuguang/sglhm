@@ -178,17 +178,17 @@
 
 /* ▼▼▼ 新增：聊天列表和卡片样式 ▼▼▼ */
 #chat-list-area {
-    padding: 8px;
+    padding: 0px; /* 修改点：调整页面左右边距 */
 }
 
 .chat-card {
     display: flex;
     align-items: center;
-    padding: 12px;
-    margin-bottom: 8px;
+    padding: 12px 13px;
+    margin-bottom: 12px; /* 修改点：调整卡片上下间距 */
     background-color: #fff;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -242,10 +242,12 @@
 .chat-card-time {
     font-size: 0.8em;
     color: #adb5bd;
+    position: relative; /* 新增：开启相对定位，让我们可以微调位置 */
+    top: -2px;         /* 新增：向上移动 2px */
 }
 
 .unread-badge {
-    margin-top: 6px;
+    margin-top: 10px;
     background-color: #B9A2E9;
     color: white;
     font-size: 0.75em;
