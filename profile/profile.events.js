@@ -1,5 +1,4 @@
 // profile.events.js
-
 /**
  * 负责所有事件监听器的绑定
  */
@@ -97,21 +96,28 @@ function createEventManager(elements, state, ui, data, config) {
             trigger?.addEventListener('click', () => {
                 const valueDisplay = trigger.querySelector('.value-display');
                 if (!valueDisplay) return;
-                ui.openSubEditor({
-                    title: title,
+
+                // ▼▼▼ 修改/新增开始 ▼▼▼
+                // 从调用 openSubEditor 改为调用 openItemEditor
+                ui.openItemEditor({
+                    header: title, // 面板顶部的标题，例如 "编辑年龄"
+                    title: title.replace('编辑', ''), // 输入框里的标题，例如 "年龄"
                     initialValue: valueDisplay.classList.contains('placeholder') ? '' : valueDisplay.textContent,
-                    placeholder: valueDisplay.getAttribute('data-placeholder') || '',
+                    isTitleEditable: false, // 关键：标题不可编辑
                     onSave: (newValue) => {
+                        // 保存逻辑和以前一样
                         valueDisplay.textContent = newValue || valueDisplay.getAttribute('data-placeholder') || '';
                         valueDisplay.classList.toggle('placeholder', !newValue);
                     }
                 });
+                // ▲▲▲ 修改/新增结束 ▲▲▲
             });
         };
         setupTrigger(elements.editAgeTrigger, '编辑年龄');
         setupTrigger(elements.editRaceTrigger, '编辑种族');
         setupTrigger(elements.editOccupationTrigger, '编辑职业');
         setupTrigger(elements.editBioTrigger, '编辑简介');
+        
         elements.editGenderTrigger?.addEventListener('click', () => {
             if (state.currentMode === 'YOU') return;
             const display = elements.editGenderTrigger.querySelector('.value-display');
@@ -154,20 +160,29 @@ function createEventManager(elements, state, ui, data, config) {
         });
         elements.itemEditorBackBtn?.addEventListener('click', ui.closeItemEditor);
         elements.itemEditorSaveBtn?.addEventListener('click', () => {
-            const { pane, item } = state.currentItemEditingContext;
+            // ▼▼▼ 修改/新增开始 ▼▼▼
+            const { pane, item, onSave } = state.currentItemEditingContext;
             const title = elements.itemEditorTitleInput.value.trim();
             const value = elements.itemEditorValueTextarea.value.trim();
-            if (!title) return alert('标题不能为空！');
-            if (title.length > 10) return alert('标题不能超过10个字符！');
-            if (item) { // Editing existing item
-                item.querySelector('label').textContent = title;
-                const valueDisplay = item.querySelector('.value-display');
-                valueDisplay.textContent = value || '点击填写内容';
-                valueDisplay.classList.toggle('placeholder', !value);
-            } else { // Adding new item
-                ui.createAndAppendCustomItem(pane, title, value);
+
+            if (typeof onSave === 'function') {
+                // 新增的模式：如果存在 onSave 回调，直接执行它
+                onSave(value); 
+            } else {
+                // 旧的模式：处理自定义条目的添加和编辑
+                if (!title) return alert('标题不能为空！');
+                if (title.length > 10) return alert('标题不能超过10个字符！');
+                if (item) { // Editing existing item
+                    item.querySelector('label').textContent = title;
+                    const valueDisplay = item.querySelector('.value-display');
+                    valueDisplay.textContent = value || '点击填写内容';
+                    valueDisplay.classList.toggle('placeholder', !value);
+                } else { // Adding new item
+                    ui.createAndAppendCustomItem(pane, title, value);
+                }
             }
             ui.closeItemEditor();
+            // ▲▲▲ 修改/新增结束 ▲▲▲
         });
 
         // Custom Sections Logic
@@ -188,14 +203,20 @@ function createEventManager(elements, state, ui, data, config) {
             } else if (e.target.closest('.pane-title-capsule') && pane.id.startsWith('modal-section-custom-')) {
                 ui.openOptionsBottomSheet(pane);
             
+            // ▼▼▼ 第 1 处修改 ▼▼▼
             } else if (e.target.closest('.add-item-btn')) {
                 if (e.target.closest('.add-item-btn').id !== 'add-relationship-btn') {
-                    ui.openItemEditor(pane, null);
+                    // 旧代码: ui.openItemEditor(pane, null);
+                    // 新代码 (传入配置对象):
+                    ui.openItemEditor({ pane: pane });
                 }
             
+            // ▼▼▼ 第 2 处修改 ▼▼▼
             } else if (e.target.closest('.custom-item-group')) {
                 if (!e.target.closest('.custom-item-group').hasAttribute('data-rel-char-id')) {
-                    ui.openItemEditor(pane, e.target.closest('.custom-item-group'));
+                    // 旧代码: ui.openItemEditor(pane, e.target.closest('.custom-item-group'));
+                    // 新代码 (传入配置对象):
+                    ui.openItemEditor({ pane: pane, item: e.target.closest('.custom-item-group') });
                 }
             }
         });
@@ -313,7 +334,6 @@ function createEventManager(elements, state, ui, data, config) {
         elements.cancelRelTypeBtn?.addEventListener('click', ui.closeRelationshipTypeSelector);
         elements.relationshipTypeOverlay?.addEventListener('click', e => e.target === elements.relationshipTypeOverlay && ui.closeRelationshipTypeSelector());
         
-        // ▼▼▼ BUG修复的关键位置 ▼▼▼
         elements.relationshipTypeOptions?.addEventListener('click', e => {
             const targetBtn = e.target.closest('.option-tag');
             if (!targetBtn) return;
@@ -337,17 +357,14 @@ function createEventManager(elements, state, ui, data, config) {
                 state.selectedRelationshipTypes = state.selectedRelationshipTypes.filter(t => t !== type);
             }
 
-            // 【关键修复】: 每次点击标签后，立即调用UI更新函数，以启用或禁用确认按钮
             ui.updateRelTypeConfirmButtonState();
         });
-        // ▲▲▲ 修复结束 ▲▲▲
 
         elements.confirmRelTypeBtn?.addEventListener('click', async () => {
             if (state.selectedRelationshipTypes.length === 0) return;
             
             const finalRelationshipTypes = state.selectedRelationshipTypes;
 
-            // 调用UI函数创建条目
             ui.createAndAppendRelationshipItem(state.selectedCharForRel, finalRelationshipTypes);
 
             const currentProfile = state.profileData.find(p => p.id === state.currentProfileId);

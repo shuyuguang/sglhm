@@ -9,22 +9,40 @@ function createDataManager(db, state, ui) {
         async getItem(key) { try { const item = await db.keyValueStore.get(key); return item ? item.value : null; } catch (error) { console.error(`[dbStorage] Failed to get item '${key}':`, error); return null; } }
     };
 
-    state.getDbKey = (baseKey) => `${state.currentMode === 'YOU' ? 'user' : 'char'}${baseKey.charAt(0).toUpperCase() + baseKey.slice(1)}`;
+    // ▼▼▼【BUG修复】▼▼▼
+    // 补上缺失的辅助函数，用于从 .value-display 元素中安全地获取值
+    const getDisplayValue = (trigger) => {
+        if (!trigger) return '';
+        const display = trigger.querySelector('.value-display');
+        // 如果 display 元素不存在，或者它带有 placeholder 类，则返回空字符串
+        if (!display || display.classList.contains('placeholder')) {
+            return '';
+        }
+        return display.textContent.trim();
+    };
+    // ▲▲▲【修复结束】▲▲▲
+
+    // ▼▼▼【核心修改 1/4】：不再使用 getDbKey 函数，直接从配置中获取键名 ▼▼▼
+    const getProfileDataKey = () => state.currentMode === 'YOU' ? PROFILE_DB_KEYS.USER_PROFILES : PROFILE_DB_KEYS.CHAR_PROFILES;
+    const getCurrentIdKey = () => state.currentMode === 'YOU' ? PROFILE_DB_KEYS.USER_CURRENT_ID : PROFILE_DB_KEYS.CHAR_CURRENT_ID;
+    const getModeKey = () => state.uiStyle === 'YDN' ? PROFILE_DB_KEYS.YDN_MODE : PROFILE_DB_KEYS.YDM_MODE;
+    
     state.getDefaultProfileId = () => state.currentMode === 'YOU' ? 'default-user-1' : 'default-char-1';
 
     const initializeApp = async () => {
-        state.currentMode = await dbStorage.getItem(`profile${state.uiStyle}Mode`) || 'YOU';
-        const loadedProfiles = await dbStorage.getItem(state.getDbKey('profileData'));
+        // ▼▼▼【核心修改 2/4】：使用新的函数获取键名 ▼▼▼
+        state.currentMode = await dbStorage.getItem(getModeKey()) || 'YOU';
+        const loadedProfiles = await dbStorage.getItem(getProfileDataKey());
 
         if (loadedProfiles?.length > 0) {
             state.profileData = loadedProfiles;
         } else {
             const defaultName = state.currentMode === 'YOU' ? 'User' : 'Felotus';
             state.profileData = [{ id: state.getDefaultProfileId(), name: defaultName, gender: '♀（女）', bio: '', age: '', race: '', occupation: '', avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg', banner: 'https://i.postimg.cc/NjRJ5qdx/a-good.jpg', customSections: [], relationships: [] }];
-            await dbStorage.setItem(state.getDbKey('profileData'), state.profileData);
+            await dbStorage.setItem(getProfileDataKey(), state.profileData);
         }
 
-        state.presetContentStore = await dbStorage.getItem('globalPresetContentStore') || {};
+        state.presetContentStore = await dbStorage.getItem(PROFILE_DB_KEYS.PRESETS) || {};
         const presetContainer = state.elements.presetTagsContainer;
         if (presetContainer) {
             presetContainer.querySelectorAll('.preset-tag:not(.preset-tag-custom)').forEach(tag => tag.remove());
@@ -39,9 +57,10 @@ function createDataManager(db, state, ui) {
             });
         }
 
-        const loadedProfileId = await dbStorage.getItem(state.getDbKey('currentProfileId'));
+        const loadedProfileId = await dbStorage.getItem(getCurrentIdKey());
         state.currentProfileId = (loadedProfileId && state.profileData.some(p => p.id === loadedProfileId)) ? loadedProfileId : state.getDefaultProfileId();
-        await dbStorage.setItem(state.getDbKey('currentProfileId'), state.currentProfileId);
+        await dbStorage.setItem(getCurrentIdKey(), state.currentProfileId);
+        // ▲▲▲【修改结束】▲▲▲
 
         ui.updateUiForMode();
 
@@ -61,7 +80,7 @@ function createDataManager(db, state, ui) {
         }
         const profile = state.profileData.find(p => p.id === profileId);
         state.currentProfileId = profileId;
-        await dbStorage.setItem(state.getDbKey('currentProfileId'), profileId);
+        await dbStorage.setItem(getCurrentIdKey(), profileId); // 使用配置键
 
         const { characterBannerImg, profileAvatarImg, userNameEl, genderSymbolEl, homeBioContent } = state.elements;
         if (characterBannerImg) characterBannerImg.src = profile.banner;
@@ -83,17 +102,16 @@ function createDataManager(db, state, ui) {
         const relationshipContainer = state.elements.relationshipItemsContainer;
         if (relationshipContainer) relationshipContainer.innerHTML = '';
         if (profile.relationships && profile.relationships.length > 0) {
-            const relatedProfileKey = state.currentMode === 'YOU' ? 'charProfileData' : 'userProfileData';
+            // ▼▼▼【核心修改 3/4】：使用配置键获取关联数据 ▼▼▼
+            const relatedProfileKey = state.currentMode === 'YOU' ? PROFILE_DB_KEYS.CHAR_PROFILES : PROFILE_DB_KEYS.USER_PROFILES;
             const relatedData = await dbStorage.getItem(relatedProfileKey) || [];
+            // ▲▲▲【修改结束】▲▲▲
             const relatedMap = new Map(relatedData.map(c => [c.id, c]));
 
             profile.relationships.forEach(rel => {
                 const character = relatedMap.get(rel.charId) || { id: rel.charId, name: rel.charName || '未知角色', avatar: '' };
-                // ▼▼▼ 修改开始 (确保加载时也能正确渲染) ▼▼▼
-                // 将保存的 "挚友 / 恋人" 这样的字符串分割成数组
                 const relationshipTypesArray = rel.type ? rel.type.split(' / ') : [];
                 ui.createAndAppendRelationshipItem(character, relationshipTypesArray);
-                // ▲▲▲ 修改结束 ▲▲▲
             });
         }
 
@@ -110,7 +128,7 @@ function createDataManager(db, state, ui) {
             customSections: [], relationships: []
         };
         state.profileData.push(newProfile);
-        await dbStorage.setItem(state.getDbKey('profileData'), state.profileData);
+        await dbStorage.setItem(getProfileDataKey(), state.profileData); // 使用配置键
         
         if (state.uiStyle === 'YDN' && typeof state.elements.showProfilePage === 'function') {
             await loadProfileData(newProfile.id);
@@ -126,10 +144,9 @@ function createDataManager(db, state, ui) {
         if (!currentProfile) return;
 
         currentProfile.name = document.getElementById('edit-username')?.value || '';
-        currentProfile.gender = state.currentMode === 'YOU' ? '♀（女）' : (document.getElementById('edit-gender-trigger')?.querySelector('.value-display')?.textContent || '♀（女）');
-        currentProfile.avatar = document.getElementById('edit-avatar-url')?.value || '';
-        currentProfile.banner = document.getElementById('edit-banner-url')?.value || '';
-        const getDisplayValue = (trigger) => { const display = trigger?.querySelector('.value-display'); return (display && !display.classList.contains('placeholder')) ? display.textContent : ''; };
+        currentProfile.avatar = state.elements.avatarUrlInput.value;
+        currentProfile.banner = state.elements.bannerUrlInput.value;
+        currentProfile.gender = state.elements.editGenderTrigger.querySelector('.value-display').textContent;
         currentProfile.age = getDisplayValue(state.elements.editAgeTrigger);
         currentProfile.race = getDisplayValue(state.elements.editRaceTrigger);
         currentProfile.occupation = getDisplayValue(state.elements.editOccupationTrigger);
@@ -155,13 +172,15 @@ function createDataManager(db, state, ui) {
 
         await loadProfileData(currentProfile.id);
         if (typeof state.onProfileSave === 'function') state.onProfileSave(currentProfile);
-        await dbStorage.setItem(state.getDbKey('profileData'), state.profileData);
+        await dbStorage.setItem(getProfileDataKey(), state.profileData); // 使用配置键
         ui.closeModal();
     };
     
     const syncReverseRelationship = async (sourceProfile, targetProfileData, relationshipType) => {
-        const targetDbKey = state.currentMode === 'YOU' ? 'charProfileData' : 'userProfileData';
+        // ▼▼▼【核心修改 4/4】：使用配置键获取目标数据 ▼▼▼
+        const targetDbKey = state.currentMode === 'YOU' ? PROFILE_DB_KEYS.CHAR_PROFILES : PROFILE_DB_KEYS.USER_PROFILES;
         const targetDataSet = await dbStorage.getItem(targetDbKey) || [];
+        // ▲▲▲【修改结束】▲▲▲
         const target = targetDataSet.find(p => p.id === targetProfileData.id);
         if (!target) {
             console.error(`反向关系同步失败: 找不到ID为 ${targetProfileData.id} 的目标。`);
@@ -177,7 +196,7 @@ function createDataManager(db, state, ui) {
                 charName: sourceProfile.name,
                 type: relationshipType
             });
-            await dbStorage.setItem(targetDbKey, targetDataSet);
+            await dbStorage.setItem(targetDbKey, targetDataSet); // 使用配置键
         }
     };
 
@@ -187,7 +206,7 @@ function createDataManager(db, state, ui) {
         if (!confirm(`确定要删除 ${state.selectedProfileIds.length} 个选定的${noun}吗？\n此操作不可撤销。`)) return;
 
         state.profileData = state.profileData.filter(p => !state.selectedProfileIds.includes(p.id));
-        await dbStorage.setItem(state.getDbKey('profileData'), state.profileData);
+        await dbStorage.setItem(getProfileDataKey(), state.profileData); // 使用配置键
 
         if (state.selectedProfileIds.includes(state.currentProfileId)) {
             if (state.uiStyle === 'YDN') {
@@ -202,12 +221,12 @@ function createDataManager(db, state, ui) {
 
     const savePresetContent = async (sectionName, items) => {
         state.presetContentStore[sectionName] = items;
-        await dbStorage.setItem('globalPresetContentStore', state.presetContentStore);
+        await dbStorage.setItem(PROFILE_DB_KEYS.PRESETS, state.presetContentStore); // 使用配置键
     };
 
     const deletePreset = async (presetName) => {
         delete state.presetContentStore[presetName];
-        await dbStorage.setItem('globalPresetContentStore', state.presetContentStore);
+        await dbStorage.setItem(PROFILE_DB_KEYS.PRESETS, state.presetContentStore); // 使用配置键
     };
 
     return {

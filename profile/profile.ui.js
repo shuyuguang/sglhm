@@ -43,27 +43,48 @@ function createUiManager(elements, state, config) {
         state.currentSaveCallback = null;
     };
 
-    const openItemEditor = (pane, item = null) => {
+    // ▼▼▼ 修改/新增开始 ▼▼▼
+    const openItemEditor = (config) => {
         if (!itemEditorPanel || !itemEditorTitleHeader || !itemEditorTitleInput || !itemEditorValueTextarea) return;
-        state.currentItemEditingContext = { pane, item };
-        if (item) {
+
+        // 清理旧状态
+        state.currentItemEditingContext = {};
+        itemEditorTitleInput.disabled = false; // 默认标题可编辑
+
+        if (config.item) { // 编辑现有 DOM 条目
+            state.currentItemEditingContext = { pane: config.pane, item: config.item };
             itemEditorTitleHeader.textContent = '编辑条目';
-            const label = item.querySelector('label')?.textContent;
-            const valueDisplay = item.querySelector('.value-display');
+            const label = config.item.querySelector('label')?.textContent;
+            const valueDisplay = config.item.querySelector('.value-display');
             const value = (valueDisplay && !valueDisplay.classList.contains('placeholder')) ? valueDisplay.textContent : '';
             itemEditorTitleInput.value = label || '';
             itemEditorValueTextarea.value = value;
-        } else {
+        } else if (config.pane) { // 添加新条目到 pane
+            state.currentItemEditingContext = { pane: config.pane, item: null };
             itemEditorTitleHeader.textContent = '添加条目';
             itemEditorTitleInput.value = '';
             itemEditorValueTextarea.value = '';
             itemEditorTitleInput.focus();
+        } else { // 通过配置对象打开（用于基础信息编辑）
+            state.currentItemEditingContext = { onSave: config.onSave };
+            itemEditorTitleHeader.textContent = config.header || '编辑';
+            itemEditorTitleInput.value = config.title || '';
+            itemEditorValueTextarea.value = config.initialValue || '';
+            if (config.isTitleEditable === false) {
+                itemEditorTitleInput.disabled = true;
+            }
+            itemEditorValueTextarea.focus();
         }
+
         itemEditorPanel.classList.add('active');
     };
+// ▲▲▲ 修改/新增结束 ▲▲▲
+
     const closeItemEditor = () => {
         itemEditorPanel?.classList.remove('active');
-        state.currentItemEditingContext = { pane: null, item: null };
+        // ▼▼▼ 修改开始 ▼▼▼
+        state.currentItemEditingContext = {}; // 统一清理
+        // ▲▲▲ 修改结束 ▲▲▲
     };
 
     const openCropper = (imageDataUrl, context) => {
