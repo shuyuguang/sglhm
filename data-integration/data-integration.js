@@ -7,11 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
         keyValueStore: 'key' // 确保与主应用中的定义一致
     });
 
-    // ▼▼▼【核心修改】▼▼▼
-    // 从 app.config.js 中获取所有需要备份的数据库键，不再硬编码
-    // 这使得数据中心可以自动支持未来新增的模块（如 chat, diary）
-    const PROFILE_DATA_KEYS = ALL_APP_DB_KEYS;
-    // ▲▲▲【修改结束】▲▲▲
+    // 从 app.config.js 中获取所有需要备份的数据库键
+    const STATIC_DB_KEYS = ALL_APP_DB_KEYS;
 
 
     // ====================【DOM 元素获取】====================
@@ -28,9 +25,31 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     async function handleExport() {
         try {
+            // ▼▼▼【核心修改 ①】动态获取所有需要导出的数据键 ▼▼▼
+            // 1. 从静态配置开始
+            const keysToExport = new Set(STATIC_DB_KEYS);
+
+            // 2. 动态生成聊天记录的键
+            // 2.1 首先获取当前激活的聊天列表
+            const activeChatListData = await db.keyValueStore.get(CHAT_DB_KEYS.ACTIVE_CHAT_LIST);
+            if (activeChatListData && activeChatListData.value) {
+                const activeChatList = activeChatListData.value;
+                // 2.2 为列表中的每个角色生成对应的聊天记录键
+                activeChatList.forEach(char => {
+                    if (char.id) {
+                        const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${char.id}`;
+                        keysToExport.add(historyKey);
+                    }
+                });
+            }
+            
+            // 3. 将 Set 转换为数组，用于批量获取
+            const finalKeys = Array.from(keysToExport);
+            // ▲▲▲【修改结束】▲▲▲
+            
             const dataToExport = {};
-            // 使用从配置中读取的键列表来获取数据
-            const items = await db.keyValueStore.bulkGet(PROFILE_DATA_KEYS);
+            // 使用最终生成的键列表来获取数据
+            const items = await db.keyValueStore.bulkGet(finalKeys);
 
             items.forEach((item) => {
                 if (item) { // 只导出存在的数据
@@ -51,16 +70,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // 定义一个 replacer 函数，用于在 JSON 序列化时替换 Base64 图片
             const replacer = (key, value) => {
                 const defaultAvatarUrl = 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg';
-                // 检查值是否为字符串，并且以 'data:image/' 开头
                 if (typeof value === 'string' && value.startsWith('data:image/')) {
-                    // 如果是，就返回默认头像 URL
                     return defaultAvatarUrl;
                 }
-                // 否则，返回原始值
                 return value;
             };
 
-            // 在 JSON.stringify 中使用这个 replacer 函数
             const jsonString = JSON.stringify(dataToExport, replacer, 2);
 
             // 创建并下载文件
@@ -98,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!file) return;
 
         if (!confirm('导入数据将覆盖现有设置，确定要继续吗？')) {
-            event.target.value = null; // 重置文件输入，以便下次可以选择相同文件
+            event.target.value = null;
             return;
         }
 
@@ -107,17 +122,21 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const importedData = JSON.parse(e.target.result);
                 
-                // 验证导入的数据是否为对象
                 if (typeof importedData !== 'object' || importedData === null) {
                     throw new Error('文件内容格式不正确，不是有效的JSON对象。');
                 }
                 
                 const dataToPut = [];
                 for (const key in importedData) {
-                    // 使用从配置中读取的键列表来验证和筛选数据
-                    if (PROFILE_DATA_KEYS.includes(key)) {
+                    // ▼▼▼【核心修改 ②】更新导入验证逻辑 ▼▼▼
+                    // 允许静态键列表中的键，或者以聊天记录前缀开头的动态键
+                    const isStaticKey = STATIC_DB_KEYS.includes(key);
+                    const isDynamicChatKey = key.startsWith(`${CHAT_DB_KEYS.CHAT_HISTORY}_`);
+
+                    if (isStaticKey || isDynamicChatKey) {
                         dataToPut.push({ key, value: importedData[key] });
                     }
+                    // ▲▲▲【修改结束】▲▲▲
                 }
 
                 if (dataToPut.length === 0) {
@@ -132,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('导入数据时出错:', error);
                 alert(`导入失败：${error.message}`);
             } finally {
-                event.target.value = null; // 无论成功失败都重置
+                event.target.value = null;
             }
         };
         reader.onerror = () => {
@@ -154,8 +173,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            // 使用从配置中读取的键列表来删除数据
-            await db.keyValueStore.bulkDelete(PROFILE_DATA_KEYS);
+            // ▼▼▼【核心修改 ③】清除数据时也需要动态处理 ▼▼▼
+            // (虽然这个功能不常用，但保持逻辑一致性是好习惯)
+            const keysToDelete = new Set(STATIC_DB_KEYS);
+            const activeChatListData = await db.keyValueStore.get(CHAT_DB_KEYS.ACTIVE_CHAT_LIST);
+            if (activeChatListData && activeChatListData.value) {
+                activeChatListData.value.forEach(char => {
+                    if (char.id) {
+                        keysToDelete.add(`${CHAT_DB_KEYS.CHAT_HISTORY}_${char.id}`);
+                    }
+                });
+            }
+            
+            await db.keyValueStore.bulkDelete(Array.from(keysToDelete));
+            // ▲▲▲【修改结束】▲▲▲
             alert('所有本地数据已成功清除。');
         } catch (error) {
             console.error('清除数据时出错:', error);
