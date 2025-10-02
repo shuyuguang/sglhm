@@ -5,10 +5,12 @@
  * @param {object} options - 配置对象
  * @param {string} options.title - 页面顶部显示的标题
  * @param {string} options.contentHtml - 页面主体区域要显示的 HTML 内容
+ * @param {string} [options.modalsHtml=''] - (可选) 页面所需的模态框、面板等浮层元素的 HTML
  * @param {function} options.onFeatherClick - 当右上角的羽毛笔按钮被点击时要执行的函数
- * @param {function} [options.onPageLoad] - (可选) 页面HTML渲染完成后要执行的初始化函数，用于激活复杂内容
+ * @param {function} [options.onPageLoad] - (可选) 页面HTML渲染完成后要执行的初始化函数
  */
-function createPageLayout({ title, contentHtml, onFeatherClick, onPageLoad }) {
+// ▼▼▼ 核心修改：在函数前添加 export 关键字 ▼▼▼
+export function createPageLayout({ title, contentHtml, modalsHtml = '', onFeatherClick, onPageLoad }) {
     
     const pageHtml = `
         <header class="page-header">
@@ -25,6 +27,8 @@ function createPageLayout({ title, contentHtml, onFeatherClick, onPageLoad }) {
                 ${contentHtml}
             </main>
         </div>
+
+        ${modalsHtml}
     `;
 
     document.body.innerHTML = pageHtml;
