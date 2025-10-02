@@ -2,14 +2,14 @@
 import { createPageLayout } from '../common/template.js';
 
 // 2. 定义页面的专属 HTML 内容
-const personalityPageContent = `
+const systemSettingPageContent = `
     <!-- Tab 导航栏 -->
     <nav class="tabs-nav">
         <div class="tabs-container">
-            <button class="tab-button active" data-tab="theme">主题</button>
-            <button class="tab-button" data-tab="bubbles">聊天气泡</button>
-            <button class="tab-button" data-tab="pendant">头像挂件</button>
-            <button class="tab-button" data-tab="font">字体</button>
+            <button class="tab-button active" data-tab="main-interface">主界面</button>
+            <button class="tab-button" data-tab="theme-ui">主题UI</button>
+            <button class="tab-button" data-tab="background-sound">背景音</button>
+            <button class="tab-button" data-tab="other">其它</button>
         </div>
     </nav>
 
@@ -20,17 +20,17 @@ const personalityPageContent = `
         <main class="content-body">
             <!-- Tab 内容面板 -->
             <div class="tabs-content">
-                <div id="theme" class="tab-pane active">
-                    <p>这里是【主题】的编辑区。</p>
+                <div id="main-interface" class="tab-pane active">
+                    <p>这里是【主界面】的编辑区。</p>
                 </div>
-                <div id="bubbles" class="tab-pane">
-                    <p>这里是【聊天气泡】的编辑区。</p>
+                <div id="theme-ui" class="tab-pane">
+                    <p>这里是【主题UI】的编辑区。</p>
                 </div>
-                <div id="pendant" class="tab-pane">
-                    <p>这里是【头像挂件】的编辑区。</p>
+                <div id="background-sound" class="tab-pane">
+                    <p>这里是【背景音】的编辑区。</p>
                 </div>
-                <div id="font" class="tab-pane">
-                    <p>这里是【字体】的编辑区。</p>
+                <div id="other" class="tab-pane">
+                    <p>这里是【其它】的编辑区。</p>
                 </div>
             </div>
         </main>
@@ -39,11 +39,10 @@ const personalityPageContent = `
 
 /**
  * 页面加载后需要执行的所有初始化操作。
- * (包含Tab切换、指示器定位等)
  */
 function initializePage() {
-    console.log("个性化页面JS加载，小爱心指示器逻辑已启动。");
-    
+    console.log("系统设置页面JS加载，小爱心指示器逻辑已启动。");
+
     const indicator = document.querySelector('.active-tab-indicator');
     const tabsNav = document.querySelector('.tabs-nav');
 
@@ -90,16 +89,16 @@ function initializePage() {
 }
 
 // 3. 定义羽毛笔按钮的功能
-const handlePersonalityFeatherClick = () => {
-    console.log('羽毛笔被点击，可以在这里执行保存个性化设置的逻辑。');
-    alert('个性化设置已保存！(模拟)');
+const handleSystemSettingFeatherClick = () => {
+    console.log('羽毛笔被点击，可以在这里执行保存系统设置的逻辑。');
+    alert('系统设置已保存！(模拟)');
 };
 
 // 4. 脚本的入口：调用 createPageLayout 来构建页面
 //    并将所有初始化逻辑作为 onPageLoad 回调传入
 createPageLayout({
-    title: '个性化',
-    contentHtml: personalityPageContent,
-    onFeatherClick: handlePersonalityFeatherClick,
+    title: '系统设置',
+    contentHtml: systemSettingPageContent,
+    onFeatherClick: handleSystemSettingFeatherClick,
     onPageLoad: initializePage // 关键：确保在HTML渲染完毕后再执行初始化
 });
