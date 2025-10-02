@@ -7,16 +7,11 @@ document.addEventListener('DOMContentLoaded', () => {
         keyValueStore: 'key' // 确保与主应用中的定义一致
     });
 
-    // 定义需要备份和恢复的数据键
-    const PROFILE_DATA_KEYS = [
-        'userProfileData',
-        'userCurrentProfileId',
-        'charProfileData',
-        'charCurrentProfileId',
-        'globalPresetContentStore',
-        'profileYDNMode',
-        'profileYDMMode'
-    ];
+    // ▼▼▼【核心修改】▼▼▼
+    // 从 app.config.js 中获取所有需要备份的数据库键，不再硬编码
+    // 这使得数据中心可以自动支持未来新增的模块（如 chat, diary）
+    const PROFILE_DATA_KEYS = ALL_APP_DB_KEYS;
+    // ▲▲▲【修改结束】▲▲▲
 
 
     // ====================【DOM 元素获取】====================
@@ -34,9 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleExport() {
         try {
             const dataToExport = {};
+            // 使用从配置中读取的键列表来获取数据
             const items = await db.keyValueStore.bulkGet(PROFILE_DATA_KEYS);
 
-            items.forEach((item, index) => {
+            items.forEach((item) => {
                 if (item) { // 只导出存在的数据
                     dataToExport[item.key] = item.value;
                 }
@@ -52,8 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const timestamp = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}-${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
             const filename = `felotus-data-${timestamp}.json`;
 
-            // ▼▼▼【核心修改点】▼▼▼
-            // 1. 定义一个 replacer 函数，用于在 JSON 序列化时替换 Base64 图片
+            // 定义一个 replacer 函数，用于在 JSON 序列化时替换 Base64 图片
             const replacer = (key, value) => {
                 const defaultAvatarUrl = 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg';
                 // 检查值是否为字符串，并且以 'data:image/' 开头
@@ -65,12 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return value;
             };
 
-            // 2. 在 JSON.stringify 中使用这个 replacer 函数
-            // 第一个参数是要序列化的对象
-            // 第二个参数是 replacer 函数
-            // 第三个参数是缩进（用于美化输出）
+            // 在 JSON.stringify 中使用这个 replacer 函数
             const jsonString = JSON.stringify(dataToExport, replacer, 2);
-            // ▲▲▲【修改结束】▲▲▲
 
             // 创建并下载文件
             const blob = new Blob([jsonString], { type: 'application/json' });
@@ -123,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const dataToPut = [];
                 for (const key in importedData) {
-                    // 只导入我们关心的数据键
+                    // 使用从配置中读取的键列表来验证和筛选数据
                     if (PROFILE_DATA_KEYS.includes(key)) {
                         dataToPut.push({ key, value: importedData[key] });
                     }
@@ -163,6 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
+            // 使用从配置中读取的键列表来删除数据
             await db.keyValueStore.bulkDelete(PROFILE_DATA_KEYS);
             alert('所有本地数据已成功清除。');
         } catch (error) {

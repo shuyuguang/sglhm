@@ -75,9 +75,20 @@
 
     <!-- 隐藏的文件输入框，用于导入 -->
     <input type="file" id="import-file-input" accept=".json" style="display: none;">
-
+    
     <!-- 依赖脚本 -->
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+
+    <!-- ▼▼▼ 新增：加载所有模块的配置和总配置 ▼▼▼ -->
+    <!-- 1. 加载各个模块的配置 -->
+    <script src="../config/profile.config.js"></script>
+    <!-- <script src="../config/chat.config.js"></script> -->
+    <!-- <script src="../config/diary.config.js"></script> -->
+
+    <!-- 2. 加载聚合后的总配置 -->
+    <script src="../config/app.config.js"></script>
+    <!-- ▲▲▲ 新增结束 ▲▲▲ -->
+
     <script src="data-integration.js"></script>
 
 </body>
