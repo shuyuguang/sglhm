@@ -12,7 +12,10 @@ function createUiManager(elements, state, config) {
         customSectionOptionsOverlay, modalMainContent, sidebarNavList,
         characterBannerImg, profileAvatarImg, userNameEl, genderSymbolEl, homeBioContent,
         usernameLabel, switcherSettingsTitle, editGenderTrigger, editAgeTrigger,
-        editRaceTrigger, editOccupationTrigger, editBioTrigger
+        editRaceTrigger, editOccupationTrigger, editBioTrigger,
+        characterSelectorOverlay, relationshipTypeOverlay, charSelectorList,
+        relationshipItemsContainer, relationshipTypeOptions,
+        confirmRelTypeBtn
     } = elements;
 
     let cropper = null;
@@ -120,7 +123,34 @@ function createUiManager(elements, state, config) {
         state.activeCustomPane = null;
     };
 
+    const openCharacterSelector = () => characterSelectorOverlay?.classList.add('active');
+    const closeCharacterSelector = () => {
+        characterSelectorOverlay?.classList.remove('active');
+        state.selectedCharForRel = null;
+    };
+    
+    const openRelationshipTypeSelector = () => {
+        relationshipTypeOverlay?.classList.add('active');
+        updateRelTypeConfirmButtonState(); // 打开时立即更新按钮状态（初始为禁用）
+    };
+
+    // ▼▼▼ 修改开始 (UI优化) ▼▼▼
+    const closeRelationshipTypeSelector = () => {
+        relationshipTypeOverlay?.classList.remove('active');
+        // 确保状态完全重置
+        state.selectedRelationshipTypes = []; 
+        relationshipTypeOptions?.querySelectorAll('.option-tag.selected').forEach(el => el.classList.remove('selected'));
+        updateRelTypeConfirmButtonState(); // 关闭时也更新一下，确保按钮回到禁用状态
+    };
+    // ▲▲▲ 修改结束 ▲▲▲
+
     // --- DOM Rendering & Updates ---
+
+    const updateRelTypeConfirmButtonState = () => {
+        if (!confirmRelTypeBtn) return;
+        confirmRelTypeBtn.disabled = state.selectedRelationshipTypes.length === 0;
+    };
+
     const updateUiForMode = () => {
         const isYouMode = state.currentMode === 'YOU';
         const isYdn = state.uiStyle === 'YDN';
@@ -235,6 +265,51 @@ function createUiManager(elements, state, config) {
         container.appendChild(newItem);
     };
 
+    const renderCharacterSelectorList = (characters, currentProfileId) => {
+        if (!charSelectorList) return;
+        charSelectorList.innerHTML = '';
+        const filteredChars = characters.filter(char => char.id !== currentProfileId);
+
+        if (filteredChars.length === 0) {
+            charSelectorList.innerHTML = `<p style="text-align: center; color: #999; padding: 20px;">暂无可选择的角色</p>`;
+            return;
+        }
+
+        filteredChars.forEach(char => {
+            const li = document.createElement('li');
+            li.className = 'char-selector-item';
+            li.dataset.charId = char.id;
+            li.innerHTML = `
+                <img src="${char.avatar}" alt="${char.name}" class="avatar">
+                <span class="name">${char.name || '未命名'}</span>`;
+            charSelectorList.appendChild(li);
+        });
+    };
+
+    // ▼▼▼ 修改开始 (UI优化) ▼▼▼
+    const createAndAppendRelationshipItem = (character, relationshipTypes) => {
+        if (!relationshipItemsContainer) return;
+        const newItem = document.createElement('div');
+        newItem.className = 'form-group custom-item-group';
+
+        // 将关系类型数组转换为带样式的HTML标签字符串
+        const tagsHtml = relationshipTypes.map(type => `<span class="relationship-tag">${type}</span>`).join('');
+        
+        // 组合最终的显示HTML
+        const finalDisplayTextHtml = `是 <strong>${character.name}</strong> 的 ${tagsHtml}`;
+        
+        // 存储数据到dataset，用于保存
+        newItem.dataset.relCharId = character.id;
+        newItem.dataset.relCharName = character.name;
+        newItem.dataset.relType = relationshipTypes.join(' / '); // 保存为简单字符串
+
+        newItem.innerHTML = `
+            <label>${finalDisplayTextHtml}</label>
+            <button class="item-actions-btn" title="删除关系"><i class="fa-solid fa-trash-can"></i></button>`;
+        relationshipItemsContainer.appendChild(newItem);
+    };
+    // ▲▲▲ 修改结束 ▲▲▲
+
     const renderProfileTab = () => {
         const profileTabPane = document.getElementById(`profile-${state.uiStyle.toLowerCase()}`);
         if (!profileTabPane) return;
@@ -243,7 +318,6 @@ function createUiManager(elements, state, config) {
         const currentProfile = state.profileData.find(p => p.id === state.currentProfileId);
         if (!currentProfile) return;
 
-        // Render basic info
         const basicInfoCard = document.createElement('div');
         basicInfoCard.className = 'info-card';
         basicInfoCard.innerHTML = `<h3 class="card-title">基础信息</h3><ul class="info-list"></ul>`;
@@ -263,7 +337,6 @@ function createUiManager(elements, state, config) {
         addInfoItem('职业', currentProfile.occupation);
         if (basicInfoList.children.length > 0) profileTabPane.appendChild(basicInfoCard);
 
-        // Render custom sections
         currentProfile.customSections?.forEach(section => {
             const card = document.createElement('div');
             card.className = 'info-card';
@@ -289,7 +362,11 @@ function createUiManager(elements, state, config) {
         openModal, closeModal, openSubEditor, closeSubEditor, openItemEditor, closeItemEditor,
         openCropper, closeCropper, openSwitcherSettingsModal, closeSwitcherSettingsModal,
         openAddSectionSheet, closeAddSectionSheet, openNamePrompt, closeNamePrompt,
-        openOptionsBottomSheet, closeOptionsBottomSheet, updateUiForMode, updateDeleteButtonState,
+        openOptionsBottomSheet, closeOptionsBottomSheet, 
+        openCharacterSelector, closeCharacterSelector, openRelationshipTypeSelector, closeRelationshipTypeSelector,
+        renderCharacterSelectorList, createAndAppendRelationshipItem,
+        updateRelTypeConfirmButtonState,
+        updateUiForMode, updateDeleteButtonState,
         updateEditModalValues, createNewSection, createAndAppendCustomItem, renderProfileTab,
         getCropper: () => cropper
     };

@@ -32,6 +32,11 @@ function createProfileManager(config) {
         selectedProfileIds: [],
         isMultiSelectMode: false,
 
+        // ▼▼▼ 新增开始 ▼▼▼
+        selectedCharForRel: null, // {id, name, avatar}
+        selectedRelationshipTypes: [], // 修改：从 null 改为数组 []
+        // ▲▲▲ 新增结束 ▲▲▲
+
         // 动态计算的函数
         getDbKey: null,
         getDefaultProfileId: null

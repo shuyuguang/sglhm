@@ -205,7 +205,17 @@
                         <div class="form-group"><label>职业</label><div class="form-group-clickable" id="edit-occupation-trigger"><span class="value-display placeholder">请填写职业</span><i class="fa-solid fa-chevron-right"></i></div></div>
                         <div class="form-group"><label>简介</label><div class="form-group-clickable" id="edit-bio-trigger"><span class="value-display placeholder">请填写简介</span><i class="fa-solid fa-chevron-right"></i></div></div>
                     </div>
-                    <div id="modal-section-relationship" class="modal-section-pane"><div class="pane-header-container"><h4 class="pane-title-capsule">关系</h4></div></div>
+                    <div id="modal-section-relationship" class="modal-section-pane"><div class="pane-header-container"><h4 class="pane-title-capsule">关系</h4>
+                        </div>
+                        <div class="custom-items-container" id="relationship-items-container">
+                            <!-- 关系条目将在这里动态生成 -->
+                        </div>
+                        <button class="add-item-btn" id="add-relationship-btn">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>添加关系</span>
+                        </button>
+                    </div>
+                    <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                 </div>
             </div>
             <div class="sub-editor-panel" id="sub-editor-panel"><div class="sep-header"><button class="sep-btn" id="sep-back-btn"><i class="fa-solid fa-chevron-left"></i></button><h3 class="sep-title" id="sep-title">编辑</h3><button class="sep-btn sep-btn-save" id="sep-save-btn"><i class="fa-solid fa-check"></i></button></div><div class="sep-body"><textarea id="sep-textarea" placeholder="在此输入内容..."></textarea></div></div>
@@ -217,6 +227,52 @@
     <!-- 底部操作表 -->
     <div class="bottom-sheet-overlay" id="custom-section-options-overlay"><div class="bottom-sheet" id="custom-section-options-sheet"><div class="bottom-sheet-header"><span class="bottom-sheet-title">栏目操作</span></div><ul class="bottom-sheet-actions"><li><button class="action-button" data-action="rename">编辑栏目名称</button></li><li><button class="action-button" data-action="save-preset">存为预设栏目</button></li><li><button class="action-button" data-action="load-content">加载条目内容</button></li><li><button class="action-button action-delete" data-action="delete">删除此栏目</button></li></ul><button class="bottom-sheet-cancel" id="cancel-options-sheet-btn">取消</button></div></div>
     <div class="bottom-sheet-overlay" id="add-section-sheet-overlay"><div class="bottom-sheet" id="add-section-sheet"><div class="bottom-sheet-header"><span class="bottom-sheet-title">添加新栏目</span></div><div class="preset-tags-container" id="preset-tags-container"><button class="preset-tag preset-tag-custom" data-action="custom"><i class="fa-solid fa-plus"></i><span>自定义栏目</span></button></div><button class="bottom-sheet-cancel" id="cancel-add-sheet-btn">取消</button></div></div>
+    <!-- ▼▼▼ 新增开始 ▼▼▼ -->
+    <!-- 角色选择半屏 -->
+    <div class="bottom-sheet-overlay" id="character-selector-overlay">
+        <div class="bottom-sheet" id="character-selector-sheet">
+            <div class="bottom-sheet-header-flex">
+                <h4 class="bottom-sheet-title-main">选择角色</h4>
+                <div class="sheet-header-controls">
+                    <div class="sheet-search-wrapper">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="char-search-input" placeholder="搜索...">
+                    </div>
+                    <button class="sheet-close-btn" id="cancel-char-selector-btn">&times;</button>
+                </div>
+            </div>
+            <div class="sheet-body-list" id="char-selector-list">
+                <!-- 角色列表将在这里动态生成 -->
+            </div>
+            <div class="sheet-footer">
+                <button class="sheet-confirm-btn" id="confirm-char-selection-btn">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 关系类型选择半屏 -->
+    <div class="bottom-sheet-overlay" id="relationship-type-overlay">
+        <div class="bottom-sheet" id="relationship-type-sheet">
+            <div class="bottom-sheet-header-flex">
+                <h4 class="bottom-sheet-title-main">设置关系</h4>
+                <button class="sheet-close-btn" id="cancel-rel-type-btn">&times;</button>
+            </div>
+            <!-- ▼▼▼ 修改开始 ▼▼▼ -->
+            <div class="sheet-body-options" id="relationship-type-options">
+                <button class="option-tag" data-type="挚友">挚友</button>
+                <button class="option-tag" data-type="床伴">床伴</button>
+                <button class="option-tag" data-type="恋人">恋人</button>
+                <button class="option-tag" data-type="亲属">亲属</button>
+                <button class="option-tag" data-type="宿敌">宿敌</button>
+                <button class="option-tag" data-type="同道">同道</button>
+            </div>
+            <!-- ▲▲▲ 修改结束 ▲▲▲ -->
+            <div class="sheet-footer">
+                <button class="sheet-confirm-btn" id="confirm-rel-type-btn">确认</button>
+            </div>
+        </div>
+    </div>
+    <!-- ▲▲▲ 新增结束 ▲▲▲ -->
     <!-- 管理面板 -->
     <div class="modal-overlay" id="switcher-settings-modal-overlay"><div class="modal-panel settings-modal-panel"><div class="modal-header"><div class="modal-header-content"><h3 class="modal-title" id="switcher-settings-title">管理</h3></div><button class="modal-close" id="settings-close-btn" title="关闭">&times;</button></div><div class="modal-body settings-modal-body"><ul class="settings-user-list" id="settings-user-list"></ul></div><div class="settings-modal-footer v2"><button class="footer-action-btn" id="settings-import-btn" title="暂未开放"><i class="fa-solid fa-upload"></i>导入</button><button class="footer-action-btn" id="settings-export-btn" title="暂未开放"><i class="fa-solid fa-download"></i>导出</button><button class="footer-action-btn" id="settings-multi-select-btn"><i class="fa-solid fa-check-double"></i>多选</button><button class="footer-action-btn btn-danger" id="settings-delete-btn" disabled><i class="fa-solid fa-trash-can"></i>删除</button></div></div></div>
     <!-- 图片裁剪 -->

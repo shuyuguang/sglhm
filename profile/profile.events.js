@@ -174,14 +174,29 @@ function createEventManager(elements, state, ui, data, config) {
         elements.modalMainContent?.addEventListener('click', (e) => {
             const pane = e.target.closest('.modal-section-pane');
             if (!pane) return;
+
             if (e.target.closest('.item-actions-btn')) {
-                if (confirm('确定要删除这个条目吗？')) e.target.closest('.custom-item-group')?.remove();
+                const itemGroup = e.target.closest('.custom-item-group');
+                let confirmMessage = '确定要删除这个条目吗？';
+                if (itemGroup && itemGroup.hasAttribute('data-rel-char-id')) {
+                    confirmMessage = '确定要删除这段关系吗？';
+                }
+                if (confirm(confirmMessage)) {
+                    itemGroup?.remove();
+                }
+            
             } else if (e.target.closest('.pane-title-capsule') && pane.id.startsWith('modal-section-custom-')) {
                 ui.openOptionsBottomSheet(pane);
+            
             } else if (e.target.closest('.add-item-btn')) {
-                ui.openItemEditor(pane, null);
+                if (e.target.closest('.add-item-btn').id !== 'add-relationship-btn') {
+                    ui.openItemEditor(pane, null);
+                }
+            
             } else if (e.target.closest('.custom-item-group')) {
-                ui.openItemEditor(pane, e.target.closest('.custom-item-group'));
+                if (!e.target.closest('.custom-item-group').hasAttribute('data-rel-char-id')) {
+                    ui.openItemEditor(pane, e.target.closest('.custom-item-group'));
+                }
             }
         });
 
@@ -245,6 +260,115 @@ function createEventManager(elements, state, ui, data, config) {
                     break;
             }
             ui.closeOptionsBottomSheet();
+        });
+
+        // 关系选择流程事件绑定
+        elements.addRelationshipBtn?.addEventListener('click', async () => {
+            const targetMode = state.currentMode === 'YOU' ? 'TA' : 'YOU';
+            const dataKey = targetMode === 'TA' ? 'charProfileData' : 'userProfileData';
+            const targetData = await data.dbStorage.getItem(dataKey);
+
+            if (!targetData || targetData.length === 0) {
+                return alert(`还没有可供选择的“${targetMode}”模式${targetMode === 'TA' ? '角色' : '用户'}，请先创建。`);
+            }
+            
+            ui.renderCharacterSelectorList(targetData || [], state.currentProfileId);
+            ui.openCharacterSelector();
+        });
+
+
+        // 角色选择器事件
+        elements.cancelCharSelectorBtn?.addEventListener('click', ui.closeCharacterSelector);
+        elements.characterSelectorOverlay?.addEventListener('click', e => e.target === elements.characterSelectorOverlay && ui.closeCharacterSelector());
+        
+        elements.charSearchInput?.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            elements.charSelectorList.querySelectorAll('.char-selector-item').forEach(item => {
+                const name = item.querySelector('.name').textContent.toLowerCase();
+                item.style.display = name.includes(searchTerm) ? 'flex' : 'none';
+            });
+        });
+
+        elements.charSelectorList?.addEventListener('click', e => {
+            const targetItem = e.target.closest('.char-selector-item');
+            if (!targetItem) return;
+
+            elements.charSelectorList.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+            targetItem.classList.add('selected');
+
+            state.selectedCharForRel = {
+                id: targetItem.dataset.charId,
+                name: targetItem.querySelector('.name').textContent,
+                avatar: targetItem.querySelector('.avatar').src,
+            };
+        });
+
+        elements.confirmCharSelectionBtn?.addEventListener('click', () => {
+            if (!state.selectedCharForRel) return alert('请选择一个角色！');
+            ui.closeCharacterSelector();
+            ui.openRelationshipTypeSelector();
+        });
+
+        // 关系类型选择器事件
+        elements.cancelRelTypeBtn?.addEventListener('click', ui.closeRelationshipTypeSelector);
+        elements.relationshipTypeOverlay?.addEventListener('click', e => e.target === elements.relationshipTypeOverlay && ui.closeRelationshipTypeSelector());
+        
+        // ▼▼▼ BUG修复的关键位置 ▼▼▼
+        elements.relationshipTypeOptions?.addEventListener('click', e => {
+            const targetBtn = e.target.closest('.option-tag');
+            if (!targetBtn) return;
+
+            const selectedCount = elements.relationshipTypeOptions.querySelectorAll('.selected').length;
+            const isSelected = targetBtn.classList.contains('selected');
+
+            if (!isSelected && selectedCount >= 4) {
+                alert('最多只能选择四个关系标签');
+                return;
+            }
+
+            targetBtn.classList.toggle('selected');
+
+            const type = targetBtn.dataset.type;
+            if (targetBtn.classList.contains('selected')) {
+                // 确保不重复添加
+                if (!state.selectedRelationshipTypes.includes(type)) {
+                    state.selectedRelationshipTypes.push(type);
+                }
+            } else {
+                state.selectedRelationshipTypes = state.selectedRelationshipTypes.filter(t => t !== type);
+            }
+
+            // 【关键修复】: 每次点击标签后，立即调用UI更新函数
+            ui.updateRelTypeConfirmButtonState();
+        });
+        // ▲▲▲ 修复结束 ▲▲▲
+
+        elements.confirmRelTypeBtn?.addEventListener('click', async () => {
+            if (state.selectedRelationshipTypes.length === 0) return;
+            
+            const finalRelationshipTypes = state.selectedRelationshipTypes;
+
+            // 调用UI函数创建条目
+            ui.createAndAppendRelationshipItem(state.selectedCharForRel, finalRelationshipTypes);
+
+            const currentProfile = state.profileData.find(p => p.id === state.currentProfileId);
+            if (currentProfile) {
+                if (!currentProfile.relationships) {
+                    currentProfile.relationships = [];
+                }
+                const relExists = currentProfile.relationships.some(r => r.charId === state.selectedCharForRel.id);
+                if (!relExists) {
+                    currentProfile.relationships.push({
+                        charId: state.selectedCharForRel.id,
+                        charName: state.selectedCharForRel.name,
+                        type: finalRelationshipTypes.join(' / ')
+                    });
+                }
+                
+                await data.syncReverseRelationship(currentProfile, state.selectedCharForRel, finalRelationshipTypes.join(' / '));
+            }
+
+            ui.closeRelationshipTypeSelector();
         });
 
         // Settings Modal

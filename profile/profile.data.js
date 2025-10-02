@@ -20,7 +20,7 @@ function createDataManager(db, state, ui) {
             state.profileData = loadedProfiles;
         } else {
             const defaultName = state.currentMode === 'YOU' ? 'User' : 'Felotus';
-            state.profileData = [{ id: state.getDefaultProfileId(), name: defaultName, gender: '♀（女）', bio: '', age: '', race: '', occupation: '', avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg', banner: 'https://i.postimg.cc/NjRJ5qdx/a-good.jpg', customSections: [] }];
+            state.profileData = [{ id: state.getDefaultProfileId(), name: defaultName, gender: '♀（女）', bio: '', age: '', race: '', occupation: '', avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg', banner: 'https://i.postimg.cc/NjRJ5qdx/a-good.jpg', customSections: [], relationships: [] }];
             await dbStorage.setItem(state.getDbKey('profileData'), state.profileData);
         }
 
@@ -63,7 +63,6 @@ function createDataManager(db, state, ui) {
         state.currentProfileId = profileId;
         await dbStorage.setItem(state.getDbKey('currentProfileId'), profileId);
 
-        // Update main page UI
         const { characterBannerImg, profileAvatarImg, userNameEl, genderSymbolEl, homeBioContent } = state.elements;
         if (characterBannerImg) characterBannerImg.src = profile.banner;
         if (profileAvatarImg) profileAvatarImg.src = profile.avatar;
@@ -72,16 +71,30 @@ function createDataManager(db, state, ui) {
         const bioPlaceholder = state.currentMode === 'YOU' ? '这里是用户的个人简介...' : '这里是角色的个人简介...';
         if (homeBioContent) homeBioContent.textContent = profile.bio || bioPlaceholder;
 
-        // Update modal values
         ui.updateEditModalValues(profile);
 
-        // Load custom sections in modal
         state.elements.modalMainContent?.querySelectorAll('.modal-section-pane[id^="modal-section-custom-"]').forEach(pane => pane.remove());
         state.elements.sidebarNavList?.querySelectorAll('.modal-nav-button:not(.fixed-nav-button)').forEach(btn => btn.remove());
         profile.customSections?.forEach(sectionData => {
             const newPane = ui.createNewSection(sectionData.title, false);
             sectionData.items?.forEach(itemData => ui.createAndAppendCustomItem(newPane, itemData.title, itemData.value));
         });
+
+        const relationshipContainer = state.elements.relationshipItemsContainer;
+        if (relationshipContainer) relationshipContainer.innerHTML = '';
+        if (profile.relationships && profile.relationships.length > 0) {
+            const relatedProfileKey = state.currentMode === 'YOU' ? 'charProfileData' : 'userProfileData';
+            const relatedData = await dbStorage.getItem(relatedProfileKey) || [];
+            const relatedMap = new Map(relatedData.map(c => [c.id, c]));
+
+            profile.relationships.forEach(rel => {
+                const character = relatedMap.get(rel.charId) || { id: rel.charId, name: rel.charName || '未知角色', avatar: '' };
+                // ▼▼▼ 修改开始 (UI优化) ▼▼▼
+                const relationshipTypesArray = rel.type ? rel.type.split(' / ') : [];
+                ui.createAndAppendRelationshipItem(character, relationshipTypesArray);
+                // ▲▲▲ 修改结束 ▲▲▲
+            });
+        }
 
         if (typeof state.renderSwitcher === 'function') state.renderSwitcher();
         ui.renderProfileTab();
@@ -93,7 +106,7 @@ function createDataManager(db, state, ui) {
             id: `${isYouMode ? 'user' : 'char'}-${Date.now()}`,
             name: '', gender: '♀（女）', bio: '', age: '', race: '', occupation: '',
             avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg', banner: 'https://i.postimg.cc/NjRJ5qdx/a-good.jpg',
-            customSections: []
+            customSections: [], relationships: []
         };
         state.profileData.push(newProfile);
         await dbStorage.setItem(state.getDbKey('profileData'), state.profileData);
@@ -111,7 +124,6 @@ function createDataManager(db, state, ui) {
         const currentProfile = state.profileData.find(p => p.id === state.currentProfileId);
         if (!currentProfile) return;
 
-        // Extract values from modal form
         currentProfile.name = document.getElementById('edit-username')?.value || '';
         currentProfile.gender = state.currentMode === 'YOU' ? '♀（女）' : (document.getElementById('edit-gender-trigger')?.querySelector('.value-display')?.textContent || '♀（女）');
         currentProfile.avatar = document.getElementById('edit-avatar-url')?.value || '';
@@ -130,14 +142,44 @@ function createDataManager(db, state, ui) {
                     value: itemEl.querySelector('.value-display:not(.placeholder)')?.textContent || ''
                 }))
             }));
+        
+        if (state.elements.relationshipItemsContainer) {
+            currentProfile.relationships = Array.from(state.elements.relationshipItemsContainer.querySelectorAll('.custom-item-group'))
+                .map(itemEl => ({
+                    charId: itemEl.dataset.relCharId,
+                    charName: itemEl.dataset.relCharName,
+                    type: itemEl.dataset.relType
+                }));
+        }
 
-        // Update UI and save
-        await loadProfileData(currentProfile.id); // Reload to reflect changes everywhere
+        await loadProfileData(currentProfile.id);
         if (typeof state.onProfileSave === 'function') state.onProfileSave(currentProfile);
         await dbStorage.setItem(state.getDbKey('profileData'), state.profileData);
         ui.closeModal();
     };
     
+    const syncReverseRelationship = async (sourceProfile, targetProfileData, relationshipType) => {
+        const targetDbKey = state.currentMode === 'YOU' ? 'charProfileData' : 'userProfileData';
+        const targetDataSet = await dbStorage.getItem(targetDbKey) || [];
+        const target = targetDataSet.find(p => p.id === targetProfileData.id);
+        if (!target) {
+            console.error(`反向关系同步失败: 找不到ID为 ${targetProfileData.id} 的目标。`);
+            return;
+        }
+        if (!target.relationships) {
+            target.relationships = [];
+        }
+        const reverseRelExists = target.relationships.some(r => r.charId === sourceProfile.id);
+        if (!reverseRelExists) {
+            target.relationships.push({
+                charId: sourceProfile.id,
+                charName: sourceProfile.name,
+                type: relationshipType
+            });
+            await dbStorage.setItem(targetDbKey, targetDataSet);
+        }
+    };
+
     const deleteSelectedProfiles = async () => {
         if (state.selectedProfileIds.length === 0) return;
         const noun = state.currentMode === 'YOU' ? '用户' : '角色';
@@ -148,7 +190,7 @@ function createDataManager(db, state, ui) {
 
         if (state.selectedProfileIds.includes(state.currentProfileId)) {
             if (state.uiStyle === 'YDN') {
-                state.currentProfileId = null; // Will force switcher view
+                state.currentProfileId = null; 
             } else {
                 await loadProfileData(state.getDefaultProfileId());
             }
@@ -169,6 +211,7 @@ function createDataManager(db, state, ui) {
 
     return {
         dbStorage, initializeApp, loadProfileData, addNewProfile, saveCurrentProfile,
+        syncReverseRelationship,
         deleteSelectedProfiles, savePresetContent, deletePreset
     };
 }

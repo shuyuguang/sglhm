@@ -101,6 +101,20 @@ document.addEventListener('DOMContentLoaded', () => {
             editGenderTrigger: document.getElementById('edit-gender-trigger'),
             usernameLabel: document.getElementById('username-label'),
             switcherSettingsTitle: document.getElementById('switcher-settings-title'),
+            
+            // ▼▼▼ 新增开始 ▼▼▼
+            addRelationshipBtn: document.getElementById('add-relationship-btn'),
+            relationshipItemsContainer: document.getElementById('relationship-items-container'),
+            characterSelectorOverlay: document.getElementById('character-selector-overlay'),
+            cancelCharSelectorBtn: document.getElementById('cancel-char-selector-btn'),
+            charSearchInput: document.getElementById('char-search-input'),
+            charSelectorList: document.getElementById('char-selector-list'),
+            confirmCharSelectionBtn: document.getElementById('confirm-char-selection-btn'),
+            relationshipTypeOverlay: document.getElementById('relationship-type-overlay'),
+            cancelRelTypeBtn: document.getElementById('cancel-rel-type-btn'),
+            relationshipTypeOptions: document.getElementById('relationship-type-options'),
+            confirmRelTypeBtn: document.getElementById('confirm-rel-type-btn'),
+            // ▲▲▲ 新增结束 ▲▲▲
         };
     }
 

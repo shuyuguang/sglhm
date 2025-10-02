@@ -50,7 +50,10 @@
   --z-secondary-backdrop: 60;
   --z-secondary-panel: 61;
   --z-tooltip: 70;
-  --z-sub-editor: 1001;
+  --z-sub-editor: 101;
+  /* ▼▼▼ 新增开始 ▼▼▼ */
+  --z-bottom-sheet: 102; /* 确保半屏在最顶层 */
+  /* ▲▲▲ 新增结束 ▲▲▲ */
 
   /* Sizing & Radius */
   --radius-m: 12px;
