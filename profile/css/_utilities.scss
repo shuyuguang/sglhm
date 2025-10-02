@@ -1,0 +1,49 @@
+/* utilities.css */
+
+/* --- SortableJS Ghost Classes --- */
+.sortable-ghost,
+.item-sortable-ghost,
+#ydn-ui-wrapper .avatar-sortable-ghost,
+#ydm-ui-wrapper .avatar-sortable-ghost {
+    opacity: 0.4;
+    background-color: var(--color-bg-grey-hover);
+}
+
+#ydn-ui-wrapper .avatar-sortable-ghost {
+    border-radius: var(--radius-m);
+}
+
+#ydm-ui-wrapper .avatar-sortable-ghost {
+    border-radius: var(--radius-round);
+}
+
+.sortable-ghost, .item-sortable-ghost {
+    border: 1px dashed var(--color-primary);
+}
+
+/* --- Custom Scrollbars --- */
+.sidebar-nav-list::-webkit-scrollbar, 
+.switcher-body::-webkit-scrollbar, 
+#ydn-ui-wrapper .switcher-content::-webkit-scrollbar { 
+    width: 6px; 
+}
+
+.sidebar-nav-list::-webkit-scrollbar-track, 
+.switcher-body::-webkit-scrollbar-track, 
+#ydn-ui-wrapper .switcher-content::-webkit-scrollbar-track { 
+    background: transparent; 
+}
+
+.sidebar-nav-list::-webkit-scrollbar-thumb, 
+.switcher-body::-webkit-scrollbar-thumb, 
+#ydn-ui-wrapper .switcher-content::-webkit-scrollbar-thumb { 
+    background-color: transparent; 
+    border-radius: 10px; 
+    transition: background-color 0.3s ease; 
+}
+
+.sidebar-nav-list:hover::-webkit-scrollbar-thumb, 
+.switcher-body:hover::-webkit-scrollbar-thumb, 
+#ydn-ui-wrapper .switcher-content:hover::-webkit-scrollbar-thumb { 
+    background-color: var(--color-primary-border-dashed); 
+}

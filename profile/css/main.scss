@@ -1,1 +1,10 @@
+// main.scss
 
+// 导入时可以省略下划线和后缀名，Sass很聪明
+@import 'base';
+@import 'layout';
+@import 'components';
+@import 'ui-ydn';
+@import 'ui-ydm';
+@import 'modals';
+@import 'utilities';
