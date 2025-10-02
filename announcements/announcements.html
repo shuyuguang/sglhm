@@ -7,25 +7,18 @@
     
     <!-- 引入公共资源 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <!-- 假设的通用模板样式 -->
     <link rel="stylesheet" href="../common/template.css">
 
-    <!-- 内联本页专属CSS (从 announcements.css 整合而来) -->
+    <!-- 内联本页专属CSS (这部分保持不变) -->
     <style>
-        /* --- 主体内容区域 --- */
-        /* template.js 可能会创建自己的内容容器，这里提供一些微调 */
-        /* 如果模板的 content-body 有内边距，我们可能需要调整或覆盖它 */
         .content-body {
             padding: 20px 15px;
         }
-
-        /* --- 公告卡片样式 --- */
         .announcement-container {
             display: flex;
             flex-direction: column;
-            gap: 15px; /* 卡片之间的间距 */
+            gap: 15px;
         }
-
         .announcement-card {
             background-color: #ffffff;
             border: 1px solid #e9ecef;
@@ -33,19 +26,16 @@
             padding: 20px;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-
         .announcement-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
         }
-
         .card-date {
             font-size: 0.85em;
             color: #868e96;
             margin-bottom: 8px;
             display: block;
         }
-
         .card-content {
             font-size: 1em;
             color: #495057;
@@ -55,38 +45,37 @@
     </style>
 </head>
 <body>
-    <!-- 引入通用的模板脚本 -->
-    <!-- 确保这个路径是正确的 -->
-    <script src="../common/template.js"></script>
+    <!-- 
+      已删除 <script src="../common/template.js"></script> 
+    -->
     
-    <!-- 这个页面的专属逻辑 -->
-    <script>
+    <!-- ▼▼▼ 核心修改点 ▼▼▼ -->
+    <script type="module">
+        // 1. 从模块中导入函数
+        import { createPageLayout } from '../common/template.js';
+
         document.addEventListener('DOMContentLoaded', () => {
 
-            // 定义“公告”页面的专属内容 (从 index.html 整合而来)
+            // 定义“公告”页面的专属内容
             const announcementsPageContent = `
                 <div class="announcement-container">
-                    
                     <div class="announcement-card">
                         <span class="card-date">2025.9.17</span>
                         <p class="card-content">Felotus互动套壳机诞生，集养OC、DIY产粮、互动聊天于一体的新机，我称呼它菲洛图互动套壳机>𖥦<</p>
                     </div>
-
                     <div class="announcement-card">
                         <span class="card-date">2025.8.2</span>
                         <p class="card-content">Felotus初版小手机诞生，初版会在后续删减为聊天机内置在互动套壳机中，适合仅聊天的简约派~</p>
                     </div>
-
                 </div>
             `;
 
-            // 定义“公告”页面羽毛笔按钮的专属功能 (此页面无新增功能)
+            // 定义“公告”页面羽毛笔按钮的专属功能
             const handleAnnouncementsFeatherClick = () => {
                 console.log('公告页面的羽毛笔被点击，但当前无功能。');
             };
 
             // 调用 createPageLayout 生成页面
-            // 假设 createPageLayout 函数会处理标题和返回按钮
             createPageLayout({
                 title: '公告',
                 contentHtml: announcementsPageContent,
