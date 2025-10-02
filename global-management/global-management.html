@@ -5,85 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>世界观</title>
     
-    <!-- 引入公共资源 -->
+    <!-- 1. 引入所有需要的样式 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="../common/template.css">
-    
-    <!-- 引入此页面的专属样式 -->
     <link rel="stylesheet" href="global-management.css">
 
 </head>
 <body>
-    <!-- 引入通用的模板脚本 -->
-    <script src="../common/template.js"></script>
-    
-    <!-- 这个页面的专属逻辑脚本 -->
-    <script src="global-management.js"></script>
-    
-    <!-- 页面内容生成脚本 -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-
-            // 定义“世界观”页面的专属内容
-            const worldviewPageContent = `
-                <!-- Tab 导航栏 -->
-                <nav class="tabs-nav">
-                    <div class="tabs-container">
-                        <button class="tab-button active" data-tab="world-intro">世界介绍</button>
-                        <button class="tab-button" data-tab="timeline">时间线</button>
-                        <button class="tab-button" data-tab="glossary">设定词</button>
-                        <button class="tab-button" data-tab="region-settings">地区设定</button>
-                        <button class="tab-button" data-tab="race-settings">种族设定</button>
-                        <button class="tab-button" data-tab="world-origin">世界起源</button>
-                        <button class="tab-button" data-tab="locus">轨迹</button>
-                    </div>
-                </nav>
-
-                <!-- 用于显示小爱心的独立元素，放置在裁剪容器外部 -->
-                <div class="active-tab-indicator"></div>
-
-                <div class="main-container">
-                    <main class="content-body">
-                        <!-- Tab 内容面板 -->
-                        <div class="tabs-content">
-                            <div id="world-intro" class="tab-pane active">
-                                <p>这里是【世界介绍】的内容区。</p>
-                            </div>
-                            <div id="timeline" class="tab-pane">
-                                <p>这里是【时间线】的内容区。</p>
-                            </div>
-                            <div id="glossary" class="tab-pane">
-                                <p>这里是【设定词】的内容区。</p>
-                            </div>
-                            <div id="region-settings" class="tab-pane">
-                                <p>这里是【地区设定】的内容区。</p>
-                            </div>
-                            <div id="race-settings" class="tab-pane">
-                                <p>这里是【种族设定】的内容区。</p>
-                            </div>
-                            <div id="world-origin" class="tab-pane">
-                                <p>这里是【世界起源】的内容区。</p>
-                            </div>
-                            <div id="locus" class="tab-pane">
-                                <p>这里是【轨迹】的内容区。</p>
-                            </div>
-                        </div>
-                    </main>
-                </div>
-            `;
-
-            // 定义羽毛笔按钮的功能
-            const handleWorldviewFeatherClick = () => {
-                console.log('羽毛笔被点击，可以在这里执行保存世界观设定的逻辑。');
-            };
-
-            // 调用 createPageLayout 生成页面
-            createPageLayout({
-                title: '世界观',
-                contentHtml: worldviewPageContent,
-                onFeatherClick: handleWorldviewFeatherClick
-            });
-        });
-    </script>
+    <!-- 页面 body 初始为空 -->
+    <!-- 2. 引入唯一的入口模块脚本 -->
+    <script src="global-management.js" type="module"></script>
 </body>
 </html>
