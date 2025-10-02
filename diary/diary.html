@@ -11,11 +11,16 @@
 
 </head>
 <body>
-    <!-- 引入通用的模板脚本 -->
-    <script src="../common/template.js"></script>
+    <!-- 
+      这里不再需要 <script src="../common/template.js"></script>
+      因为下面的模块脚本会通过 import 自动加载它
+    -->
     
-    <!-- 这个页面的专属逻辑 -->
-    <script>
+    <!-- ▼▼▼ 核心修改点 ▼▼▼ -->
+    <script type="module">
+        // 1. 从模块中导入 createPageLayout 函数
+        import { createPageLayout } from '../common/template.js';
+
         document.addEventListener('DOMContentLoaded', () => {
 
             // 定义“日记”页面的专属内容
