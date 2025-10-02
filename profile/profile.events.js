@@ -330,7 +330,6 @@ function createEventManager(elements, state, ui, data, config) {
 
             const type = targetBtn.dataset.type;
             if (targetBtn.classList.contains('selected')) {
-                // 确保不重复添加
                 if (!state.selectedRelationshipTypes.includes(type)) {
                     state.selectedRelationshipTypes.push(type);
                 }
@@ -338,7 +337,7 @@ function createEventManager(elements, state, ui, data, config) {
                 state.selectedRelationshipTypes = state.selectedRelationshipTypes.filter(t => t !== type);
             }
 
-            // 【关键修复】: 每次点击标签后，立即调用UI更新函数
+            // 【关键修复】: 每次点击标签后，立即调用UI更新函数，以启用或禁用确认按钮
             ui.updateRelTypeConfirmButtonState();
         });
         // ▲▲▲ 修复结束 ▲▲▲

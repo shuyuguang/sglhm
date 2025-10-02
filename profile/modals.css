@@ -229,7 +229,20 @@
 }
 .custom-items-container { display: flex; flex-direction: column; gap: 5px; }
 .modal-section-pane .custom-item-group { margin-bottom: 5px; }
-.custom-item-group { display: flex; flex-wrap: wrap; align-items: center; padding: 2px 0; }
+/* 1. 首先，确保通用的 .custom-item-group 样式是它原来的样子（允许换行） */
+/* 如果你之前把它改成了 nowrap，请把它改回 wrap 或者直接删除 flex-wrap 属性 */
+.custom-item-group { 
+    display: flex; 
+    flex-wrap: wrap; /* 确保这里是 wrap，这是默认或原始状态 */
+    align-items: center; 
+    padding: 2px 0; 
+}
+
+/* 2. 然后，添加下面的新规则，专门针对关系条目 */
+/* ▼▼▼ 新增样式 ▼▼▼ */
+.custom-item-group.relationship-item {
+    flex-wrap: nowrap; /* 仅对关系条目强制不换行 */
+}
 .custom-item-group > label { flex-grow: 1; font-weight: 500; padding-right: 10px; cursor: grab; }
 .custom-item-group > label:active { cursor: grabbing; }
 .custom-item-group .form-group-clickable { flex-basis: 100%; margin-top: 0; width: 100%; padding-top: 2px; padding-bottom: 0px; }
@@ -640,6 +653,26 @@
 }
 
 /* ▼▼▼ 新增开始 (UI优化) ▼▼▼ */
+.custom-item-group > label strong {
+    font-weight: 600;
+    color: var(--color-text-dark);
+}
+
+.relationship-tag {
+    display: inline-block;
+    background-color: var(--color-primary-bg-light);
+    color: var(--color-primary-text);
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    font-size: 0.8em;
+    font-weight: 500;
+    margin: 0 2px;
+    line-height: 1.4;
+    vertical-align: middle;
+}
+
+
+/* ▼▼▼ 新增开始 (关系条目UI优化) ▼▼▼ */
 .custom-item-group > label strong {
     font-weight: 600;
     color: var(--color-text-dark);

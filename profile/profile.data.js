@@ -89,7 +89,8 @@ function createDataManager(db, state, ui) {
 
             profile.relationships.forEach(rel => {
                 const character = relatedMap.get(rel.charId) || { id: rel.charId, name: rel.charName || '未知角色', avatar: '' };
-                // ▼▼▼ 修改开始 (UI优化) ▼▼▼
+                // ▼▼▼ 修改开始 (确保加载时也能正确渲染) ▼▼▼
+                // 将保存的 "挚友 / 恋人" 这样的字符串分割成数组
                 const relationshipTypesArray = rel.type ? rel.type.split(' / ') : [];
                 ui.createAndAppendRelationshipItem(character, relationshipTypesArray);
                 // ▲▲▲ 修改结束 ▲▲▲

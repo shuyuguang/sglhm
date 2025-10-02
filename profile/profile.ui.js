@@ -124,23 +124,26 @@ function createUiManager(elements, state, config) {
     };
 
     const openCharacterSelector = () => characterSelectorOverlay?.classList.add('active');
+    
+    // ▼▼▼ 修改开始 ▼▼▼
     const closeCharacterSelector = () => {
         characterSelectorOverlay?.classList.remove('active');
-        state.selectedCharForRel = null;
+        // 【错误点移除】不再在这里清除 state.selectedCharForRel
+        // state.selectedCharForRel = null; 
     };
     
     const openRelationshipTypeSelector = () => {
         relationshipTypeOverlay?.classList.add('active');
-        updateRelTypeConfirmButtonState(); // 打开时立即更新按钮状态（初始为禁用）
+        updateRelTypeConfirmButtonState();
     };
 
-    // ▼▼▼ 修改开始 (UI优化) ▼▼▼
     const closeRelationshipTypeSelector = () => {
         relationshipTypeOverlay?.classList.remove('active');
-        // 确保状态完全重置
+        // 【正确清理位置】在整个流程结束或取消时，在这里统一清理所有相关状态
+        state.selectedCharForRel = null; 
         state.selectedRelationshipTypes = []; 
         relationshipTypeOptions?.querySelectorAll('.option-tag.selected').forEach(el => el.classList.remove('selected'));
-        updateRelTypeConfirmButtonState(); // 关闭时也更新一下，确保按钮回到禁用状态
+        updateRelTypeConfirmButtonState();
     };
     // ▲▲▲ 修改结束 ▲▲▲
 
@@ -286,29 +289,25 @@ function createUiManager(elements, state, config) {
         });
     };
 
-    // ▼▼▼ 修改开始 (UI优化) ▼▼▼
     const createAndAppendRelationshipItem = (character, relationshipTypes) => {
         if (!relationshipItemsContainer) return;
         const newItem = document.createElement('div');
-        newItem.className = 'form-group custom-item-group';
+        // ▼▼▼ 修改开始 (为关系条目添加一个专属的class) ▼▼▼
+        newItem.className = 'form-group custom-item-group relationship-item'; // <-- 增加一个 'relationship-item' 类
+        // ▲▲▲ 修改结束 ▲▲▲
 
-        // 将关系类型数组转换为带样式的HTML标签字符串
         const tagsHtml = relationshipTypes.map(type => `<span class="relationship-tag">${type}</span>`).join('');
-        
-        // 组合最终的显示HTML
         const finalDisplayTextHtml = `是 <strong>${character.name}</strong> 的 ${tagsHtml}`;
         
-        // 存储数据到dataset，用于保存
         newItem.dataset.relCharId = character.id;
         newItem.dataset.relCharName = character.name;
-        newItem.dataset.relType = relationshipTypes.join(' / '); // 保存为简单字符串
+        newItem.dataset.relType = relationshipTypes.join(' / ');
 
         newItem.innerHTML = `
             <label>${finalDisplayTextHtml}</label>
-            <button class="item-actions-btn" title="删除关系"><i class="fa-solid fa-trash-can"></i></button>`;
+            <button class="item-actions-btn" title="删除关系"><i class="fa-solid fa-ellipsis-vertical"></i></button>`; // <-- 确认图标是三点
         relationshipItemsContainer.appendChild(newItem);
     };
-    // ▲▲▲ 修改结束 ▲▲▲
 
     const renderProfileTab = () => {
         const profileTabPane = document.getElementById(`profile-${state.uiStyle.toLowerCase()}`);
