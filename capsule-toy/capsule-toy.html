@@ -11,11 +11,15 @@
 
 </head>
 <body>
-    <!-- 引入通用的模板脚本 -->
-    <script src="../common/template.js"></script>
+    <!-- 
+      已删除 <script src="../common/template.js"></script> 
+    -->
     
-    <!-- 这个页面的专属逻辑 -->
-    <script>
+    <!-- ▼▼▼ 核心修改点 ▼▼▼ -->
+    <script type="module">
+        // 1. 从模块中导入函数
+        import { createPageLayout } from '../common/template.js';
+
         document.addEventListener('DOMContentLoaded', () => {
 
             // 定义“扭蛋”页面的专属内容
@@ -23,7 +27,7 @@
                 <p>这里是扭蛋页面</p>
             `;
 
-            // 定义“扭蛋”页面羽毛笔按钮的专属功能 (此页面无新增功能)
+            // 定义“扭蛋”页面羽毛笔按钮的专属功能
             const handleCapsuleToyFeatherClick = () => {
                 console.log('扭蛋页面的羽毛笔被点击，但当前无功能。');
             };
