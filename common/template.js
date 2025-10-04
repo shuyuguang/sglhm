@@ -9,7 +9,6 @@
  * @param {function} options.onFeatherClick - 当右上角的羽毛笔按钮被点击时要执行的函数
  * @param {function} [options.onPageLoad] - (可选) 页面HTML渲染完成后要执行的初始化函数
  */
-// ▼▼▼ 核心修改：在函数前添加 export 关键字 ▼▼▼
 export function createPageLayout({ title, contentHtml, modalsHtml = '', onFeatherClick, onPageLoad }) {
     
     const pageHtml = `
@@ -38,6 +37,27 @@ export function createPageLayout({ title, contentHtml, modalsHtml = '', onFeathe
     if (featherButton && typeof onFeatherClick === 'function') {
         featherButton.addEventListener('click', onFeatherClick);
     }
+
+    // ▼▼▼ 新增开始 ▼▼▼
+    // 为帮助按钮和提示框绑定事件
+    const helpButton = document.getElementById('help-btn');
+    const helpTooltip = document.getElementById('help-tooltip');
+
+    if (helpButton && helpTooltip) {
+        // 点击问号按钮，切换提示框的显示/隐藏
+        helpButton.addEventListener('click', (event) => {
+            event.stopPropagation(); // 阻止事件冒泡到 document
+            helpTooltip.classList.toggle('active');
+        });
+
+        // 点击页面其他地方，隐藏提示框
+        document.addEventListener('click', (event) => {
+            if (helpTooltip.classList.contains('active') && !helpTooltip.contains(event.target)) {
+                helpTooltip.classList.remove('active');
+            }
+        });
+    }
+    // ▲▲▲ 新增结束 ▲▲▲
 
     // 如果有页面加载后的回调函数，则执行它
     if (typeof onPageLoad === 'function') {

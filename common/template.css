@@ -83,3 +83,48 @@ body {
 .content-body {
     padding: 20px 15px;
 }
+
+/* ▼▼▼ 新增开始 ▼▼▼ */
+/* --- 帮助提示框样式 --- */
+.help-tooltip {
+    position: absolute;
+    top: 55px;
+    right: 50px;
+    width: 280px;
+    background-color: #ffffff;
+    color: #333;
+    padding: 12px 15px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    font-size: 1em;
+    line-height: 1.6;
+    z-index: 101;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s 0.2s;
+}
+
+.help-tooltip.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s;
+}
+
+.help-tooltip p {
+    margin: 0;
+}
+
+.help-tooltip::after {
+    content: '';
+    position: absolute;
+    top: -8px;
+    right: 62px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid #ffffff;
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */
