@@ -411,8 +411,10 @@ body {
     background-color: var(--color-bg-light);
     padding: 16px;
     border-radius: 12px;
-    margin-bottom: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    
+    margin: 0 -10px 12px -10px; /* 上0 右-10 下12 左-10 */
+    
+    
     font-weight: 500;
     color: var(--color-text-dark);
     cursor: pointer;
@@ -422,4 +424,40 @@ body {
 .api-config-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+/* ==========================================================================
+   8. API CARD STATES (API 卡片状态样式)
+   ========================================================================== */
+
+/* 让卡片内容水平分布 */
+.api-config-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* 卡片禁用时的样式 */
+.api-config-card.disabled {
+    background-color: #FFEFED;
+    
+}
+
+/* 状态胶囊的基础样式 */
+.status-capsule {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 500;
+}
+
+/* 启用状态的颜色 */
+.status-enabled {
+    background-color: #D3F8DB; /* 浅绿 */
+    color: #168E4C; /* 深绿 */
+}
+
+/* 禁用状态的颜色 */
+.status-disabled {
+    background-color: #FFE9C0; /* 浅橙 */
+    color: #B0520E; /* 深橙 */
 }
