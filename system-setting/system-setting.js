@@ -37,6 +37,16 @@ const systemSettingPageContent = `
     </div>
 `;
 
+// ▼▼▼ 新增开始 ▼▼▼
+// 定义帮助框的 HTML 内容
+const systemSettingModalsHtml = `
+    <div id="help-tooltip" class="help-tooltip">
+        <p>这里是系统设置，未来会有自定义主界面样式等，功能待开发</p>
+    </div>
+`;
+// ▲▲▲ 新增结束 ▲▲▲
+
+
 /**
  * 页面加载后需要执行的所有初始化操作。
  */
@@ -99,6 +109,9 @@ const handleSystemSettingFeatherClick = () => {
 createPageLayout({
     title: '系统设置',
     contentHtml: systemSettingPageContent,
+    // ▼▼▼ 修改/新增开始 ▼▼▼
+    modalsHtml: systemSettingModalsHtml, // 传入帮助框的 HTML
+    // ▲▲▲ 修改/新增结束 ▲▲▲
     onFeatherClick: handleSystemSettingFeatherClick,
-    onPageLoad: initializePage // 关键：确保在HTML渲染完毕后再执行初始化
+    onPageLoad: initializePage 
 });
