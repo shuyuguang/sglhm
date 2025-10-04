@@ -167,24 +167,35 @@ function switchPanelTab(targetTabId) {
     }
 }
 
+
+
 function handleAddApi() {
     const provider = document.querySelector('.pill-option.active').dataset.provider;
     const name = document.getElementById('api-name').value.trim();
     const apiKey = document.getElementById('api-key').value.trim();
     const baseUrl = document.getElementById('api-base-url').value.trim();
     const path = document.getElementById('api-path').value.trim();
+    
     if (!name || !apiKey) {
         alert('“名称”和“API Key”不能为空！');
         return;
     }
+
     const newConfig = {
-        id: Date.now(), provider, name, apiKey, baseUrl,
+        id: Date.now(),
+        provider,
+        name,
+        apiKey,
+        baseUrl,
         path: PROVIDER_CONFIG[provider].showApiPath ? path : null,
-        enabled: true, model: ''
+        enabled: true,
+        model: '' // 确保所有 provider 创建时都有 model 字段
     };
+
     const existingConfigs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
     existingConfigs.push(newConfig);
     localStorage.setItem(API_CONFIGS_KEY, JSON.stringify(existingConfigs));
+    
     renderApiCards();
     closeApiConfigPanel();
 }

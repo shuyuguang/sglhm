@@ -125,3 +125,7 @@ body {
     font-size: 1.1em;
 }
 /* ▲▲▲ 新增结束 ▲▲▲ */
+/* --- 微调：为表单容器增加底部 padding --- */
+.api-form-container {
+    padding-bottom: 8px; /* 增加一点底部空间 */
+}
