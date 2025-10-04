@@ -83,68 +83,49 @@ const apiConfigPanelHtml = `
 </div>
 `;
 
+// ▼▼▼ 新增：定义本页专属的帮助框 HTML 内容 ▼▼▼
+const helpTooltipHtml = `
+    <div id="help-tooltip" class="help-tooltip">
+        <p>点击羽毛笔添加API，添加的API卡片右侧可选启动/禁用，点击卡片跳转编辑页面，记得拉取模型嗷</p>
+    </div>
+`;
+// ▲▲▲ 新增结束 ▲▲▲
+
+// ▼▼▼ 新增：将所有模态框/浮层 HTML 合并成一个字符串 ▼▼▼
+const allModalsHtml = apiConfigPanelHtml + helpTooltipHtml;
+// ▲▲▲ 新增结束 ▲▲▲
+
 // 3. 服务商配置数据 (这部分不变)
 const PROVIDER_CONFIG = {
-    openai: {
-        apiKeyPlaceholder: 'sk-...',
-        baseUrlValue: 'https://api.openai.com',
-        apiPathValue: '/v1/chat/completions',
-        showApiPath: true
-    },
-    google: {
-        apiKeyPlaceholder: 'AIzaSy...',
-        baseUrlValue: 'https://generativelace.googleapis.com/v1beta',
-        showApiPath: false
-    },
-    claude: {
-        apiKeyPlaceholder: 'sk-ant-...',
-        baseUrlValue: 'https://api.anthropic.com/v1',
-        showApiPath: false
-    }
+    openai: { apiKeyPlaceholder: 'sk-...', baseUrlValue: 'https://api.openai.com', apiPathValue: '/v1/chat/completions', showApiPath: true },
+    google: { apiKeyPlaceholder: 'AIzaSy...', baseUrlValue: 'https://generativelace.googleapis.com/v1beta', showApiPath: false },
+    claude: { apiKeyPlaceholder: 'sk-ant-...', baseUrlValue: 'https://api.anthropic.com/v1', showApiPath: false }
 };
 
 let ui = {};
 
 // 4. 功能函数区
 
-/**
- * 新增：从 localStorage 读取数据并渲染 API 卡片到页面
- */
 function renderApiCards() {
     const configs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
     const container = document.getElementById('text');
     if (!container) return;
-
     if (configs.length === 0) {
         container.innerHTML = '<p>这里是【文本】的主配置区，还没有添加任何 API。</p>';
     } else {
         container.innerHTML = configs.map(config => {
-            // 根据 enabled 状态决定样式类和胶囊内容
             const enabledClass = config.enabled ? '' : 'disabled';
-            const statusCapsule = config.enabled
-                ? '<span class="status-capsule status-enabled">启用</span>'
-                : '<span class="status-capsule status-disabled">禁用</span>';
-
-            return `
-            <div class="api-config-card ${enabledClass}" data-id="${config.id}">
-                <span class="card-name">${config.name}</span>
-                ${statusCapsule}
-            </div>
-            `;
+            const statusCapsule = config.enabled ? '<span class="status-capsule status-enabled">启用</span>' : '<span class="status-capsule status-disabled">禁用</span>';
+            return `<div class="api-config-card ${enabledClass}" data-id="${config.id}"><span class="card-name">${config.name}</span>${statusCapsule}</div>`;
         }).join('');
     }
 }
 
-/**
- * 根据服务商更新表单的函数 (这部分不变)
- */
 function updateFormForProvider(providerName) {
     const config = PROVIDER_CONFIG[providerName];
     if (!config || !ui.apiKeyInput || !ui.baseUrlInput || !ui.apiPathGroup) return;
-
     ui.apiKeyInput.placeholder = config.apiKeyPlaceholder;
     ui.baseUrlInput.value = config.baseUrlValue;
-
     if (config.showApiPath) {
         ui.apiPathInput.value = config.apiPathValue;
         ui.apiPathGroup.style.display = '';
@@ -153,39 +134,27 @@ function updateFormForProvider(providerName) {
     }
 }
 
-/**
- * 打开模态框面板 (这部分不变)
- */
 function openApiConfigPanel() {
     if (!ui.overlay) return;
     const activeMainTab = document.querySelector('.tab-button.active');
     let targetPanelTabId = 'text-panel'; 
     if (activeMainTab) {
-        const mainTabId = activeMainTab.dataset.tab;
-        targetPanelTabId = `${mainTabId}-panel`;
+        targetPanelTabId = `${activeMainTab.dataset.tab}-panel`;
     }
     switchPanelTab(targetPanelTabId);
     ui.overlay.classList.add('active');
 }
 
-/**
- * 关闭并重置模态框面板 (这部分不变)
- */
 function closeApiConfigPanel() {
     if (!ui.overlay) return;
     ui.overlay.classList.remove('active');
-    
     if(ui.apiProviderForm) ui.apiProviderForm.reset();
-    
     ui.panelContentContainer.querySelectorAll('.pill-option').forEach(pill => {
         pill.classList.toggle('active', pill.dataset.provider === 'openai');
     });
     updateFormForProvider('openai');
 }
 
-/**
- * 切换模态框内的 Tab (这部分不变)
- */
 function switchPanelTab(targetTabId) {
     if (!ui.panelTabs) return;
     ui.panelTabs.forEach(tab => tab.classList.remove('active'));
@@ -198,65 +167,39 @@ function switchPanelTab(targetTabId) {
     }
 }
 
-/**
- * 核心修改：处理“添加”按钮点击事件，现在会保存完整数据
- */
 function handleAddApi() {
     const provider = document.querySelector('.pill-option.active').dataset.provider;
     const name = document.getElementById('api-name').value.trim();
     const apiKey = document.getElementById('api-key').value.trim();
     const baseUrl = document.getElementById('api-base-url').value.trim();
     const path = document.getElementById('api-path').value.trim();
-
     if (!name || !apiKey) {
         alert('“名称”和“API Key”不能为空！');
         return;
     }
-
     const newConfig = {
-        id: Date.now(),
-        provider,
-        name,
-        apiKey,
-        baseUrl,
+        id: Date.now(), provider, name, apiKey, baseUrl,
         path: PROVIDER_CONFIG[provider].showApiPath ? path : null,
-        enabled: true,
-        model: '' // 新增：初始化 model 字段
+        enabled: true, model: ''
     };
-
     const existingConfigs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
     existingConfigs.push(newConfig);
     localStorage.setItem(API_CONFIGS_KEY, JSON.stringify(existingConfigs));
-
     renderApiCards();
     closeApiConfigPanel();
 }
-// ▼▼▼ 新增：处理状态切换的函数 ▼▼▼
-/**
- * 根据 API ID 切换其启用/禁用状态
- * @param {string} apiId - The ID of the API config to toggle.
- */
+
 function handleToggleStatus(apiId) {
     const configs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
     const configIndex = configs.findIndex(c => c.id == apiId);
-
     if (configIndex > -1) {
-        // 切换 enabled 属性的值 (true -> false, false -> true)
         configs[configIndex].enabled = !configs[configIndex].enabled;
-        
-        // 将更新后的数组存回 localStorage
         localStorage.setItem(API_CONFIGS_KEY, JSON.stringify(configs));
-        
-        // 重新渲染卡片以立即反映变化
         renderApiCards();
     }
 }
-// ▲▲▲ 新增结束 ▲▲▲
-/**
- * 页面加载后需要执行的所有初始化操作
- */
+
 function initializePage() {
-    // --- 主页面 Tab 切换逻辑 (这部分不变) ---
     const indicator = document.querySelector('.active-tab-indicator');
     const tabsNav = document.querySelector('.tabs-nav');
     function updateIndicatorPosition() {
@@ -286,29 +229,22 @@ function initializePage() {
     window.addEventListener('scroll', updateIndicatorPosition, { passive: true });
     window.addEventListener('resize', updateIndicatorPosition);
 
-    // --- 模态框面板的初始化和事件绑定 ---
     ui = {
-        overlay: document.getElementById('api-config-overlay'),
-        panel: document.getElementById('api-config-panel'),
-        cancelBtn: document.getElementById('cancel-panel-btn'),
-        addBtn: document.getElementById('add-api-btn'),
+        overlay: document.getElementById('api-config-overlay'), panel: document.getElementById('api-config-panel'),
+        cancelBtn: document.getElementById('cancel-panel-btn'), addBtn: document.getElementById('add-api-btn'),
         panelTabsContainer: document.querySelector('#api-config-panel .modal-tabs'),
         panelTabs: document.querySelectorAll('#api-config-panel .modal-tab'),
         panelTabContents: document.querySelectorAll('#api-config-panel .modal-tab-content'),
         panelContentContainer: document.querySelector('#api-config-panel .modal-content-container'),
-        apiProviderForm: document.getElementById('api-provider-form'),
-        apiKeyInput: document.getElementById('api-key'),
-        baseUrlInput: document.getElementById('api-base-url'),
-        apiPathInput: document.getElementById('api-path'),
+        apiProviderForm: document.getElementById('api-provider-form'), apiKeyInput: document.getElementById('api-key'),
+        baseUrlInput: document.getElementById('api-base-url'), apiPathInput: document.getElementById('api-path'),
         apiPathGroup: document.getElementById('api-path-group')
     };
 
     if (ui.cancelBtn) ui.cancelBtn.addEventListener('click', closeApiConfigPanel);
     if (ui.addBtn) ui.addBtn.addEventListener('click', handleAddApi);
     if (ui.overlay) {
-        ui.overlay.addEventListener('click', (event) => {
-            if (event.target === ui.overlay) closeApiConfigPanel();
-        });
+        ui.overlay.addEventListener('click', (event) => { if (event.target === ui.overlay) closeApiConfigPanel(); });
     }
     if (ui.panelTabsContainer) {
         ui.panelTabsContainer.addEventListener('click', (event) => {
@@ -323,34 +259,24 @@ function initializePage() {
                 const allPills = clickedPill.parentElement.querySelectorAll('.pill-option');
                 allPills.forEach(pill => pill.classList.remove('active'));
                 clickedPill.classList.add('active');
-                const provider = clickedPill.dataset.provider;
-                updateFormForProvider(provider);
+                updateFormForProvider(clickedPill.dataset.provider);
             }
         });
     }
 
-    // 新增：为卡片容器添加点击事件委托，处理跳转
     const textTabPane = document.getElementById('text');
     if (textTabPane) {
         textTabPane.addEventListener('click', (event) => {
             const card = event.target.closest('.api-config-card');
-            if (!card) return; // 如果点击的不是卡片内的任何元素，则不执行任何操作
-
+            if (!card) return;
             const apiId = card.dataset.id;
-
-            // 检查点击的是否是状态胶囊
             if (event.target.matches('.status-capsule')) {
-                // 如果是，则只切换状态，不跳转
                 handleToggleStatus(apiId);
             } else {
-                // 如果点击的是卡片的其他部分，则执行跳转
                 window.location.href = `./api-room.html?id=${apiId}`;
             }
         });
     }
-    // ▲▲▲ 修改结束 ▲▲▲
-
-    // 新增：页面加载时，立即渲染已保存的卡片
     renderApiCards();
 }
 
@@ -358,7 +284,9 @@ function initializePage() {
 createPageLayout({
     title: '配置',
     contentHtml: apiManagementPageContent,
-    modalsHtml: apiConfigPanelHtml,
+    // ▼▼▼ 修改：传入合并后的 HTML ▼▼▼
+    modalsHtml: allModalsHtml,
+    // ▲▲▲ 修改结束 ▲▲▲
     onFeatherClick: openApiConfigPanel,
     onPageLoad: initializePage 
 });
