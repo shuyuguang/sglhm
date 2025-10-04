@@ -75,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ▼▼▼ 核心修改：fetchModels 函数恢复为单一、通用的实现 ▼▼▼
+
 async function fetchModels() {
     const baseUrlInput = document.getElementById('api-base-url');
     const apiKeyInput = document.getElementById('api-key');
@@ -84,7 +85,7 @@ async function fetchModels() {
 
     if (!baseUrlInput || !apiKeyInput || !modelSelect || !fetchBtn) return;
 
-    const baseUrl = baseUrlInput.value.trim();
+    const baseUrl = baseUrlInput.value.trim().replace(/\/$/, ''); // 去掉末尾的 /
     const apiKey = apiKeyInput.value.trim();
 
     if (!baseUrl || !apiKey) {
@@ -92,7 +93,6 @@ async function fetchModels() {
         return;
     }
 
-    // 1. 获取当前配置，判断 provider (核心新增)
     const params = new URLSearchParams(window.location.search);
     const apiId = params.get('id');
     const allConfigs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
@@ -102,35 +102,48 @@ async function fetchModels() {
         alert('错误：无法找到当前配置信息。');
         return;
     }
-    const provider = config.provider; // 获取到是 'google', 'openai' 还是 'claude'
+    const provider = config.provider;
 
     fetchBtn.disabled = true;
     btnSpan.textContent = '正在拉取...';
 
     try {
         let response;
-        // 2. 根据 provider 决定请求方式 (核心修改)
+        let modelsEndpoint = '';
+
         if (provider === 'google') {
-            // 使用 Gemini 的方式请求
-            response = await fetch(`${baseUrl}/models?key=${apiKey}`);
+            // --- Gemini 的逻辑 ---
+            modelsEndpoint = `${baseUrl}/models?key=${apiKey}`;
+            response = await fetch(modelsEndpoint);
         } else {
-            // 默认使用 OpenAI / Claude 兼容的方式请求
-            response = await fetch(`${baseUrl}/v1/models`, {
+            // --- OpenAI 及兼容 API 的智能逻辑 ---
+            const apiPathInput = document.getElementById('api-path');
+            const userPath = apiPathInput ? apiPathInput.value.trim() : '/v1/chat/completions';
+
+            // 1. 智能推断模型路径
+            //    将路径末尾的 /chat/completions 或 /completions 替换为 /models
+            const modelsPath = userPath
+                .replace(/chat\/completions$/, 'models')
+                .replace(/completions$/, 'models');
+            
+            // 2. 如果用户没填路径，提供一个安全的默认值
+            modelsEndpoint = baseUrl + (modelsPath || '/v1/models');
+            
+            response = await fetch(modelsEndpoint, {
                 headers: { 'Authorization': `Bearer ${apiKey}` }
             });
         }
 
         if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`HTTP 错误: ${response.status} ${response.statusText}\n响应内容: ${errorText}`);
+            throw new Error(`HTTP 错误: ${response.status} ${response.statusText}\n请求地址: ${modelsEndpoint}\n响应内容: ${errorText}`);
         }
 
         const data = await response.json();
-        // 3. 兼容不同 API 返回的模型数据结构 (增强兼容性)
         const models = data.data || data.models || data || [];
 
         if (!Array.isArray(models) || models.length === 0) {
-            alert('成功连接，但未返回任何模型。请检查Key的权限。');
+            alert('成功连接，但未返回任何模型。请检查Key的权限或API路径。');
             modelSelect.innerHTML = '<option value="">未找到模型</option>';
             return;
         }
@@ -138,9 +151,8 @@ async function fetchModels() {
         modelSelect.innerHTML = '';
         models.forEach(model => {
             const option = document.createElement('option');
-            // 4. 兼容不同 API 返回的模型 ID 和名称 (增强兼容性)
-            const modelId = model.id || model.name; // OpenAI用id, Gemini用name
-            const modelName = model.displayName || model.id || model.name; // Gemini有displayName
+            const modelId = model.id || model.name;
+            const modelName = model.displayName || model.id || model.name;
             
             option.value = modelId;
             option.textContent = modelName;
@@ -150,7 +162,7 @@ async function fetchModels() {
         alert(`成功拉取 ${models.length} 个模型！`);
 
     } catch (error) {
-        alert(`模型拉取失败！\n\n错误详情: ${error.message}\n\n请检查 Base URL 是否正确，以及 Key 是否有效且已启用相关API。`);
+        alert(`模型拉取失败！\n\n错误详情: ${error.message}`);
     } finally {
         fetchBtn.disabled = false;
         btnSpan.textContent = '拉取模型';
