@@ -98,7 +98,7 @@ const allModalsHtml = apiConfigPanelHtml + helpTooltipHtml;
 // 3. 服务商配置数据 (这部分不变)
 const PROVIDER_CONFIG = {
     openai: { apiKeyPlaceholder: 'sk-...', baseUrlValue: 'https://api.openai.com', apiPathValue: '/v1/chat/completions', showApiPath: true },
-    google: { apiKeyPlaceholder: 'AIzaSy...', baseUrlValue: 'https://generativelace.googleapis.com/v1beta', showApiPath: false },
+    google: { apiKeyPlaceholder: 'AIzaSy...', baseUrlValue: 'https://generativelanguage.googleapis.com/v1beta', showApiPath: false },
     claude: { apiKeyPlaceholder: 'sk-ant-...', baseUrlValue: 'https://api.anthropic.com/v1', showApiPath: false }
 };
 
