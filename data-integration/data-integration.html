@@ -15,68 +15,33 @@
                 <i class="fa-solid fa-chevron-left"></i>
             </a>
             <h1>数据中心</h1>
-            <button class="header-btn menu-btn" title="更多选项">
-                <i class="fa-solid fa-ellipsis-vertical"></i>
-            </button>
+            <button class="header-btn menu-btn" title="更多选项"><i class="fa-solid fa-ellipsis-vertical"></i></button>
         </header>
-
         <main>
-            <!-- 本地数据卡片 -->
             <div class="card">
-                <!-- ▼▼▼ 修改点：新增 header 包裹标题和描述 ▼▼▼ -->
                 <div class="card-header">
                     <h2><i class="fa-solid fa-server"></i> 本地</h2>
                     <p class="card-description">管理存储在此设备上的数据</p>
                 </div>
-                <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                 <div class="button-group">
-                    <button id="export-local-btn" class="card-btn">
-                        <i class="fa-solid fa-download"></i>
-                        <span>导出本地数据</span>
-                    </button>
-                    <button id="import-local-btn" class="card-btn">
-                        <i class="fa-solid fa-upload"></i>
-                        <span>导入本地数据</span>
-                    </button>
-                    <button id="clear-local-btn" class="card-btn danger">
-                        <!-- ▼▼▼ 修改点：更换图标 ▼▼▼ -->
-                        <i class="fa-solid fa-eraser"></i>
-                        <!-- ▲▲▲ 修改结束 ▲▲▲ -->
-                        <span>清除本地数据</span>
-                    </button>
+                    <button id="export-local-btn" class="card-btn"><i class="fa-solid fa-download"></i><span>导出本地数据</span></button>
+                    <button id="import-local-btn" class="card-btn"><i class="fa-solid fa-upload"></i><span>导入本地数据</span></button>
+                    <button id="clear-local-btn" class="card-btn danger"><i class="fa-solid fa-eraser"></i><span>清除本地数据</span></button>
                 </div>
             </div>
-
-            <!-- 云端数据卡片 -->
             <div class="card disabled">
-                 <!-- ▼▼▼ 修改点：新增 header 包裹标题和描述 ▼▼▼ -->
                 <div class="card-header">
                     <h2><i class="fa-solid fa-cloud"></i> 云端</h2>
                     <p class="card-description">通过云服务同步和备份数据</p>
                 </div>
-                <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                 <div class="button-group">
-                    <button class="card-btn" disabled title="功能暂未开放">
-                        <i class="fa-solid fa-cloud-arrow-down"></i>
-                        <span>导出云端数据</span>
-                    </button>
-                    <button class="card-btn" disabled title="功能暂未开放">
-                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                        <span>导入云端数据</span>
-                    </button>
-                    <button class="card-btn danger" disabled title="功能暂未开放">
-                        <i class="fa-solid fa-eraser"></i>
-                        <span>清除云端数据</span>
-                    </button>
+                    <button class="card-btn" disabled title="功能暂未开放"><i class="fa-solid fa-cloud-arrow-down"></i><span>导出云端数据</span></button>
+                    <button class="card-btn" disabled title="功能暂未开放"><i class="fa-solid fa-cloud-arrow-up"></i><span>导入云端数据</span></button>
+                    <button class="card-btn danger" disabled title="功能暂未开放"><i class="fa-solid fa-eraser"></i><span>清除云端数据</span></button>
                 </div>
             </div>
         </main>
     </div>
-
-    <!-- 隐藏的文件输入框，用于导入 -->
-    <input type="file" id="import-file-input" accept=".json" style="display: none;">
-    
-    <!-- 隐藏的文件输入框，用于导入 -->
     <input type="file" id="import-file-input" accept=".json" style="display: none;">
     
     <!-- 依赖脚本 -->
@@ -85,7 +50,8 @@
     <!-- ▼▼▼ 修改点：加载所有模块的配置和总配置 ▼▼▼ -->
     <!-- 1. 加载各个模块的配置 -->
     <script src="../config/profile.config.js"></script>
-    <script src="../config/chat.config.js"></script> <!-- 新增这一行 -->
+    <script src="../config/chat.config.js"></script>
+    <script src="../config/api.config.js"></script> <!-- 新增这一行 -->
     <!-- <script src="../config/diary.config.js"></script> -->
 
     <!-- 2. 加载聚合后的总配置 -->
