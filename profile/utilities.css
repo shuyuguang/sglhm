@@ -51,15 +51,15 @@
 /* --- Global Help Tooltip --- */
 .help-tooltip.global-help {
     position: fixed; /* 使用 fixed 定位，使其相对于视口 */
-    top: 52px; /* 按钮 top 12px + height 32px + 间距 8px */
-    right: 12px;
+    top: 55px; 
+    right: 50px;
     width: 280px;
     background-color: var(--color-bg-light);
     color: var(--color-text-dark);
-    padding: 15px 18px;
+    padding: 12px 15px;
     border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
-    font-size: 0.95em;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    font-size: 1em;
     line-height: 1.6;
     z-index: var(--z-tooltip);
     opacity: 0;
@@ -79,7 +79,7 @@
     content: '';
     position: absolute;
     top: -8px;
-    right: 50px; /* 调整箭头位置使其对准问号按钮 */
+    right: 62px; /* 调整箭头位置使其对准问号按钮 */
     width: 0;
     height: 0;
     border-left: 8px solid transparent;
