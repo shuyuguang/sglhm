@@ -21,8 +21,6 @@
   --color-bg-grey: #f1f3f5;
   --color-bg-grey-hover: #e9ecef;
 
-
-
   /* Layout */
   --header-height: 62px;
   --tabs-nav-height: 41px; /* Approximate height for calculation */
@@ -89,7 +87,7 @@ body {
   margin-right: 10px; 
   color: var(--color-primary); 
 }
-/* --- Header Action Buttons (省略) --- */
+/* --- Header Action Buttons --- */
 .header-actions { display: flex; align-items: center; gap: 10px; }
 .header-actions button, .header-actions a { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: none; border-radius: 50%; cursor: pointer; text-decoration: none; transition: all 0.2s ease; }
 .btn-help { font-size: 16px; color: var(--color-accent); background-color: var(--color-accent-bg); }
@@ -104,10 +102,8 @@ body {
   position: sticky;
   top: calc(var(--header-height) - 15px);
   z-index: 10;
-  
   background-color: var(--color-bg-light);
   border-bottom: 1px solid var(--color-border);
-  
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -148,14 +144,11 @@ body {
   position: sticky;
   top: calc(var(--header-height) - 10px + var(--tabs-nav-height) - 7px - 4px);
   z-index: 30;
-  
   width: 20px;
   height: 14px;
-  
   font-size: 14px;
   text-align: center;
   color: var(--color-primary);
-  
   pointer-events: none;
   opacity: 0;
   transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
@@ -317,7 +310,7 @@ body {
 .pill-option {
     padding: 8px 18px;
     border: none;
-    border-radius: 20px; /* 关键：实现胶囊形状 */
+    border-radius: 20px;
     background-color: var(--color-bg-grey);
     color: var(--color-text-medium);
     font-size: 0.9em;
@@ -326,12 +319,10 @@ body {
     transition: all 0.05s ease-in-out;
 }
 
-/* ▼▼▼ 修改：移除了 transform 属性 ▼▼▼ */
 .pill-option:not(.active):hover {
     background-color: var(--color-bg-grey-hover);
 }
 
-/* ▼▼▼ 修改：移除了 transform 属性 ▼▼▼ */
 .pill-option.active {
     background-color: var(--color-primary);
     color: var(--color-text-white);
@@ -341,39 +332,32 @@ body {
    7. MODAL FORM & NEW COMPONENTS (模态框表单及新组件)
    ========================================================================== */
 
-/* --- Floating Label Form Style (新样式) --- */
 .api-form-container {
-    /* 增加顶部 padding，给第一个 label 留出空间 */
     padding: 16px 20px; 
 }
 
 .form-group {
-    position: relative; /* 关键：为 label 的绝对定位创建上下文 */
-    margin-bottom: 24px; /* 增加间距以适应新样式 */
+    position: relative;
+    margin-bottom: 24px;
 }
 
 .form-group label {
-    position: absolute; /* 关键：将 label 从文档流中脱离 */
+    position: absolute;
     top: 0;
     left: 10px;
-    transform: translateY(-50%); /* 关键：向上移动自身高度的一半，使其跨坐在边框上 */
-    
-    background-color: var(--color-bg-light); /* 关键：用背景色“切开”输入框的边框 */
+    transform: translateY(-50%);
+    background-color: var(--color-bg-light);
     padding: 0 4px;
-    
     color: var(--color-text-light);
     font-size: 0.85em;
     font-weight: 500;
-    
-    /* 防止 label 挡住对输入框的点击 */
     pointer-events: none; 
-    
     transition: color 0.2s ease;
 }
 
 .form-group input[type="text"] {
     width: 100%;
-    padding: 12px; /* 调整内边距 */
+    padding: 12px;
     border: 1px solid #ced4da;
     border-radius: 8px;
     font-size: 1em;
@@ -382,22 +366,15 @@ body {
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-/* 当用户聚焦在输入框上时，边框和 label 同时变色 */
 .form-group input[type="text"]:focus {
     outline: none;
     border-color: var(--color-primary);
-    
 }
 
-/* 
-  使用 :focus-within，当 form-group 内部的任何元素
-  (这里就是我们的 input) 被聚焦时，就改变 label 的颜色 
-*/
 .form-group:focus-within label {
     color: var(--color-primary);
 }
 
-/* --- 确认按钮样式 --- */
 .sheet-btn-confirm {
     background-color: var(--color-primary);
     color: var(--color-text-white);
@@ -406,58 +383,285 @@ body {
     background-color: var(--color-primary-hover);
 }
 
-/* --- 主内容区的 API 配置卡片 --- */
 .api-config-card {
     background-color: var(--color-bg-light);
-    padding: 16px;
+    padding: 16px 4px 16px 16px;
     border-radius: 12px;
-    
-    margin: 0 -10px 12px -10px; /* 上0 右-10 下12 左-10 */
-    
-    
+    margin: 0 -10px 12px -10px;
     font-weight: 500;
     color: var(--color-text-dark);
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.api-config-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
+
 /* ==========================================================================
    8. API CARD STATES (API 卡片状态样式)
    ========================================================================== */
 
-/* 让卡片内容水平分布 */
 .api-config-card {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-/* 卡片禁用时的样式 */
 .api-config-card.disabled {
     background-color: #FFEFED;
-    
 }
 
-/* 状态胶囊的基础样式 */
 .status-capsule {
     padding: 3px 10px;
     border-radius: 12px;
     font-size: 0.8em;
     font-weight: 500;
+    white-space: nowrap; /* 防止胶囊文字换行 */
 }
 
-/* 启用状态的颜色 */
 .status-enabled {
-    background-color: #D3F8DB; /* 浅绿 */
-    color: #168E4C; /* 深绿 */
+    background-color: #D3F8DB;
+    color: #168E4C;
 }
 
-/* 禁用状态的颜色 */
 .status-disabled {
-    background-color: #FFE9C0; /* 浅橙 */
-    color: #B0520E; /* 深橙 */
+    background-color: #FFE9C0;
+    color: #B0520E;
+}
+/* ==========================================================================
+   9. API CARD ENHANCEMENTS (API 卡片增强样式)
+   ========================================================================== */
+
+.card-capsules {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-model {
+    background-color: #e0f2ff;
+    color: #1c7ed6;
+}
+/* ==========================================================================
+   10. API CARD VISUALS (API 卡片视觉增强)
+   ========================================================================== */
+
+.card-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.provider-icon {
+    width: 36px;
+    height: 28px;
+    border-radius: 20px;
+    background-color: var(--color-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1em;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+/* ==========================================================================
+   11. API CARD DRAG HANDLE (API 卡片拖拽图标)
+   ========================================================================== */
+
+.card-right-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+
+
+/* 新增：拖拽过程中的卡片样式 */
+.api-config-card.dragging {
+    opacity: 0.5;
+    background: #e9ecef;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    transform: scale(1.02);
+}
+/* ==========================================================================
+   12. CROSS-PLATFORM DRAG & DROP (跨平台拖拽样式)
+   ========================================================================== */
+
+
+
+/* 正在被拖拽的卡片的样式 */
+.api-config-card.dragging {
+    opacity: 0.8;
+    background: #e9ecef;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    transform: scale(1.02);
+    cursor: grabbing;
+}
+
+/* 在拖拽期间，禁止页面上的文本被选中 */
+body.user-select-none {
+    user-select: none;
+    -webkit-user-select: none; /* 兼容旧版 Safari/Chrome */
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+/* ==========================================================================
+   13. MULTI-SELECT MODE (多选模式样式)
+   ========================================================================== */
+
+/* --- 多选操作栏 --- */
+.multi-select-footer {
+    position: fixed;
+    bottom: -100px; /* 默认在屏幕外 */
+    left: 0;
+    width: 100%;
+    background-color: var(--color-bg-light);
+    padding: 16px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom)); /* 适配 iPhone X 等设备 */
+    display: flex;
+    gap: 12px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    z-index: 900;
+    transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 当 body 有 multi-select-active 类时，显示操作栏 */
+body.multi-select-active .multi-select-footer {
+    bottom: 0;
+}
+
+.footer-btn {
+    flex-grow: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: var(--color-bg-grey);
+    color: var(--color-text-medium);
+    transition: background-color 0.2s;
+}
+.footer-btn:hover {
+    background-color: var(--color-bg-grey-hover);
+}
+
+.footer-btn.btn-delete {
+    background-color: #ffe3e3;
+    color: #f03e3e;
+}
+.footer-btn.btn-delete:not(:disabled):hover {
+    background-color: #f03e3e;
+    color: white;
+}
+.footer-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
+/* --- 卡片内的复选框 --- */
+.card-checkbox-wrapper {
+    width: 0;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+body.multi-select-active .card-checkbox-wrapper {
+    width: 40px; /* 展开宽度 */
+    opacity: 1;
+    transform: scale(1);
+}
+
+.custom-checkbox {
+    width: 22px;
+    height: 22px;
+    border: 2px solid #ced4da;
+    border-radius: 50%;
+    background-color: white;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+/* --- 卡片选中状态 --- */
+.api-config-card.card-selected {
+    background-color: #e0f2ff; /* 选中时背景变淡蓝色 */
+}
+
+.api-config-card.card-selected .custom-checkbox {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    /* 添加一个对勾图标 */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 8l3 3 7-7'/%3e%3c/svg%3e");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 60%;
+}
+
+/* --- 在多选模式下，隐藏操作手柄，避免误操作 --- */
+body.multi-select-active .card-action-handle {
+    opacity: 0;
+    pointer-events: none;
+    width: 0;           /* 新增：宽度变为0 */
+    padding: 0;         /* 新增：内边距变为0 */
+    overflow: hidden;   /* 新增：隐藏溢出的内容 */
+}
+
+/* --- 重命名 .drag-handle 为 .card-action-handle --- */
+.card-action-handle {
+    color: #adb5bd;
+    font-size: 1.2em;
+    cursor: pointer; /* 普通点击是 pointer */
+    
+    /* ▼▼▼ 新增/修改 ▼▼▼ */
+    width: 16px;                 /* 1. 设定与复选框相同的宽度 */
+    display: flex;               /* 2. 使用 flex 布局 */
+    align-items: center;         /* 3. 垂直居中图标 */
+    justify-content: center;     /* 4. 水平居中图标 */
+    /* ▲▲▲ 新增/修改 ▲▲▲ */
+
+    transition: all 0.3s ease; 
+    /* padding: 0 4px; */ /* padding 不再需要，可以删除或注释掉 */
+}
+
+body:not(.multi-select-active) .card-action-handle:hover {
+    color: var(--color-text-medium);
+}
+/* ==========================================================================
+   12. STYLED MODEL CONTAINER (美化后的模型容器)
+   ========================================================================== */
+
+#selected-models-container {
+    /* 1. 借用输入框的核心样式 */
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    background-color: var(--color-bg-light);
+    transition: border-color 0.2s, box-shadow 0.2s;
+
+    /* 2. 关键：设置最小高度，让它可以自适应内容增高 */
+    min-height: 49px; /* 与输入框高度保持一致 */
+
+    /* 3. 内部使用 Flex 布局来排列标签 */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center; /* 垂直居中对齐标签 */
+}
+
+/* 当父级 .form-group 获得焦点时（虽然div不能真聚焦，但:focus-within可以检测子元素），
+   让我们的容器也显示高亮边框，行为与输入框统一 */
+.form-group:focus-within #selected-models-container {
+    border-color: var(--color-primary);
+}
+
+/* 微调一下“未选择模型”的提示文本，让它在框内更好看 */
+#selected-models-container .no-models-selected {
+    padding: 0; /* 移除原有的垂直 padding */
+    width: 100%; /* 占满整行 */
 }

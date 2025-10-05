@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const formHtml = `
         <div class="form-wrapper">
             <form class="api-form-container" id="edit-api-form">
+                <!-- 名称, Key, URL, 路径等表单组保持不变 -->
                 <div class="form-group"><label for="api-name">名称</label><input type="text" id="api-name" value="${config.name || ''}"></div>
                 <div class="form-group"><label for="api-key">API Key</label><input type="text" id="api-key" value="${config.apiKey || ''}"></div>
                 <div class="form-group"><label for="api-base-url">API Base URL</label><input type="text" id="api-base-url" value="${config.baseUrl || ''}"></div>
@@ -65,10 +66,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span>拉取模型</span>
                     </button>
                 </div>
-                <div id="selected-models-container"></div>
+
+                <!-- 新的结构：用 form-group 包裹模型容器 -->
+                <div class="form-group">
+                    <label for="selected-models-container">已选模型</label>
+                    <div id="selected-models-container">
+                        <!-- 已选模型的标签将由 JS 注入这里 -->
+                    </div>
+                </div>
             </form>
         </div>
     `;
+    // ▲▲▲ 修改结束 ▲▲▲
+
     mainContent.innerHTML = formHtml;
 
     // 缓存所有需要操作的 DOM 元素
@@ -123,12 +133,15 @@ function renderSelectedModels() {
     if (currentSelectedModels.length === 0) {
         ui.selectedContainer.innerHTML = '<p class="no-models-selected">尚未选择任何模型</p>';
     } else {
+        // ▼▼▼ 核心修改：不再创建 model-tag，而是创建 model-list-item ▼▼▼
         currentSelectedModels.forEach(modelId => {
-            const tag = document.createElement('div');
-            tag.className = 'model-tag';
-            tag.textContent = modelId;
-            ui.selectedContainer.appendChild(tag);
+            const item = document.createElement('div');
+            // 使用一个新的、更合适的类名
+            item.className = 'model-list-item'; 
+            item.textContent = modelId;
+            ui.selectedContainer.appendChild(item);
         });
+        // ▲▲▲ 修改结束 ▲▲▲
     }
 }
 

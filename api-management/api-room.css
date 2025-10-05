@@ -206,27 +206,43 @@ body {
 }
 
 /* ==========================================================================
-   10. SELECTED MODEL TAGS (已选模型标签)
+   10. SELECTED MODEL LIST (已选模型列表) - 全新样式
    ========================================================================== */
-.selected-models-container {
-    padding: 8px 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+
+/* 这是外面的大框框 */
+#selected-models-container {
+    /* 1. 借用输入框的核心样式 */
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    background-color: var(--color-bg-light);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    min-height: 49px; /* 与输入框高度保持一致 */
+    
+    /* 2. 移除 flex 布局，让内部的 div 自然地垂直排列 */
 }
-.model-tag {
-    background-color: var(--color-bg-grey);
-    color: var(--color-text-medium);
-    padding: 6px 12px;
-    border-radius: 16px;
-    font-size: 0.9em;
-    font-weight: 500;
+
+/* 当父级 .form-group 获得焦点时，让我们的容器也显示高亮边框 */
+.form-group:focus-within #selected-models-container {
+    border-color: var(--color-primary);
 }
-.no-models-selected {
-    color: var(--color-text-light);
-    font-size: 0.9em;
-    padding: 8px 0;
+
+/* 这是框框里面的每一个模型名称 */
+.model-list-item {
+    padding: 4px 0; /* 增加一点垂直间距，让列表不拥挤 */
+    font-size: 1em; /* 字体大小与输入框内文字一致 */
+    color: var(--color-text-dark);
+    line-height: 1.5; /* 增加行高，提升可读性 */
 }
+
+/* 微调“未选择模型”的提示文本 */
+#selected-models-container .no-models-selected {
+    padding: 0;
+    width: 100%;
+    line-height: 1.5; /* 确保高度感一致 */
+}
+
 /* ==========================================================================
    11. MODEL SEARCH BAR (模型搜索栏样式)
    ========================================================================== */

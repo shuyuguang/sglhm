@@ -4,8 +4,9 @@ import { createPageLayout } from '../common/template.js';
 
 // 使用 localStorage 的 Key，用于存储和读取 API 配置
 const API_CONFIGS_KEY = 'api_configs_text';
+let isMultiSelectMode = false; // 全局状态，跟踪是否处于多选模式
 
-// 1. 定义页面的专属 HTML 内容 (这部分不变)
+// 1. 定义页面的专属 HTML 内容
 const apiManagementPageContent = `
     <!-- Tab 导航栏 -->
     <nav class="tabs-nav">
@@ -22,18 +23,19 @@ const apiManagementPageContent = `
                 <div id="text" class="tab-pane active">
                     <!-- 卡片将由 JS 动态渲染到这里 -->
                 </div>
-                <div id="image" class="tab-pane">
-                    <p>图片 API 配置区。</p>
-                </div>
-                <div id="voice" class="tab-pane">
-                    <p>语音 API 配置区。</p>
-                </div>
+                <div id="image" class="tab-pane"><p>图片 API 配置区。</p></div>
+                <div id="voice" class="tab-pane"><p>语音 API 配置区。</p></div>
             </div>
         </main>
     </div>
+    <!-- 多选模式下的操作栏，默认隐藏 -->
+    <div id="multi-select-footer" class="multi-select-footer">
+        <button class="footer-btn" id="cancel-multi-select">取消</button>
+        <button class="footer-btn btn-delete" id="delete-selected-btn" disabled>删除</button>
+    </div>
 `;
 
-// 2. 定义模态框面板的 HTML 结构 (这部分不变)
+// 2. 定义模态框面板的 HTML 结构
 const apiConfigPanelHtml = `
 <div class="modal-overlay" id="api-config-overlay">
     <div class="modal-panel" id="api-config-panel">
@@ -83,19 +85,17 @@ const apiConfigPanelHtml = `
 </div>
 `;
 
-// ▼▼▼ 新增：定义本页专属的帮助框 HTML 内容 ▼▼▼
+// 定义本页专属的帮助框 HTML 内容
 const helpTooltipHtml = `
     <div id="help-tooltip" class="help-tooltip">
         <p>点击羽毛笔添加API，添加的API卡片右侧可选启动/禁用，点击卡片跳转编辑页面，记得拉取模型嗷</p>
     </div>
 `;
-// ▲▲▲ 新增结束 ▲▲▲
 
-// ▼▼▼ 新增：将所有模态框/浮层 HTML 合并成一个字符串 ▼▼▼
+// 将所有模态框/浮层 HTML 合并成一个字符串
 const allModalsHtml = apiConfigPanelHtml + helpTooltipHtml;
-// ▲▲▲ 新增结束 ▲▲▲
 
-// 3. 服务商配置数据 (这部分不变)
+// 3. 服务商配置数据
 const PROVIDER_CONFIG = {
     openai: { apiKeyPlaceholder: 'sk-...', baseUrlValue: 'https://api.openai.com', apiPathValue: '/v1/chat/completions', showApiPath: true },
     google: { apiKeyPlaceholder: 'AIzaSy...', baseUrlValue: 'https://generativelanguage.googleapis.com/v1beta', showApiPath: false },
@@ -105,18 +105,42 @@ const PROVIDER_CONFIG = {
 let ui = {};
 
 // 4. 功能函数区
-
 function renderApiCards() {
     const configs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
     const container = document.getElementById('text');
     if (!container) return;
+
     if (configs.length === 0) {
         container.innerHTML = '<p>这里是【文本】的主配置区，还没有添加任何 API。</p>';
     } else {
         container.innerHTML = configs.map(config => {
+            const providerMap = { openai: 'OA', google: 'Ge', claude: 'Cl' };
+            const providerInitial = providerMap[config.provider] || '?';
+            const providerIcon = `<div class="provider-icon">${providerInitial}</div>`;
             const enabledClass = config.enabled ? '' : 'disabled';
-            const statusCapsule = config.enabled ? '<span class="status-capsule status-enabled">启用</span>' : '<span class="status-capsule status-disabled">禁用</span>';
-            return `<div class="api-config-card ${enabledClass}" data-id="${config.id}"><span class="card-name">${config.name}</span>${statusCapsule}</div>`;
+            const statusCapsule = config.enabled 
+                ? '<span class="status-capsule status-enabled">启用</span>' 
+                : '<span class="status-capsule status-disabled">禁用</span>';
+            const modelCount = (config.model && config.model.length) ? config.model.length : 0;
+            const modelCapsule = `<span class="status-capsule status-model">${modelCount}个模型</span>`;
+            const actionHandle = `<div class="card-action-handle"><i class="fa-solid fa-ellipsis-vertical"></i></div>`;
+            const checkboxWrapper = `<div class="card-checkbox-wrapper"><div class="custom-checkbox"></div></div>`;
+            return `
+                <div class="api-config-card ${enabledClass}" data-id="${config.id}">
+                    <div class="card-info">
+                        ${providerIcon}
+                        <span class="card-name">${config.name}</span>
+                    </div>
+                    <div class="card-right-content">
+                        <div class="card-capsules">
+                            ${modelCapsule}
+                            ${statusCapsule}
+                        </div>
+                        ${actionHandle}
+                        ${checkboxWrapper}
+                    </div>
+                </div>
+            `;
         }).join('');
     }
 }
@@ -167,35 +191,24 @@ function switchPanelTab(targetTabId) {
     }
 }
 
-
-
 function handleAddApi() {
     const provider = document.querySelector('.pill-option.active').dataset.provider;
     const name = document.getElementById('api-name').value.trim();
     const apiKey = document.getElementById('api-key').value.trim();
     const baseUrl = document.getElementById('api-base-url').value.trim();
     const path = document.getElementById('api-path').value.trim();
-    
     if (!name || !apiKey) {
         alert('“名称”和“API Key”不能为空！');
         return;
     }
-
     const newConfig = {
-        id: Date.now(),
-        provider,
-        name,
-        apiKey,
-        baseUrl,
+        id: Date.now(), provider, name, apiKey, baseUrl,
         path: PROVIDER_CONFIG[provider].showApiPath ? path : null,
-        enabled: true,
-        model: [] // ◀️ 核心修改：确保 model 初始化为空数组
+        enabled: true, model: []
     };
-
     const existingConfigs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
     existingConfigs.push(newConfig);
     localStorage.setItem(API_CONFIGS_KEY, JSON.stringify(existingConfigs));
-    
     renderApiCards();
     closeApiConfigPanel();
 }
@@ -210,7 +223,61 @@ function handleToggleStatus(apiId) {
     }
 }
 
+function saveCardOrder() {
+    const cardElements = document.querySelectorAll('#text .api-config-card');
+    const newOrderIds = Array.from(cardElements).map(card => card.dataset.id);
+    const allConfigs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
+    const configMap = new Map(allConfigs.map(c => [String(c.id), c]));
+    const newSortedConfigs = newOrderIds.map(id => configMap.get(id)).filter(Boolean);
+    localStorage.setItem(API_CONFIGS_KEY, JSON.stringify(newSortedConfigs));
+}
+
+function enterMultiSelectMode(clickedCard) {
+    isMultiSelectMode = true;
+    document.body.classList.add('multi-select-active');
+    if (clickedCard) {
+        clickedCard.classList.add('card-selected');
+    }
+    updateMultiSelectFooter();
+}
+
+function exitMultiSelectMode() {
+    isMultiSelectMode = false;
+    document.body.classList.remove('multi-select-active');
+    document.querySelectorAll('.api-config-card.card-selected').forEach(card => {
+        card.classList.remove('card-selected');
+    });
+}
+
+function updateMultiSelectFooter() {
+    const selectedCount = document.querySelectorAll('.api-config-card.card-selected').length;
+    const deleteBtn = document.getElementById('delete-selected-btn');
+    if (deleteBtn) {
+        if (selectedCount > 0) {
+            deleteBtn.disabled = false;
+            deleteBtn.textContent = `删除 (${selectedCount})`;
+        } else {
+            deleteBtn.disabled = true;
+            deleteBtn.textContent = '删除';
+        }
+    }
+}
+
+function handleBulkDelete() {
+    const selectedCards = document.querySelectorAll('.api-config-card.card-selected');
+    if (selectedCards.length === 0) return;
+    if (confirm(`确定要删除这 ${selectedCards.length} 个配置吗？`)) {
+        const idsToDelete = new Set(Array.from(selectedCards).map(card => card.dataset.id));
+        let configs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
+        const updatedConfigs = configs.filter(config => !idsToDelete.has(String(config.id)));
+        localStorage.setItem(API_CONFIGS_KEY, JSON.stringify(updatedConfigs));
+        renderApiCards();
+        exitMultiSelectMode();
+    }
+}
+
 function initializePage() {
+    // --- Tab 切换逻辑 (不变) ---
     const indicator = document.querySelector('.active-tab-indicator');
     const tabsNav = document.querySelector('.tabs-nav');
     function updateIndicatorPosition() {
@@ -239,7 +306,8 @@ function initializePage() {
     requestAnimationFrame(updateIndicatorPosition);
     window.addEventListener('scroll', updateIndicatorPosition, { passive: true });
     window.addEventListener('resize', updateIndicatorPosition);
-
+    
+    // --- UI 元素获取和模态框事件绑定 (不变) ---
     ui = {
         overlay: document.getElementById('api-config-overlay'), panel: document.getElementById('api-config-panel'),
         cancelBtn: document.getElementById('cancel-panel-btn'), addBtn: document.getElementById('add-api-btn'),
@@ -251,53 +319,130 @@ function initializePage() {
         baseUrlInput: document.getElementById('api-base-url'), apiPathInput: document.getElementById('api-path'),
         apiPathGroup: document.getElementById('api-path-group')
     };
-
     if (ui.cancelBtn) ui.cancelBtn.addEventListener('click', closeApiConfigPanel);
     if (ui.addBtn) ui.addBtn.addEventListener('click', handleAddApi);
-    if (ui.overlay) {
-        ui.overlay.addEventListener('click', (event) => { if (event.target === ui.overlay) closeApiConfigPanel(); });
-    }
-    if (ui.panelTabsContainer) {
-        ui.panelTabsContainer.addEventListener('click', (event) => {
-            const target = event.target;
-            if (target.classList.contains('modal-tab')) switchPanelTab(target.dataset.tab);
-        });
-    }
-    if (ui.panelContentContainer) {
-        ui.panelContentContainer.addEventListener('click', (event) => {
-            if (event.target.matches('.pill-option')) {
-                const clickedPill = event.target;
-                const allPills = clickedPill.parentElement.querySelectorAll('.pill-option');
-                allPills.forEach(pill => pill.classList.remove('active'));
-                clickedPill.classList.add('active');
-                updateFormForProvider(clickedPill.dataset.provider);
-            }
-        });
-    }
+    if (ui.overlay) { ui.overlay.addEventListener('click', (event) => { if (event.target === ui.overlay) closeApiConfigPanel(); }); }
+    if (ui.panelTabsContainer) { ui.panelTabsContainer.addEventListener('click', (event) => { if (event.target.classList.contains('modal-tab')) switchPanelTab(event.target.dataset.tab); }); }
+    if (ui.panelContentContainer) { ui.panelContentContainer.addEventListener('click', (event) => { if (event.target.matches('.pill-option')) { const clickedPill = event.target; clickedPill.parentElement.querySelectorAll('.pill-option').forEach(pill => pill.classList.remove('active')); clickedPill.classList.add('active'); updateFormForProvider(clickedPill.dataset.provider); } }); }
 
+    // ▼▼▼ BUG修复与逻辑优化：最终版事件处理 ▼▼▼
     const textTabPane = document.getElementById('text');
     if (textTabPane) {
+        let longPressTimer;
+        let draggedElement = null;
+        let isDragging = false;
+        let hasMovedSincePress = false;
+
+        // 1. 统一的单击事件处理器
         textTabPane.addEventListener('click', (event) => {
+            if (isDragging) {
+                return;
+            }
+
             const card = event.target.closest('.api-config-card');
             if (!card) return;
-            const apiId = card.dataset.id;
-            if (event.target.matches('.status-capsule')) {
-                handleToggleStatus(apiId);
+
+            if (isMultiSelectMode) {
+                card.classList.toggle('card-selected');
+                updateMultiSelectFooter();
             } else {
-                window.location.href = `./api-room.html?id=${apiId}`;
+                const apiId = card.dataset.id;
+                const target = event.target; // 获取实际点击的元素
+
+                if (target.closest('.card-action-handle')) {
+                    enterMultiSelectMode(card);
+                } 
+                // 修改：检查是否点击了带有 .status-enabled 或 .status-disabled 的元素
+                else if (target.closest('.status-enabled') || target.closest('.status-disabled')) {
+                    handleToggleStatus(apiId);
+                } 
+                else {
+                    // 其他所有情况（包括点击模型胶囊）都视为跳转
+                    window.location.href = `./api-room.html?id=${apiId}`;
+                }
             }
         });
+
+        // 2. 独立的拖拽事件处理器
+        const pressStartHandler = (event) => {
+            const handle = event.target.closest('.card-action-handle');
+            // 拖拽必须由三点图标发起，且不能在多选模式下
+            if (!handle || isMultiSelectMode || (event.button && event.button !== 0)) {
+                return;
+            }
+
+            hasMovedSincePress = false;
+            draggedElement = handle.closest('.api-config-card');
+
+            // 启动长按计时器
+            longPressTimer = setTimeout(() => {
+                // 如果在计时期间已经移动了（判定为滚动），则不启动拖拽
+                if (hasMovedSincePress) return;
+                
+                isDragging = true;
+                draggedElement.classList.add('dragging');
+                document.body.classList.add('user-select-none');
+            }, 300);
+
+            document.addEventListener('mousemove', pressMoveHandler);
+            document.addEventListener('touchmove', pressMoveHandler, { passive: false });
+            document.addEventListener('mouseup', pressEndHandler, { once: true });
+            document.addEventListener('touchend', pressEndHandler, { once: true });
+        };
+
+        const pressMoveHandler = (event) => {
+            hasMovedSincePress = true; // 只要移动了就标记
+
+            if (isDragging) {
+                event.preventDefault(); // 只有在真正拖拽时才阻止滚动
+                const currentY = event.type === 'touchmove' ? event.touches[0].clientY : event.clientY;
+                const targetCard = document.elementFromPoint(
+                    event.type === 'touchmove' ? event.touches[0].clientX : event.clientX,
+                    currentY
+                )?.closest('.api-config-card');
+
+                if (targetCard && targetCard !== draggedElement) {
+                    const rect = targetCard.getBoundingClientRect();
+                    const midpoint = rect.top + rect.height / 2;
+                    textTabPane.insertBefore(draggedElement, currentY < midpoint ? targetCard : targetCard.nextSibling);
+                }
+            }
+        };
+
+        const pressEndHandler = () => {
+            clearTimeout(longPressTimer);
+            document.removeEventListener('mousemove', pressMoveHandler);
+            document.removeEventListener('touchmove', pressMoveHandler);
+
+            if (isDragging) {
+                draggedElement.classList.remove('dragging');
+                document.body.classList.remove('user-select-none');
+                saveCardOrder();
+                
+                // 延迟重置 isDragging 状态，以确保后续的 click 事件被正确忽略
+                setTimeout(() => {
+                    isDragging = false;
+                }, 0);
+            }
+            draggedElement = null;
+        };
+
+        textTabPane.addEventListener('mousedown', pressStartHandler);
+        textTabPane.addEventListener('touchstart', pressStartHandler, { passive: false });
+
+        document.getElementById('cancel-multi-select').addEventListener('click', exitMultiSelectMode);
+        document.getElementById('delete-selected-btn').addEventListener('click', handleBulkDelete);
     }
+    // ▲▲▲ 修复结束 ▲▲▲
+    
     renderApiCards();
 }
 
-// 5. 脚本的入口
+// 脚本入口
 createPageLayout({
     title: '配置',
     contentHtml: apiManagementPageContent,
-    // ▼▼▼ 修改：传入合并后的 HTML ▼▼▼
     modalsHtml: allModalsHtml,
-    // ▲▲▲ 修改结束 ▲▲▲
     onFeatherClick: openApiConfigPanel,
     onPageLoad: initializePage 
 });
