@@ -1,4 +1,5 @@
 // profile.events.js
+
 /**
  * 负责所有事件监听器的绑定
  */
@@ -73,12 +74,33 @@ function createEventManager(elements, state, ui, data, config) {
         elements.closeModalButton?.addEventListener('click', ui.closeModal);
         elements.modalOverlay?.addEventListener('click', (e) => e.target === elements.modalOverlay && ui.closeModal());
         elements.saveButton?.addEventListener('click', data.saveCurrentProfile);
-        elements.helpButton?.addEventListener('click', (e) => { e.stopPropagation(); elements.helpTooltip?.classList.toggle('active'); });
-        document.addEventListener('click', (e) => {
-            if (elements.helpTooltip?.classList.contains('active') && !elements.helpTooltip.contains(e.target)) {
-                elements.helpTooltip.classList.remove('active');
-            }
+
+        // ▼▼▼【重要】用下面这种更简洁可靠的方式重写帮助框逻辑 ▼▼▼
+        
+        // Modal内的帮助按钮
+        elements.helpButton?.addEventListener('click', (e) => {
+            e.stopPropagation(); // 阻止事件冒泡到document
+            elements.helpTooltip?.classList.toggle('active');
         });
+
+        // 全局帮助按钮
+        elements.globalHelpBtn?.addEventListener('click', (e) => {
+            e.stopPropagation(); // 阻止事件冒泡到document
+            elements.globalHelpTooltip?.classList.toggle('active');
+        });
+        
+        // 全局点击监听，用于关闭打开的提示框
+        document.addEventListener('click', () => {
+            elements.helpTooltip?.classList.remove('active');
+            elements.globalHelpTooltip?.classList.remove('active');
+        });
+        
+        // 阻止提示框自身的点击事件关闭自己
+        elements.helpTooltip?.addEventListener('click', e => e.stopPropagation());
+        elements.globalHelpTooltip?.addEventListener('click', e => e.stopPropagation());
+
+        // ▲▲▲ 修改结束 ▲▲▲
+
 
         // Edit Modal Sidebar
         elements.modalSidebar?.addEventListener('click', (e) => {
@@ -91,26 +113,24 @@ function createEventManager(elements, state, ui, data, config) {
         });
         new Sortable(elements.sidebarNavList, { animation: 150, ghostClass: 'sortable-ghost', filter: '.fixed-nav-button', delay: 200, delayOnTouchOnly: true });
 
+
+
         // Basic Info Triggers
         const setupTrigger = (trigger, title) => {
             trigger?.addEventListener('click', () => {
                 const valueDisplay = trigger.querySelector('.value-display');
                 if (!valueDisplay) return;
 
-                // ▼▼▼ 修改/新增开始 ▼▼▼
-                // 从调用 openSubEditor 改为调用 openItemEditor
                 ui.openItemEditor({
-                    header: title, // 面板顶部的标题，例如 "编辑年龄"
-                    title: title.replace('编辑', ''), // 输入框里的标题，例如 "年龄"
+                    header: title,
+                    title: title.replace('编辑', ''),
                     initialValue: valueDisplay.classList.contains('placeholder') ? '' : valueDisplay.textContent,
-                    isTitleEditable: false, // 关键：标题不可编辑
+                    isTitleEditable: false,
                     onSave: (newValue) => {
-                        // 保存逻辑和以前一样
                         valueDisplay.textContent = newValue || valueDisplay.getAttribute('data-placeholder') || '';
                         valueDisplay.classList.toggle('placeholder', !newValue);
                     }
                 });
-                // ▲▲▲ 修改/新增结束 ▲▲▲
             });
         };
         setupTrigger(elements.editAgeTrigger, '编辑年龄');
@@ -160,29 +180,25 @@ function createEventManager(elements, state, ui, data, config) {
         });
         elements.itemEditorBackBtn?.addEventListener('click', ui.closeItemEditor);
         elements.itemEditorSaveBtn?.addEventListener('click', () => {
-            // ▼▼▼ 修改/新增开始 ▼▼▼
             const { pane, item, onSave } = state.currentItemEditingContext;
             const title = elements.itemEditorTitleInput.value.trim();
             const value = elements.itemEditorValueTextarea.value.trim();
 
             if (typeof onSave === 'function') {
-                // 新增的模式：如果存在 onSave 回调，直接执行它
                 onSave(value); 
             } else {
-                // 旧的模式：处理自定义条目的添加和编辑
                 if (!title) return alert('标题不能为空！');
                 if (title.length > 10) return alert('标题不能超过10个字符！');
-                if (item) { // Editing existing item
+                if (item) {
                     item.querySelector('label').textContent = title;
                     const valueDisplay = item.querySelector('.value-display');
                     valueDisplay.textContent = value || '点击填写内容';
                     valueDisplay.classList.toggle('placeholder', !value);
-                } else { // Adding new item
+                } else {
                     ui.createAndAppendCustomItem(pane, title, value);
                 }
             }
             ui.closeItemEditor();
-            // ▲▲▲ 修改/新增结束 ▲▲▲
         });
 
         // Custom Sections Logic
@@ -203,19 +219,13 @@ function createEventManager(elements, state, ui, data, config) {
             } else if (e.target.closest('.pane-title-capsule') && pane.id.startsWith('modal-section-custom-')) {
                 ui.openOptionsBottomSheet(pane);
             
-            // ▼▼▼ 第 1 处修改 ▼▼▼
             } else if (e.target.closest('.add-item-btn')) {
                 if (e.target.closest('.add-item-btn').id !== 'add-relationship-btn') {
-                    // 旧代码: ui.openItemEditor(pane, null);
-                    // 新代码 (传入配置对象):
                     ui.openItemEditor({ pane: pane });
                 }
             
-            // ▼▼▼ 第 2 处修改 ▼▼▼
             } else if (e.target.closest('.custom-item-group')) {
                 if (!e.target.closest('.custom-item-group').hasAttribute('data-rel-char-id')) {
-                    // 旧代码: ui.openItemEditor(pane, e.target.closest('.custom-item-group'));
-                    // 新代码 (传入配置对象):
                     ui.openItemEditor({ pane: pane, item: e.target.closest('.custom-item-group') });
                 }
             }
@@ -296,7 +306,6 @@ function createEventManager(elements, state, ui, data, config) {
             ui.renderCharacterSelectorList(targetData || [], state.currentProfileId);
             ui.openCharacterSelector();
         });
-
 
         // 角色选择器事件
         elements.cancelCharSelectorBtn?.addEventListener('click', ui.closeCharacterSelector);

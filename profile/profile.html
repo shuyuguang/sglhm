@@ -30,6 +30,11 @@
 
     <!-- ====================【新增：全局控制按钮】==================== -->
     <div class="profile-global-controls">
+        <!-- ▼▼▼ 新增开始 (这里就是你需要补上的代码) ▼▼▼ -->
+        <button id="global-help-btn" class="control-btn" title="帮助">
+            <i class="fa-solid fa-question"></i>
+        </button>
+        <!-- ▲▲▲ 新增结束 ▲▲▲ -->
         <button id="ui-switch-btn" class="control-btn" title="切换UI布局">
             <i class="fa-solid fa-arrows-rotate"></i>
         </button>
@@ -149,6 +154,29 @@
 
 
     <!-- ====================【共用 Modals 和 Overlays】==================== -->
+    <!-- 全局帮助提示框 -->
+    <div id="global-help-tooltip" class="help-tooltip global-help">
+        <ol class="help-list">
+            <li>
+                左上切换YOU/TA：<br>
+                YOU为用户，TA为角色
+            </li>
+            <li>
+                右上换UI样式：<br>
+                目前有两套，内容共享
+            </li>
+            <li>
+                左下管理设定：<br>
+                可多选和删除，导入导出待开发
+            </li>
+            <li>
+                羽毛笔编辑设定：<br>
+                记得点面板右上√键手动保存
+            </li>
+        </ol>
+        <p>其余自行探索，如遇bug请刷新页面，若无法解决请联系开发者，感谢配合~</p>
+    </div>
+
     <!-- 编辑面板 -->
     <div class="modal-overlay" id="edit-modal-overlay">
         <div class="modal-panel">

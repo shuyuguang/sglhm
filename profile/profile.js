@@ -46,6 +46,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // ====================【获取所有共享的 DOM 元素】====================
     function getSharedDOMElements() {
         return {
+            // ▼▼▼ 新增开始 ▼▼▼
+            globalHelpBtn: document.getElementById('global-help-btn'),
+            globalHelpTooltip: document.getElementById('global-help-tooltip'),
+            // ▲▲▲ 新增结束 ▲▲▲
+
             modalOverlay: document.getElementById('edit-modal-overlay'),
             closeModalButton: document.getElementById('close-modal-btn'),
             saveButton: document.getElementById('save-btn'),
