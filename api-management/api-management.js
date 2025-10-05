@@ -1,15 +1,17 @@
 // api-management.js
 
 import { createPageLayout } from '../common/template.js';
-import { dbStorage } from '../common/db.js'; // ▼▼▼ 1. 导入我们的 dbStorage ▼▼▼
+import { dbStorage } from '../common/db.js';
 
-// 使用数据库的 Key，用于存储和读取 API 配置
+// 数据库键
 const API_CONFIGS_KEY = 'api_configs_text';
-let isMultiSelectMode = false; // 全局状态，跟踪是否处于多选模式
+const BUILT_IN_API_STATES_KEY = 'built_in_api_states';
+const BUILT_IN_API_DATA_KEY = 'built_in_api_data';
 
-// 1. 定义页面的专属 HTML 内容
+let isMultiSelectMode = false;
+
+// ... (页面 HTML 和模态框 HTML 定义保持不变) ...
 const apiManagementPageContent = `
-    <!-- Tab 导航栏 -->
     <nav class="tabs-nav">
         <div class="tabs-container">
             <button class="tab-button active" data-tab="text">文本</button>
@@ -21,22 +23,17 @@ const apiManagementPageContent = `
     <div class="main-container">
         <main class="content-body">
             <div class="tabs-content">
-                <div id="text" class="tab-pane active">
-                    <!-- 卡片将由 JS 动态渲染到这里 -->
-                </div>
+                <div id="text" class="tab-pane active"></div>
                 <div id="image" class="tab-pane"><p>图片 API 配置区。</p></div>
                 <div id="voice" class="tab-pane"><p>语音 API 配置区。</p></div>
             </div>
         </main>
     </div>
-    <!-- 多选模式下的操作栏，默认隐藏 -->
     <div id="multi-select-footer" class="multi-select-footer">
         <button class="footer-btn" id="cancel-multi-select">取消</button>
         <button class="footer-btn btn-delete" id="delete-selected-btn" disabled>删除</button>
     </div>
 `;
-
-// 2. 定义模态框面板的 HTML 结构
 const apiConfigPanelHtml = `
 <div class="modal-overlay" id="api-config-overlay">
     <div class="modal-panel" id="api-config-panel">
@@ -53,30 +50,14 @@ const apiConfigPanelHtml = `
                     <button class="pill-option" data-provider="claude">Claude</button>
                 </div>
                 <form class="api-form-container" id="api-provider-form">
-                    <div class="form-group">
-                        <label for="api-name">名称</label>
-                        <input type="text" id="api-name" placeholder="例如：My Key">
-                    </div>
-                    <div class="form-group">
-                        <label for="api-key">API Key</label>
-                        <input type="text" id="api-key" placeholder="sk-...">
-                    </div>
-                    <div class="form-group">
-                        <label for="api-base-url">API Base URL</label>
-                        <input type="text" id="api-base-url" value="https://api.openai.com">
-                    </div>
-                    <div class="form-group" id="api-path-group">
-                        <label for="api-path">API 路径</label>
-                        <input type="text" id="api-path" value="/v1/chat/completions">
-                    </div>
+                    <div class="form-group"><label for="api-name">名称</label><input type="text" id="api-name" placeholder="例如：My Key"></div>
+                    <div class="form-group"><label for="api-key">API Key</label><input type="text" id="api-key" placeholder="sk-..."></div>
+                    <div class="form-group"><label for="api-base-url">API Base URL</label><input type="text" id="api-base-url" value="https://api.openai.com"></div>
+                    <div class="form-group" id="api-path-group"><label for="api-path">API 路径</label><input type="text" id="api-path" value="/v1/chat/completions"></div>
                 </form>
             </div>
-            <div class="modal-tab-content" id="image-panel-content">
-                <p class="no-char-message">图片 API 配置区 (待开发)</p>
-            </div>
-            <div class="modal-tab-content" id="voice-panel-content">
-                <p class="no-char-message">语音 API 配置区 (待开发)</p>
-            </div>
+            <div class="modal-tab-content" id="image-panel-content"><p class="no-char-message">图片 API 配置区 (待开发)</p></div>
+            <div class="modal-tab-content" id="voice-panel-content"><p class="no-char-message">语音 API 配置区 (待开发)</p></div>
         </div>
         <div class="sheet-footer">
             <button class="sheet-btn sheet-btn-cancel" id="cancel-panel-btn">取消</button>
@@ -85,8 +66,6 @@ const apiConfigPanelHtml = `
     </div>
 </div>
 `;
-
-// 定义本页专属的帮助框 HTML 内容
 const helpTooltipHtml = `
     <div id="help-tooltip" class="help-tooltip">
         <p>目前仅支持添加文本API，图片和语音待开发</p>
@@ -100,45 +79,85 @@ const helpTooltipHtml = `
         <p class="help-reminder">拉取模型后记得右上保存嗷~</p>
     </div>
 `;
-
-// 将所有模态框/浮层 HTML 合并成一个字符串
 const allModalsHtml = apiConfigPanelHtml + helpTooltipHtml;
-
-// 3. 服务商配置数据
 const PROVIDER_CONFIG = {
     openai: { apiKeyPlaceholder: 'sk-...', baseUrlValue: 'https://api.openai.com', apiPathValue: '/v1/chat/completions', showApiPath: true },
     google: { apiKeyPlaceholder: 'AIzaSy...', baseUrlValue: 'https://generativelanguage.googleapis.com/v1beta', showApiPath: false },
     claude: { apiKeyPlaceholder: 'sk-ant-...', baseUrlValue: 'https://api.anthropic.com/v1', showApiPath: false }
 };
 
-// 1. 定义内置的、不可删除的 API 卡片
-const BUILT_IN_APIS = [
-    { id: 'built-in-deepseek', name: 'DeepSeek', shortName: 'DS', isBuiltIn: true, model: [] },
-    { id: 'built-in-siliconflow', name: '硅基流动', shortName: '硅', isBuiltIn: true, model: [] },
-    { id: 'built-in-volcengine', name: '火山引擎', shortName: '火', isBuiltIn: true, model: [] },
-    { id: 'built-in-openrouter', name: 'OpenRouter', shortName: 'OR', isBuiltIn: true, model: [] },
+// ▼▼▼ 新增：定义两个“默认”的可编辑卡片配置 ▼▼▼
+const DEFAULT_EDITABLE_APIS = [
+    { 
+        id: 'default-openai', // 使用一个固定的、特殊的ID
+        provider: 'openai', 
+        name: 'OpenAI', 
+        apiKey: '', 
+        baseUrl: 'https://api.openai.com', 
+        path: '/v1/chat/completions',
+        enabled: true, 
+        model: [] 
+    },
+    { 
+        id: 'default-google', // 使用一个固定的、特殊的ID
+        provider: 'google', 
+        name: 'Google', 
+        apiKey: '', 
+        baseUrl: 'https://generativelanguage.googleapis.com/v1beta', 
+        path: null,
+        enabled: true, 
+        model: [] 
+    }
 ];
 
-// 2. 为内置 API 的状态创建一个独立的数据库键
-const BUILT_IN_API_STATES_KEY = 'built_in_api_states';
-
-// ▲▲▲ 添加结束 ▲▲▲
+const BUILT_IN_APIS = [
+    { id: 'built-in-deepseek', name: 'DeepSeek', shortName: 'DS', isBuiltIn: true },
+    { id: 'built-in-siliconflow', name: '硅基流动', shortName: '硅', isBuiltIn: true },
+    { id: 'built-in-openrouter', name: 'OpenRouter', shortName: 'OR', isBuiltIn: true },
+];
 
 let ui = {};
 
-// 4. 功能函数区
-// ▼▼▼ 2. 所有读写操作都变成 async/await ▼▼▼
-// ▼▼▼ 用这个新函数替换掉旧的 renderApiCards 函数 ▼▼▼
+// ▼▼▼ 新增：检查并创建默认可编辑卡片的函数 ▼▼▼
+/**
+ * 确保默认的可编辑 API 配置存在于数据库中。
+ * 如果不存在，则创建它们。
+ */
+async function ensureDefaultConfigs() {
+    const userConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
+    let configsChanged = false;
+
+    // 检查每一个我们定义的默认API
+    DEFAULT_EDITABLE_APIS.forEach(defaultApi => {
+        // 通过我们设定的特殊ID来查找
+        const exists = userConfigs.some(config => config.id === defaultApi.id);
+        if (!exists) {
+            // 如果数据库里没有，就把它加进去
+            userConfigs.push(defaultApi);
+            configsChanged = true;
+        }
+    });
+
+    // 如果我们添加了新的默认配置，就把更新后的整个列表存回数据库
+    if (configsChanged) {
+        await dbStorage.setItem(API_CONFIGS_KEY, userConfigs);
+    }
+}
+
 async function renderApiCards() {
+    // 1. 获取所有数据（这个逻辑不变）
     const userConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
     const builtInStates = await dbStorage.getItem(BUILT_IN_API_STATES_KEY) || {};
+    const builtInUserData = await dbStorage.getItem(BUILT_IN_API_DATA_KEY) || {};
 
-    const processedBuiltInApis = BUILT_IN_APIS.map(api => ({
-        ...api,
-        enabled: builtInStates[api.id]?.enabled ?? false, 
-    }));
+    // 2. 合并只读的内置API数据（这个逻辑不变）
+    const processedBuiltInApis = BUILT_IN_APIS.map(api => {
+        const userData = builtInUserData[api.id] || {};
+        const stateData = builtInStates[api.id] || {};
+        return { ...api, ...userData, enabled: stateData.enabled ?? false };
+    });
 
-    // ★★★ 核心修改 ①：调整顺序，让用户自定义的卡片在前面 ★★★
+    // 3. 将用户卡片（现在已经包含了我们的默认卡片）和只读卡片合并
     const allConfigs = [...userConfigs, ...processedBuiltInApis];
 
     const container = document.getElementById('text');
@@ -148,7 +167,10 @@ async function renderApiCards() {
         container.innerHTML = '<p>这里是【文本】的主配置区，还没有添加任何 API。</p>';
     } else {
         container.innerHTML = allConfigs.map(config => {
-            const providerInitial = config.isBuiltIn ? config.shortName : (({ openai: 'OA', google: 'Ge', claude: 'Cl' })[config.provider] || '?');
+            const providerInitial = config.isBuiltIn 
+                ? config.shortName 
+                : (({ openai: 'OA', google: 'Ge', claude: 'Cl' })[config.provider] || '?');
+            
             const providerClass = config.isBuiltIn ? 'provider-built-in' : `provider-${config.provider}`;
             const providerIcon = `<div class="provider-icon ${providerClass}">${providerInitial}</div>`;
 
@@ -157,11 +179,10 @@ async function renderApiCards() {
                 ? '<span class="status-capsule status-enabled">启用</span>' 
                 : '<span class="status-capsule status-disabled">禁用</span>';
             
-            // ★★★ 核心修改 ②：无差别渲染所有UI元素，不再有 isBuiltIn 判断 ★★★
             const modelCapsule = `<span class="status-capsule status-model">${(config.model?.length || 0)}个模型</span>`;
+            
             const actionHandle = `<div class="card-action-handle"><i class="fa-solid fa-ellipsis-vertical"></i></div>`;
             const checkboxWrapper = `<div class="card-checkbox-wrapper"><div class="custom-checkbox"></div></div>`;
-            
             const builtInCardClass = config.isBuiltIn ? 'built-in-card' : '';
 
             return `
@@ -171,10 +192,7 @@ async function renderApiCards() {
                         <span class="card-name">${config.name}</span>
                     </div>
                     <div class="card-right-content">
-                        <div class="card-capsules">
-                            ${modelCapsule}
-                            ${statusCapsule}
-                        </div>
+                        <div class="card-capsules">${modelCapsule}${statusCapsule}</div>
                         ${actionHandle}
                         ${checkboxWrapper}
                     </div>
@@ -184,6 +202,7 @@ async function renderApiCards() {
     }
 }
 
+// ... (handleAddApi, handleToggleStatus 等其他函数保持不变) ...
 function updateFormForProvider(providerName) {
     const config = PROVIDER_CONFIG[providerName];
     if (!config || !ui.apiKeyInput || !ui.baseUrlInput || !ui.apiPathGroup) return;
@@ -196,7 +215,6 @@ function updateFormForProvider(providerName) {
         ui.apiPathGroup.style.display = 'none';
     }
 }
-
 function openApiConfigPanel() {
     if (!ui.overlay) return;
     const activeMainTab = document.querySelector('.tab-button.active');
@@ -207,7 +225,6 @@ function openApiConfigPanel() {
     switchPanelTab(targetPanelTabId);
     ui.overlay.classList.add('active');
 }
-
 function closeApiConfigPanel() {
     if (!ui.overlay) return;
     ui.overlay.classList.remove('active');
@@ -217,7 +234,6 @@ function closeApiConfigPanel() {
     });
     updateFormForProvider('openai');
 }
-
 function switchPanelTab(targetTabId) {
     if (!ui.panelTabs) return;
     ui.panelTabs.forEach(tab => tab.classList.remove('active'));
@@ -229,44 +245,35 @@ function switchPanelTab(targetTabId) {
         targetContent.classList.add('active');
     }
 }
-
 async function handleAddApi() {
     const provider = document.querySelector('.pill-option.active').dataset.provider;
     const name = document.getElementById('api-name').value.trim();
     const apiKey = document.getElementById('api-key').value.trim();
     const baseUrl = document.getElementById('api-base-url').value.trim();
     const path = document.getElementById('api-path').value.trim();
-    if (!name || !apiKey) {
-        alert('“名称”和“API Key”不能为空！');
-        return;
-    }
+    if (!name) {
+    alert('“名称”不能为空！');
+    return;
+}
     const newConfig = {
         id: Date.now(), provider, name, apiKey, baseUrl,
         path: PROVIDER_CONFIG[provider].showApiPath ? path : null,
         enabled: true, model: []
     };
-    const existingConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || []; // 从 Dexie 读取
+    const existingConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
     existingConfigs.push(newConfig);
-    await dbStorage.setItem(API_CONFIGS_KEY, existingConfigs); // 写入 Dexie
+    await dbStorage.setItem(API_CONFIGS_KEY, existingConfigs);
     await renderApiCards();
     closeApiConfigPanel();
 }
-
-// ▼▼▼ 用这个新函数替换掉旧的 handleToggleStatus 函数 ▼▼▼
 async function handleToggleStatus(apiId) {
-    // 检查这个 ID 是否属于内置 API
     const isBuiltIn = apiId.startsWith('built-in-');
-
     if (isBuiltIn) {
-        // --- 处理内置 API ---
         const builtInStates = await dbStorage.getItem(BUILT_IN_API_STATES_KEY) || {};
-        // 获取当前状态，如果不存在则为 false (禁用)
         const currentState = builtInStates[apiId]?.enabled ?? false;
-        // 更新状态
         builtInStates[apiId] = { enabled: !currentState };
         await dbStorage.setItem(BUILT_IN_API_STATES_KEY, builtInStates);
     } else {
-        // --- 处理用户自定义 API (逻辑不变) ---
         const configs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
         const configIndex = configs.findIndex(c => c.id == apiId);
         if (configIndex > -1) {
@@ -274,27 +281,17 @@ async function handleToggleStatus(apiId) {
             await dbStorage.setItem(API_CONFIGS_KEY, configs);
         }
     }
-    
-    // 无论处理哪种，都重新渲染卡片列表
     await renderApiCards();
 }
-
 async function saveCardOrder() {
     const cardElements = document.querySelectorAll('#text .api-config-card');
     const newOrderIds = Array.from(cardElements).map(card => card.dataset.id);
-    
-    // ★★★ 核心修改：只筛选出用户自定义的 API ID 进行保存 ★★★
     const userApiOrderIds = newOrderIds.filter(id => !id.startsWith('built-in-'));
-
     const allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
     const configMap = new Map(allConfigs.map(c => [String(c.id), c]));
-    
-    // 使用筛选后的 ID 列表来创建新的排序后数组
     const newSortedConfigs = userApiOrderIds.map(id => configMap.get(id)).filter(Boolean);
-    
     await dbStorage.setItem(API_CONFIGS_KEY, newSortedConfigs);
 }
-
 function enterMultiSelectMode(clickedCard) {
     isMultiSelectMode = true;
     document.body.classList.add('multi-select-active');
@@ -303,7 +300,6 @@ function enterMultiSelectMode(clickedCard) {
     }
     updateMultiSelectFooter();
 }
-
 function exitMultiSelectMode() {
     isMultiSelectMode = false;
     document.body.classList.remove('multi-select-active');
@@ -311,7 +307,6 @@ function exitMultiSelectMode() {
         card.classList.remove('card-selected');
     });
 }
-
 function updateMultiSelectFooter() {
     const selectedCount = document.querySelectorAll('.api-config-card.card-selected').length;
     const deleteBtn = document.getElementById('delete-selected-btn');
@@ -325,26 +320,18 @@ function updateMultiSelectFooter() {
         }
     }
 }
-
 async function handleBulkDelete() {
     const selectedCards = document.querySelectorAll('.api-config-card.card-selected');
     if (selectedCards.length === 0) return;
-
     const selectedIds = Array.from(selectedCards).map(card => card.dataset.id);
-    
-    // 1. 找出被选中的内置 API
     const selectedBuiltInApis = selectedIds
         .map(id => BUILT_IN_APIS.find(api => api.id === id))
-        .filter(Boolean); // 过滤掉 undefined (即用户自定义的卡片)
-
-    // 2. ★★★ 核心守护逻辑：如果选中的包含任何内置API，则阻止删除并提示 ★★★
+        .filter(Boolean);
     if (selectedBuiltInApis.length > 0) {
         const names = selectedBuiltInApis.map(api => `“${api.name}”`).join('、');
         alert(`内置API卡片 ${names} 无法删除，请取消勾选，试着勾选自定义添加的API卡片吧`);
-        return; // 中断删除流程
+        return;
     }
-
-    // 3. 如果能走到这里，说明选中的都是可以删除的自定义卡片
     if (confirm(`确定要删除这 ${selectedIds.length} 个配置吗？`)) {
         const idsToDelete = new Set(selectedIds);
         let configs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
@@ -355,7 +342,10 @@ async function handleBulkDelete() {
     }
 }
 
-async function initializePage() { // 变为 async
+async function initializePage() {
+    // ▼▼▼ 关键一步：在页面加载时，首先确保我们的默认卡片已存在 ▼▼▼
+    await ensureDefaultConfigs();
+
     // --- Tab 切换逻辑 (不变) ---
     const indicator = document.querySelector('.active-tab-indicator');
     const tabsNav = document.querySelector('.tabs-nav');
@@ -386,7 +376,6 @@ async function initializePage() { // 变为 async
     window.addEventListener('scroll', updateIndicatorPosition, { passive: true });
     window.addEventListener('resize', updateIndicatorPosition);
     
-    // --- UI 元素获取和模态框事件绑定 (不变) ---
     ui = {
         overlay: document.getElementById('api-config-overlay'), panel: document.getElementById('api-config-panel'),
         cancelBtn: document.getElementById('cancel-panel-btn'), addBtn: document.getElementById('add-api-btn'),
@@ -404,7 +393,6 @@ async function initializePage() { // 变为 async
     if (ui.panelTabsContainer) { ui.panelTabsContainer.addEventListener('click', (event) => { if (event.target.classList.contains('modal-tab')) switchPanelTab(event.target.dataset.tab); }); }
     if (ui.panelContentContainer) { ui.panelContentContainer.addEventListener('click', (event) => { if (event.target.matches('.pill-option')) { const clickedPill = event.target; clickedPill.parentElement.querySelectorAll('.pill-option').forEach(pill => pill.classList.remove('active')); clickedPill.classList.add('active'); updateFormForProvider(clickedPill.dataset.provider); } }); }
 
-    // ... (事件处理逻辑保持不变) ...
     const textTabPane = document.getElementById('text');
     if (textTabPane) {
         let longPressTimer;
@@ -412,80 +400,58 @@ async function initializePage() { // 变为 async
         let isDragging = false;
         let hasMovedSincePress = false;
 
-        // 1. 统一的单击事件处理器
         textTabPane.addEventListener('click', (event) => {
-            if (isDragging) {
-                return;
-            }
-
+            if (isDragging) return;
             const card = event.target.closest('.api-config-card');
             if (!card) return;
-
             if (isMultiSelectMode) {
                 card.classList.toggle('card-selected');
                 updateMultiSelectFooter();
             } else {
                 const apiId = card.dataset.id;
-                const target = event.target; // 获取实际点击的元素
-
+                const target = event.target;
                 if (target.closest('.card-action-handle')) {
                     enterMultiSelectMode(card);
-                } 
-                // 修改：检查是否点击了带有 .status-enabled 或 .status-disabled 的元素
-                else if (target.closest('.status-enabled') || target.closest('.status-disabled')) {
+                } else if (target.closest('.status-enabled') || target.closest('.status-disabled')) {
                     handleToggleStatus(apiId);
-                } 
-                else {
-                    // ★★★ 核心修改：根据ID判断跳转到哪个页面 ★★★
+                } else {
+                    // ★★★ 这个判断逻辑现在完美兼容所有情况 ★★★
                     if (apiId.startsWith('built-in-')) {
-                        // 如果是内置API，跳转到专属页面
                         window.location.href = `./api-room-builtin.html?id=${apiId}`;
                     } else {
-                        // 否则，跳转到原来的普通编辑页
+                        // 我们的'default-openai'和'default-google'会走这里
                         window.location.href = `./api-room.html?id=${apiId}`;
                     }
                 }
             }
         });
 
-        // 2. 独立的拖拽事件处理器
+        // ... (拖拽逻辑 pressStartHandler, pressMoveHandler, pressEndHandler 保持不变) ...
         const pressStartHandler = (event) => {
             const handle = event.target.closest('.card-action-handle');
-            // 拖拽必须由三点图标发起，且不能在多选模式下
-            if (!handle || isMultiSelectMode || (event.button && event.button !== 0)) {
-                return;
-            }
-
+            if (!handle || isMultiSelectMode || (event.button && event.button !== 0)) return;
             hasMovedSincePress = false;
             draggedElement = handle.closest('.api-config-card');
-
-            // 启动长按计时器
             longPressTimer = setTimeout(() => {
-                // 如果在计时期间已经移动了（判定为滚动），则不启动拖拽
                 if (hasMovedSincePress) return;
-                
                 isDragging = true;
                 draggedElement.classList.add('dragging');
                 document.body.classList.add('user-select-none');
             }, 300);
-
             document.addEventListener('mousemove', pressMoveHandler);
             document.addEventListener('touchmove', pressMoveHandler, { passive: false });
             document.addEventListener('mouseup', pressEndHandler, { once: true });
             document.addEventListener('touchend', pressEndHandler, { once: true });
         };
-
         const pressMoveHandler = (event) => {
-            hasMovedSincePress = true; // 只要移动了就标记
-
+            hasMovedSincePress = true;
             if (isDragging) {
-                event.preventDefault(); // 只有在真正拖拽时才阻止滚动
+                event.preventDefault();
                 const currentY = event.type === 'touchmove' ? event.touches[0].clientY : event.clientY;
                 const targetCard = document.elementFromPoint(
                     event.type === 'touchmove' ? event.touches[0].clientX : event.clientX,
                     currentY
                 )?.closest('.api-config-card');
-
                 if (targetCard && targetCard !== draggedElement) {
                     const rect = targetCard.getBoundingClientRect();
                     const midpoint = rect.top + rect.height / 2;
@@ -493,36 +459,27 @@ async function initializePage() { // 变为 async
                 }
             }
         };
-
         const pressEndHandler = () => {
             clearTimeout(longPressTimer);
             document.removeEventListener('mousemove', pressMoveHandler);
             document.removeEventListener('touchmove', pressMoveHandler);
-
             if (isDragging) {
                 draggedElement.classList.remove('dragging');
                 document.body.classList.remove('user-select-none');
                 saveCardOrder();
-                
-                // 延迟重置 isDragging 状态，以确保后续的 click 事件被正确忽略
-                setTimeout(() => {
-                    isDragging = false;
-                }, 0);
+                setTimeout(() => { isDragging = false; }, 0);
             }
             draggedElement = null;
         };
-
         textTabPane.addEventListener('mousedown', pressStartHandler);
         textTabPane.addEventListener('touchstart', pressStartHandler, { passive: false });
-
         document.getElementById('cancel-multi-select').addEventListener('click', exitMultiSelectMode);
         document.getElementById('delete-selected-btn').addEventListener('click', handleBulkDelete);
     }
     
-    await renderApiCards(); // 等待初次渲染完成
+    await renderApiCards();
 }
 
-// 脚本入口
 createPageLayout({
     title: '配置',
     contentHtml: apiManagementPageContent,

@@ -6,26 +6,25 @@ import { dbStorage } from '../common/db.js';
 const BUILT_IN_API_DATA_KEY = 'built_in_api_data';
 
 // 2. 定义内置API的静态信息（名称、URL等），这是我们的“数据源”
+// ▼▼▼ 1. 在每个API的定义里，新增一个 hint 属性 ▼▼▼
 const BUILT_IN_API_DEFINITIONS = {
     'built-in-deepseek': { 
         name: 'DeepSeek', 
         baseUrl: 'https://api.deepseek.com/v1', 
-        path: '/chat/completions' 
+        path: '/chat/completions',
+        hint: 'DeepSeek官网：https://platform.deepseek.com/usage' // 你以后可以在这里修改内容
     },
     'built-in-siliconflow': { 
         name: '硅基流动', 
         baseUrl: 'https://api.siliconflow.cn/v1', 
-        path: '/chat/completions' 
-    },
-    'built-in-volcengine': { 
-        name: '火山引擎', 
-        baseUrl: 'https://ark.cn-beijing.volces.com/api/v3', 
-        path: '/chat/completions' 
+        path: '/chat/completions',
+        hint: '硅基流动官网：https://m.siliconflow.cn/me/models' // 你以后可以在这里修改内容
     },
     'built-in-openrouter': { 
         name: 'OpenRouter', 
         baseUrl: 'https://openrouter.ai/api/v1', 
-        path: '/chat/completions' 
+        path: '/chat/completions',
+        hint: 'OpenRouter官网：https://openrouter.ai/' // 你以后可以在这里修改内容
     },
 };
 
@@ -76,26 +75,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     currentSelectedModels = [...(config.model || [])];
 
-    // 6. ★★★ 核心区别：为不可修改的字段添加 readonly 属性 ★★★
+    // ▼▼▼ 2. 动态生成提示卡片的 HTML ▼▼▼
+    const hintCardHtml = config.hint ? `
+        <div class="hint-card">
+            <i class="fa-solid fa-circle-info icon"></i>
+            <div class="hint-text-content">
+                <h4 class="hint-title">提示</h4>
+                <p class="hint-content">${config.hint}</p>
+            </div>
+        </div>
+    ` : '';
+
+    // ▼▼▼ 3. 将提示卡片 HTML 插入到表单的最上方 ▼▼▼
     const formHtml = `
         <div class="form-wrapper">
             <form class="api-form-container" id="edit-api-form">
+                ${hintCardHtml} 
                 <div class="form-group"><label for="api-name">名称</label><input type="text" id="api-name" value="${config.name}" readonly></div>
                 <div class="form-group"><label for="api-key">API Key</label><input type="text" id="api-key" placeholder="sk-..." value="${config.apiKey || ''}"></div>
                 <div class="form-group"><label for="api-base-url">API Base URL</label><input type="text" id="api-base-url" value="${config.baseUrl}" readonly></div>
                 <div class="form-group" id="api-path-group"><label for="api-path">API 路径</label><input type="text" id="api-path" value="${config.path}" readonly></div>
-                
-                <div class="form-group-action">
-                    <button type="button" class="btn-fetch" id="fetch-models-btn">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        <span>拉取模型</span>
-                    </button>
-                </div>
-
-                <div class="form-group">
-                    <label for="selected-models-container">已选模型</label>
-                    <div id="selected-models-container"></div>
-                </div>
+                <div class="form-group-action"><button type="button" class="btn-fetch" id="fetch-models-btn"><i class="fa-solid fa-wand-magic-sparkles"></i><span>拉取模型</span></button></div>
+                <div class="form-group"><label for="selected-models-container">已选模型</label><div id="selected-models-container"></div></div>
             </form>
         </div>
     `;

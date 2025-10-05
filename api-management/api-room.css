@@ -292,3 +292,39 @@ body {
     padding: 30px 16px;
     color: var(--color-text-light);
 }
+/* --- 提示卡片样式 --- */
+.hint-card {
+    margin-bottom: 24px;
+    padding: 16px;
+    background-color: #f3eefc; /* 淡紫色背景，呼应主题色 */
+    border-left: 4px solid var(--color-primary);
+    border-radius: 8px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start; /* 图标和文字顶部对齐 */
+}
+
+.hint-card .icon {
+    font-size: 1.2em;
+    color: var(--color-primary);
+    margin-top: 2px; /* 微调图标位置，使其更协调 */
+    flex-shrink: 0;
+}
+
+.hint-text-content {
+    flex: 1;
+}
+
+.hint-title {
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: var(--color-text-dark);
+    font-size: 1em;
+}
+
+.hint-content {
+    margin: 0;
+    font-size: 0.95em;
+    color: var(--color-text-medium);
+    line-height: 1.5;
+}

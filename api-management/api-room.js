@@ -3,37 +3,31 @@
 import { dbStorage } from '../common/db.js'; // ▼▼▼ 1. 导入我们的 dbStorage ▼▼▼
 
 const API_CONFIGS_KEY = 'api_configs_text';
-let ui = {}; // 用于缓存 DOM 元素
-let currentSelectedModels = []; // 用于暂存用户在面板中选择的模型
+let ui = {};
+let currentSelectedModels = [];
 
+// ▼▼▼ 1. 新增一个“提示字典”，专门存放这两个卡片的提示信息 ▼▼▼
+const HINT_MESSAGES = {
+    'default-openai': '兼容OpenAI、反代轮询、New API、One API、Veloera等格式', // 你以后可以在这里修改内容
+    'default-google': 'Google API官网：https://aistudio.google.com/app/apikey'  // 你以后可以在这里修改内容
+};
 
+// ... (modelSelectionPanelHtml 定义保持不变) ...
 const modelSelectionPanelHtml = `
 <div class="modal-overlay" id="model-selection-overlay">
     <div class="modal-panel">
         <div class="modal-header">选择模型</div>
-        <div class="search-bar-container">
-            <i class="fa-solid fa-magnifying-glass search-icon"></i>
-            <input type="search" id="model-search-input" placeholder="搜索模型名称...">
-        </div>
+        <div class="search-bar-container"><i class="fa-solid fa-magnifying-glass search-icon"></i><input type="search" id="model-search-input" placeholder="搜索模型名称..."></div>
         <div class="modal-content-container">
-            <ul class="model-checkbox-list" id="model-checkbox-list">
-                <!-- 模型将动态插入这里 -->
-            </ul>
-            <div id="no-models-found" class="no-models-found-message">
-                未找到匹配的模型
-            </div>
+            <ul class="model-checkbox-list" id="model-checkbox-list"></ul>
+            <div id="no-models-found" class="no-models-found-message">未找到匹配的模型</div>
         </div>
-        <div class="sheet-footer">
-            <button class="sheet-btn sheet-btn-cancel" id="cancel-model-selection">取消</button>
-            <button class="sheet-btn sheet-btn-confirm" id="confirm-model-selection">确认</button>
-        </div>
+        <div class="sheet-footer"><button class="sheet-btn sheet-btn-cancel" id="cancel-model-selection">取消</button><button class="sheet-btn sheet-btn-confirm" id="confirm-model-selection">确认</button></div>
     </div>
 </div>
 `;
 
-// ▼▼▼ 2. 所有读写操作都变成 async/await ▼▼▼
-document.addEventListener('DOMContentLoaded', async () => { // 变为 async
-    // 注入模态框 HTML
+document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('modals-container').innerHTML = modelSelectionPanelHtml;
 
     const mainContent = document.getElementById('main-content');
@@ -44,37 +38,37 @@ document.addEventListener('DOMContentLoaded', async () => { // 变为 async
         return;
     }
 
-    const allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || []; // 从 Dexie 读取
+    const allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
     const config = allConfigs.find(c => c.id == apiId);
     if (!config) {
         mainContent.innerHTML = `<p class="error-message">错误：ID 为 ${apiId} 的配置不存在。</p>`;
         return;
     }
-
-    // 初始化暂存的模型数组
     currentSelectedModels = [...(config.model || [])];
 
+    // ▼▼▼ 2. 从我们的“提示字典”里查找对应的提示文本 ▼▼▼
+    const hintText = HINT_MESSAGES[apiId];
+    const hintCardHtml = hintText ? `
+        <div class="hint-card">
+            <i class="fa-solid fa-circle-info icon"></i>
+            <div class="hint-text-content">
+                <h4 class="hint-title">提示</h4>
+                <p class="hint-content">${hintText}</p>
+            </div>
+        </div>
+    ` : '';
+
+    // ▼▼▼ 3. 将提示卡片 HTML 插入到表单的最上方 ▼▼▼
     const formHtml = `
         <div class="form-wrapper">
             <form class="api-form-container" id="edit-api-form">
+                ${hintCardHtml}
                 <div class="form-group"><label for="api-name">名称</label><input type="text" id="api-name" value="${config.name || ''}"></div>
                 <div class="form-group"><label for="api-key">API Key</label><input type="text" id="api-key" value="${config.apiKey || ''}"></div>
                 <div class="form-group"><label for="api-base-url">API Base URL</label><input type="text" id="api-base-url" value="${config.baseUrl || ''}"></div>
                 ${config.provider === 'openai' ? `<div class="form-group" id="api-path-group"><label for="api-path">API 路径</label><input type="text" id="api-path" value="${config.path || ''}"></div>` : ''}
-                
-                <div class="form-group-action">
-                    <button type="button" class="btn-fetch" id="fetch-models-btn">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        <span>拉取模型</span>
-                    </button>
-                </div>
-
-                <div class="form-group">
-                    <label for="selected-models-container">已选模型</label>
-                    <div id="selected-models-container">
-                        <!-- 已选模型的标签将由 JS 注入这里 -->
-                    </div>
-                </div>
+                <div class="form-group-action"><button type="button" class="btn-fetch" id="fetch-models-btn"><i class="fa-solid fa-wand-magic-sparkles"></i><span>拉取模型</span></button></div>
+                <div class="form-group"><label for="selected-models-container">已选模型</label><div id="selected-models-container"></div></div>
             </form>
         </div>
     `;

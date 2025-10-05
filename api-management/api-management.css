@@ -689,3 +689,21 @@ body:not(.multi-select-active) .card-action-handle:hover {
     transform: none;
     box-shadow: none;
 }
+/* api-management.css 末尾追加 */
+
+/* --- 模板卡片专属样式 --- */
+.api-config-card.template-card {
+    background-color: #f8f9fa; /* 淡灰色背景 */
+    border: 1px dashed #dee2e6; /* 虚线边框 */
+}
+
+.api-config-card.template-card.disabled {
+    background-color: #f8f9fa; /* 覆盖默认的禁用背景色 */
+}
+
+.template-prompt {
+    font-size: 0.9em;
+    font-weight: 500;
+    color: var(--color-primary);
+    padding-right: 12px;
+}
