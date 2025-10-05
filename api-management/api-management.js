@@ -189,7 +189,7 @@ function handleAddApi() {
         baseUrl,
         path: PROVIDER_CONFIG[provider].showApiPath ? path : null,
         enabled: true,
-        model: '' // 确保所有 provider 创建时都有 model 字段
+        model: [] // ◀️ 核心修改：确保 model 初始化为空数组
     };
 
     const existingConfigs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];

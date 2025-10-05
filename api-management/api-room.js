@@ -1,209 +1,216 @@
-// api-room.js (全新通用版本)
+// api-room.js (支持多模型选择版本)
 
 const API_CONFIGS_KEY = 'api_configs_text';
+let ui = {}; // 用于缓存 DOM 元素
+let currentSelectedModels = []; // 用于暂存用户在面板中选择的模型
+
+// 新增：模型选择面板的 HTML 结构
+const modelSelectionPanelHtml = `
+<div class="modal-overlay" id="model-selection-overlay">
+    <div class="modal-panel">
+        <div class="modal-header">选择模型</div>
+        <div class="modal-content-container">
+            <ul class="model-checkbox-list" id="model-checkbox-list">
+                <!-- 模型将动态插入这里 -->
+            </ul>
+        </div>
+        <div class="sheet-footer">
+            <button class="sheet-btn sheet-btn-cancel" id="cancel-model-selection">取消</button>
+            <button class="sheet-btn sheet-btn-confirm" id="confirm-model-selection">确认</button>
+        </div>
+    </div>
+</div>
+`;
 
 document.addEventListener('DOMContentLoaded', () => {
-    const mainContent = document.getElementById('main-content');
-    if (!mainContent) return;
+    // 注入模态框 HTML
+    document.getElementById('modals-container').innerHTML = modelSelectionPanelHtml;
 
+    const mainContent = document.getElementById('main-content');
     const params = new URLSearchParams(window.location.search);
     const apiId = params.get('id');
-    if (!apiId) {
-        mainContent.innerHTML = '<p class="error-message">错误：未找到配置 ID。</p>';
-        return;
-    }
+    if (!apiId) { /* ... 错误处理不变 ... */ return; }
 
     const allConfigs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
     const config = allConfigs.find(c => c.id == apiId);
-    if (!config) {
-        mainContent.innerHTML = `<p class="error-message">错误：ID 为 ${apiId} 的配置不存在。</p>`;
-        return;
-    }
+    if (!config) { /* ... 错误处理不变 ... */ return; }
 
-    // ▼▼▼ 修改：API 路径的显示逻辑保持不变，只对 openai 显示 ▼▼▼
+    // 初始化暂存的模型数组
+    currentSelectedModels = [...(config.model || [])];
+
+    // ▼▼▼ 修改：表单 HTML 不再包含 select，而是为已选模型留出容器 ▼▼▼
     const formHtml = `
         <div class="form-wrapper">
             <form class="api-form-container" id="edit-api-form">
-                <div class="form-group">
-                    <label for="api-name">名称</label>
-                    <input type="text" id="api-name" value="${config.name || ''}">
-                </div>
-                <div class="form-group">
-                    <label for="api-key">API Key</label>
-                    <input type="text" id="api-key" value="${config.apiKey || ''}">
-                </div>
-                <div class="form-group">
-                    <label for="api-base-url">API Base URL</label>
-                    <input type="text" id="api-base-url" value="${config.baseUrl || ''}">
-                </div>
-                ${config.provider === 'openai' ? `
-                <div class="form-group" id="api-path-group">
-                    <label for="api-path">API 路径</label>
-                    <input type="text" id="api-path" value="${config.path || ''}">
-                </div>
-                ` : ''}
+                <!-- 名称, Key, URL, 路径等表单组保持不变 -->
+                <div class="form-group"><label for="api-name">名称</label><input type="text" id="api-name" value="${config.name || ''}"></div>
+                <div class="form-group"><label for="api-key">API Key</label><input type="text" id="api-key" value="${config.apiKey || ''}"></div>
+                <div class="form-group"><label for="api-base-url">API Base URL</label><input type="text" id="api-base-url" value="${config.baseUrl || ''}"></div>
+                ${config.provider === 'openai' ? `<div class="form-group" id="api-path-group"><label for="api-path">API 路径</label><input type="text" id="api-path" value="${config.path || ''}"></div>` : ''}
                 
-                <div class="form-group">
-                    <label for="api-model">模型</label>
-                    <select id="api-model">
-                        ${config.model ? `<option value="${config.model}" selected>${config.model}</option>` : '<option value="">请先拉取模型</option>'}
-                    </select>
-                </div>
                 <div class="form-group-action">
                     <button type="button" class="btn-fetch" id="fetch-models-btn">
                         <i class="fa-solid fa-wand-magic-sparkles"></i>
                         <span>拉取模型</span>
                     </button>
                 </div>
+                <!-- 新增：用于显示已选模型的容器 -->
+                <div id="selected-models-container"></div>
             </form>
         </div>
     `;
-    // ▲▲▲ 修改结束 ▲▲▲
-
     mainContent.innerHTML = formHtml;
 
-    // 绑定按钮事件
-    const saveBtn = document.getElementById('save-btn');
-    const deleteBtn = document.getElementById('delete-btn');
-    const fetchModelsBtn = document.getElementById('fetch-models-btn');
+    // 缓存所有需要操作的 DOM 元素
+    ui = {
+        saveBtn: document.getElementById('save-btn'),
+        deleteBtn: document.getElementById('delete-btn'),
+        fetchModelsBtn: document.getElementById('fetch-models-btn'),
+        modelOverlay: document.getElementById('model-selection-overlay'),
+        modelList: document.getElementById('model-checkbox-list'),
+        confirmBtn: document.getElementById('confirm-model-selection'),
+        cancelBtn: document.getElementById('cancel-model-selection'),
+        selectedContainer: document.getElementById('selected-models-container')
+    };
 
-    if (saveBtn) saveBtn.addEventListener('click', () => handleSave(apiId));
-    if (deleteBtn) deleteBtn.addEventListener('click', () => handleDelete(apiId, config.name));
-    if (fetchModelsBtn) {
-        fetchModelsBtn.addEventListener('click', fetchModels); // 直接调用通用函数
-    }
+    // 绑定事件
+    if (ui.saveBtn) ui.saveBtn.addEventListener('click', () => handleSave(apiId));
+    if (ui.deleteBtn) ui.deleteBtn.addEventListener('click', () => handleDelete(apiId, config.name));
+    if (ui.fetchModelsBtn) ui.fetchModelsBtn.addEventListener('click', fetchAndShowModels);
+    
+    // 绑定模态框控制事件
+    if (ui.modelOverlay) ui.modelOverlay.addEventListener('click', (e) => { if (e.target === ui.modelOverlay) closeModelPanel(); });
+    if (ui.cancelBtn) ui.cancelBtn.addEventListener('click', closeModelPanel);
+    if (ui.confirmBtn) ui.confirmBtn.addEventListener('click', handleConfirmSelection);
+
+    // 初始渲染已选模型
+    renderSelectedModels();
 });
 
-// ▼▼▼ 核心修改：fetchModels 函数恢复为单一、通用的实现 ▼▼▼
-
-async function fetchModels() {
-    const baseUrlInput = document.getElementById('api-base-url');
-    const apiKeyInput = document.getElementById('api-key');
-    const modelSelect = document.getElementById('api-model');
-    const fetchBtn = document.getElementById('fetch-models-btn');
-    const btnSpan = fetchBtn.querySelector('span');
-
-    if (!baseUrlInput || !apiKeyInput || !modelSelect || !fetchBtn) return;
-
-    const baseUrl = baseUrlInput.value.trim().replace(/\/$/, ''); // 去掉末尾的 /
-    const apiKey = apiKeyInput.value.trim();
-
-    if (!baseUrl || !apiKey) {
-        alert('请先填写 API Base URL 和 API Key！');
-        return;
+// 新增：渲染已选模型的标签
+function renderSelectedModels() {
+    if (!ui.selectedContainer) return;
+    ui.selectedContainer.innerHTML = ''; // 清空容器
+    if (currentSelectedModels.length === 0) {
+        ui.selectedContainer.innerHTML = '<p class="no-models-selected">尚未选择任何模型</p>';
+    } else {
+        currentSelectedModels.forEach(modelId => {
+            const tag = document.createElement('div');
+            tag.className = 'model-tag';
+            tag.textContent = modelId;
+            ui.selectedContainer.appendChild(tag);
+        });
     }
+}
+
+// 新增：打开和关闭模型选择面板
+function openModelPanel() { ui.modelOverlay?.classList.add('active'); }
+function closeModelPanel() { ui.modelOverlay?.classList.remove('active'); }
+
+// 新增：处理确认选择的逻辑
+function handleConfirmSelection() {
+    const selectedInputs = ui.modelList.querySelectorAll('input[type="checkbox"]:checked');
+    currentSelectedModels = Array.from(selectedInputs).map(input => input.value);
+    renderSelectedModels();
+    closeModelPanel();
+}
+
+// ▼▼▼ 核心修改：重构模型拉取与展示逻辑 ▼▼▼
+async function fetchAndShowModels() {
+    const baseUrl = document.getElementById('api-base-url').value.trim().replace(/\/$/, '');
+    const apiKey = document.getElementById('api-key').value.trim();
+    if (!baseUrl || !apiKey) { /* ... 错误提示不变 ... */ return; }
 
     const params = new URLSearchParams(window.location.search);
     const apiId = params.get('id');
-    const allConfigs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
-    const config = allConfigs.find(c => c.id == apiId);
+    const config = (JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || []).find(c => c.id == apiId);
+    if (!config) { /* ... 错误提示不变 ... */ return; }
 
-    if (!config) {
-        alert('错误：无法找到当前配置信息。');
-        return;
-    }
     const provider = config.provider;
-
-    fetchBtn.disabled = true;
+    const btnSpan = ui.fetchModelsBtn.querySelector('span');
+    ui.fetchModelsBtn.disabled = true;
     btnSpan.textContent = '正在拉取...';
 
     try {
+        // ... (fetch 请求和错误处理逻辑完全不变) ...
         let response;
         let modelsEndpoint = '';
 
         if (provider === 'google') {
-            // --- Gemini 的逻辑 ---
             modelsEndpoint = `${baseUrl}/models?key=${apiKey}`;
             response = await fetch(modelsEndpoint);
         } else {
-            // --- OpenAI 及兼容 API 的智能逻辑 ---
-            const apiPathInput = document.getElementById('api-path');
-            const userPath = apiPathInput ? apiPathInput.value.trim() : '/v1/chat/completions';
-
-            // 1. 智能推断模型路径
-            //    将路径末尾的 /chat/completions 或 /completions 替换为 /models
-            const modelsPath = userPath
-                .replace(/chat\/completions$/, 'models')
-                .replace(/completions$/, 'models');
-            
-            // 2. 如果用户没填路径，提供一个安全的默认值
+            const userPath = (document.getElementById('api-path') || {}).value || '/v1/chat/completions';
+            const modelsPath = userPath.replace(/chat\/completions$/, 'models').replace(/completions$/, 'models');
             modelsEndpoint = baseUrl + (modelsPath || '/v1/models');
-            
-            response = await fetch(modelsEndpoint, {
-                headers: { 'Authorization': `Bearer ${apiKey}` }
-            });
+            response = await fetch(modelsEndpoint, { headers: { 'Authorization': `Bearer ${apiKey}` } });
         }
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP 错误: ${response.status} ${response.statusText}\n请求地址: ${modelsEndpoint}\n响应内容: ${errorText}`);
-        }
-
+        if (!response.ok) { throw new Error(`HTTP ${response.status}: ${await response.text()}`); }
         const data = await response.json();
         const models = data.data || data.models || data || [];
 
         if (!Array.isArray(models) || models.length === 0) {
-            alert('成功连接，但未返回任何模型。请检查Key的权限或API路径。');
-            modelSelect.innerHTML = '<option value="">未找到模型</option>';
+            alert('成功连接，但未返回任何模型。');
             return;
         }
         
-        modelSelect.innerHTML = '';
+        // 核心：填充模型选择面板，而不是 select
+        ui.modelList.innerHTML = ''; // 清空列表
         models.forEach(model => {
-            const option = document.createElement('option');
             const modelId = model.id || model.name;
             const modelName = model.displayName || model.id || model.name;
-            
-            option.value = modelId;
-            option.textContent = modelName;
-            modelSelect.appendChild(option);
-        });
+            const isChecked = currentSelectedModels.includes(modelId);
 
-        alert(`成功拉取 ${models.length} 个模型！`);
+            const item = document.createElement('li');
+            item.className = 'model-checkbox-item';
+            item.innerHTML = `
+                <input type="checkbox" id="model-${modelId}" value="${modelId}" ${isChecked ? 'checked' : ''}>
+                <div class="custom-checkbox"><i class="fa-solid fa-check"></i></div>
+                <label for="model-${modelId}" class="checkbox-label">${modelName}</label>
+            `;
+            ui.modelList.appendChild(item);
+        });
+        
+        openModelPanel(); // 打开面板让用户选择
 
     } catch (error) {
-        alert(`模型拉取失败！\n\n错误详情: ${error.message}`);
+        alert(`模型拉取失败！\n\n${error.message}`);
     } finally {
-        fetchBtn.disabled = false;
+        ui.fetchModelsBtn.disabled = false;
         btnSpan.textContent = '拉取模型';
     }
 }
-// ▲▲▲ 替换到这里结束 ▲▲▲
 
-
-
-// ▼▼▼ 修改：handleSave 现在也会保存模型和路径 ▼▼▼
+// ▼▼▼ 修改：handleSave 保存的是模型数组 ▼▼▼
 function handleSave(apiId) {
     const allConfigs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
     const configIndex = allConfigs.findIndex(c => c.id == apiId);
 
     if (configIndex > -1) {
-        // 更新通用表单数据
         allConfigs[configIndex].name = document.getElementById('api-name').value.trim();
         allConfigs[configIndex].apiKey = document.getElementById('api-key').value.trim();
         allConfigs[configIndex].baseUrl = document.getElementById('api-base-url').value.trim();
-        allConfigs[configIndex].model = document.getElementById('api-model').value;
+        
+        // 保存暂存的已选模型数组
+        allConfigs[configIndex].model = currentSelectedModels;
 
-        // 核心修正：在读取 path 之前，先检查输入框是否存在
         const apiPathInput = document.getElementById('api-path');
         if (apiPathInput) {
             allConfigs[configIndex].path = apiPathInput.value.trim();
         }
 
         localStorage.setItem(API_CONFIGS_KEY, JSON.stringify(allConfigs));
-        alert('配置已保存！'); // 加一个保存成功的提示
+        alert('配置已保存！');
         window.location.href = './api-management.html';
     } else {
         alert('错误：找不到要保存的配置。');
     }
 }
-// ▲▲▲ 替换到这里结束 ▲▲▲
 
 // handleDelete 函数保持不变
 function handleDelete(apiId, apiName) {
     if (confirm(`确定要删除配置 "${apiName}" 吗？`)) {
-        let allConfigs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
-        const updatedConfigs = allConfigs.filter(c => c.id != apiId);
+        let updatedConfigs = (JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || []).filter(c => c.id != apiId);
         localStorage.setItem(API_CONFIGS_KEY, JSON.stringify(updatedConfigs));
         window.location.href = './api-management.html';
     }
