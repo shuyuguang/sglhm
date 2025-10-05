@@ -1,10 +1,12 @@
 // api-room.js 
 
+import { dbStorage } from '../common/db.js'; // ▼▼▼ 1. 导入我们的 dbStorage ▼▼▼
+
 const API_CONFIGS_KEY = 'api_configs_text';
 let ui = {}; // 用于缓存 DOM 元素
 let currentSelectedModels = []; // 用于暂存用户在面板中选择的模型
 
-// 模型选择面板的 HTML 结构
+
 const modelSelectionPanelHtml = `
 <div class="modal-overlay" id="model-selection-overlay">
     <div class="modal-panel">
@@ -29,7 +31,8 @@ const modelSelectionPanelHtml = `
 </div>
 `;
 
-document.addEventListener('DOMContentLoaded', () => {
+// ▼▼▼ 2. 所有读写操作都变成 async/await ▼▼▼
+document.addEventListener('DOMContentLoaded', async () => { // 变为 async
     // 注入模态框 HTML
     document.getElementById('modals-container').innerHTML = modelSelectionPanelHtml;
 
@@ -41,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    const allConfigs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
+    const allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || []; // 从 Dexie 读取
     const config = allConfigs.find(c => c.id == apiId);
     if (!config) {
         mainContent.innerHTML = `<p class="error-message">错误：ID 为 ${apiId} 的配置不存在。</p>`;
@@ -54,7 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const formHtml = `
         <div class="form-wrapper">
             <form class="api-form-container" id="edit-api-form">
-                <!-- 名称, Key, URL, 路径等表单组保持不变 -->
                 <div class="form-group"><label for="api-name">名称</label><input type="text" id="api-name" value="${config.name || ''}"></div>
                 <div class="form-group"><label for="api-key">API Key</label><input type="text" id="api-key" value="${config.apiKey || ''}"></div>
                 <div class="form-group"><label for="api-base-url">API Base URL</label><input type="text" id="api-base-url" value="${config.baseUrl || ''}"></div>
@@ -67,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </button>
                 </div>
 
-                <!-- 新的结构：用 form-group 包裹模型容器 -->
                 <div class="form-group">
                     <label for="selected-models-container">已选模型</label>
                     <div id="selected-models-container">
@@ -77,8 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
             </form>
         </div>
     `;
-    // ▲▲▲ 修改结束 ▲▲▲
-
     mainContent.innerHTML = formHtml;
 
     // 缓存所有需要操作的 DOM 元素
@@ -133,15 +132,12 @@ function renderSelectedModels() {
     if (currentSelectedModels.length === 0) {
         ui.selectedContainer.innerHTML = '<p class="no-models-selected">尚未选择任何模型</p>';
     } else {
-        // ▼▼▼ 核心修改：不再创建 model-tag，而是创建 model-list-item ▼▼▼
         currentSelectedModels.forEach(modelId => {
             const item = document.createElement('div');
-            // 使用一个新的、更合适的类名
             item.className = 'model-list-item'; 
             item.textContent = modelId;
             ui.selectedContainer.appendChild(item);
         });
-        // ▲▲▲ 修改结束 ▲▲▲
     }
 }
 
@@ -153,11 +149,9 @@ function openModelPanel() {
     ui.modelOverlay?.classList.add('active');
 }
 
-// ▼▼▼ 核心 Bug 修复：补上这个丢失的函数 ▼▼▼
 function closeModelPanel() {
     ui.modelOverlay?.classList.remove('active');
 }
-// ▲▲▲ 修复结束 ▲▲▲
 
 function handleConfirmSelection() {
     const selectedInputs = ui.modelList.querySelectorAll('input[type="checkbox"]:checked');
@@ -176,7 +170,8 @@ async function fetchAndShowModels() {
 
     const params = new URLSearchParams(window.location.search);
     const apiId = params.get('id');
-    const config = (JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || []).find(c => c.id == apiId);
+    const allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || []; // 从 Dexie 读取
+    const config = allConfigs.find(c => c.id == apiId);
     if (!config) {
         alert('错误：无法找到当前配置信息。');
         return;
@@ -239,8 +234,8 @@ async function fetchAndShowModels() {
     }
 }
 
-function handleSave(apiId) {
-    const allConfigs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
+async function handleSave(apiId) {
+    const allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || []; // 从 Dexie 读取
     const configIndex = allConfigs.findIndex(c => c.id == apiId);
 
     if (configIndex > -1) {
@@ -254,7 +249,7 @@ function handleSave(apiId) {
             allConfigs[configIndex].path = apiPathInput.value.trim();
         }
 
-        localStorage.setItem(API_CONFIGS_KEY, JSON.stringify(allConfigs));
+        await dbStorage.setItem(API_CONFIGS_KEY, allConfigs); // 写入 Dexie
         alert('配置已保存！');
         window.location.href = './api-management.html';
     } else {
@@ -262,10 +257,11 @@ function handleSave(apiId) {
     }
 }
 
-function handleDelete(apiId, apiName) {
+async function handleDelete(apiId, apiName) {
     if (confirm(`确定要删除配置 "${apiName}" 吗？`)) {
-        let updatedConfigs = (JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || []).filter(c => c.id != apiId);
-        localStorage.setItem(API_CONFIGS_KEY, JSON.stringify(updatedConfigs));
+        let allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || []; // 从 Dexie 读取
+        let updatedConfigs = allConfigs.filter(c => c.id != apiId);
+        await dbStorage.setItem(API_CONFIGS_KEY, updatedConfigs); // 写入 Dexie
         window.location.href = './api-management.html';
     }
 }

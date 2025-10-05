@@ -1,8 +1,9 @@
 // api-management.js
 
 import { createPageLayout } from '../common/template.js';
+import { dbStorage } from '../common/db.js'; // ▼▼▼ 1. 导入我们的 dbStorage ▼▼▼
 
-// 使用 localStorage 的 Key，用于存储和读取 API 配置
+// 使用数据库的 Key，用于存储和读取 API 配置
 const API_CONFIGS_KEY = 'api_configs_text';
 let isMultiSelectMode = false; // 全局状态，跟踪是否处于多选模式
 
@@ -88,15 +89,7 @@ const apiConfigPanelHtml = `
 // 定义本页专属的帮助框 HTML 内容
 const helpTooltipHtml = `
     <div id="help-tooltip" class="help-tooltip">
-        <p>目前仅支持添加文本API</p>
-        <ol class="help-list">
-            <li>右上羽毛笔添加API，可选OpenAI和Google，禁选Claude（拉取模型待开放）</li>
-            <li>已添加的API卡片可切换启动/禁用状态</li>
-            <li>点击API卡片跳转编辑页面，可拉取、搜索和多选模型</li>
-            <li>长按卡片右侧三点图标可拖动卡片位置</li>
-            <li>单击三点图标可多选删除，或在编辑页面右上删除</li>
-        </ol>
-        <p class="help-reminder">拉取模型后记得右上保存嗷~</p>
+        <p>点击羽毛笔添加API，添加的API卡片右侧可选启动/禁用，点击卡片跳转编辑页面，记得拉取模型嗷</p>
     </div>
 `;
 
@@ -107,14 +100,15 @@ const allModalsHtml = apiConfigPanelHtml + helpTooltipHtml;
 const PROVIDER_CONFIG = {
     openai: { apiKeyPlaceholder: 'sk-...', baseUrlValue: 'https://api.openai.com', apiPathValue: '/v1/chat/completions', showApiPath: true },
     google: { apiKeyPlaceholder: 'AIzaSy...', baseUrlValue: 'https://generativelanguage.googleapis.com/v1beta', showApiPath: false },
-    claude: { apiKeyPlaceholder: 'sk-ant-sid01-...', baseUrlValue: 'https://api.anthropic.com/v1', showApiPath: false }
+    claude: { apiKeyPlaceholder: 'sk-ant-...', baseUrlValue: 'https://api.anthropic.com/v1', showApiPath: false }
 };
 
 let ui = {};
 
 // 4. 功能函数区
-function renderApiCards() {
-    const configs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
+// ▼▼▼ 2. 所有读写操作都变成 async/await ▼▼▼
+async function renderApiCards() {
+    const configs = await dbStorage.getItem(API_CONFIGS_KEY) || []; // 从 Dexie 读取
     const container = document.getElementById('text');
     if (!container) return;
 
@@ -199,7 +193,7 @@ function switchPanelTab(targetTabId) {
     }
 }
 
-function handleAddApi() {
+async function handleAddApi() {
     const provider = document.querySelector('.pill-option.active').dataset.provider;
     const name = document.getElementById('api-name').value.trim();
     const apiKey = document.getElementById('api-key').value.trim();
@@ -214,30 +208,30 @@ function handleAddApi() {
         path: PROVIDER_CONFIG[provider].showApiPath ? path : null,
         enabled: true, model: []
     };
-    const existingConfigs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
+    const existingConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || []; // 从 Dexie 读取
     existingConfigs.push(newConfig);
-    localStorage.setItem(API_CONFIGS_KEY, JSON.stringify(existingConfigs));
-    renderApiCards();
+    await dbStorage.setItem(API_CONFIGS_KEY, existingConfigs); // 写入 Dexie
+    await renderApiCards();
     closeApiConfigPanel();
 }
 
-function handleToggleStatus(apiId) {
-    const configs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
+async function handleToggleStatus(apiId) {
+    const configs = await dbStorage.getItem(API_CONFIGS_KEY) || []; // 从 Dexie 读取
     const configIndex = configs.findIndex(c => c.id == apiId);
     if (configIndex > -1) {
         configs[configIndex].enabled = !configs[configIndex].enabled;
-        localStorage.setItem(API_CONFIGS_KEY, JSON.stringify(configs));
-        renderApiCards();
+        await dbStorage.setItem(API_CONFIGS_KEY, configs); // 写入 Dexie
+        await renderApiCards();
     }
 }
 
-function saveCardOrder() {
+async function saveCardOrder() {
     const cardElements = document.querySelectorAll('#text .api-config-card');
     const newOrderIds = Array.from(cardElements).map(card => card.dataset.id);
-    const allConfigs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
+    const allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || []; // 从 Dexie 读取
     const configMap = new Map(allConfigs.map(c => [String(c.id), c]));
     const newSortedConfigs = newOrderIds.map(id => configMap.get(id)).filter(Boolean);
-    localStorage.setItem(API_CONFIGS_KEY, JSON.stringify(newSortedConfigs));
+    await dbStorage.setItem(API_CONFIGS_KEY, newSortedConfigs); // 写入 Dexie
 }
 
 function enterMultiSelectMode(clickedCard) {
@@ -271,20 +265,20 @@ function updateMultiSelectFooter() {
     }
 }
 
-function handleBulkDelete() {
+async function handleBulkDelete() {
     const selectedCards = document.querySelectorAll('.api-config-card.card-selected');
     if (selectedCards.length === 0) return;
     if (confirm(`确定要删除这 ${selectedCards.length} 个配置吗？`)) {
         const idsToDelete = new Set(Array.from(selectedCards).map(card => card.dataset.id));
-        let configs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
+        let configs = await dbStorage.getItem(API_CONFIGS_KEY) || []; // 从 Dexie 读取
         const updatedConfigs = configs.filter(config => !idsToDelete.has(String(config.id)));
-        localStorage.setItem(API_CONFIGS_KEY, JSON.stringify(updatedConfigs));
-        renderApiCards();
+        await dbStorage.setItem(API_CONFIGS_KEY, updatedConfigs); // 写入 Dexie
+        await renderApiCards();
         exitMultiSelectMode();
     }
 }
 
-function initializePage() {
+async function initializePage() { // 变为 async
     // --- Tab 切换逻辑 (不变) ---
     const indicator = document.querySelector('.active-tab-indicator');
     const tabsNav = document.querySelector('.tabs-nav');
@@ -333,7 +327,7 @@ function initializePage() {
     if (ui.panelTabsContainer) { ui.panelTabsContainer.addEventListener('click', (event) => { if (event.target.classList.contains('modal-tab')) switchPanelTab(event.target.dataset.tab); }); }
     if (ui.panelContentContainer) { ui.panelContentContainer.addEventListener('click', (event) => { if (event.target.matches('.pill-option')) { const clickedPill = event.target; clickedPill.parentElement.querySelectorAll('.pill-option').forEach(pill => pill.classList.remove('active')); clickedPill.classList.add('active'); updateFormForProvider(clickedPill.dataset.provider); } }); }
 
-    // ▼▼▼ BUG修复与逻辑优化：最终版事件处理 ▼▼▼
+    // ... (事件处理逻辑保持不变) ...
     const textTabPane = document.getElementById('text');
     if (textTabPane) {
         let longPressTimer;
@@ -441,9 +435,8 @@ function initializePage() {
         document.getElementById('cancel-multi-select').addEventListener('click', exitMultiSelectMode);
         document.getElementById('delete-selected-btn').addEventListener('click', handleBulkDelete);
     }
-    // ▲▲▲ 修复结束 ▲▲▲
     
-    renderApiCards();
+    await renderApiCards(); // 等待初次渲染完成
 }
 
 // 脚本入口
