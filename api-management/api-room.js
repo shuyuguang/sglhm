@@ -178,20 +178,26 @@ function handleSave(apiId) {
     const configIndex = allConfigs.findIndex(c => c.id == apiId);
 
     if (configIndex > -1) {
-        // 更新所有表单数据
+        // 更新通用表单数据
         allConfigs[configIndex].name = document.getElementById('api-name').value.trim();
         allConfigs[configIndex].apiKey = document.getElementById('api-key').value.trim();
         allConfigs[configIndex].baseUrl = document.getElementById('api-base-url').value.trim();
-        allConfigs[configIndex].path = document.getElementById('api-path').value.trim(); // 保存路径
-        allConfigs[configIndex].model = document.getElementById('api-model').value; // 保存模型
+        allConfigs[configIndex].model = document.getElementById('api-model').value;
+
+        // 核心修正：在读取 path 之前，先检查输入框是否存在
+        const apiPathInput = document.getElementById('api-path');
+        if (apiPathInput) {
+            allConfigs[configIndex].path = apiPathInput.value.trim();
+        }
 
         localStorage.setItem(API_CONFIGS_KEY, JSON.stringify(allConfigs));
+        alert('配置已保存！'); // 加一个保存成功的提示
         window.location.href = './api-management.html';
     } else {
         alert('错误：找不到要保存的配置。');
     }
 }
-// ▲▲▲ 修改结束 ▲▲▲
+// ▲▲▲ 替换到这里结束 ▲▲▲
 
 // handleDelete 函数保持不变
 function handleDelete(apiId, apiName) {
