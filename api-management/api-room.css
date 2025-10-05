@@ -180,11 +180,18 @@ body {
     flex-grow: 1; color: var(--color-text-dark);
     user-select: none; /* 防止选中文本 */
 }
+/* 找到这个选择器并替换 */
 .custom-checkbox {
-    width: 20px; height: 20px; border: 2px solid #ced4da;
-    border-radius: 6px; margin-right: 16px;
-    display: flex; align-items: center; justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ced4da;
+    border-radius: 6px;
+    margin-left: 16px; /* ◀️ 核心修改：从 margin-right 改为 margin-left */
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.2s ease;
+    flex-shrink: 0; /* 防止复选框被压缩 */
 }
 .custom-checkbox .fa-check {
     font-size: 12px; color: white; transform: scale(0); transition: transform 0.2s ease;
@@ -219,4 +226,53 @@ body {
     color: var(--color-text-light);
     font-size: 0.9em;
     padding: 8px 0;
+}
+/* ==========================================================================
+   11. MODEL SEARCH BAR (模型搜索栏样式)
+   ========================================================================== */
+
+.search-bar-container {
+    position: relative; /* 为图标定位提供上下文 */
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--color-bg-grey);
+}
+
+.search-bar-container .search-icon {
+    position: absolute;
+    left: 32px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-light);
+    pointer-events: none; /* 让图标不影响点击输入框 */
+}
+
+#model-search-input {
+    width: 100%;
+    padding: 10px 12px 10px 34px; /* 左侧内边距为图标留出空间 */
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 1em;
+    color: var(--color-text-dark);
+    background-color: var(--color-bg-light);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#model-search-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(185, 162, 233, 0.25);
+}
+
+/* 隐藏 Webkit 浏览器中搜索框默认的清除按钮 */
+#model-search-input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* “未找到模型”的消息样式 */
+.no-models-found-message {
+    display: none; /* 默认隐藏 */
+    text-align: center;
+    padding: 30px 16px;
+    color: var(--color-text-light);
 }

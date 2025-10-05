@@ -1,18 +1,25 @@
-// api-room.js (支持多模型选择版本)
+// api-room.js 
 
 const API_CONFIGS_KEY = 'api_configs_text';
 let ui = {}; // 用于缓存 DOM 元素
 let currentSelectedModels = []; // 用于暂存用户在面板中选择的模型
 
-// 新增：模型选择面板的 HTML 结构
+// 模型选择面板的 HTML 结构
 const modelSelectionPanelHtml = `
 <div class="modal-overlay" id="model-selection-overlay">
     <div class="modal-panel">
         <div class="modal-header">选择模型</div>
+        <div class="search-bar-container">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="search" id="model-search-input" placeholder="搜索模型名称...">
+        </div>
         <div class="modal-content-container">
             <ul class="model-checkbox-list" id="model-checkbox-list">
                 <!-- 模型将动态插入这里 -->
             </ul>
+            <div id="no-models-found" class="no-models-found-message">
+                未找到匹配的模型
+            </div>
         </div>
         <div class="sheet-footer">
             <button class="sheet-btn sheet-btn-cancel" id="cancel-model-selection">取消</button>
@@ -29,20 +36,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainContent = document.getElementById('main-content');
     const params = new URLSearchParams(window.location.search);
     const apiId = params.get('id');
-    if (!apiId) { /* ... 错误处理不变 ... */ return; }
+    if (!apiId) {
+        mainContent.innerHTML = '<p class="error-message">错误：未找到配置 ID。</p>';
+        return;
+    }
 
     const allConfigs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
     const config = allConfigs.find(c => c.id == apiId);
-    if (!config) { /* ... 错误处理不变 ... */ return; }
+    if (!config) {
+        mainContent.innerHTML = `<p class="error-message">错误：ID 为 ${apiId} 的配置不存在。</p>`;
+        return;
+    }
 
     // 初始化暂存的模型数组
     currentSelectedModels = [...(config.model || [])];
 
-    // ▼▼▼ 修改：表单 HTML 不再包含 select，而是为已选模型留出容器 ▼▼▼
     const formHtml = `
         <div class="form-wrapper">
             <form class="api-form-container" id="edit-api-form">
-                <!-- 名称, Key, URL, 路径等表单组保持不变 -->
                 <div class="form-group"><label for="api-name">名称</label><input type="text" id="api-name" value="${config.name || ''}"></div>
                 <div class="form-group"><label for="api-key">API Key</label><input type="text" id="api-key" value="${config.apiKey || ''}"></div>
                 <div class="form-group"><label for="api-base-url">API Base URL</label><input type="text" id="api-base-url" value="${config.baseUrl || ''}"></div>
@@ -54,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span>拉取模型</span>
                     </button>
                 </div>
-                <!-- 新增：用于显示已选模型的容器 -->
                 <div id="selected-models-container"></div>
             </form>
         </div>
@@ -70,27 +80,46 @@ document.addEventListener('DOMContentLoaded', () => {
         modelList: document.getElementById('model-checkbox-list'),
         confirmBtn: document.getElementById('confirm-model-selection'),
         cancelBtn: document.getElementById('cancel-model-selection'),
-        selectedContainer: document.getElementById('selected-models-container')
+        selectedContainer: document.getElementById('selected-models-container'),
+        modelSearchInput: document.getElementById('model-search-input'),
+        noModelsFoundMsg: document.getElementById('no-models-found')
     };
 
-    // 绑定事件
+    // 绑定所有事件
     if (ui.saveBtn) ui.saveBtn.addEventListener('click', () => handleSave(apiId));
     if (ui.deleteBtn) ui.deleteBtn.addEventListener('click', () => handleDelete(apiId, config.name));
     if (ui.fetchModelsBtn) ui.fetchModelsBtn.addEventListener('click', fetchAndShowModels);
-    
-    // 绑定模态框控制事件
     if (ui.modelOverlay) ui.modelOverlay.addEventListener('click', (e) => { if (e.target === ui.modelOverlay) closeModelPanel(); });
     if (ui.cancelBtn) ui.cancelBtn.addEventListener('click', closeModelPanel);
     if (ui.confirmBtn) ui.confirmBtn.addEventListener('click', handleConfirmSelection);
+    if (ui.modelList) { ui.modelList.addEventListener('click', (event) => { const item = event.target.closest('.model-checkbox-item'); if (item) { const checkbox = item.querySelector('input[type="checkbox"]'); if (checkbox) { checkbox.checked = !checkbox.checked; } } }); }
+    if (ui.modelSearchInput) { ui.modelSearchInput.addEventListener('input', handleModelSearch); }
 
-    // 初始渲染已选模型
     renderSelectedModels();
 });
 
-// 新增：渲染已选模型的标签
+function handleModelSearch() {
+    const searchTerm = ui.modelSearchInput.value.toLowerCase();
+    const items = ui.modelList.querySelectorAll('.model-checkbox-item');
+    let visibleCount = 0;
+
+    items.forEach(item => {
+        const label = item.querySelector('.checkbox-label');
+        if (label) {
+            const modelName = label.textContent.toLowerCase();
+            const isVisible = modelName.includes(searchTerm);
+            item.style.display = isVisible ? 'flex' : 'none';
+            if (isVisible) {
+                visibleCount++;
+            }
+        }
+    });
+    ui.noModelsFoundMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+}
+
 function renderSelectedModels() {
     if (!ui.selectedContainer) return;
-    ui.selectedContainer.innerHTML = ''; // 清空容器
+    ui.selectedContainer.innerHTML = '';
     if (currentSelectedModels.length === 0) {
         ui.selectedContainer.innerHTML = '<p class="no-models-selected">尚未选择任何模型</p>';
     } else {
@@ -103,11 +132,20 @@ function renderSelectedModels() {
     }
 }
 
-// 新增：打开和关闭模型选择面板
-function openModelPanel() { ui.modelOverlay?.classList.add('active'); }
-function closeModelPanel() { ui.modelOverlay?.classList.remove('active'); }
+function openModelPanel() {
+    if (ui.modelSearchInput) {
+        ui.modelSearchInput.value = '';
+    }
+    handleModelSearch();
+    ui.modelOverlay?.classList.add('active');
+}
 
-// 新增：处理确认选择的逻辑
+// ▼▼▼ 核心 Bug 修复：补上这个丢失的函数 ▼▼▼
+function closeModelPanel() {
+    ui.modelOverlay?.classList.remove('active');
+}
+// ▲▲▲ 修复结束 ▲▲▲
+
 function handleConfirmSelection() {
     const selectedInputs = ui.modelList.querySelectorAll('input[type="checkbox"]:checked');
     currentSelectedModels = Array.from(selectedInputs).map(input => input.value);
@@ -115,16 +153,21 @@ function handleConfirmSelection() {
     closeModelPanel();
 }
 
-// ▼▼▼ 核心修改：重构模型拉取与展示逻辑 ▼▼▼
 async function fetchAndShowModels() {
     const baseUrl = document.getElementById('api-base-url').value.trim().replace(/\/$/, '');
     const apiKey = document.getElementById('api-key').value.trim();
-    if (!baseUrl || !apiKey) { /* ... 错误提示不变 ... */ return; }
+    if (!baseUrl || !apiKey) {
+        alert('请先填写 API Base URL 和 API Key！');
+        return;
+    }
 
     const params = new URLSearchParams(window.location.search);
     const apiId = params.get('id');
     const config = (JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || []).find(c => c.id == apiId);
-    if (!config) { /* ... 错误提示不变 ... */ return; }
+    if (!config) {
+        alert('错误：无法找到当前配置信息。');
+        return;
+    }
 
     const provider = config.provider;
     const btnSpan = ui.fetchModelsBtn.querySelector('span');
@@ -132,7 +175,6 @@ async function fetchAndShowModels() {
     btnSpan.textContent = '正在拉取...';
 
     try {
-        // ... (fetch 请求和错误处理逻辑完全不变) ...
         let response;
         let modelsEndpoint = '';
 
@@ -145,7 +187,11 @@ async function fetchAndShowModels() {
             modelsEndpoint = baseUrl + (modelsPath || '/v1/models');
             response = await fetch(modelsEndpoint, { headers: { 'Authorization': `Bearer ${apiKey}` } });
         }
-        if (!response.ok) { throw new Error(`HTTP ${response.status}: ${await response.text()}`); }
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+        }
+
         const data = await response.json();
         const models = data.data || data.models || data || [];
 
@@ -154,8 +200,7 @@ async function fetchAndShowModels() {
             return;
         }
         
-        // 核心：填充模型选择面板，而不是 select
-        ui.modelList.innerHTML = ''; // 清空列表
+        ui.modelList.innerHTML = '';
         models.forEach(model => {
             const modelId = model.id || model.name;
             const modelName = model.displayName || model.id || model.name;
@@ -165,13 +210,13 @@ async function fetchAndShowModels() {
             item.className = 'model-checkbox-item';
             item.innerHTML = `
                 <input type="checkbox" id="model-${modelId}" value="${modelId}" ${isChecked ? 'checked' : ''}>
-                <div class="custom-checkbox"><i class="fa-solid fa-check"></i></div>
                 <label for="model-${modelId}" class="checkbox-label">${modelName}</label>
+                <div class="custom-checkbox"><i class="fa-solid fa-check"></i></div>
             `;
             ui.modelList.appendChild(item);
         });
         
-        openModelPanel(); // 打开面板让用户选择
+        openModelPanel();
 
     } catch (error) {
         alert(`模型拉取失败！\n\n${error.message}`);
@@ -181,7 +226,6 @@ async function fetchAndShowModels() {
     }
 }
 
-// ▼▼▼ 修改：handleSave 保存的是模型数组 ▼▼▼
 function handleSave(apiId) {
     const allConfigs = JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || [];
     const configIndex = allConfigs.findIndex(c => c.id == apiId);
@@ -190,8 +234,6 @@ function handleSave(apiId) {
         allConfigs[configIndex].name = document.getElementById('api-name').value.trim();
         allConfigs[configIndex].apiKey = document.getElementById('api-key').value.trim();
         allConfigs[configIndex].baseUrl = document.getElementById('api-base-url').value.trim();
-        
-        // 保存暂存的已选模型数组
         allConfigs[configIndex].model = currentSelectedModels;
 
         const apiPathInput = document.getElementById('api-path');
@@ -207,7 +249,6 @@ function handleSave(apiId) {
     }
 }
 
-// handleDelete 函数保持不变
 function handleDelete(apiId, apiName) {
     if (confirm(`确定要删除配置 "${apiName}" 吗？`)) {
         let updatedConfigs = (JSON.parse(localStorage.getItem(API_CONFIGS_KEY)) || []).filter(c => c.id != apiId);
