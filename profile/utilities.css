@@ -79,7 +79,7 @@
     content: '';
     position: absolute;
     top: -8px;
-    right: 62px; /* 调整箭头位置使其对准问号按钮 */
+    right: 58px; /* 调整箭头位置使其对准问号按钮 */
     width: 0;
     height: 0;
     border-left: 8px solid transparent;
