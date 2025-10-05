@@ -89,7 +89,15 @@ const apiConfigPanelHtml = `
 // 定义本页专属的帮助框 HTML 内容
 const helpTooltipHtml = `
     <div id="help-tooltip" class="help-tooltip">
-        <p>点击羽毛笔添加API，添加的API卡片右侧可选启动/禁用，点击卡片跳转编辑页面，记得拉取模型嗷</p>
+        <p>目前仅支持添加文本API，图片和语音待开发</p>
+        <ol class="help-list">
+            <li>右上羽毛笔添加API，可选OpenAI和Google，禁选Claude（拉取模型待开放）</li>
+            <li>已添加的API卡片可切换启动/禁用状态</li>
+            <li>点击API卡片跳转编辑页面，可拉取、搜索和多选模型</li>
+            <li>长按卡片右侧三点图标可拖动卡片位置</li>
+            <li>单击三点图标可多选删除，或在编辑页面右上删除</li>
+        </ol>
+        <p class="help-reminder">拉取模型后记得右上保存嗷~</p>
     </div>
 `;
 
@@ -118,7 +126,7 @@ async function renderApiCards() {
         container.innerHTML = configs.map(config => {
             const providerMap = { openai: 'OA', google: 'Ge', claude: 'Cl' };
             const providerInitial = providerMap[config.provider] || '?';
-            const providerIcon = `<div class="provider-icon">${providerInitial}</div>`;
+            const providerIcon = `<div class="provider-icon provider-${config.provider}">${providerInitial}</div>`;
             const enabledClass = config.enabled ? '' : 'disabled';
             const statusCapsule = config.enabled 
                 ? '<span class="status-capsule status-enabled">启用</span>' 

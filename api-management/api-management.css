@@ -463,6 +463,20 @@ body {
     font-weight: 600;
     flex-shrink: 0;
 }
+
+/* 为不同服务商设置专属颜色 */
+.provider-icon.provider-openai {
+    background-color: #B3D5B4; /* 你的 OA 颜色 */
+}
+
+.provider-icon.provider-google {
+    background-color: #BAC4E8; /* 你的 Ge 颜色 */
+}
+
+.provider-icon.provider-claude {
+    background-color: #F4CF9E; /* 你的 Cl 颜色 */
+}
+
 /* ==========================================================================
    11. API CARD DRAG HANDLE (API 卡片拖拽图标)
    ========================================================================== */
