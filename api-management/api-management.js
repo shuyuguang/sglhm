@@ -111,32 +111,61 @@ const PROVIDER_CONFIG = {
     claude: { apiKeyPlaceholder: 'sk-ant-...', baseUrlValue: 'https://api.anthropic.com/v1', showApiPath: false }
 };
 
+// 1. 定义内置的、不可删除的 API 卡片
+const BUILT_IN_APIS = [
+    { id: 'built-in-deepseek', name: 'DeepSeek', shortName: 'DS', isBuiltIn: true, model: [] },
+    { id: 'built-in-siliconflow', name: '硅基流动', shortName: '硅', isBuiltIn: true, model: [] },
+    { id: 'built-in-volcengine', name: '火山引擎', shortName: '火', isBuiltIn: true, model: [] },
+    { id: 'built-in-openrouter', name: 'OpenRouter', shortName: 'OR', isBuiltIn: true, model: [] },
+];
+
+// 2. 为内置 API 的状态创建一个独立的数据库键
+const BUILT_IN_API_STATES_KEY = 'built_in_api_states';
+
+// ▲▲▲ 添加结束 ▲▲▲
+
 let ui = {};
 
 // 4. 功能函数区
 // ▼▼▼ 2. 所有读写操作都变成 async/await ▼▼▼
+// ▼▼▼ 用这个新函数替换掉旧的 renderApiCards 函数 ▼▼▼
 async function renderApiCards() {
-    const configs = await dbStorage.getItem(API_CONFIGS_KEY) || []; // 从 Dexie 读取
+    const userConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
+    const builtInStates = await dbStorage.getItem(BUILT_IN_API_STATES_KEY) || {};
+
+    const processedBuiltInApis = BUILT_IN_APIS.map(api => ({
+        ...api,
+        enabled: builtInStates[api.id]?.enabled ?? false, 
+    }));
+
+    // ★★★ 核心修改 ①：调整顺序，让用户自定义的卡片在前面 ★★★
+    const allConfigs = [...userConfigs, ...processedBuiltInApis];
+
     const container = document.getElementById('text');
     if (!container) return;
 
-    if (configs.length === 0) {
+    if (allConfigs.length === 0) {
         container.innerHTML = '<p>这里是【文本】的主配置区，还没有添加任何 API。</p>';
     } else {
-        container.innerHTML = configs.map(config => {
-            const providerMap = { openai: 'OA', google: 'Ge', claude: 'Cl' };
-            const providerInitial = providerMap[config.provider] || '?';
-            const providerIcon = `<div class="provider-icon provider-${config.provider}">${providerInitial}</div>`;
+        container.innerHTML = allConfigs.map(config => {
+            const providerInitial = config.isBuiltIn ? config.shortName : (({ openai: 'OA', google: 'Ge', claude: 'Cl' })[config.provider] || '?');
+            const providerClass = config.isBuiltIn ? 'provider-built-in' : `provider-${config.provider}`;
+            const providerIcon = `<div class="provider-icon ${providerClass}">${providerInitial}</div>`;
+
             const enabledClass = config.enabled ? '' : 'disabled';
             const statusCapsule = config.enabled 
                 ? '<span class="status-capsule status-enabled">启用</span>' 
                 : '<span class="status-capsule status-disabled">禁用</span>';
-            const modelCount = (config.model && config.model.length) ? config.model.length : 0;
-            const modelCapsule = `<span class="status-capsule status-model">${modelCount}个模型</span>`;
+            
+            // ★★★ 核心修改 ②：无差别渲染所有UI元素，不再有 isBuiltIn 判断 ★★★
+            const modelCapsule = `<span class="status-capsule status-model">${(config.model?.length || 0)}个模型</span>`;
             const actionHandle = `<div class="card-action-handle"><i class="fa-solid fa-ellipsis-vertical"></i></div>`;
             const checkboxWrapper = `<div class="card-checkbox-wrapper"><div class="custom-checkbox"></div></div>`;
+            
+            const builtInCardClass = config.isBuiltIn ? 'built-in-card' : '';
+
             return `
-                <div class="api-config-card ${enabledClass}" data-id="${config.id}">
+                <div class="api-config-card ${enabledClass} ${builtInCardClass}" data-id="${config.id}">
                     <div class="card-info">
                         ${providerIcon}
                         <span class="card-name">${config.name}</span>
@@ -223,23 +252,47 @@ async function handleAddApi() {
     closeApiConfigPanel();
 }
 
+// ▼▼▼ 用这个新函数替换掉旧的 handleToggleStatus 函数 ▼▼▼
 async function handleToggleStatus(apiId) {
-    const configs = await dbStorage.getItem(API_CONFIGS_KEY) || []; // 从 Dexie 读取
-    const configIndex = configs.findIndex(c => c.id == apiId);
-    if (configIndex > -1) {
-        configs[configIndex].enabled = !configs[configIndex].enabled;
-        await dbStorage.setItem(API_CONFIGS_KEY, configs); // 写入 Dexie
-        await renderApiCards();
+    // 检查这个 ID 是否属于内置 API
+    const isBuiltIn = apiId.startsWith('built-in-');
+
+    if (isBuiltIn) {
+        // --- 处理内置 API ---
+        const builtInStates = await dbStorage.getItem(BUILT_IN_API_STATES_KEY) || {};
+        // 获取当前状态，如果不存在则为 false (禁用)
+        const currentState = builtInStates[apiId]?.enabled ?? false;
+        // 更新状态
+        builtInStates[apiId] = { enabled: !currentState };
+        await dbStorage.setItem(BUILT_IN_API_STATES_KEY, builtInStates);
+    } else {
+        // --- 处理用户自定义 API (逻辑不变) ---
+        const configs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
+        const configIndex = configs.findIndex(c => c.id == apiId);
+        if (configIndex > -1) {
+            configs[configIndex].enabled = !configs[configIndex].enabled;
+            await dbStorage.setItem(API_CONFIGS_KEY, configs);
+        }
     }
+    
+    // 无论处理哪种，都重新渲染卡片列表
+    await renderApiCards();
 }
 
 async function saveCardOrder() {
     const cardElements = document.querySelectorAll('#text .api-config-card');
     const newOrderIds = Array.from(cardElements).map(card => card.dataset.id);
-    const allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || []; // 从 Dexie 读取
+    
+    // ★★★ 核心修改：只筛选出用户自定义的 API ID 进行保存 ★★★
+    const userApiOrderIds = newOrderIds.filter(id => !id.startsWith('built-in-'));
+
+    const allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
     const configMap = new Map(allConfigs.map(c => [String(c.id), c]));
-    const newSortedConfigs = newOrderIds.map(id => configMap.get(id)).filter(Boolean);
-    await dbStorage.setItem(API_CONFIGS_KEY, newSortedConfigs); // 写入 Dexie
+    
+    // 使用筛选后的 ID 列表来创建新的排序后数组
+    const newSortedConfigs = userApiOrderIds.map(id => configMap.get(id)).filter(Boolean);
+    
+    await dbStorage.setItem(API_CONFIGS_KEY, newSortedConfigs);
 }
 
 function enterMultiSelectMode(clickedCard) {
@@ -276,11 +329,27 @@ function updateMultiSelectFooter() {
 async function handleBulkDelete() {
     const selectedCards = document.querySelectorAll('.api-config-card.card-selected');
     if (selectedCards.length === 0) return;
-    if (confirm(`确定要删除这 ${selectedCards.length} 个配置吗？`)) {
-        const idsToDelete = new Set(Array.from(selectedCards).map(card => card.dataset.id));
-        let configs = await dbStorage.getItem(API_CONFIGS_KEY) || []; // 从 Dexie 读取
+
+    const selectedIds = Array.from(selectedCards).map(card => card.dataset.id);
+    
+    // 1. 找出被选中的内置 API
+    const selectedBuiltInApis = selectedIds
+        .map(id => BUILT_IN_APIS.find(api => api.id === id))
+        .filter(Boolean); // 过滤掉 undefined (即用户自定义的卡片)
+
+    // 2. ★★★ 核心守护逻辑：如果选中的包含任何内置API，则阻止删除并提示 ★★★
+    if (selectedBuiltInApis.length > 0) {
+        const names = selectedBuiltInApis.map(api => `“${api.name}”`).join('、');
+        alert(`内置API卡片 ${names} 无法删除，请取消勾选，试着勾选自定义添加的API卡片吧`);
+        return; // 中断删除流程
+    }
+
+    // 3. 如果能走到这里，说明选中的都是可以删除的自定义卡片
+    if (confirm(`确定要删除这 ${selectedIds.length} 个配置吗？`)) {
+        const idsToDelete = new Set(selectedIds);
+        let configs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
         const updatedConfigs = configs.filter(config => !idsToDelete.has(String(config.id)));
-        await dbStorage.setItem(API_CONFIGS_KEY, updatedConfigs); // 写入 Dexie
+        await dbStorage.setItem(API_CONFIGS_KEY, updatedConfigs);
         await renderApiCards();
         exitMultiSelectMode();
     }
@@ -367,8 +436,14 @@ async function initializePage() { // 变为 async
                     handleToggleStatus(apiId);
                 } 
                 else {
-                    // 其他所有情况（包括点击模型胶囊）都视为跳转
-                    window.location.href = `./api-room.html?id=${apiId}`;
+                    // ★★★ 核心修改：根据ID判断跳转到哪个页面 ★★★
+                    if (apiId.startsWith('built-in-')) {
+                        // 如果是内置API，跳转到专属页面
+                        window.location.href = `./api-room-builtin.html?id=${apiId}`;
+                    } else {
+                        // 否则，跳转到原来的普通编辑页
+                        window.location.href = `./api-room.html?id=${apiId}`;
+                    }
                 }
             }
         });

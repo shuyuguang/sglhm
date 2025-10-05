@@ -3,39 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>编辑配置</title>
+    <title>编辑内置配置</title>
     
-    <!-- 1. 引入 Font Awesome 图标库 -->
+    <!-- 1. 样式文件和原编辑页完全一样 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <!-- 2. 引入本页专属的全新样式 -->
     <link rel="stylesheet" href="api-room.css">
 
 </head>
 <body>
 
-    <!-- 自定义的全新顶栏 -->
+    <!-- 顶栏：注意，我们已经移除了删除按钮 -->
     <header class="edit-header">
         <div class="header-left">
             <a href="api-management.html" class="btn-back" title="返回">
                 <i class="fa-solid fa-chevron-left"></i>
             </a>
-            <h1 class="header-title">编辑配置</h1>
+            <h1 class="header-title">编辑内置配置</h1>
         </div>
         <div class="header-right">
-            <button class="btn-delete" id="delete-btn" title="删除">
-                <i class="fa-solid fa-trash-can"></i>
-            </button>
             <button class="btn-save" id="save-btn" title="保存">
                 <i class="fa-solid fa-check"></i>
             </button>
         </div>
     </header>
-    <main class="main-content" id="main-content"></main>
+
+    <!-- 主内容区域，表单将被 JS 注入到这里 -->
+    <main class="main-content" id="main-content">
+        <!-- 表单容器 -->
+    </main>
+    
+    <!-- 用于承载所有模态框的容器 -->
     <div id="modals-container"></div>
     
-    <!-- ▼▼▼ 新增点：在这里引入 Dexie 库 ▼▼▼ -->
+    <!-- 依赖库 -->
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     
-    <script src="api-room.js" type="module"></script>
+    <!-- ▼▼▼ 关键：加载我们即将创建的专属 JS 文件 ▼▼▼ -->
+    <script src="api-room-builtin.js" type="module"></script>
 </body>
 </html>

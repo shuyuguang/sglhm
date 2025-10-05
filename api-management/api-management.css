@@ -679,3 +679,13 @@ body:not(.multi-select-active) .card-action-handle:hover {
     padding: 0; /* 移除原有的垂直 padding */
     width: 100%; /* 占满整行 */
 }
+/* 为所有内置 API 设置统一的颜色 */
+.provider-icon.provider-built-in {
+    background-color: #A7CEEA; /* 你的专属颜色 */
+}
+
+/* （可选）让内置卡片在鼠标悬浮时没有拖拽动效，感觉更“固定” */
+.api-config-card.built-in-card:hover {
+    transform: none;
+    box-shadow: none;
+}
