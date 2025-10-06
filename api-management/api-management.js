@@ -481,7 +481,7 @@ async function initializePage() {
 }
 
 createPageLayout({
-    title: '配置',
+    title: '牵引仪',
     contentHtml: apiManagementPageContent,
     modalsHtml: allModalsHtml,
     onFeatherClick: openApiConfigPanel,
