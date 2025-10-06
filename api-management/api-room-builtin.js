@@ -48,7 +48,6 @@ const modelSelectionPanelHtml = `
 </div>
 `;
 
-// ▼▼▼ 修改：更新测试模态框的 HTML 结构 ▼▼▼
 const apiTestPanelHtml = `
 <div class="modal-overlay" id="api-test-overlay">
     <div class="modal-panel api-test-panel">
@@ -137,7 +136,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         testApiOverlay: document.getElementById('api-test-overlay'),
         testApiModelSelect: document.getElementById('test-model-select'),
         closeTestPanelBtn: document.getElementById('close-test-panel-btn'),
-        // ▼▼▼ 新增UI元素 ▼▼▼
         sendTestRequestBtn: document.getElementById('send-test-request-btn'),
         apiTestReport: document.getElementById('api-test-report'),
     };
@@ -152,7 +150,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (ui.testApiBtn) ui.testApiBtn.addEventListener('click', openTestPanel);
     if (ui.testApiOverlay) ui.testApiOverlay.addEventListener('click', (e) => { if (e.target === ui.testApiOverlay) closeTestPanel(); });
     if (ui.closeTestPanelBtn) ui.closeTestPanelBtn.addEventListener('click', closeTestPanel);
-    // ▼▼▼ 新增事件监听 ▼▼▼
     if (ui.sendTestRequestBtn) ui.sendTestRequestBtn.addEventListener('click', handleApiTest);
 
     renderSelectedModels();
@@ -169,7 +166,7 @@ async function handleSave(apiId) {
     window.location.href = './api-management.html';
 }
 
-// ▼▼▼ 新增：核心API测试函数 (与 api-room.js 完全一致) ▼▼▼
+// ▼▼▼ 修改：核心API测试函数 (与 api-room.js 完全一致) ▼▼▼
 async function handleApiTest() {
     const btn = ui.sendTestRequestBtn;
     const btnSpan = btn.querySelector('span');
@@ -183,9 +180,10 @@ async function handleApiTest() {
     const userPath = document.getElementById('api-path').value || '/v1/chat/completions';
     const endpoint = baseUrl + userPath;
 
+    // 1. 更新测试文本
     const testPayload = {
         model: selectedModel,
-        messages: [{ role: 'user', content: '你好' }],
+        messages: [{ role: 'user', content: '你好，很高兴见到你，我是User。' }],
     };
     const sentChars = testPayload.messages[0].content.length;
 
@@ -228,6 +226,7 @@ async function testNonStreaming(endpoint, apiKey, payload) {
     }
 }
 
+// 2. 更新流式测试逻辑
 async function testStreaming(endpoint, apiKey, payload) {
     const startTime = performance.now();
     try {
@@ -243,18 +242,27 @@ async function testStreaming(endpoint, apiKey, payload) {
         }
 
         const reader = response.body.getReader();
-        const firstChunk = await reader.read();
+        await reader.read(); // 读取第一个数据块
         const firstCharLatency = performance.now() - startTime;
 
+        // 持续读取直到数据流结束
         while (!(await reader.read()).done) {}
         
-        return { status: 'success', firstCharLatency: firstCharLatency.toFixed(0) };
+        // 数据流结束后，计算总用时
+        const duration = performance.now() - startTime;
+        
+        return { 
+            status: 'success', 
+            firstCharLatency: firstCharLatency.toFixed(0),
+            duration: duration.toFixed(0) // 返回总用时
+        };
 
     } catch (error) {
         return { status: 'failure', error: error.message, type: error instanceof TypeError ? '网络错误' : 'API错误' };
     }
 }
 
+// 3. 更新报告渲染逻辑
 function renderTestReport(data) {
     const { endpoint, model, sentChars, nonStreamResult, streamResult } = data;
 
@@ -264,9 +272,18 @@ function renderTestReport(data) {
         
         let detailsHtml = '';
         if (result.status === 'success') {
-            const latencyHtml = isStream
-                ? `<div class="report-item"><span class="report-item-label">首字用时</span><span class="report-item-value">${result.firstCharLatency} ms</span></div>`
-                : `<div class="report-item"><span class="report-item-label">请求用时</span><span class="report-item-value">${result.duration} ms</span></div>`;
+            let latencyHtml = '';
+            if (isStream) {
+                // 流式请求，显示“首字”和“用时”
+                latencyHtml = `
+                    <div class="report-item"><span class="report-item-label">首字</span><span class="report-item-value">${result.firstCharLatency} ms</span></div>
+                    <div class="report-item"><span class="report-item-label">用时</span><span class="report-item-value">${result.duration} ms</span></div>
+                `;
+            } else {
+                // 非流式请求，只显示“用时”
+                latencyHtml = `<div class="report-item"><span class="report-item-label">用时</span><span class="report-item-value">${result.duration} ms</span></div>`;
+            }
+
             detailsHtml = `
                 <div class="report-item"><span class="report-item-label">URL</span><span class="report-item-value">${endpoint}</span></div>
                 <div class="report-item"><span class="report-item-label">Model</span><span class="report-item-value">${model}</span></div>
