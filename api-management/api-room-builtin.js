@@ -2,36 +2,32 @@
 
 import { dbStorage } from '../common/db.js';
 
-// 1. 定义一个新的数据库键，专门存储内置API的用户数据（Key和模型）
 const BUILT_IN_API_DATA_KEY = 'built_in_api_data';
 
-// 2. 定义内置API的静态信息（名称、URL等），这是我们的“数据源”
-// ▼▼▼ 1. 在每个API的定义里，新增一个 hint 属性 ▼▼▼
 const BUILT_IN_API_DEFINITIONS = {
     'built-in-deepseek': { 
         name: 'DeepSeek', 
         baseUrl: 'https://api.deepseek.com/v1', 
         path: '/chat/completions',
-        hint: 'DeepSeek官网：https://platform.deepseek.com/usage' // 你以后可以在这里修改内容
+        hint: 'DeepSeek官网：https://platform.deepseek.com/usage'
     },
     'built-in-siliconflow': { 
         name: '硅基流动', 
         baseUrl: 'https://api.siliconflow.cn/v1', 
         path: '/chat/completions',
-        hint: '硅基流动官网：https://m.siliconflow.cn/me/models' // 你以后可以在这里修改内容
+        hint: '硅基流动官网：https://m.siliconflow.cn/me/models'
     },
     'built-in-openrouter': { 
         name: 'OpenRouter', 
         baseUrl: 'https://openrouter.ai/api/v1', 
         path: '/chat/completions',
-        hint: 'OpenRouter官网：https://openrouter.ai/' // 你以后可以在这里修改内容
+        hint: 'OpenRouter官网：https://openrouter.ai/'
     },
 };
 
 let ui = {};
 let currentSelectedModels = [];
 
-// 模型选择面板的 HTML 结构 (和原来一样)
 const modelSelectionPanelHtml = `
 <div class="modal-overlay" id="model-selection-overlay">
     <div class="modal-panel">
@@ -52,30 +48,53 @@ const modelSelectionPanelHtml = `
 </div>
 `;
 
+// ▼▼▼ 修改：更新测试模态框的 HTML 结构 ▼▼▼
+const apiTestPanelHtml = `
+<div class="modal-overlay" id="api-test-overlay">
+    <div class="modal-panel api-test-panel">
+        <div class="modal-header">测试 API</div>
+        <div class="modal-content-container">
+            <div class="test-form-group">
+                <label for="test-model-select">选择一个模型进行测试</label>
+                <select id="test-model-select"></select>
+            </div>
+            <button class="btn-send-test" id="send-test-request-btn">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>发送请求文本</span>
+            </button>
+            <div class="test-form-group">
+                <label>测试报告</label>
+                <div id="api-test-report">
+                    <div class="no-report-message">尚未发送请求文本</div>
+                </div>
+            </div>
+        </div>
+        <div class="sheet-footer">
+            <button class="sheet-btn sheet-btn-cancel" id="close-test-panel-btn">关闭</button>
+        </div>
+    </div>
+</div>
+`;
+
+
 document.addEventListener('DOMContentLoaded', async () => {
-    document.getElementById('modals-container').innerHTML = modelSelectionPanelHtml;
+    document.getElementById('modals-container').innerHTML = modelSelectionPanelHtml + apiTestPanelHtml;
 
     const mainContent = document.getElementById('main-content');
     const params = new URLSearchParams(window.location.search);
     const apiId = params.get('id');
 
-    // 3. 从我们的静态定义中获取基础信息
     const staticConfig = BUILT_IN_API_DEFINITIONS[apiId];
     if (!apiId || !staticConfig) {
         mainContent.innerHTML = '<p class="error-message">错误：未找到指定的内置配置。</p>';
         return;
     }
 
-    // 4. 从数据库中获取该API的用户专属数据（Key和模型）
     const allUserData = await dbStorage.getItem(BUILT_IN_API_DATA_KEY) || {};
-    const userConfig = allUserData[apiId] || {}; // 如果没有，就是个空对象
-
-    // 5. 合并静态数据和用户数据，得到最终的配置
+    const userConfig = allUserData[apiId] || {};
     const config = { ...staticConfig, ...userConfig };
-
     currentSelectedModels = [...(config.model || [])];
 
-    // ▼▼▼ 2. 动态生成提示卡片的 HTML ▼▼▼
     const hintCardHtml = config.hint ? `
         <div class="hint-card">
             <i class="fa-solid fa-circle-info icon"></i>
@@ -86,7 +105,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
     ` : '';
 
-    // ▼▼▼ 3. 将提示卡片 HTML 插入到表单的最上方 ▼▼▼
     const formHtml = `
         <div class="form-wrapper">
             <form class="api-form-container" id="edit-api-form">
@@ -95,7 +113,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="form-group"><label for="api-key">API Key</label><input type="text" id="api-key" placeholder="sk-..." value="${config.apiKey || ''}"></div>
                 <div class="form-group"><label for="api-base-url">API Base URL</label><input type="text" id="api-base-url" value="${config.baseUrl}" readonly></div>
                 <div class="form-group" id="api-path-group"><label for="api-path">API 路径</label><input type="text" id="api-path" value="${config.path}" readonly></div>
-                <div class="form-group-action"><button type="button" class="btn-fetch" id="fetch-models-btn"><i class="fa-solid fa-wand-magic-sparkles"></i><span>拉取模型</span></button></div>
+                <div class="form-group-action">
+                    <button type="button" class="btn-test" id="test-api-btn" title="测试此配置" disabled><i class="fa-solid fa-bolt"></i><span>测试API</span></button>
+                    <button type="button" class="btn-fetch" id="fetch-models-btn"><i class="fa-solid fa-wand-magic-sparkles"></i><span>拉取模型</span></button>
+                </div>
                 <div class="form-group"><label for="selected-models-container">已选模型</label><div id="selected-models-container"></div></div>
             </form>
         </div>
@@ -111,42 +132,186 @@ document.addEventListener('DOMContentLoaded', async () => {
         cancelBtn: document.getElementById('cancel-model-selection'),
         selectedContainer: document.getElementById('selected-models-container'),
         modelSearchInput: document.getElementById('model-search-input'),
-        noModelsFoundMsg: document.getElementById('no-models-found')
+        noModelsFoundMsg: document.getElementById('no-models-found'),
+        testApiBtn: document.getElementById('test-api-btn'),
+        testApiOverlay: document.getElementById('api-test-overlay'),
+        testApiModelSelect: document.getElementById('test-model-select'),
+        closeTestPanelBtn: document.getElementById('close-test-panel-btn'),
+        // ▼▼▼ 新增UI元素 ▼▼▼
+        sendTestRequestBtn: document.getElementById('send-test-request-btn'),
+        apiTestReport: document.getElementById('api-test-report'),
     };
 
-    // 绑定事件，注意没有 handleDelete
     if (ui.saveBtn) ui.saveBtn.addEventListener('click', () => handleSave(apiId));
     if (ui.fetchModelsBtn) ui.fetchModelsBtn.addEventListener('click', fetchAndShowModels);
-    // ... 其他事件绑定和 api-room.js 保持一致
     if (ui.modelOverlay) ui.modelOverlay.addEventListener('click', (e) => { if (e.target === ui.modelOverlay) closeModelPanel(); });
     if (ui.cancelBtn) ui.cancelBtn.addEventListener('click', closeModelPanel);
     if (ui.confirmBtn) ui.confirmBtn.addEventListener('click', handleConfirmSelection);
     if (ui.modelList) { ui.modelList.addEventListener('click', (event) => { const item = event.target.closest('.model-checkbox-item'); if (item) { const checkbox = item.querySelector('input[type="checkbox"]'); if (checkbox) { checkbox.checked = !checkbox.checked; } } }); }
     if (ui.modelSearchInput) { ui.modelSearchInput.addEventListener('input', handleModelSearch); }
+    if (ui.testApiBtn) ui.testApiBtn.addEventListener('click', openTestPanel);
+    if (ui.testApiOverlay) ui.testApiOverlay.addEventListener('click', (e) => { if (e.target === ui.testApiOverlay) closeTestPanel(); });
+    if (ui.closeTestPanelBtn) ui.closeTestPanelBtn.addEventListener('click', closeTestPanel);
+    // ▼▼▼ 新增事件监听 ▼▼▼
+    if (ui.sendTestRequestBtn) ui.sendTestRequestBtn.addEventListener('click', handleApiTest);
 
     renderSelectedModels();
 });
 
-// 7. ★★★ 全新的 handleSave 函数 ★★★
 async function handleSave(apiId) {
-    // 读取整个内置API的用户数据对象
     const allUserData = await dbStorage.getItem(BUILT_IN_API_DATA_KEY) || {};
-
-    // 更新当前这个API的数据
     allUserData[apiId] = {
         apiKey: document.getElementById('api-key').value.trim(),
         model: currentSelectedModels
     };
-
-    // 将整个对象存回数据库
     await dbStorage.setItem(BUILT_IN_API_DATA_KEY, allUserData);
     alert('配置已保存！');
     window.location.href = './api-management.html';
 }
 
+// ▼▼▼ 新增：核心API测试函数 (与 api-room.js 完全一致) ▼▼▼
+async function handleApiTest() {
+    const btn = ui.sendTestRequestBtn;
+    const btnSpan = btn.querySelector('span');
+    btn.disabled = true;
+    btnSpan.textContent = '正在测试...';
+    ui.apiTestReport.innerHTML = '<div class="no-report-message">测试中，请稍候...</div>';
 
-// --- 以下函数和 api-room.js 基本一致，可以直接复用 ---
+    const baseUrl = document.getElementById('api-base-url').value.trim().replace(/\/$/, '');
+    const apiKey = document.getElementById('api-key').value.trim();
+    const selectedModel = ui.testApiModelSelect.value;
+    const userPath = document.getElementById('api-path').value || '/v1/chat/completions';
+    const endpoint = baseUrl + userPath;
 
+    const testPayload = {
+        model: selectedModel,
+        messages: [{ role: 'user', content: '你好' }],
+    };
+    const sentChars = testPayload.messages[0].content.length;
+
+    try {
+        const nonStreamResult = await testNonStreaming(endpoint, apiKey, { ...testPayload, stream: false });
+        const streamResult = await testStreaming(endpoint, apiKey, { ...testPayload, stream: true });
+        
+        renderTestReport({ 
+            endpoint, 
+            model: selectedModel, 
+            sentChars,
+            nonStreamResult, 
+            streamResult 
+        });
+
+    } catch (error) {
+        ui.apiTestReport.innerHTML = `<div class="report-error-details">发生意外错误: ${error.message}</div>`;
+    } finally {
+        btn.disabled = false;
+        btnSpan.textContent = '发送请求文本';
+    }
+}
+
+async function testNonStreaming(endpoint, apiKey, payload) {
+    const startTime = performance.now();
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+            body: JSON.stringify(payload)
+        });
+        const duration = performance.now() - startTime;
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        return { status: 'success', duration: duration.toFixed(0) };
+    } catch (error) {
+        return { status: 'failure', error: error.message, type: error instanceof TypeError ? '网络错误' : 'API错误' };
+    }
+}
+
+async function testStreaming(endpoint, apiKey, payload) {
+    const startTime = performance.now();
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+
+        const reader = response.body.getReader();
+        const firstChunk = await reader.read();
+        const firstCharLatency = performance.now() - startTime;
+
+        while (!(await reader.read()).done) {}
+        
+        return { status: 'success', firstCharLatency: firstCharLatency.toFixed(0) };
+
+    } catch (error) {
+        return { status: 'failure', error: error.message, type: error instanceof TypeError ? '网络错误' : 'API错误' };
+    }
+}
+
+function renderTestReport(data) {
+    const { endpoint, model, sentChars, nonStreamResult, streamResult } = data;
+
+    const renderSection = (title, result, isStream = false) => {
+        const statusIcon = result.status === 'success' ? 'fa-circle-check' : 'fa-circle-xmark';
+        const statusClass = result.status === 'success' ? 'success' : 'error';
+        
+        let detailsHtml = '';
+        if (result.status === 'success') {
+            const latencyHtml = isStream
+                ? `<div class="report-item"><span class="report-item-label">首字用时</span><span class="report-item-value">${result.firstCharLatency} ms</span></div>`
+                : `<div class="report-item"><span class="report-item-label">请求用时</span><span class="report-item-value">${result.duration} ms</span></div>`;
+            detailsHtml = `
+                <div class="report-item"><span class="report-item-label">URL</span><span class="report-item-value">${endpoint}</span></div>
+                <div class="report-item"><span class="report-item-label">Model</span><span class="report-item-value">${model}</span></div>
+                <div class="report-item"><span class="report-item-label">发送字符</span><span class="report-item-value">${sentChars}</span></div>
+                ${latencyHtml}
+            `;
+        } else {
+            detailsHtml = `
+                <div class="report-item"><span class="report-item-label">错误类型</span><span class="report-item-value">${result.type}</span></div>
+                <div class="report-error-details">${result.error}</div>
+            `;
+        }
+
+        return `
+            <div class="report-section">
+                <h4 class="report-title"><i class="fa-solid ${statusIcon} report-status ${statusClass}"></i>${title}</h4>
+                ${detailsHtml}
+            </div>
+        `;
+    };
+
+    ui.apiTestReport.innerHTML = `
+        ${renderSection('非流式请求测试', nonStreamResult, false)}
+        ${renderSection('流式请求测试', streamResult, true)}
+    `;
+}
+
+
+// --- 以下函数与之前版本一致 ---
+function openTestPanel() {
+    if (currentSelectedModels.length === 0) {
+        alert('请先拉取并选择至少一个模型后再进行测试。');
+        return;
+    }
+    if (ui.testApiModelSelect) {
+        ui.testApiModelSelect.innerHTML = currentSelectedModels
+            .map(modelId => `<option value="${modelId}">${modelId}</option>`)
+            .join('');
+    }
+    ui.apiTestReport.innerHTML = '<div class="no-report-message">尚未发送请求文本</div>';
+    ui.testApiOverlay?.classList.add('active');
+}
+function closeTestPanel() {
+    ui.testApiOverlay?.classList.remove('active');
+}
 function renderSelectedModels() {
     if (!ui.selectedContainer) return;
     ui.selectedContainer.innerHTML = '';
@@ -160,10 +325,11 @@ function renderSelectedModels() {
             ui.selectedContainer.appendChild(item);
         });
     }
+    if (ui.testApiBtn) {
+        ui.testApiBtn.disabled = currentSelectedModels.length === 0;
+    }
 }
-
 async function fetchAndShowModels() {
-    // 这个函数从表单读取 readonly 的值，完全没问题
     const baseUrl = document.getElementById('api-base-url').value.trim().replace(/\/$/, '');
     const apiKey = document.getElementById('api-key').value.trim();
     if (!baseUrl || !apiKey) {
@@ -173,12 +339,10 @@ async function fetchAndShowModels() {
     const btnSpan = ui.fetchModelsBtn.querySelector('span');
     ui.fetchModelsBtn.disabled = true;
     btnSpan.textContent = '正在拉取...';
-
     try {
         const modelsPath = document.getElementById('api-path').value.replace(/chat\/completions$/, 'models').replace(/completions$/, 'models');
         const modelsEndpoint = baseUrl + (modelsPath || '/v1/models');
         const response = await fetch(modelsEndpoint, { headers: { 'Authorization': `Bearer ${apiKey}` } });
-
         if (!response.ok) throw new Error(`HTTP ${response.status}: ${await response.text()}`);
         const data = await response.json();
         const models = data.data || data.models || data || [];
@@ -186,7 +350,6 @@ async function fetchAndShowModels() {
             alert('成功连接，但未返回任何模型。');
             return;
         }
-        
         ui.modelList.innerHTML = '';
         models.forEach(model => {
             const modelId = model.id || model.name;
@@ -208,7 +371,6 @@ async function fetchAndShowModels() {
         btnSpan.textContent = '拉取模型';
     }
 }
-
 function handleModelSearch() {
     const searchTerm = ui.modelSearchInput.value.toLowerCase();
     const items = ui.modelList.querySelectorAll('.model-checkbox-item');
@@ -221,17 +383,14 @@ function handleModelSearch() {
     });
     ui.noModelsFoundMsg.style.display = visibleCount === 0 ? 'block' : 'none';
 }
-
 function openModelPanel() {
     if (ui.modelSearchInput) ui.modelSearchInput.value = '';
     handleModelSearch();
     ui.modelOverlay?.classList.add('active');
 }
-
 function closeModelPanel() {
     ui.modelOverlay?.classList.remove('active');
 }
-
 function handleConfirmSelection() {
     const selectedInputs = ui.modelList.querySelectorAll('input[type="checkbox"]:checked');
     currentSelectedModels = Array.from(selectedInputs).map(input => input.value);

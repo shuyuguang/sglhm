@@ -3,7 +3,8 @@
 :root {
   --color-primary: #B9A2E9;
   --color-primary-hover: #a68ed6;
-  --color-success: #4edc84;
+  --color-success: #28a745;
+  --color-danger: #dc3545;
   --color-delete: #f03e3e;
   --color-delete-bg: #ffe3e3;
   --color-delete-hover: #c92a2a;
@@ -65,13 +66,12 @@ body {
     pointer-events: none; transition: color 0.2s ease;
 }
 
-/* ▼▼▼ 修改：将 select 也加入样式规则 ▼▼▼ */
 .form-group input[type="text"],
 .form-group select {
     width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 8px;
     font-size: 1em; color: var(--color-text-dark); background-color: var(--color-bg-light);
     transition: border-color 0.2s, box-shadow 0.2s;
-    -webkit-appearance: none; /* 移除 iOS 默认样式 */
+    -webkit-appearance: none;
     appearance: none;
 }
 .form-group select {
@@ -85,55 +85,61 @@ body {
 .form-group select:focus { 
     outline: none; border-color: var(--color-primary); 
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
 
 .form-group:focus-within label { color: var(--color-primary); }
 
-/* ▼▼▼ 新增：拉取模型按钮的样式 ▼▼▼ */
 .form-group-action {
     display: flex;
-    justify-content: flex-end; /* 按钮靠右 */
-    margin-top: -8px; /* 减少与上方元素的间距 */
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: -8px;
     margin-bottom: 16px;
 }
-.btn-fetch {
+.btn-fetch, .btn-test {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     padding: 10px 16px;
     border: none;
     border-radius: 8px;
-    background-color: var(--color-primary);
     color: white;
     font-size: 0.95em;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
 }
-.btn-fetch:hover {
-    background-color: var(--color-primary-hover);
+.btn-fetch {
+    background-color: var(--color-primary);
+}
+.btn-test {
+    background-color: #7AAFE4;
+}
+.btn-fetch:hover, .btn-test:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
-.btn-fetch:disabled {
+.btn-fetch:hover {
+    background-color: var(--color-primary-hover);
+}
+.btn-test:hover {
+    background-color: #6399D1;
+}
+.btn-fetch:disabled, .btn-test:disabled {
     background-color: #ccc;
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
 }
-.btn-fetch i {
+.btn-fetch i, .btn-test i {
     font-size: 1.1em;
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */
-/* --- 微调：为表单容器增加底部 padding --- */
 .api-form-container {
-    padding-bottom: 8px; /* 增加一点底部空间 */
+    padding-bottom: 8px;
 }
 /* ==========================================================================
    9. MODEL SELECTION PANEL (模型选择面板)
    ========================================================================== */
 
-/* --- 模态框通用样式 (独立于 template.css) --- */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background-color: rgba(0, 0, 0, 0.4);
@@ -149,7 +155,6 @@ body {
 }
 @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
-/* --- 面板内布局 --- */
 .modal-header {
     padding: 16px 20px; border-bottom: 1px solid var(--color-bg-grey);
     font-weight: 600; font-size: 1.1em; color: var(--color-text-dark);
@@ -168,7 +173,6 @@ body {
 .sheet-btn-confirm { background-color: var(--color-primary); color: white; }
 .sheet-btn-confirm:hover { background-color: var(--color-primary-hover); }
 
-/* --- 模型复选框列表 --- */
 .model-checkbox-list { list-style: none; padding: 0; margin: 0; }
 .model-checkbox-item {
     display: flex; align-items: center; padding: 12px 20px;
@@ -178,25 +182,23 @@ body {
 .model-checkbox-item input[type="checkbox"] { display: none; }
 .model-checkbox-item .checkbox-label {
     flex-grow: 1; color: var(--color-text-dark);
-    user-select: none; /* 防止选中文本 */
+    user-select: none;
 }
-/* 找到这个选择器并替换 */
 .custom-checkbox {
     width: 20px;
     height: 20px;
     border: 2px solid #ced4da;
     border-radius: 6px;
-    margin-left: 16px; /* ◀️ 核心修改：从 margin-right 改为 margin-left */
+    margin-left: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
-    flex-shrink: 0; /* 防止复选框被压缩 */
+    flex-shrink: 0;
 }
 .custom-checkbox .fa-check {
     font-size: 12px; color: white; transform: scale(0); transition: transform 0.2s ease;
 }
-/* 选中状态 */
 .model-checkbox-item input[type="checkbox"]:checked ~ .custom-checkbox {
     background-color: var(--color-primary);
     border-color: var(--color-primary);
@@ -206,41 +208,31 @@ body {
 }
 
 /* ==========================================================================
-   10. SELECTED MODEL LIST (已选模型列表) - 全新样式
+   10. SELECTED MODEL LIST (已选模型列表)
    ========================================================================== */
 
-/* 这是外面的大框框 */
 #selected-models-container {
-    /* 1. 借用输入框的核心样式 */
     width: 100%;
     padding: 12px;
     border: 1px solid #ced4da;
     border-radius: 8px;
     background-color: var(--color-bg-light);
     transition: border-color 0.2s, box-shadow 0.2s;
-    min-height: 49px; /* 与输入框高度保持一致 */
-    
-    /* 2. 移除 flex 布局，让内部的 div 自然地垂直排列 */
+    min-height: 49px;
 }
-
-/* 当父级 .form-group 获得焦点时，让我们的容器也显示高亮边框 */
 .form-group:focus-within #selected-models-container {
     border-color: var(--color-primary);
 }
-
-/* 这是框框里面的每一个模型名称 */
 .model-list-item {
-    padding: 4px 0; /* 增加一点垂直间距，让列表不拥挤 */
-    font-size: 1em; /* 字体大小与输入框内文字一致 */
+    padding: 4px 0;
+    font-size: 1em;
     color: var(--color-text-dark);
-    line-height: 1.5; /* 增加行高，提升可读性 */
+    line-height: 1.5;
 }
-
-/* 微调“未选择模型”的提示文本 */
 #selected-models-container .no-models-selected {
     padding: 0;
     width: 100%;
-    line-height: 1.5; /* 确保高度感一致 */
+    line-height: 1.5;
 }
 
 /* ==========================================================================
@@ -248,7 +240,7 @@ body {
    ========================================================================== */
 
 .search-bar-container {
-    position: relative; /* 为图标定位提供上下文 */
+    position: relative;
     padding: 12px 20px;
     border-bottom: 1px solid var(--color-bg-grey);
 }
@@ -259,12 +251,12 @@ body {
     top: 50%;
     transform: translateY(-50%);
     color: var(--color-text-light);
-    pointer-events: none; /* 让图标不影响点击输入框 */
+    pointer-events: none;
 }
 
 #model-search-input {
     width: 100%;
-    padding: 10px 12px 10px 34px; /* 左侧内边距为图标留出空间 */
+    padding: 10px 12px 10px 34px;
     border: 1px solid #ced4da;
     border-radius: 8px;
     font-size: 1em;
@@ -279,52 +271,165 @@ body {
     box-shadow: 0 0 0 3px rgba(185, 162, 233, 0.25);
 }
 
-/* 隐藏 Webkit 浏览器中搜索框默认的清除按钮 */
 #model-search-input::-webkit-search-cancel-button {
     -webkit-appearance: none;
     appearance: none;
 }
-
-/* “未找到模型”的消息样式 */
 .no-models-found-message {
-    display: none; /* 默认隐藏 */
+    display: none;
     text-align: center;
     padding: 30px 16px;
     color: var(--color-text-light);
 }
-/* --- 提示卡片样式 --- */
 .hint-card {
     margin-bottom: 24px;
     padding: 16px;
-    background-color: #f3eefc; /* 淡紫色背景，呼应主题色 */
-    border-left: 4px solid var(--color-primary);
+    background-color: #e8f5e9;
+    border-left: 4px solid #4CAF50;
     border-radius: 8px;
     display: flex;
     gap: 12px;
-    align-items: flex-start; /* 图标和文字顶部对齐 */
+    align-items: flex-start;
 }
-
 .hint-card .icon {
     font-size: 1.2em;
-    color: var(--color-primary);
-    margin-top: 2px; /* 微调图标位置，使其更协调 */
+    color: #4CAF50;
+    margin-top: 2px;
     flex-shrink: 0;
 }
-
-.hint-text-content {
-    flex: 1;
-}
-
+.hint-text-content { flex: 1; }
 .hint-title {
     font-weight: 600;
     margin: 0 0 4px 0;
     color: var(--color-text-dark);
     font-size: 1em;
 }
-
 .hint-content {
     margin: 0;
     font-size: 0.95em;
     color: var(--color-text-medium);
     line-height: 1.5;
 }
+
+/* ▼▼▼ 新增/修改：API 测试模态框样式 ▼▼▼ */
+.api-test-panel .modal-content-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.test-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--color-text-medium);
+}
+.test-form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 1em;
+    color: var(--color-text-dark);
+    background-color: var(--color-bg-light);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    padding-right: 2.5rem;
+}
+.test-form-group select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+.btn-send-test {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--color-primary);
+    color: white;
+    font-size: 1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.btn-send-test:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
+}
+.btn-send-test:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+#api-test-report {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    min-height: 100px;
+    font-size: 0.9em;
+    color: var(--color-text-medium);
+    line-height: 1.6;
+}
+.no-report-message {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    min-height: 74px;
+}
+.report-section {
+    margin-bottom: 12px;
+}
+.report-section:last-child {
+    margin-bottom: 0;
+}
+.report-title {
+    font-weight: 600;
+    color: var(--color-text-dark);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.report-status.success {
+    color: var(--color-success);
+}
+.report-status.error {
+    color: var(--color-danger);
+}
+.report-item {
+    display: flex;
+    margin-bottom: 4px;
+}
+.report-item-label {
+    width: 80px;
+    flex-shrink: 0;
+    color: var(--color-text-light);
+}
+.report-item-value {
+    color: var(--color-text-dark);
+    word-break: break-all;
+}
+.report-error-details {
+    margin-top: 8px;
+    padding: 8px;
+    background-color: #fff5f5;
+    border-radius: 4px;
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-size: 0.9em;
+    color: #c92a2a;
+}
+/* ▲▲▲ 新增/修改结束 ▲▲▲ */

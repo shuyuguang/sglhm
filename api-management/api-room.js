@@ -1,18 +1,16 @@
 // api-room.js 
 
-import { dbStorage } from '../common/db.js'; // ▼▼▼ 1. 导入我们的 dbStorage ▼▼▼
+import { dbStorage } from '../common/db.js';
 
 const API_CONFIGS_KEY = 'api_configs_text';
 let ui = {};
 let currentSelectedModels = [];
 
-// ▼▼▼ 1. 新增一个“提示字典”，专门存放这两个卡片的提示信息 ▼▼▼
 const HINT_MESSAGES = {
-    'default-openai': '兼容OpenAI、反代轮询、New API、One API、Veloera等格式', // 你以后可以在这里修改内容
-    'default-google': 'Google API官网：https://aistudio.google.com/app/apikey'  // 你以后可以在这里修改内容
+    'default-openai': '兼容OpenAI、反代轮询、New API、One API、Veloera等格式',
+    'default-google': 'Google API官网：https://aistudio.google.com/app/apikey'
 };
 
-// ... (modelSelectionPanelHtml 定义保持不变) ...
 const modelSelectionPanelHtml = `
 <div class="modal-overlay" id="model-selection-overlay">
     <div class="modal-panel">
@@ -27,8 +25,36 @@ const modelSelectionPanelHtml = `
 </div>
 `;
 
+// ▼▼▼ 修改：更新测试模态框的 HTML 结构 ▼▼▼
+const apiTestPanelHtml = `
+<div class="modal-overlay" id="api-test-overlay">
+    <div class="modal-panel api-test-panel">
+        <div class="modal-header">测试 API</div>
+        <div class="modal-content-container">
+            <div class="test-form-group">
+                <label for="test-model-select">选择一个模型进行测试</label>
+                <select id="test-model-select"></select>
+            </div>
+            <button class="btn-send-test" id="send-test-request-btn">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>发送请求文本</span>
+            </button>
+            <div class="test-form-group">
+                <label>测试报告</label>
+                <div id="api-test-report">
+                    <div class="no-report-message">尚未发送请求文本</div>
+                </div>
+            </div>
+        </div>
+        <div class="sheet-footer">
+            <button class="sheet-btn sheet-btn-cancel" id="close-test-panel-btn">关闭</button>
+        </div>
+    </div>
+</div>
+`;
+
 document.addEventListener('DOMContentLoaded', async () => {
-    document.getElementById('modals-container').innerHTML = modelSelectionPanelHtml;
+    document.getElementById('modals-container').innerHTML = modelSelectionPanelHtml + apiTestPanelHtml;
 
     const mainContent = document.getElementById('main-content');
     const params = new URLSearchParams(window.location.search);
@@ -46,7 +72,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     currentSelectedModels = [...(config.model || [])];
 
-    // ▼▼▼ 2. 从我们的“提示字典”里查找对应的提示文本 ▼▼▼
     const hintText = HINT_MESSAGES[apiId];
     const hintCardHtml = hintText ? `
         <div class="hint-card">
@@ -58,7 +83,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
     ` : '';
 
-    // ▼▼▼ 3. 将提示卡片 HTML 插入到表单的最上方 ▼▼▼
     const formHtml = `
         <div class="form-wrapper">
             <form class="api-form-container" id="edit-api-form">
@@ -67,14 +91,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="form-group"><label for="api-key">API Key</label><input type="text" id="api-key" value="${config.apiKey || ''}"></div>
                 <div class="form-group"><label for="api-base-url">API Base URL</label><input type="text" id="api-base-url" value="${config.baseUrl || ''}"></div>
                 ${config.provider === 'openai' ? `<div class="form-group" id="api-path-group"><label for="api-path">API 路径</label><input type="text" id="api-path" value="${config.path || ''}"></div>` : ''}
-                <div class="form-group-action"><button type="button" class="btn-fetch" id="fetch-models-btn"><i class="fa-solid fa-wand-magic-sparkles"></i><span>拉取模型</span></button></div>
+                <div class="form-group-action">
+                    <button type="button" class="btn-test" id="test-api-btn" title="测试此配置" disabled><i class="fa-solid fa-bolt"></i><span>测试API</span></button>
+                    <button type="button" class="btn-fetch" id="fetch-models-btn"><i class="fa-solid fa-wand-magic-sparkles"></i><span>拉取模型</span></button>
+                </div>
                 <div class="form-group"><label for="selected-models-container">已选模型</label><div id="selected-models-container"></div></div>
             </form>
         </div>
     `;
     mainContent.innerHTML = formHtml;
 
-    // 缓存所有需要操作的 DOM 元素
     ui = {
         saveBtn: document.getElementById('save-btn'),
         deleteBtn: document.getElementById('delete-btn'),
@@ -85,10 +111,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         cancelBtn: document.getElementById('cancel-model-selection'),
         selectedContainer: document.getElementById('selected-models-container'),
         modelSearchInput: document.getElementById('model-search-input'),
-        noModelsFoundMsg: document.getElementById('no-models-found')
+        noModelsFoundMsg: document.getElementById('no-models-found'),
+        testApiBtn: document.getElementById('test-api-btn'),
+        testApiOverlay: document.getElementById('api-test-overlay'),
+        testApiModelSelect: document.getElementById('test-model-select'),
+        closeTestPanelBtn: document.getElementById('close-test-panel-btn'),
+        // ▼▼▼ 新增UI元素 ▼▼▼
+        sendTestRequestBtn: document.getElementById('send-test-request-btn'),
+        apiTestReport: document.getElementById('api-test-report'),
     };
 
-    // 绑定所有事件
     if (ui.saveBtn) ui.saveBtn.addEventListener('click', () => handleSave(apiId));
     if (ui.deleteBtn) ui.deleteBtn.addEventListener('click', () => handleDelete(apiId, config.name));
     if (ui.fetchModelsBtn) ui.fetchModelsBtn.addEventListener('click', fetchAndShowModels);
@@ -97,29 +129,177 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (ui.confirmBtn) ui.confirmBtn.addEventListener('click', handleConfirmSelection);
     if (ui.modelList) { ui.modelList.addEventListener('click', (event) => { const item = event.target.closest('.model-checkbox-item'); if (item) { const checkbox = item.querySelector('input[type="checkbox"]'); if (checkbox) { checkbox.checked = !checkbox.checked; } } }); }
     if (ui.modelSearchInput) { ui.modelSearchInput.addEventListener('input', handleModelSearch); }
+    if (ui.testApiBtn) ui.testApiBtn.addEventListener('click', openTestPanel);
+    if (ui.testApiOverlay) ui.testApiOverlay.addEventListener('click', (e) => { if (e.target === ui.testApiOverlay) closeTestPanel(); });
+    if (ui.closeTestPanelBtn) ui.closeTestPanelBtn.addEventListener('click', closeTestPanel);
+    // ▼▼▼ 新增事件监听 ▼▼▼
+    if (ui.sendTestRequestBtn) ui.sendTestRequestBtn.addEventListener('click', handleApiTest);
+
 
     renderSelectedModels();
 });
 
+function openTestPanel() {
+    if (currentSelectedModels.length === 0) {
+        alert('请先拉取并选择至少一个模型后再进行测试。');
+        return;
+    }
+    if (ui.testApiModelSelect) {
+        ui.testApiModelSelect.innerHTML = currentSelectedModels
+            .map(modelId => `<option value="${modelId}">${modelId}</option>`)
+            .join('');
+    }
+    // 重置报告区域
+    ui.apiTestReport.innerHTML = '<div class="no-report-message">尚未发送请求文本</div>';
+    ui.testApiOverlay?.classList.add('active');
+}
+
+function closeTestPanel() {
+    ui.testApiOverlay?.classList.remove('active');
+}
+
+// ▼▼▼ 新增：核心API测试函数 ▼▼▼
+async function handleApiTest() {
+    const btn = ui.sendTestRequestBtn;
+    const btnSpan = btn.querySelector('span');
+    btn.disabled = true;
+    btnSpan.textContent = '正在测试...';
+    ui.apiTestReport.innerHTML = '<div class="no-report-message">测试中，请稍候...</div>';
+
+    const baseUrl = document.getElementById('api-base-url').value.trim().replace(/\/$/, '');
+    const apiKey = document.getElementById('api-key').value.trim();
+    const selectedModel = ui.testApiModelSelect.value;
+    const userPath = (document.getElementById('api-path') || {}).value || '/v1/chat/completions';
+    const endpoint = baseUrl + userPath;
+
+    const testPayload = {
+        model: selectedModel,
+        messages: [{ role: 'user', content: '你好' }],
+    };
+    const sentChars = testPayload.messages[0].content.length;
+
+    try {
+        const nonStreamResult = await testNonStreaming(endpoint, apiKey, { ...testPayload, stream: false });
+        const streamResult = await testStreaming(endpoint, apiKey, { ...testPayload, stream: true });
+        
+        renderTestReport({ 
+            endpoint, 
+            model: selectedModel, 
+            sentChars,
+            nonStreamResult, 
+            streamResult 
+        });
+
+    } catch (error) {
+        ui.apiTestReport.innerHTML = `<div class="report-error-details">发生意外错误: ${error.message}</div>`;
+    } finally {
+        btn.disabled = false;
+        btnSpan.textContent = '发送请求文本';
+    }
+}
+
+async function testNonStreaming(endpoint, apiKey, payload) {
+    const startTime = performance.now();
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+            body: JSON.stringify(payload)
+        });
+        const duration = performance.now() - startTime;
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        return { status: 'success', duration: duration.toFixed(0) };
+    } catch (error) {
+        return { status: 'failure', error: error.message, type: error instanceof TypeError ? '网络错误' : 'API错误' };
+    }
+}
+
+async function testStreaming(endpoint, apiKey, payload) {
+    const startTime = performance.now();
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+
+        const reader = response.body.getReader();
+        const firstChunk = await reader.read();
+        const firstCharLatency = performance.now() - startTime;
+
+        // 继续读取并丢弃剩余部分，以完成请求
+        while (!(await reader.read()).done) {}
+        
+        return { status: 'success', firstCharLatency: firstCharLatency.toFixed(0) };
+
+    } catch (error) {
+        return { status: 'failure', error: error.message, type: error instanceof TypeError ? '网络错误' : 'API错误' };
+    }
+}
+
+function renderTestReport(data) {
+    const { endpoint, model, sentChars, nonStreamResult, streamResult } = data;
+
+    const renderSection = (title, result, isStream = false) => {
+        const statusIcon = result.status === 'success' ? 'fa-circle-check' : 'fa-circle-xmark';
+        const statusClass = result.status === 'success' ? 'success' : 'error';
+        
+        let detailsHtml = '';
+        if (result.status === 'success') {
+            const latencyHtml = isStream
+                ? `<div class="report-item"><span class="report-item-label">首字用时</span><span class="report-item-value">${result.firstCharLatency} ms</span></div>`
+                : `<div class="report-item"><span class="report-item-label">请求用时</span><span class="report-item-value">${result.duration} ms</span></div>`;
+            detailsHtml = `
+                <div class="report-item"><span class="report-item-label">URL</span><span class="report-item-value">${endpoint}</span></div>
+                <div class="report-item"><span class="report-item-label">Model</span><span class="report-item-value">${model}</span></div>
+                <div class="report-item"><span class="report-item-label">发送字符</span><span class="report-item-value">${sentChars}</span></div>
+                ${latencyHtml}
+            `;
+        } else {
+            detailsHtml = `
+                <div class="report-item"><span class="report-item-label">错误类型</span><span class="report-item-value">${result.type}</span></div>
+                <div class="report-error-details">${result.error}</div>
+            `;
+        }
+
+        return `
+            <div class="report-section">
+                <h4 class="report-title"><i class="fa-solid ${statusIcon} report-status ${statusClass}"></i>${title}</h4>
+                ${detailsHtml}
+            </div>
+        `;
+    };
+
+    ui.apiTestReport.innerHTML = `
+        ${renderSection('非流式请求测试', nonStreamResult, false)}
+        ${renderSection('流式请求测试', streamResult, true)}
+    `;
+}
+
+// --- 以下函数保持不变 ---
 function handleModelSearch() {
     const searchTerm = ui.modelSearchInput.value.toLowerCase();
     const items = ui.modelList.querySelectorAll('.model-checkbox-item');
     let visibleCount = 0;
-
     items.forEach(item => {
         const label = item.querySelector('.checkbox-label');
         if (label) {
             const modelName = label.textContent.toLowerCase();
             const isVisible = modelName.includes(searchTerm);
             item.style.display = isVisible ? 'flex' : 'none';
-            if (isVisible) {
-                visibleCount++;
-            }
+            if (isVisible) visibleCount++;
         }
     });
     ui.noModelsFoundMsg.style.display = visibleCount === 0 ? 'block' : 'none';
 }
-
 function renderSelectedModels() {
     if (!ui.selectedContainer) return;
     ui.selectedContainer.innerHTML = '';
@@ -133,27 +313,24 @@ function renderSelectedModels() {
             ui.selectedContainer.appendChild(item);
         });
     }
-}
-
-function openModelPanel() {
-    if (ui.modelSearchInput) {
-        ui.modelSearchInput.value = '';
+    if (ui.testApiBtn) {
+        ui.testApiBtn.disabled = currentSelectedModels.length === 0;
     }
+}
+function openModelPanel() {
+    if (ui.modelSearchInput) ui.modelSearchInput.value = '';
     handleModelSearch();
     ui.modelOverlay?.classList.add('active');
 }
-
 function closeModelPanel() {
     ui.modelOverlay?.classList.remove('active');
 }
-
 function handleConfirmSelection() {
     const selectedInputs = ui.modelList.querySelectorAll('input[type="checkbox"]:checked');
     currentSelectedModels = Array.from(selectedInputs).map(input => input.value);
     renderSelectedModels();
     closeModelPanel();
 }
-
 async function fetchAndShowModels() {
     const baseUrl = document.getElementById('api-base-url').value.trim().replace(/\/$/, '');
     const apiKey = document.getElementById('api-key').value.trim();
@@ -161,25 +338,21 @@ async function fetchAndShowModels() {
         alert('请先填写 API Base URL 和 API Key！');
         return;
     }
-
     const params = new URLSearchParams(window.location.search);
     const apiId = params.get('id');
-    const allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || []; // 从 Dexie 读取
+    const allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
     const config = allConfigs.find(c => c.id == apiId);
     if (!config) {
         alert('错误：无法找到当前配置信息。');
         return;
     }
-
     const provider = config.provider;
     const btnSpan = ui.fetchModelsBtn.querySelector('span');
     ui.fetchModelsBtn.disabled = true;
     btnSpan.textContent = '正在拉取...';
-
     try {
         let response;
         let modelsEndpoint = '';
-
         if (provider === 'google') {
             modelsEndpoint = `${baseUrl}/models?key=${apiKey}`;
             response = await fetch(modelsEndpoint);
@@ -189,25 +362,20 @@ async function fetchAndShowModels() {
             modelsEndpoint = baseUrl + (modelsPath || '/v1/models');
             response = await fetch(modelsEndpoint, { headers: { 'Authorization': `Bearer ${apiKey}` } });
         }
-
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${await response.text()}`);
         }
-
         const data = await response.json();
         const models = data.data || data.models || data || [];
-
         if (!Array.isArray(models) || models.length === 0) {
             alert('成功连接，但未返回任何模型。');
             return;
         }
-        
         ui.modelList.innerHTML = '';
         models.forEach(model => {
             const modelId = model.id || model.name;
             const modelName = model.displayName || model.id || model.name;
             const isChecked = currentSelectedModels.includes(modelId);
-
             const item = document.createElement('li');
             item.className = 'model-checkbox-item';
             item.innerHTML = `
@@ -217,9 +385,7 @@ async function fetchAndShowModels() {
             `;
             ui.modelList.appendChild(item);
         });
-        
         openModelPanel();
-
     } catch (error) {
         alert(`模型拉取失败！\n\n${error.message}`);
     } finally {
@@ -227,35 +393,30 @@ async function fetchAndShowModels() {
         btnSpan.textContent = '拉取模型';
     }
 }
-
 async function handleSave(apiId) {
-    const allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || []; // 从 Dexie 读取
+    const allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
     const configIndex = allConfigs.findIndex(c => c.id == apiId);
-
     if (configIndex > -1) {
         allConfigs[configIndex].name = document.getElementById('api-name').value.trim();
         allConfigs[configIndex].apiKey = document.getElementById('api-key').value.trim();
         allConfigs[configIndex].baseUrl = document.getElementById('api-base-url').value.trim();
         allConfigs[configIndex].model = currentSelectedModels;
-
         const apiPathInput = document.getElementById('api-path');
         if (apiPathInput) {
             allConfigs[configIndex].path = apiPathInput.value.trim();
         }
-
-        await dbStorage.setItem(API_CONFIGS_KEY, allConfigs); // 写入 Dexie
+        await dbStorage.setItem(API_CONFIGS_KEY, allConfigs);
         alert('配置已保存！');
         window.location.href = './api-management.html';
     } else {
         alert('错误：找不到要保存的配置。');
     }
 }
-
 async function handleDelete(apiId, apiName) {
     if (confirm(`确定要删除配置 "${apiName}" 吗？`)) {
-        let allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || []; // 从 Dexie 读取
+        let allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
         let updatedConfigs = allConfigs.filter(c => c.id != apiId);
-        await dbStorage.setItem(API_CONFIGS_KEY, updatedConfigs); // 写入 Dexie
+        await dbStorage.setItem(API_CONFIGS_KEY, updatedConfigs);
         window.location.href = './api-management.html';
     }
 }
