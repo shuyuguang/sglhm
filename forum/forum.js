@@ -99,7 +99,7 @@ const forumPageContent = `
  * 这个函数将在页面HTML渲染完毕后被调用。
  */
 function initializePage() {
-    console.log("Felotus论坛页面加载完成，开始绑定事件和同步数据。");
+    console.log("喵言咪语页面加载完成，开始绑定事件和同步数据。");
 
     // 3a. 同步"我"页面的个人资料
     syncForumProfile();
@@ -221,7 +221,7 @@ function initializeFab() {
 // 4. 脚本的入口：调用 createPageLayout 来构建页面
 //    并将所有初始化逻辑作为 onPageLoad 回调传入
 createPageLayout({
-    title: 'Felotus论坛',
+    title: '喵言咪语',
     contentHtml: forumPageContent,
     onPageLoad: initializePage  // 关键：确保在HTML渲染后再执行初始化
 });
