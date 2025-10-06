@@ -154,7 +154,6 @@ function closeTestPanel() {
     ui.testApiOverlay?.classList.remove('active');
 }
 
-// ▼▼▼ 修改：核心API测试函数 ▼▼▼
 async function handleApiTest() {
     const btn = ui.sendTestRequestBtn;
     const btnSpan = btn.querySelector('span');
@@ -168,7 +167,6 @@ async function handleApiTest() {
     const userPath = (document.getElementById('api-path') || {}).value || '/v1/chat/completions';
     const endpoint = baseUrl + userPath;
 
-    // 1. 更新测试文本
     const testPayload = {
         model: selectedModel,
         messages: [{ role: 'user', content: '你好，很高兴见到你，我是User。' }],
@@ -214,7 +212,6 @@ async function testNonStreaming(endpoint, apiKey, payload) {
     }
 }
 
-// 2. 更新流式测试逻辑
 async function testStreaming(endpoint, apiKey, payload) {
     const startTime = performance.now();
     try {
@@ -230,19 +227,17 @@ async function testStreaming(endpoint, apiKey, payload) {
         }
 
         const reader = response.body.getReader();
-        await reader.read(); // 读取第一个数据块
+        await reader.read();
         const firstCharLatency = performance.now() - startTime;
 
-        // 持续读取直到数据流结束
         while (!(await reader.read()).done) {}
         
-        // 数据流结束后，计算总用时
         const duration = performance.now() - startTime;
 
         return { 
             status: 'success', 
             firstCharLatency: firstCharLatency.toFixed(0),
-            duration: duration.toFixed(0) // 返回总用时
+            duration: duration.toFixed(0)
         };
 
     } catch (error) {
@@ -250,7 +245,6 @@ async function testStreaming(endpoint, apiKey, payload) {
     }
 }
 
-// 3. 更新报告渲染逻辑
 function renderTestReport(data) {
     const { endpoint, model, sentChars, nonStreamResult, streamResult } = data;
 
@@ -262,13 +256,11 @@ function renderTestReport(data) {
         if (result.status === 'success') {
             let latencyHtml = '';
             if (isStream) {
-                // 流式请求，显示“首字”和“用时”
                 latencyHtml = `
                     <div class="report-item"><span class="report-item-label">首字</span><span class="report-item-value">${result.firstCharLatency} ms</span></div>
                     <div class="report-item"><span class="report-item-label">用时</span><span class="report-item-value">${result.duration} ms</span></div>
                 `;
             } else {
-                // 非流式请求，只显示“用时”
                 latencyHtml = `<div class="report-item"><span class="report-item-label">用时</span><span class="report-item-value">${result.duration} ms</span></div>`;
             }
 
@@ -298,7 +290,7 @@ function renderTestReport(data) {
         ${renderSection('流式请求测试', streamResult, true)}
     `;
 }
-// --- 以下函数保持不变 ---
+
 function handleModelSearch() {
     const searchTerm = ui.modelSearchInput.value.toLowerCase();
     const items = ui.modelList.querySelectorAll('.model-checkbox-item');
@@ -407,6 +399,8 @@ async function fetchAndShowModels() {
         btnSpan.textContent = '拉取模型';
     }
 }
+
+// ▼▼▼ 修改：移除了 alert 弹窗 ▼▼▼
 async function handleSave(apiId) {
     const allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
     const configIndex = allConfigs.findIndex(c => c.id == apiId);
@@ -420,12 +414,14 @@ async function handleSave(apiId) {
             allConfigs[configIndex].path = apiPathInput.value.trim();
         }
         await dbStorage.setItem(API_CONFIGS_KEY, allConfigs);
-        alert('配置已保存！');
+        // alert('配置已保存！'); // <-- 已移除此行
         window.location.href = './api-management.html';
     } else {
         alert('错误：找不到要保存的配置。');
     }
 }
+// ▲▲▲ 修改结束 ▲▲▲
+
 async function handleDelete(apiId, apiName) {
     if (confirm(`确定要删除配置 "${apiName}" 吗？`)) {
         let allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
