@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const staticConfig = BUILT_IN_API_DEFINITIONS[apiId];
     if (!apiId || !staticConfig) {
-        mainContent.innerHTML = '<p class="error-message">错误：未找到指定的内置配置。</p>';
+        mainContent.innerHTML = '<p class="error-message">错误：未找到指定的内置牵引仪。</p>';
         return;
     }
 

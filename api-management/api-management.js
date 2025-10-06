@@ -24,8 +24,8 @@ const apiManagementPageContent = `
         <main class="content-body">
             <div class="tabs-content">
                 <div id="text" class="tab-pane active"></div>
-                <div id="image" class="tab-pane"><p>图片 API 配置区。</p></div>
-                <div id="voice" class="tab-pane"><p>语音 API 配置区。</p></div>
+                <div id="image" class="tab-pane"><p>图片 API 配置。</p></div>
+                <div id="voice" class="tab-pane"><p>语音 API 配置。</p></div>
             </div>
         </main>
     </div>
@@ -56,8 +56,8 @@ const apiConfigPanelHtml = `
                     <div class="form-group" id="api-path-group"><label for="api-path">API 路径</label><input type="text" id="api-path" value="/v1/chat/completions"></div>
                 </form>
             </div>
-            <div class="modal-tab-content" id="image-panel-content"><p class="no-char-message">图片 API 配置区 (待开发)</p></div>
-            <div class="modal-tab-content" id="voice-panel-content"><p class="no-char-message">语音 API 配置区 (待开发)</p></div>
+            <div class="modal-tab-content" id="image-panel-content"><p class="no-char-message">图片 API 配置 (待开发)</p></div>
+            <div class="modal-tab-content" id="voice-panel-content"><p class="no-char-message">语音 API 配置 (待开发)</p></div>
         </div>
         <div class="sheet-footer">
             <button class="sheet-btn sheet-btn-cancel" id="cancel-panel-btn">取消</button>
@@ -164,7 +164,7 @@ async function renderApiCards() {
     if (!container) return;
 
     if (allConfigs.length === 0) {
-        container.innerHTML = '<p>这里是【文本】的主配置区，还没有添加任何 API。</p>';
+        container.innerHTML = '<p>这里是【文本】的主配置，还没有添加任何 API。</p>';
     } else {
         container.innerHTML = allConfigs.map(config => {
             const providerInitial = config.isBuiltIn 
