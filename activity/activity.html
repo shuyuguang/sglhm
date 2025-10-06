@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>活动</title>
+    <title>动态广场</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="../common/template.css">
 
@@ -63,9 +63,9 @@
 
         document.addEventListener('DOMContentLoaded', () => {
 
-            const activityPageContent = `<p>这里是活动页面</p>`;
+            const activityPageContent = `<p>这里是动态广场页面</p>`;
             const handleFeatherClick = () => {
-                console.log('活动页面的羽毛笔被点击，但当前无功能。');
+                console.log('动态广场页面的羽毛笔被点击，但当前无功能。');
             };
 
             const initializePageSpecificFeatures = () => {
@@ -76,7 +76,7 @@
                 const tooltip = document.createElement('div');
                 tooltip.id = 'help-tooltip';
                 tooltip.className = 'help-tooltip';
-                tooltip.innerHTML = `<p>这里是<strong>活动页面</strong>的专属帮助提示，介绍活动相关功能。</p>`;
+                tooltip.innerHTML = `<p>这里是<strong>动态广场页面</strong>的专属帮助提示，介绍动态广场相关功能。</p>`;
                 
                 headerActions.appendChild(tooltip);
 
@@ -94,7 +94,7 @@
 
             // 2. 现在可以正常调用 createPageLayout 了
             createPageLayout({
-                title: '活动',
+                title: '动态广场',
                 contentHtml: activityPageContent,
                 onFeatherClick: handleFeatherClick,
                 onPageLoad: initializePageSpecificFeatures
