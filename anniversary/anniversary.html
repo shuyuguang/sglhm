@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>纪念日</title>
+    <title>往昔回声</title>
     
     <!-- 引入公共资源 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -23,20 +23,20 @@
 
         document.addEventListener('DOMContentLoaded', () => {
 
-            // 定义“纪念日”页面的专属内容 (不变)
+            // 定义“往昔回声”页面的专属内容 (不变)
             const anniversaryPageContent = `
-                <p>这里是纪念日页面</p>
+                <p>这里是往昔回声页面</p>
             `;
 
-            // 定义“纪念日”页面羽毛笔按钮的专属功能 (不变)
+            // 定义“往昔回声”页面羽毛笔按钮的专属功能 (不变)
             const handleAnniversaryFeatherClick = () => {
-                console.log('纪念日页面的羽毛笔被点击，准备添加新的纪念日。');
-                alert('“新增纪念日”功能正在开发中！');
+                console.log('往昔回声页面的羽毛笔被点击，准备添加新的往昔回声。');
+                alert('“新增往昔回声”功能正在开发中！');
             };
 
             // 调用 createPageLayout 生成页面 (现在可以正常调用了)
             createPageLayout({
-                title: '纪念日',
+                title: '往昔回声',
                 contentHtml: anniversaryPageContent,
                 onFeatherClick: handleAnniversaryFeatherClick
             });
