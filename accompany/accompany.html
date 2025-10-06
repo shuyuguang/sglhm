@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>陪伴</title>
+    <title>共栖小筑</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="../common/template.css">
@@ -21,20 +21,20 @@
 
         document.addEventListener('DOMContentLoaded', () => {
 
-            // 2. 定义“陪伴”页面的专属内容 (这部分不变)
+            // 2. 定义“共栖小筑”页面的专属内容 (这部分不变)
             const accompanyPageContent = `
-                <p>这里是陪伴页面</p>
+                <p>这里是共栖小筑页面</p>
             `;
 
-            // 3. 定义“陪伴”页面羽毛笔按钮的专属功能 (这部分不变)
+            // 3. 定义“共栖小筑”页面羽毛笔按钮的专属功能 (这部分不变)
             const handleAccompanyFeatherClick = () => {
-                console.log('陪伴页面的羽毛笔被点击，准备开始新的陪伴记录。');
-                alert('“新增陪伴记录”功能正在开发中！');
+                console.log('共栖小筑页面的羽毛笔被点击，准备开始新的共栖小筑记录。');
+                alert('“新增共栖小筑记录”功能正在开发中！');
             };
 
             // 4. 调用 createPageLayout 生成页面 (现在可以正常调用了)
             createPageLayout({
-                title: '陪伴',
+                title: '共栖小筑',
                 contentHtml: accompanyPageContent,
                 onFeatherClick: handleAccompanyFeatherClick
             });
