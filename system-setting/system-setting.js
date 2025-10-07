@@ -41,7 +41,7 @@ const systemSettingPageContent = `
 // 定义帮助框的 HTML 内容
 const systemSettingModalsHtml = `
     <div id="help-tooltip" class="help-tooltip">
-        <p>这里是系统设置，未来会有自定义主界面样式等，功能待开发</p>
+        <p>这里是世理雕刻，未来会有自定义主界面样式等，功能待开发</p>
     </div>
 `;
 // ▲▲▲ 新增结束 ▲▲▲
@@ -51,7 +51,7 @@ const systemSettingModalsHtml = `
  * 页面加载后需要执行的所有初始化操作。
  */
 function initializePage() {
-    console.log("系统设置页面JS加载，小爱心指示器逻辑已启动。");
+    console.log("世理雕刻页面JS加载，小爱心指示器逻辑已启动。");
 
     const indicator = document.querySelector('.active-tab-indicator');
     const tabsNav = document.querySelector('.tabs-nav');
@@ -100,14 +100,14 @@ function initializePage() {
 
 // 3. 定义羽毛笔按钮的功能
 const handleSystemSettingFeatherClick = () => {
-    console.log('羽毛笔被点击，可以在这里执行保存系统设置的逻辑。');
-    alert('系统设置已保存！(模拟)');
+    console.log('羽毛笔被点击，可以在这里执行保存世理雕刻的逻辑。');
+    alert('世理雕刻已保存！(模拟)');
 };
 
 // 4. 脚本的入口：调用 createPageLayout 来构建页面
 //    并将所有初始化逻辑作为 onPageLoad 回调传入
 createPageLayout({
-    title: '系统设置',
+    title: '世理雕刻',
     contentHtml: systemSettingPageContent,
     // ▼▼▼ 修改/新增开始 ▼▼▼
     modalsHtml: systemSettingModalsHtml, // 传入帮助框的 HTML
