@@ -160,3 +160,12 @@ button:disabled:hover {
     background-color: #f8f9fa;
     border-color: var(--border-color);
 }
+
+.button-group-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+.button-group-grid .full-width {
+    grid-column: 1 / -1;
+}
