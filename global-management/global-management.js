@@ -6,12 +6,12 @@ const worldviewPageContent = `
     <!-- Tab 导航栏 -->
     <nav class="tabs-nav">
         <div class="tabs-container">
-            <button class="tab-button active" data-tab="world-intro">世界介绍</button>
+            <button class="tab-button active" data-tab="world-intro">介绍</button>
             <button class="tab-button" data-tab="timeline">时间线</button>
             <button class="tab-button" data-tab="glossary">设定词</button>
-            <button class="tab-button" data-tab="region-settings">地区设定</button>
-            <button class="tab-button" data-tab="race-settings">种族设定</button>
-            <button class="tab-button" data-tab="world-origin">世界起源</button>
+            <button class="tab-button" data-tab="region-settings">地区</button>
+            <button class="tab-button" data-tab="race-settings">种族</button>
+            <button class="tab-button" data-tab="world-origin">起源</button>
             <button class="tab-button" data-tab="locus">轨迹</button>
         </div>
     </nav>
@@ -24,7 +24,7 @@ const worldviewPageContent = `
             <!-- Tab 内容面板 -->
             <div class="tabs-content">
                 <div id="world-intro" class="tab-pane active">
-                    <p>这里是【世界介绍】的内容区。</p>
+                    <p>这里是【介绍】的内容区。</p>
                 </div>
                 <div id="timeline" class="tab-pane">
                     <p>这里是【时间线】的内容区。</p>
@@ -33,13 +33,13 @@ const worldviewPageContent = `
                     <p>这里是【设定词】的内容区。</p>
                 </div>
                 <div id="region-settings" class="tab-pane">
-                    <p>这里是【地区设定】的内容区。</p>
+                    <p>这里是【地区】的内容区。</p>
                 </div>
                 <div id="race-settings" class="tab-pane">
-                    <p>这里是【种族设定】的内容区。</p>
+                    <p>这里是【种族】的内容区。</p>
                 </div>
                 <div id="world-origin" class="tab-pane">
-                    <p>这里是【世界起源】的内容区。</p>
+                    <p>这里是【起源】的内容区。</p>
                 </div>
                 <div id="locus" class="tab-pane">
                     <p>这里是【轨迹】的内容区。</p>
@@ -53,7 +53,7 @@ const worldviewPageContent = `
  * 页面加载后需要执行的所有初始化操作。
  */
 function initializePage() {
-    console.log("世界观页面JS加载，小爱心指示器逻辑已启动。");
+    console.log("元识域页面JS加载，小爱心指示器逻辑已启动。");
 
     const indicator = document.querySelector('.active-tab-indicator');
     const tabsNav = document.querySelector('.tabs-nav');
@@ -102,14 +102,14 @@ function initializePage() {
 
 // 3. 定义羽毛笔按钮的功能
 const handleWorldviewFeatherClick = () => {
-    console.log('羽毛笔被点击，可以在这里执行保存世界观设定的逻辑。');
-    alert('世界观设定已保存！(模拟)');
+    console.log('羽毛笔被点击，可以在这里执行保存元识域设定的逻辑。');
+    alert('元识域设定已保存！(模拟)');
 };
 
 // 4. 脚本的入口：调用 createPageLayout 来构建页面
 //    并将所有初始化逻辑作为 onPageLoad 回调传入
 createPageLayout({
-    title: '世界观',
+    title: '元识域',
     contentHtml: worldviewPageContent,
     onFeatherClick: handleWorldviewFeatherClick,
     onPageLoad: initializePage // 关键：确保在HTML渲染完毕后再执行初始化
