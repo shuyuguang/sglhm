@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NPC交友</title>
+    <title>灵魂同调</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="../common/template.css">
@@ -89,7 +89,7 @@
             `;
 
             const handleFriendNpcFeatherClick = () => {
-                console.log('NPC交友页面的羽毛笔被点击，准备添加新朋友。');
+                console.log('灵魂同调页面的羽毛笔被点击，准备添加新朋友。');
                 alert('“添加新NPC好友”功能正在开发中！');
             };
 
@@ -97,7 +97,7 @@
             // 注意：你的模板函数可能没有实现 showBackButton 和 showSaveButton
             // 这里我假设它会生成一个 id="save-btn" 的按钮
             createPageLayout({
-                title: 'NPC交友',
+                title: '灵魂同调',
                 contentHtml: friendNpcPageContent,
                 onFeatherClick: handleFriendNpcFeatherClick,
             });
@@ -110,7 +110,7 @@
             const saveButton = document.getElementById('save-btn'); 
             if (saveButton) {
                 saveButton.addEventListener('click', function() {
-                    console.log("正在保存NPC交友信息...");
+                    console.log("正在保存灵魂同调信息...");
                     // 模拟保存后跳转
                     window.location.href = '../app.html'; // 路径修正：从 friend-npc 目录返回到根目录的 app.html
                 });
@@ -120,7 +120,7 @@
                 console.warn("页面中未找到 ID 为 'save-btn' 的按钮，请检查 template.js。");
             }
 
-            console.log("NPC交友页面加载和初始化完成。");
+            console.log("灵魂同调页面加载和初始化完成。");
         });
     </script>
 </body>
