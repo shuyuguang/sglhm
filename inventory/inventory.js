@@ -38,7 +38,7 @@ const inventoryPageContent = `
  * (包含Tab切换、指示器定位等)
  */
 function initializePage() {
-    console.log("物品页面JS加载，小爱心指示器逻辑已启动。");
+    console.log("须弥垫页面JS加载，小爱心指示器逻辑已启动。");
 
     const indicator = document.querySelector('.active-tab-indicator');
     const tabsNav = document.querySelector('.tabs-nav');
@@ -87,14 +87,14 @@ function initializePage() {
 
 // 3. 定义羽毛笔按钮的功能
 const handleInventoryFeatherClick = () => {
-    console.log('羽毛笔被点击，可以在这里执行保存物品相关设置的逻辑。');
+    console.log('羽毛笔被点击，可以在这里执行保存须弥垫相关设置的逻辑。');
     alert('操作已记录！(模拟)');
 };
 
 // 4. 脚本的入口：调用 createPageLayout 来构建页面
 //    并将所有初始化逻辑作为 onPageLoad 回调传入
 createPageLayout({
-    title: '物品',
+    title: '须弥垫',
     contentHtml: inventoryPageContent,
     onFeatherClick: handleInventoryFeatherClick,
     onPageLoad: initializePage // 关键：确保在HTML渲染完毕后再执行初始化
