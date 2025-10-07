@@ -6,9 +6,9 @@ const ruleManagementPageContent = `
     <!-- Tab 导航栏 -->
     <nav class="tabs-nav">
         <div class="tabs-container">
-            <button class="tab-button active" data-tab="chat">聊天</button>
-            <button class="tab-button" data-tab="reading">阅读</button>
-            <button class="tab-button" data-tab="diary">日记</button>
+            <button class="tab-button active" data-tab="chat">心语低鸣</button>
+            <button class="tab-button" data-tab="reading">万象交响</button>
+            <button class="tab-button" data-tab="diary">岁月画卷</button>
         </div>
     </nav>
 
@@ -20,13 +20,13 @@ const ruleManagementPageContent = `
             <!-- Tab 内容面板 -->
             <div class="tabs-content">
                 <div id="chat" class="tab-pane active">
-                    <p>这里是【聊天】规则的设置区。</p>
+                    <p>这里是【心语低鸣】规则的设置区。</p>
                 </div>
                 <div id="reading" class="tab-pane">
-                    <p>这里是【阅读】规则的设置区。</p>
+                    <p>这里是【万象交响】规则的设置区。</p>
                 </div>
                 <div id="diary" class="tab-pane">
-                    <p>这里是【日记】规则的设置区。</p>
+                    <p>这里是【岁月画卷】规则的设置区。</p>
                 </div>
             </div>
         </main>
