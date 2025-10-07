@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ==================== 3. 执行页面渲染和事件绑定 ====================
 
     createPageLayout({
-        title: '聊天',
+        title: '心语低鸣',
         contentHtml: chatPageContent,
         modalsHtml: charSelectPanelHtml,
         onFeatherClick: openCharacterSelector,
