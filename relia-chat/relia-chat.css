@@ -176,26 +176,24 @@
 }
 
 
-/* ▼▼▼ 新增：聊天列表和卡片样式 ▼▼▼ */
+/* ▼▼▼ 聊天列表和卡片样式 (已按要求修改) ▼▼▼ */
 #chat-list-area {
-    padding: 0px; /* 修改点：调整页面左右边距 */
+    padding: 0px;
 }
 
 .chat-card {
     display: flex;
     align-items: center;
     padding: 12px 13px;
-    margin-bottom: 12px; /* 修改点：调整卡片上下间距 */
+    margin-bottom: 12px;
     background-color: #fff;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    box-shadow: none; /* 修改点: 移除了卡片阴影 */
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    /* transition 属性已移除，因为不再有悬浮动画 */
 }
-.chat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
+
+/* 修改点: 整个 .chat-card:hover 规则已被删除，以移除悬浮时的抬起和阴影效果 */
 
 .chat-card-avatar {
     width: 50px;
@@ -242,8 +240,8 @@
 .chat-card-time {
     font-size: 0.8em;
     color: #adb5bd;
-    position: relative; /* 新增：开启相对定位，让我们可以微调位置 */
-    top: -2px;         /* 新增：向上移动 2px */
+    position: relative;
+    top: -2px;
 }
 
 .unread-badge {
@@ -260,4 +258,4 @@
     align-items: center;
     padding: 0 6px;
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */
+/* ▲▲▲ 修改结束 ▲▲▲ */

@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // --- 5. 绑定事件 (保持不变) ---
+    // --- 5. 绑定事件 ---
     input.addEventListener('input', () => {
         sendBtn.disabled = input.value.trim().length === 0;
     });
@@ -124,6 +124,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
     sendBtn.addEventListener('click', sendMessage);
+
+    // ▼▼▼ 新增：为三点图标按钮添加点击事件 ▼▼▼
+    if (optionsBtn) {
+        optionsBtn.addEventListener('click', () => {
+            // 跳转到设置页面，并带上角色ID
+            window.location.href = `./chat-setting.html?id=${charId}`;
+        });
+    }
+    // ▲▲▲ 新增结束 ▲▲▲
 
     // --- 6. 初始化页面 ---
     await loadAndRenderHistory(); // 执行加载函数
