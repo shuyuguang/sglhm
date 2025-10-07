@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const STATIC_DB_KEYS = ALL_APP_DB_KEYS;
 
     // ====================【DOM 元素获取】====================
+    // 本地功能按钮
     const exportZipBtn = document.getElementById('export-zip-btn');
     const exportJsonBtn = document.getElementById('export-json-btn');
     const importZipBtn = document.getElementById('import-zip-btn');
@@ -14,6 +15,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearBtn = document.getElementById('clear-local-btn');
     const importZipInput = document.getElementById('import-zip-input');
     const importJsonInput = document.getElementById('import-json-input');
+
+    // ▼▼▼ 新增：云端功能按钮 ▼▼▼
+    const exportCloudBtn = document.getElementById('export-cloud-btn');
+    const importCloudBtn = document.getElementById('import-cloud-btn');
+    const clearCloudBtn = document.getElementById('clear-cloud-btn');
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
 
     // ====================【通用辅助函数】====================
     const getKeysToProcess = async () => {
@@ -265,6 +273,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+// ▼▼▼ 新增：云端功能占位符函数 ▼▼▼
+    function handleCloudFeaturePlaceholder() {
+        alert('云端功能正在开发中，敬请期待！');
+    }
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
     // ====================【事件监听器绑定】====================
     exportZipBtn.addEventListener('click', handleExportZip);
     exportJsonBtn.addEventListener('click', handleExportJson);
@@ -276,4 +290,10 @@ document.addEventListener('DOMContentLoaded', () => {
     importJsonInput.addEventListener('change', processImportJsonFile);
 
     clearBtn.addEventListener('click', handleClear);
+    
+// ▼▼▼ 新增：云端功能 ▼▼▼
+    exportCloudBtn.addEventListener('click', handleCloudFeaturePlaceholder);
+    importCloudBtn.addEventListener('click', handleCloudFeaturePlaceholder);
+    clearCloudBtn.addEventListener('click', handleCloudFeaturePlaceholder);
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 });

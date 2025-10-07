@@ -23,7 +23,6 @@
                     <h2><i class="fa-solid fa-server"></i> 本地</h2>
                     <p class="card-description">管理存储在此设备上的数据</p>
                 </div>
-                <!-- ★ 修改点：按钮组已更新 ★ -->
                 <div class="button-group-grid">
                     <button id="export-zip-btn" class="card-btn"><i class="fa-solid fa-file-zipper"></i><span>导出 ZIP</span></button>
                     <button id="export-json-btn" class="card-btn"><i class="fa-solid fa-file-code"></i><span>导出 JSON</span></button>
@@ -32,26 +31,35 @@
                     <button id="clear-local-btn" class="card-btn danger full-width"><i class="fa-solid fa-eraser"></i><span>清除本地数据</span></button>
                 </div>
             </div>
-            <div class="card disabled">
-                <!-- ... 云端部分不变 ... -->
+
+            <!-- ▼▼▼ 修改点：更新云端卡片 ▼▼▼ -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-cloud"></i> 云端</h2>
+                    <p class="card-description">通过云服务同步和备份数据</p>
+                </div>
+                <div class="button-group">
+                    <!-- 提示：为未实现的功能添加 disabled 属性是好习惯 -->
+                    <button id="export-cloud-btn" class="card-btn" disabled><i class="fa-solid fa-cloud-arrow-down"></i><span>导出云端数据</span></button>
+                    <button id="import-cloud-btn" class="card-btn" disabled><i class="fa-solid fa-cloud-arrow-up"></i><span>导入云端数据</span></button>
+                    <button id="clear-cloud-btn" class="card-btn danger" disabled><i class="fa-solid fa-trash-can"></i><span>清除云端数据</span></button>
+                </div>
             </div>
+            <!-- ▲▲▲ 修改结束 ▲▲▲ -->
+
         </main>
     </div>
     
-    <!-- ★ 修改点：两个独立的文件输入框 ★ -->
     <input type="file" id="import-zip-input" accept=".zip" style="display: none;">
     <input type="file" id="import-json-input" accept=".json" style="display: none;">
     
-    <!-- 依赖脚本 -->
+    <!-- ... 依赖脚本和配置脚本不变 ... -->
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
-    <!-- ... 配置脚本加载部分 ... -->
     <script src="../config/profile.config.js"></script>
     <script src="../config/chat.config.js"></script>
     <script src="../config/api.config.js"></script>
     <script src="../config/app.config.js"></script>
-
     <script src="data-integration.js"></script>
 
 </body>
