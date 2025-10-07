@@ -146,28 +146,59 @@ function createEventManager(elements, state, ui, data, config) {
         });
 
         // Image Upload & Cropper
-        const setupImageUpload = (trigger, input, urlInput, preview) => {
-            trigger?.addEventListener('click', () => input.click());
-            input?.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (re) => ui.openCropper(re.target.result, { urlInputElement: urlInput, previewImgElement: preview });
-                reader.readAsDataURL(file);
-                e.target.value = '';
+const setupImageUpload = (trigger, input, urlInput, preview) => {
+    trigger?.addEventListener('click', () => input.click());
+    input?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        // ▼▼▼ 旧代码 ▼▼▼
+        // reader.onload = (re) => ui.openCropper(re.target.result, { urlInputElement: urlInput, previewImgElement: preview });
+        // ▲▲▲▲▲▲▲▲▲▲
+
+        // ▼▼▼ 新代码 ▼▼▼
+        reader.onload = (re) => {
+            // 在这里，我们把原始文件的类型 file.type 也传进去
+            ui.openCropper(re.target.result, {
+                urlInputElement: urlInput,
+                previewImgElement: preview,
+                originalMimeType: file.type // ★ 关键新增行
             });
         };
+        // ▲▲▲▲▲▲▲▲▲▲
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    });
+};
         setupImageUpload(elements.avatarPreviewImg, elements.avatarUploadInput, elements.avatarUrlInput, elements.avatarPreviewImg);
         setupImageUpload(elements.bannerPreviewImg, elements.bannerUploadInput, elements.bannerUrlInput, elements.bannerPreviewImg);
         elements.confirmCropBtn?.addEventListener('click', () => {
-            const cropper = ui.getCropper();
-            if (cropper && state.croppingContext.urlInputElement && state.croppingContext.previewImgElement) {
-                const dataUrl = cropper.getCroppedCanvas({ width: 512, height: 512, imageSmoothingQuality: 'high' }).toDataURL('image/png');
-                state.croppingContext.urlInputElement.value = dataUrl;
-                state.croppingContext.previewImgElement.src = dataUrl;
-                ui.closeCropper();
-            }
-        });
+    const cropper = ui.getCropper();
+    if (cropper && state.croppingContext.urlInputElement && state.croppingContext.previewImgElement) {
+        
+        // ▼▼▼ 旧代码 ▼▼▼
+        // const dataUrl = cropper.getCroppedCanvas({ width: 512, height: 512, imageSmoothingQuality: 'high' }).toDataURL('image/png');
+        // ▲▲▲▲▲▲▲▲▲▲
+
+        // ▼▼▼ 新代码 ▼▼▼
+        // 1. 从 context 获取原始 MIME 类型，如果不存在则默认为 'image/png'
+        const mimeType = state.croppingContext.originalMimeType || 'image/png';
+        
+        // 2. toDataURL 可以接受第二个参数用于设置图片质量 (主要对 jpg/webp 有效)
+        const quality = 0.9; // 0.9 是一个不错的 jpg 压缩质量
+
+        const dataUrl = cropper.getCroppedCanvas({
+            width: 512,
+            height: 512,
+            imageSmoothingQuality: 'high'
+        }).toDataURL(mimeType, quality); // ★ 使用动态的 mimeType
+        // ▲▲▲▲▲▲▲▲▲▲
+
+        state.croppingContext.urlInputElement.value = dataUrl;
+        state.croppingContext.previewImgElement.src = dataUrl;
+        ui.closeCropper();
+    }
+});
         elements.cancelCropBtn?.addEventListener('click', ui.closeCropper);
 
         // Sub-Editor & Item-Editor Panels
