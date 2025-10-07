@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>邮箱</title>
+    <title>信使跃迁</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="../common/template.css">
@@ -17,17 +17,17 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             const mailboxPageContent = `
-                <p>这里是邮箱页面</p>
+                <p>这里是信使跃迁页面</p>
             `;
 
             const handleMailboxFeatherClick = () => {
-                console.log('邮箱页面的羽毛笔被点击，准备撰写新邮件。');
+                console.log('信使跃迁页面的羽毛笔被点击，准备撰写新邮件。');
                 alert('“撰写新邮件”功能正在开发中！');
             };
 
             // 2. 调用函数
             createPageLayout({
-                title: '邮箱',
+                title: '信使跃迁',
                 contentHtml: mailboxPageContent,
                 onFeatherClick: handleMailboxFeatherClick
             });
