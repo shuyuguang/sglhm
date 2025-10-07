@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isYdn) {
             ydmWrapper.style.display = 'none';
             ydnWrapper.style.display = 'block';
-            document.title = "设定集";
+            document.title = "羁绊司";
             localStorage.setItem(UI_PREFERENCE_KEY, 'YDN');
             if (!ydnAppInitialized) {
                 initYdnApp();
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             ydnWrapper.style.display = 'none';
             ydmWrapper.style.display = 'flex'; // YDM uses flex display
-            document.title = "设定集";
+            document.title = "羁绊司";
             localStorage.setItem(UI_PREFERENCE_KEY, 'YDM');
             if (!ydmAppInitialized) {
                 initYdmApp();

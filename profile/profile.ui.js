@@ -180,7 +180,7 @@ function createUiManager(elements, state, config) {
         const isYdn = state.uiStyle === 'YDN';
 
         const modeText = {
-            docTitle: '设定集',
+            docTitle: '羁绊司',
             settingsTitle: isYouMode ? '用户管理' : '角色管理',
             usernameLabel: isYouMode ? '用户名' : '角色名',
             bannerAlt: isYouMode ? '用户主图' : '角色主图',
