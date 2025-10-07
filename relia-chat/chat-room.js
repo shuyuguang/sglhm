@@ -54,15 +54,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const chatArea = document.getElementById('chat-messages-area');
     const input = document.getElementById('chat-input');
     const sendBtn = document.getElementById('send-btn');
+    // ▼▼▼ 修复：在这里获取三点图标按钮 ▼▼▼
+    const optionsBtn = document.querySelector('.options-btn');
+    // ▲▲▲ 修复结束 ▲▲▲
     
-    // ▼▼▼ 新增：定义聊天记录的唯一键名和内存中的聊天记录数组 ▼▼▼
     const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`;
     let chatHistory = [];
-    // ▲▲▲ 新增结束 ▲▲▲
 
-    // --- 4. 核心功能函数 ---
-    
-    // renderMessage 函数保持不变
+    // --- 4. 核心功能函数 (保持不变) ---
     function renderMessage({ text, sender }) {
         const messageRow = document.createElement('div');
         messageRow.className = `message-row ${sender}`;
@@ -78,36 +77,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatArea.scrollTop = chatArea.scrollHeight;
     }
 
-    /**
-     * ▼▼▼ 修改：发送消息的函数，增加保存功能 ▼▼▼
-     */
     async function sendMessage() {
         const text = input.value.trim();
         if (text) {
             const newMessage = { text, sender: 'user' };
-            renderMessage(newMessage); // 1. 渲染到屏幕
-
-            // 2. 更新内存中的历史记录
+            renderMessage(newMessage);
             chatHistory.push(newMessage);
-            
-            // 3. 将最新的历史记录完整保存到数据库
             await dbStorage.setItem(historyKey, chatHistory);
-
             input.value = '';
             input.dispatchEvent(new Event('input'));
         }
     }
     
-    /**
-     * ▼▼▼ 新增：加载并渲染历史消息的函数 ▼▼▼
-     */
     async function loadAndRenderHistory() {
         const savedHistory = await dbStorage.getItem(historyKey);
         if (savedHistory && Array.isArray(savedHistory) && savedHistory.length > 0) {
-            chatHistory = savedHistory; // 从数据库加载到内存
+            chatHistory = savedHistory;
             chatHistory.forEach(message => renderMessage(message));
         } else {
-            // 如果没有历史记录，才显示示例消息
             renderMessage({ text: '发送示例内容', sender: 'user' });
             renderMessage({ text: '回复示例内容', sender: 'character' });
         }
@@ -125,15 +112,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     sendBtn.addEventListener('click', sendMessage);
 
-    // ▼▼▼ 新增：为三点图标按钮添加点击事件 ▼▼▼
+    // ▼▼▼ 修复：现在这里的 optionsBtn 已经是定义好的了 ▼▼▼
     if (optionsBtn) {
         optionsBtn.addEventListener('click', () => {
-            // 跳转到设置页面，并带上角色ID
             window.location.href = `./chat-setting.html?id=${charId}`;
         });
     }
-    // ▲▲▲ 新增结束 ▲▲▲
+    // ▲▲▲ 修复结束 ▲▲▲
 
     // --- 6. 初始化页面 ---
-    await loadAndRenderHistory(); // 执行加载函数
+    await loadAndRenderHistory();
 });
