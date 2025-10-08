@@ -8,20 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ====================【DOM 元素获取】====================
     // 本地功能按钮
-    const exportZipBtn = document.getElementById('export-zip-btn');
-    const exportJsonBtn = document.getElementById('export-json-btn');
-    const importZipBtn = document.getElementById('import-zip-btn');
-    const importJsonBtn = document.getElementById('import-json-btn');
+    const exportBtn = document.getElementById('export-local-btn');
+    const importBtn = document.getElementById('import-local-btn');
     const clearBtn = document.getElementById('clear-local-btn');
-    const importZipInput = document.getElementById('import-zip-input');
-    const importJsonInput = document.getElementById('import-json-input');
+    const importFileInput = document.getElementById('import-file-input');
 
-    // ▼▼▼ 新增：云端功能按钮 ▼▼▼
+    // 云端功能按钮
     const exportCloudBtn = document.getElementById('export-cloud-btn');
     const importCloudBtn = document.getElementById('import-cloud-btn');
     const clearCloudBtn = document.getElementById('clear-cloud-btn');
-    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-
 
     // ====================【通用辅助函数】====================
     const getKeysToProcess = async () => {
@@ -42,11 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return data;
     };
 
-    // ====================【ZIP 导出/导入函数】====================
-    
-    function dataURLtoBlob(dataUrl) { /* ... (此函数不变) ... */ }
-    function getExtensionFromMime(mimeType) { /* ... (此函数不变) ... */ }
-    // (为了简洁，这里省略了上面两个函数的具体实现，请从你之前的文件中保留它们)
     function dataURLtoBlob(dataUrl) {
         const arr = dataUrl.split(','), mimeMatch = arr[0].match(/:(.*?);/);
         if (!mimeMatch) return null;
@@ -56,10 +46,12 @@ document.addEventListener('DOMContentLoaded', () => {
         while (n--) { u8arr[n] = bstr.charCodeAt(n); }
         return new Blob([u8arr], { type: mime });
     }
+
     function getExtensionFromMime(mimeType) { return mimeType.split('/')[1] || 'bin'; }
 
+    // ====================【核心功能函数】====================
 
-    async function handleExportZip() {
+    async function handleExport() {
         try {
             const finalKeys = await getKeysToProcess();
             const dataToExport = await fetchDataFromDB(finalKeys);
@@ -106,15 +98,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             alert(`数据已成功导出为 ${zipFilename}`);
         } catch (error) {
-            console.error('导出ZIP时出错:', error);
+            console.error('导出数据时出错:', error);
             alert('导出失败，请查看控制台。');
         }
     }
 
-    async function processImportZipFile(event) {
+    async function processImportFile(event) {
         const file = event.target.files[0];
         if (!file) return;
-        if (!confirm('导入ZIP将覆盖现有设置，确定吗？')) {
+        if (!confirm('导入数据将覆盖现有设置，确定吗？')) {
             event.target.value = null;
             return;
         }
@@ -164,102 +156,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (dataToPut.length === 0) { alert('文件中没有找到可导入的数据。'); return; }
             
             await db.keyValueStore.bulkPut(dataToPut);
-            alert('ZIP数据导入成功！\n请返回主页并刷新页面。');
+            alert('数据导入成功！\n请返回主页并刷新页面。');
         } catch (error) {
-            console.error('导入ZIP时出错:', error);
+            console.error('导入数据时出错:', error);
             alert(`导入失败：${error.message}`);
         } finally {
             event.target.value = null;
         }
     }
-
-    // ====================【JSON 导出/导入函数】====================
-
-    async function handleExportJson() {
-        try {
-            const finalKeys = await getKeysToProcess();
-            const dataToExport = await fetchDataFromDB(finalKeys);
-
-            if (Object.keys(dataToExport).length === 0) {
-                alert('本地没有可导出的数据。');
-                return;
-            }
-
-            // ★ 核心：定义JSON专用的图片替换规则
-            const jsonReplacer = (key, value) => {
-                if (typeof value === 'string' && value.startsWith('data:image/')) {
-                    if (key === 'avatar') {
-                        return 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg';
-                    }
-                    if (key === 'banner') {
-                        return 'https://i.postimg.cc/NjRJ5qdx/a-good.jpg';
-                    }
-                    // 对于其他非头像/背景的Base64图片，也用默认头像URL替换
-                    return 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg';
-                }
-                return value;
-            };
-
-            const jsonString = JSON.stringify(dataToExport, jsonReplacer, 2);
-            const blob = new Blob([jsonString], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-            const jsonFilename = `felotus-data-${timestamp}.json`;
-
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = jsonFilename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            alert(`数据已成功导出为 ${jsonFilename}`);
-        } catch (error) {
-            console.error('导出JSON时出错:', error);
-            alert('导出失败，请查看控制台。');
-        }
-    }
     
-    async function processImportJsonFile(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        if (!confirm('导入JSON将覆盖现有设置，确定吗？')) {
-            event.target.value = null;
-            return;
-        }
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const importedData = JSON.parse(e.target.result);
-                if (typeof importedData !== 'object' || importedData === null) {
-                    throw new Error('文件内容不是有效的JSON对象。');
-                }
-                
-                const dataToPut = [];
-                const allKeys = await getKeysToProcess();
-                for (const key in importedData) {
-                    if (allKeys.includes(key) || key.startsWith(`${CHAT_DB_KEYS.CHAT_HISTORY}_`)) {
-                        dataToPut.push({ key, value: importedData[key] });
-                    }
-                }
-                if (dataToPut.length === 0) { alert('文件中没有找到可导入的数据。'); return; }
-                
-                await db.keyValueStore.bulkPut(dataToPut);
-                alert('JSON数据导入成功！\n请返回主页并刷新页面。');
-            } catch (error) {
-                console.error('导入JSON时出错:', error);
-                alert(`导入失败：${error.message}`);
-            } finally {
-                event.target.value = null;
-            }
-        };
-        reader.onerror = () => { alert('读取文件失败！'); event.target.value = null; }
-        reader.readAsText(file);
-    }
-    
-    // ====================【清除数据函数】====================
-    async function handleClear() { /* ... (此函数不变) ... */ }
     async function handleClear() {
         if (!confirm('警告：此操作将删除所有本地角色和用户数据，且无法恢复！\n确定要清除所有数据吗？')) return;
         if (!confirm('再次确认：真的要删除所有本地数据吗？')) return;
@@ -273,27 +178,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-// ▼▼▼ 新增：云端功能占位符函数 ▼▼▼
     function handleCloudFeaturePlaceholder() {
         alert('云端功能正在开发中，敬请期待！');
     }
-    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
     // ====================【事件监听器绑定】====================
-    exportZipBtn.addEventListener('click', handleExportZip);
-    exportJsonBtn.addEventListener('click', handleExportJson);
-    
-    importZipBtn.addEventListener('click', () => importZipInput.click());
-    importJsonBtn.addEventListener('click', () => importJsonInput.click());
-
-    importZipInput.addEventListener('change', processImportZipFile);
-    importJsonInput.addEventListener('change', processImportJsonFile);
-
+    exportBtn.addEventListener('click', handleExport);
+    importBtn.addEventListener('click', () => importFileInput.click());
+    importFileInput.addEventListener('change', processImportFile);
     clearBtn.addEventListener('click', handleClear);
-    
-// ▼▼▼ 新增：云端功能 ▼▼▼
+
     exportCloudBtn.addEventListener('click', handleCloudFeaturePlaceholder);
     importCloudBtn.addEventListener('click', handleCloudFeaturePlaceholder);
     clearCloudBtn.addEventListener('click', handleCloudFeaturePlaceholder);
-    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 });
