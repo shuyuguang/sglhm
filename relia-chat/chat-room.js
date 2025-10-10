@@ -3,7 +3,7 @@
 import { dbStorage } from '../common/db.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // --- 1. 获取角色ID和数据 (这部分保持不变) ---
+    // --- 1. 获取角色ID和数据 (无变化) ---
     const urlParams = new URLSearchParams(window.location.search);
     const charId = urlParams.get('id');
 
@@ -27,7 +27,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const currentUser = allUsers ? allUsers.find(u => u.id === currentUserId) : null;
     const user = currentUser || { avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg' };
 
-    // --- 2. 动态生成页面HTML (这部分保持不变) ---
+    // --- 2. 动态生成页面HTML ---
+    // ▼▼▼ 核心修改点：在操作栏中增加四个功能项 ▼▼▼
     const pageHtml = `
         <div class="chat-container">
             <header class="chat-header">
@@ -42,26 +43,45 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <button class="chat-header-btn options-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
             </header>
             <main class="chat-messages" id="chat-messages-area"></main>
-            <footer class="chat-input-area">
-                <textarea id="chat-input" placeholder="点击输入消息..." rows="1"></textarea>
-                <button id="send-btn" disabled><i class="fa-solid fa-paper-plane"></i></button>
+            <footer class="chat-input-area" id="chat-input-area">
+                <div class="chat-input-main">
+                    <button id="actions-toggle-btn"><i class="fa-solid fa-plus"></i></button>
+                    <textarea id="chat-input" placeholder="点击输入消息..." rows="1"></textarea>
+                    <button id="send-btn" disabled><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+                <div class="chat-actions-bar">
+                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-image"></i></button><span>图片</span></div>
+                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-camera"></i></button><span>拍照</span></div>
+                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-microphone"></i></button><span>音频</span></div>
+                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-palette"></i></button><span>主题</span></div>
+                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-money-bill-transfer"></i></button><span>转账</span></div>
+                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-gift"></i></button><span>礼物</span></div>
+                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-phone"></i></button><span>通话</span></div>
+                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-location-dot"></i></button><span>位置</span></div>
+                    <!-- ▼▼▼ 新增下面四个功能项 ▼▼▼ -->
+                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-save"></i></button><span>存档</span></div>
+                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-file"></i></button><span>文件</span></div>
+                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-list-check"></i></button><span>清单</span></div>
+                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-music"></i></button><span>音乐</span></div>
+                </div>
             </footer>
         </div>
     `;
+    // ▲▲▲ 修改结束 ▲▲▲
     document.body.innerHTML = pageHtml;
 
-    // --- 3. 获取DOM元素和定义变量 ---
+    // --- 3. 获取DOM元素和定义变量 (无变化) ---
     const chatArea = document.getElementById('chat-messages-area');
     const input = document.getElementById('chat-input');
     const sendBtn = document.getElementById('send-btn');
-    // ▼▼▼ 修复：在这里获取三点图标按钮 ▼▼▼
     const optionsBtn = document.querySelector('.options-btn');
-    // ▲▲▲ 修复结束 ▲▲▲
+    const chatInputArea = document.getElementById('chat-input-area');
+    const actionsToggleBtn = document.getElementById('actions-toggle-btn');
     
     const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`;
     let chatHistory = [];
 
-    // --- 4. 核心功能函数 (保持不变) ---
+    // --- 4. 核心功能函数 (无变化) ---
     function renderMessage({ text, sender }) {
         const messageRow = document.createElement('div');
         messageRow.className = `message-row ${sender}`;
@@ -100,7 +120,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // --- 5. 绑定事件 ---
+    // --- 5. 绑定事件 (无变化) ---
     input.addEventListener('input', () => {
         sendBtn.disabled = input.value.trim().length === 0;
     });
@@ -112,14 +132,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     sendBtn.addEventListener('click', sendMessage);
 
-    // ▼▼▼ 修复：现在这里的 optionsBtn 已经是定义好的了 ▼▼▼
     if (optionsBtn) {
         optionsBtn.addEventListener('click', () => {
             window.location.href = `./chat-setting.html?id=${charId}`;
         });
     }
-    // ▲▲▲ 修复结束 ▲▲▲
 
-    // --- 6. 初始化页面 ---
+    if (actionsToggleBtn) {
+        actionsToggleBtn.addEventListener('click', () => {
+            chatInputArea.classList.toggle('actions-expanded');
+        });
+    }
+
+    // --- 6. 初始化页面 (无变化) ---
     await loadAndRenderHistory();
 });

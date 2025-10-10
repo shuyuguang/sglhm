@@ -111,12 +111,87 @@ html, body {
 /* --- 底部输入区域 --- */
 .chat-input-area {
     display: flex;
-    align-items: flex-end;
-    padding: 12px 15px;
+    flex-direction: column;
+    padding: 0; 
     background-color: var(--header-bg);
     flex-shrink: 0;
-    gap: 10px;
+    transition: all 0.3s ease;
 }
+
+.chat-actions-bar {
+    display: grid; 
+    grid-template-columns: repeat(4, 1fr); 
+    row-gap: 15px; 
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+}
+
+.action-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}
+
+.action-item span {
+    font-size: 0.75rem; 
+    color: var(--text-meta);
+}
+
+.action-btn {
+    background-color: var(--page-bg);
+    border: none;
+    font-size: 1.3rem; 
+    color: var(--text-dark);
+    cursor: pointer;
+    width: 50px; 
+    height: 50px; 
+    border-radius: 15px; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.chat-input-main {
+    display: flex;
+    align-items: flex-end;
+    padding: 12px 15px;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box; 
+}
+
+#actions-toggle-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--text-dark);
+    cursor: pointer;
+    padding: 5px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+/* ▼▼▼ 核心修改点：增加展开时的高度 ▼▼▼ */
+.chat-input-area.actions-expanded .chat-actions-bar {
+    max-height: 250px; /* 从 180px 增加到 250px 以容纳三行 */
+    opacity: 1;
+    padding: 15px 15px 20px; 
+    box-sizing: border-box;
+}
+.chat-input-area.actions-expanded #actions-toggle-btn {
+    transform: rotate(45deg);
+}
+/* ▲▲▲ 修改结束 ▲▲▲ */
+
 
 #chat-input {
     flex-grow: 1;
