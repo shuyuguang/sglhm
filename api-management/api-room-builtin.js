@@ -4,8 +4,7 @@ import { dbStorage } from '../common/db.js';
 
 const BUILT_IN_API_DATA_KEY = 'built_in_api_data';
 
-// ▼▼▼ 修改点：添加 export ▼▼▼
-export const BUILT_IN_API_DEFINITIONS = {
+const BUILT_IN_API_DEFINITIONS = {
     'built-in-deepseek': { 
         name: 'DeepSeek', 
         baseUrl: 'https://api.deepseek.com/v1', 
