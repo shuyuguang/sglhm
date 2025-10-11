@@ -122,11 +122,21 @@ html, body {
     display: contents;
 }
 
-/* ▼▼▼ 修改：调整按钮顺序和新增按钮 ▼▼▼ */
-#actions-toggle-btn { order: 1; }
-#model-select-btn { order: 2; display: none; } /* 默认隐藏 */
-.chat-input-wrapper { order: 3; }
-#emoji-toggle-btn { order: 4; }
+/* ▼▼▼ 修改：调整按钮排序和样式 ▼▼▼ */
+#actions-toggle-btn {
+    order: 1;
+}
+/* 新增模型切换按钮 */
+#model-toggle-btn {
+    order: 2; 
+    display: none; /* 默认隐藏 */
+}
+.chat-input-wrapper {
+    order: 3;
+}
+#emoji-toggle-btn {
+    order: 4;
+}
 /* ▲▲▲ 修改结束 ▲▲▲ */
 
 .chat-input-wrapper {
@@ -135,7 +145,7 @@ html, body {
     background-color: var(--page-bg);
     border-radius: 25px;
     min-height: 42px;
-    position: relative; /* <-- 新增：为发送按钮定位做准备 */
+    position: relative;
 }
 
 #chat-input {
@@ -153,7 +163,7 @@ html, body {
 
 #actions-toggle-btn,
 #emoji-toggle-btn,
-#model-select-btn { /* <-- 新增 #model-select-btn */
+#model-toggle-btn { /* <-- 将新按钮加入此规则 */
     background-color: var(--page-bg);
     border: none;
     font-size: 1.2rem;
@@ -180,25 +190,22 @@ html, body {
     font-weight: 300;
 }
 
-/* ▼▼▼ 新增区域：发送按钮样式 ▼▼▼ */
 .send-buttons-container {
     position: absolute;
-    top: -45px; /* 关键修改：负值将其移动到父容器(.chat-input-wrapper)的上方 */
-    right: 0;   /* 对齐到父容器的右边缘 */
+    top: -45px;
+    right: 0;
     z-index: 1;
     display: flex;
     gap: 6px;
-    
-    /* 默认隐藏，并为动画设置初始状态 */
     opacity: 0;
-    transform: translateY(8px); /* 从稍低的位置开始，实现上浮效果 */
+    transform: translateY(8px);
     pointer-events: none;
     transition: opacity 0.2s ease-out, transform 0.2s ease-out;
 }
 
 .send-buttons-container.visible {
     opacity: 1;
-    transform: translateY(0); /* 移动到最终位置 */
+    transform: translateY(0);
     pointer-events: auto;
 }
 
@@ -206,7 +213,7 @@ html, body {
     background-color: #e9ecef;
     color: #495057;
     border: none;
-    border-radius: 20px; /* 胶囊形状 */
+    border-radius: 20px;
     padding: 5px 14px;
     font-size: 0.85rem;
     font-weight: 500;
@@ -227,25 +234,24 @@ html, body {
 .send-action-btn.primary:hover {
     filter: brightness(1.1);
 }
-/* ▲▲▲ 修改区域结束 ▲▲▲ */
 
 
-/* --- 聚焦（展开）时的样式 (无变化) --- */
+/* --- 聚焦（展开）时的样式 --- */
+.chat-input-area.input-focused .chat-input-main {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    background-color: var(--page-bg);
+    border-radius: 18px;
+    padding: 10px; 
+    margin: 0 15px 12px;
+}
+
 .chat-input-area.input-focused .chat-input-controls {
     display: flex;
     justify-content: space-between;
     order: 2;
 }
-
-/* ▼▼▼ 新增：让链接按钮在展开时显示出来 ▼▼▼ */
-.chat-input-area.input-focused #model-select-btn {
-    display: flex; /* 显示按钮 */
-    background-color: transparent;
-    transition: transform 0.2s ease-out;
-    transform: translate(-10px, 5px); /* 微调位置 */
-}
-/* ▲▲▲ 新增结束 ▲▲▲ */
-
 
 .chat-input-area.input-focused .chat-input-wrapper {
     order: 1; 
@@ -256,16 +262,26 @@ html, body {
     display: flex;
 }
 
-
 .chat-input-area.input-focused #actions-toggle-btn,
-.chat-input-area.input-focused #emoji-toggle-btn {
+.chat-input-area.input-focused #emoji-toggle-btn,
+.chat-input-area.input-focused #model-toggle-btn { /* <-- 将新按钮加入此规则 */
     background-color: transparent;
     color: var(--text-dark);
     transition: transform 0.2s ease-out;
 }
 
+/* ▼▼▼ 新增：让模型切换按钮在聚焦时显示出来 ▼▼▼ */
+.chat-input-area.input-focused #model-toggle-btn {
+    display: flex;
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */
+
+
 .chat-input-area.input-focused #actions-toggle-btn {
     transform: translate(-5px, 5px);
+}
+.chat-input-area.input-focused #model-toggle-btn {
+    transform: translate(-8px, 5px); /* 微调位置 */
 }
 
 .chat-input-area.input-focused #emoji-toggle-btn {
@@ -278,51 +294,84 @@ html, body {
     max-height: 120px; 
     overflow-y: auto;  
 }
-/* ▼▼▼ 新增：模型选择面板和列表的样式 ▼▼▼ */
-.modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.4); z-index: 1000;
-    display: none; align-items: flex-end; /* 修改：从底部弹出 */
-    -webkit-tap-highlight-color: transparent;
-}
-.modal-overlay.active { display: flex; }
 
+/* ▼▼▼ 新增：模型选择面板的样式 ▼▼▼ */
+.bottom-sheet-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.bottom-sheet-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
 .bottom-sheet {
-    background-color: #fff; width: 100%; max-height: 70vh;
-    border-top-left-radius: 16px; border-top-right-radius: 16px;
-    display: flex; flex-direction: column;
-    animation: slideUp 0.3s ease-out;
+    background-color: #f8f9fa;
+    width: 100%;
+    max-height: 60vh;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
-@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
-.bottom-sheet-header-flex {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 16px; border-bottom: 1px solid #e9ecef; flex-shrink: 0;
+.bottom-sheet-overlay.active .bottom-sheet {
+    transform: translateY(0);
 }
-.bottom-sheet-title-main { margin: 0; font-size: 1.1em; }
-.sheet-close-btn { background: none; border: none; font-size: 1.5rem; color: #868e96; cursor: pointer; }
-
-.sheet-body-list { overflow-y: auto; padding: 8px 16px; }
+.bottom-sheet-header {
+    padding: 16px;
+    font-size: 1.1em;
+    font-weight: 600;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+.model-list-container {
+    overflow-y: auto;
+    padding: 8px 0;
+}
 .model-item {
-    display: flex; align-items: center; padding: 12px 4px; border-bottom: 1px solid #f1f3f5; cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    cursor: pointer;
 }
-.model-item:last-child { border-bottom: none; }
-.model-item.selected .model-name { font-weight: 600; color: var(--send-btn-bg); }
-.model-item.selected .fa-check { opacity: 1; }
-
-.provider-icon {
-    width: 38px; height: 38px; border-radius: 8px; margin-right: 12px; flex-shrink: 0;
-    display: flex; justify-content: center; align-items: center; font-weight: bold; color: #fff;
+.model-item:hover {
+    background-color: #e9ecef;
 }
-.provider-openai { background-color: #10a37f; }
-.provider-google { background-color: #4285F4; }
-.provider-claude { background-color: #d97757; }
-.provider-built-in { background-color: #6c757d; }
-
-.model-info { flex-grow: 1; min-width: 0; }
-.model-name { font-size: 1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.provider-name { font-size: 0.8em; color: #868e96; }
-
-.model-item .fa-check { font-size: 1.2em; color: var(--send-btn-bg); margin-left: 16px; opacity: 0; transition: opacity 0.2s; }
-.no-models-message { text-align: center; color: #868e96; padding: 30px 16px; }
+.model-info {
+    flex-grow: 1;
+}
+.model-item-name {
+    font-size: 1em;
+    color: var(--text-dark);
+}
+.model-item-api {
+    font-size: 0.8em;
+    color: var(--text-meta);
+}
+.model-item .fa-check {
+    color: var(--send-btn-bg);
+    font-size: 1.1em;
+    visibility: hidden;
+}
+.model-item.active .fa-check {
+    visibility: visible;
+}
+.no-models-message {
+    padding: 30px 20px;
+    text-align: center;
+    color: var(--text-meta);
+}
 /* ▲▲▲ 新增结束 ▲▲▲ */
