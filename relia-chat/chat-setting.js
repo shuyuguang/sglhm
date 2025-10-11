@@ -10,7 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // 2. 定义页面HTML结构
+    // 2. 定义页面HTML结构 (已更新)
+    // - 减少为两个选项
+    // - 每个选项都包裹在独立的 .setting-menu 容器中，形成卡片效果
     const pageHtml = `
         <div class="setting-page">
             <header class="setting-header">
@@ -19,16 +21,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 </a>
                 <h1 class="header-title">聊天设置</h1>
             </header>
-            <main class="setting-content">
-                <div class="setting-menu" id="setting-menu">
+            <main class="setting-content" id="setting-content">
+                <div class="setting-menu">
                     <div class="setting-item" data-action="view-history">
                         <span>查看聊天记录</span>
                         <i class="fa-solid fa-chevron-right"></i>
                     </div>
-                    <div class="setting-item" data-action="hide-avatar">
-                        <span>隐藏当前聊天头像</span>
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </div>
+                </div>
+
+                <div class="setting-menu">
                     <div class="setting-item" data-action="set-background">
                         <span>设置当前聊天背景</span>
                         <i class="fa-solid fa-chevron-right"></i>
@@ -41,10 +42,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. 将HTML渲染到页面
     document.body.innerHTML = pageHtml;
 
-    // 4. 绑定事件监听器 (为未来功能做准备)
-    const settingMenu = document.getElementById('setting-menu');
-    if (settingMenu) {
-        settingMenu.addEventListener('click', (event) => {
+    // 4. 绑定事件监听器 (已更新)
+    // - 将事件监听器绑定到父容器 #setting-content 上，以处理多个卡片
+    const settingContent = document.getElementById('setting-content');
+    if (settingContent) {
+        settingContent.addEventListener('click', (event) => {
             const item = event.target.closest('.setting-item');
             if (!item) return;
 
@@ -54,9 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
             switch (action) {
                 case 'view-history':
                     alert('“查看聊天记录”功能尚未实现。');
-                    break;
-                case 'hide-avatar':
-                    alert('“隐藏当前聊天头像”功能尚未实现。');
                     break;
                 case 'set-background':
                     alert('“设置当前聊天背景”功能尚未实现。');

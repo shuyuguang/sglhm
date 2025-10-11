@@ -63,7 +63,8 @@ html, body {
     background-color: #fff;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    
+    margin-bottom: 15px; /* 新增：为每个卡片添加底部间距 */
 }
 
 .setting-item {
