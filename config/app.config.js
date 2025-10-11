@@ -12,7 +12,7 @@ const ALL_APP_DB_KEYS = [
     // 2. 从 Chat 模块导入
     ...ALL_CHAT_DB_KEYS,
 
-    // 3. 从 API 模块导入 (▼▼▼ 新增点 ▼▼▼)
+    // 3. 从 API 模块导入 (这个文件已经包含了我们的新键)
     ...ALL_API_DB_KEYS,
 
     // 4. 从 Diary 模块导入 (未来扩展)
