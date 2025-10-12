@@ -9,19 +9,22 @@ const BUILT_IN_API_DEFINITIONS = {
         name: 'DeepSeek', 
         baseUrl: 'https://api.deepseek.com/v1', 
         path: '/chat/completions',
-        hint: 'DeepSeek官网：https://platform.deepseek.com/usage'
+        hint: 'DeepSeek官网：https://platform.deepseek.com/usage',
+        provider: 'openai' // 指定provider类型
     },
     'built-in-siliconflow': { 
         name: '硅基流动', 
         baseUrl: 'https://api.siliconflow.cn/v1', 
         path: '/chat/completions',
-        hint: '硅基流动官网：https://m.siliconflow.cn/me/models'
+        hint: '硅基流动官网：https://m.siliconflow.cn/me/models',
+        provider: 'openai'
     },
     'built-in-openrouter': { 
         name: 'OpenRouter', 
         baseUrl: 'https://openrouter.ai/api/v1', 
         path: '/chat/completions',
-        hint: 'OpenRouter官网：https://openrouter.ai/'
+        hint: 'OpenRouter官网：https://openrouter.ai/',
+        provider: 'openai'
     },
 };
 
@@ -150,7 +153,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (ui.testApiBtn) ui.testApiBtn.addEventListener('click', openTestPanel);
     if (ui.testApiOverlay) ui.testApiOverlay.addEventListener('click', (e) => { if (e.target === ui.testApiOverlay) closeTestPanel(); });
     if (ui.closeTestPanelBtn) ui.closeTestPanelBtn.addEventListener('click', closeTestPanel);
-    if (ui.sendTestRequestBtn) ui.sendTestRequestBtn.addEventListener('click', handleApiTest);
+    if (ui.sendTestRequestBtn) ui.sendTestRequestBtn.addEventListener('click', () => handleApiTest(apiId));
 
     renderSelectedModels();
 });
@@ -166,30 +169,68 @@ async function handleSave(apiId) {
     window.location.href = './api-management.html';
 }
 
-// ▼▼▼ 修改：核心API测试函数 (与 api-room.js 完全一致) ▼▼▼
-async function handleApiTest() {
+// ▼▼▼ 修改/新增：更新整个API测试逻辑以支持Google API (与 api-room.js 保持一致) ▼▼▼
+async function handleApiTest(apiId) {
     const btn = ui.sendTestRequestBtn;
     const btnSpan = btn.querySelector('span');
     btn.disabled = true;
     btnSpan.textContent = '正在测试...';
     ui.apiTestReport.innerHTML = '<div class="no-report-message">测试中，请稍候...</div>';
 
+    const config = BUILT_IN_API_DEFINITIONS[apiId];
+    if (!config) {
+        ui.apiTestReport.innerHTML = `<div class="report-error-details">错误：找不到内置配置</div>`;
+        btn.disabled = false;
+        btnSpan.textContent = '发送请求文本';
+        return;
+    }
+
     const baseUrl = document.getElementById('api-base-url').value.trim().replace(/\/$/, '');
     const apiKey = document.getElementById('api-key').value.trim();
     const selectedModel = ui.testApiModelSelect.value;
-    const userPath = document.getElementById('api-path').value || '/v1/chat/completions';
-    const endpoint = baseUrl + userPath;
+    const userMessage = '你好，很高兴见到你，我是User。';
+    const sentChars = userMessage.length;
 
-    // 1. 更新测试文本
-    const testPayload = {
-        model: selectedModel,
-        messages: [{ role: 'user', content: '你好，很高兴见到你，我是User。' }],
-    };
-    const sentChars = testPayload.messages[0].content.length;
+    let endpoint;
+    let fetchOptions;
+    let nonStreamPayload;
+    let streamPayload;
+
+    if (config.provider === 'google') {
+        endpoint = `${baseUrl}/models/${selectedModel}:generateContent?key=${apiKey}`;
+        const googlePayload = {
+            contents: [{ parts: [{ text: userMessage }] }]
+        };
+        nonStreamPayload = googlePayload;
+        streamPayload = googlePayload;
+
+        fetchOptions = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        };
+    } else { // OpenAI and compatible APIs
+        const userPath = document.getElementById('api-path').value || '/v1/chat/completions';
+        endpoint = baseUrl + userPath;
+        const openAiPayload = {
+            model: selectedModel,
+            messages: [{ role: 'user', content: userMessage }],
+        };
+        nonStreamPayload = { ...openAiPayload, stream: false };
+        streamPayload = { ...openAiPayload, stream: true };
+
+        fetchOptions = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        };
+    }
 
     try {
-        const nonStreamResult = await testNonStreaming(endpoint, apiKey, { ...testPayload, stream: false });
-        const streamResult = await testStreaming(endpoint, apiKey, { ...testPayload, stream: true });
+        const nonStreamResult = await testNonStreaming(endpoint, { ...fetchOptions, body: JSON.stringify(nonStreamPayload) });
+        
+        const streamEndpoint = config.provider === 'google' 
+            ? `${baseUrl}/models/${selectedModel}:streamGenerateContent?key=${apiKey}&alt=sse`
+            : endpoint;
+        const streamResult = await testStreaming(streamEndpoint, { ...fetchOptions, body: JSON.stringify(streamPayload) });
         
         renderTestReport({ 
             endpoint, 
@@ -207,14 +248,10 @@ async function handleApiTest() {
     }
 }
 
-async function testNonStreaming(endpoint, apiKey, payload) {
+async function testNonStreaming(endpoint, options) {
     const startTime = performance.now();
     try {
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-            body: JSON.stringify(payload)
-        });
+        const response = await fetch(endpoint, options);
         const duration = performance.now() - startTime;
         if (!response.ok) {
             const errorText = await response.text();
@@ -226,35 +263,27 @@ async function testNonStreaming(endpoint, apiKey, payload) {
     }
 }
 
-// 2. 更新流式测试逻辑
-async function testStreaming(endpoint, apiKey, payload) {
+async function testStreaming(endpoint, options) {
     const startTime = performance.now();
     try {
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-            body: JSON.stringify(payload)
-        });
-
+        const response = await fetch(endpoint, options);
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
 
         const reader = response.body.getReader();
-        await reader.read(); // 读取第一个数据块
+        await reader.read();
         const firstCharLatency = performance.now() - startTime;
 
-        // 持续读取直到数据流结束
         while (!(await reader.read()).done) {}
         
-        // 数据流结束后，计算总用时
         const duration = performance.now() - startTime;
-        
+
         return { 
             status: 'success', 
             firstCharLatency: firstCharLatency.toFixed(0),
-            duration: duration.toFixed(0) // 返回总用时
+            duration: duration.toFixed(0)
         };
 
     } catch (error) {
@@ -262,7 +291,6 @@ async function testStreaming(endpoint, apiKey, payload) {
     }
 }
 
-// 3. 更新报告渲染逻辑
 function renderTestReport(data) {
     const { endpoint, model, sentChars, nonStreamResult, streamResult } = data;
 
@@ -274,13 +302,11 @@ function renderTestReport(data) {
         if (result.status === 'success') {
             let latencyHtml = '';
             if (isStream) {
-                // 流式请求，显示“首字”和“用时”
                 latencyHtml = `
                     <div class="report-item"><span class="report-item-label">首字</span><span class="report-item-value">${result.firstCharLatency} ms</span></div>
                     <div class="report-item"><span class="report-item-label">用时</span><span class="report-item-value">${result.duration} ms</span></div>
                 `;
             } else {
-                // 非流式请求，只显示“用时”
                 latencyHtml = `<div class="report-item"><span class="report-item-label">用时</span><span class="report-item-value">${result.duration} ms</span></div>`;
             }
 
@@ -310,9 +336,8 @@ function renderTestReport(data) {
         ${renderSection('流式请求测试', streamResult, true)}
     `;
 }
+// ▲▲▲ 修改/新增结束 ▲▲▲
 
-
-// --- 以下函数与之前版本一致 ---
 function openTestPanel() {
     if (currentSelectedModels.length === 0) {
         alert('请先拉取并选择至少一个模型后再进行测试。');

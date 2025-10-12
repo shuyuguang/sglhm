@@ -1,4 +1,4 @@
-// api-room.js 
+// api-room.js
 
 import { dbStorage } from '../common/db.js';
 
@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (ui.testApiBtn) ui.testApiBtn.addEventListener('click', openTestPanel);
     if (ui.testApiOverlay) ui.testApiOverlay.addEventListener('click', (e) => { if (e.target === ui.testApiOverlay) closeTestPanel(); });
     if (ui.closeTestPanelBtn) ui.closeTestPanelBtn.addEventListener('click', closeTestPanel);
-    if (ui.sendTestRequestBtn) ui.sendTestRequestBtn.addEventListener('click', handleApiTest);
+    if (ui.sendTestRequestBtn) ui.sendTestRequestBtn.addEventListener('click', () => handleApiTest(apiId));
 
 
     renderSelectedModels();
@@ -154,28 +154,72 @@ function closeTestPanel() {
     ui.testApiOverlay?.classList.remove('active');
 }
 
-async function handleApiTest() {
+// ▼▼▼ 修改/新增：更新整个API测试逻辑以支持Google API ▼▼▼
+async function handleApiTest(apiId) {
     const btn = ui.sendTestRequestBtn;
     const btnSpan = btn.querySelector('span');
     btn.disabled = true;
     btnSpan.textContent = '正在测试...';
     ui.apiTestReport.innerHTML = '<div class="no-report-message">测试中，请稍候...</div>';
 
+    const allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
+    const config = allConfigs.find(c => c.id == apiId);
+    if (!config) {
+        ui.apiTestReport.innerHTML = `<div class="report-error-details">错误：找不到当前配置</div>`;
+        btn.disabled = false;
+        btnSpan.textContent = '发送请求文本';
+        return;
+    }
+
     const baseUrl = document.getElementById('api-base-url').value.trim().replace(/\/$/, '');
     const apiKey = document.getElementById('api-key').value.trim();
     const selectedModel = ui.testApiModelSelect.value;
-    const userPath = (document.getElementById('api-path') || {}).value || '/v1/chat/completions';
-    const endpoint = baseUrl + userPath;
+    const userMessage = '你好，很高兴见到你，我是User。';
+    const sentChars = userMessage.length;
 
-    const testPayload = {
-        model: selectedModel,
-        messages: [{ role: 'user', content: '你好，很高兴见到你，我是User。' }],
-    };
-    const sentChars = testPayload.messages[0].content.length;
+    let endpoint;
+    let fetchOptions;
+    let nonStreamPayload;
+    let streamPayload;
+
+    if (config.provider === 'google') {
+        endpoint = `${baseUrl}/models/${selectedModel}:generateContent?key=${apiKey}`;
+        const googlePayload = {
+            contents: [{ parts: [{ text: userMessage }] }]
+        };
+        nonStreamPayload = googlePayload;
+        streamPayload = googlePayload; // Google API uses the same payload for both
+
+        fetchOptions = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            // Body will be added in test functions
+        };
+    } else { // OpenAI and compatible APIs
+        const userPath = (document.getElementById('api-path') || {}).value || '/v1/chat/completions';
+        endpoint = baseUrl + userPath;
+        const openAiPayload = {
+            model: selectedModel,
+            messages: [{ role: 'user', content: userMessage }],
+        };
+        nonStreamPayload = { ...openAiPayload, stream: false };
+        streamPayload = { ...openAiPayload, stream: true };
+
+        fetchOptions = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+            // Body will be added in test functions
+        };
+    }
 
     try {
-        const nonStreamResult = await testNonStreaming(endpoint, apiKey, { ...testPayload, stream: false });
-        const streamResult = await testStreaming(endpoint, apiKey, { ...testPayload, stream: true });
+        const nonStreamResult = await testNonStreaming(endpoint, { ...fetchOptions, body: JSON.stringify(nonStreamPayload) });
+        
+        // For Google, streaming endpoint is different
+        const streamEndpoint = config.provider === 'google' 
+            ? `${baseUrl}/models/${selectedModel}:streamGenerateContent?key=${apiKey}&alt=sse`
+            : endpoint;
+        const streamResult = await testStreaming(streamEndpoint, { ...fetchOptions, body: JSON.stringify(streamPayload) });
         
         renderTestReport({ 
             endpoint, 
@@ -193,14 +237,10 @@ async function handleApiTest() {
     }
 }
 
-async function testNonStreaming(endpoint, apiKey, payload) {
+async function testNonStreaming(endpoint, options) {
     const startTime = performance.now();
     try {
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-            body: JSON.stringify(payload)
-        });
+        const response = await fetch(endpoint, options);
         const duration = performance.now() - startTime;
         if (!response.ok) {
             const errorText = await response.text();
@@ -212,15 +252,10 @@ async function testNonStreaming(endpoint, apiKey, payload) {
     }
 }
 
-async function testStreaming(endpoint, apiKey, payload) {
+async function testStreaming(endpoint, options) {
     const startTime = performance.now();
     try {
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-            body: JSON.stringify(payload)
-        });
-
+        const response = await fetch(endpoint, options);
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`HTTP ${response.status}: ${errorText}`);
@@ -244,6 +279,7 @@ async function testStreaming(endpoint, apiKey, payload) {
         return { status: 'failure', error: error.message, type: error instanceof TypeError ? '网络错误' : 'API错误' };
     }
 }
+// ▲▲▲ 修改/新增结束 ▲▲▲
 
 function renderTestReport(data) {
     const { endpoint, model, sentChars, nonStreamResult, streamResult } = data;
@@ -400,7 +436,6 @@ async function fetchAndShowModels() {
     }
 }
 
-// ▼▼▼ 修改：移除了 alert 弹窗 ▼▼▼
 async function handleSave(apiId) {
     const allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
     const configIndex = allConfigs.findIndex(c => c.id == apiId);
@@ -414,13 +449,11 @@ async function handleSave(apiId) {
             allConfigs[configIndex].path = apiPathInput.value.trim();
         }
         await dbStorage.setItem(API_CONFIGS_KEY, allConfigs);
-        // alert('配置已保存！'); // <-- 已移除此行
         window.location.href = './api-management.html';
     } else {
         alert('错误：找不到要保存的配置。');
     }
 }
-// ▲▲▲ 修改结束 ▲▲▲
 
 async function handleDelete(apiId, apiName) {
     if (confirm(`确定要删除配置 "${apiName}" 吗？`)) {
