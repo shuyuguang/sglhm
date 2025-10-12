@@ -12,6 +12,7 @@ export const CHAT_DB_KEYS = {
     // ▼▼▼ 新增：用于存储聊天记录的键名前缀 ▼▼▼
     // 我们会用 'chatHistory_角色ID' 的格式来为每个角色单独存储聊天记录
     CHAT_HISTORY: 'chatHistory'
+    CHAT_SELECTED_API: 'chat_selected_api'
 };
 
 export const ALL_CHAT_DB_KEYS = Object.values(CHAT_DB_KEYS);
