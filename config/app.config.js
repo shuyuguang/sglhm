@@ -5,7 +5,13 @@
  * 它会聚合所有功能模块的数据库键。
  */
 
-const ALL_APP_DB_KEYS = [
+// ▼▼▼ 修改：添加 import 语句 ▼▼▼
+import { ALL_PROFILE_DB_KEYS } from './profile.config.js';
+import { ALL_CHAT_DB_KEYS } from './chat.config.js';
+import { ALL_API_DB_KEYS } from './api.config.js';
+// ▲▲▲ 修改结束 ▲▲▲
+
+export const ALL_APP_DB_KEYS = [
     // 1. 从 Profile 模块导入
     ...ALL_PROFILE_DB_KEYS,
 
