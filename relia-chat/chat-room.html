@@ -151,10 +151,12 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 
-    <!-- ▼▼▼ 修改点：加载所有需要的配置文件和 Profile 模块脚本 ▼▼▼ -->
-    <script src="../config/profile.config.js"></script>
-    <script src="../config/chat.config.js"></script>
-    <script src="../config/api.config.js"></script>
+    <!-- ▼▼▼ 修改点：移除不再需要的 config 脚本 ▼▼▼ -->
+    <!-- 
+        <script src="../config/profile.config.js"></script>
+        <script src="../config/chat.config.js"></script>
+        <script src="../config/api.config.js"></script>
+    -->
     
     <!-- 引入 Profile 编辑器核心模块 -->
     <script src="../profile/profile.ui.js"></script>
@@ -165,4 +167,3 @@
     <!-- 引入本页面的专属 JS 逻辑 (最后加载) -->
     <script src="chat-room.js" type="module"></script>
 </body>
-</html>

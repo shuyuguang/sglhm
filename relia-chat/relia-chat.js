@@ -2,6 +2,11 @@
 
 import { dbStorage } from '../common/db.js';
 import { createPageLayout } from '../common/template.js';
+// ▼▼▼ 新增：从配置文件导入所需的变量 ▼▼▼
+import { PROFILE_DB_KEYS } from '../config/profile.config.js';
+import { CHAT_DB_KEYS } from '../config/chat.config.js';
+// ▲▲▲ 新增结束 ▲▲▲
+
 
 document.addEventListener('DOMContentLoaded', function() {
 

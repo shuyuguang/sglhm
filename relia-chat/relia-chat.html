@@ -17,13 +17,11 @@
     <!-- 引入 Dexie.js 库用于访问数据库 -->
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
 
-    <!-- ▼▼▼ 核心修改：加载所有需要的脚本 ▼▼▼ -->
-    <!-- 1. 加载数据键的配置文件 -->
-    <script src="../config/profile.config.js"></script>
-    <script src="../config/chat.config.js"></script>
-
-    <!-- 2. 引入本页面的专属 JS 逻辑 (它会自动加载自己的依赖) -->
+    <!-- ▼▼▼ 核心修改：移除不再需要的 config 脚本 ▼▼▼ -->
+    <!-- 
+        <script src="../config/profile.config.js"></script>
+        <script src="../config/chat.config.js"></script>
+    -->
     <script src="relia-chat.js" type="module"></script>
     <!-- ▲▲▲ 修改结束 ▲▲▲ -->
 </body>
-</html>
