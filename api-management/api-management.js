@@ -2,15 +2,18 @@
 
 import { createPageLayout } from '../common/template.js';
 import { dbStorage } from '../common/db.js';
+// ▼▼▼ 修改：从配置文件导入 API 定义 ▼▼▼
+import { API_DB_KEYS, DEFAULT_EDITABLE_APIS, BUILT_IN_APIS } from '../config/api.config.js';
+// ▲▲▲ 修改结束 ▲▲▲
 
-// 数据库键
-const API_CONFIGS_KEY = 'api_configs_text';
-const BUILT_IN_API_STATES_KEY = 'built_in_api_states';
-const BUILT_IN_API_DATA_KEY = 'built_in_api_data';
+// ▼▼▼ 修改：现在这些键名都从 API_DB_KEYS 中获取 ▼▼▼
+const API_CONFIGS_KEY = API_DB_KEYS.CONFIGS;
+const BUILT_IN_API_STATES_KEY = API_DB_KEYS.BUILT_IN_STATES;
+const BUILT_IN_API_DATA_KEY = API_DB_KEYS.BUILT_IN_DATA;
+// ▲▲▲ 修改结束 ▲▲▲
 
 let isMultiSelectMode = false;
 
-// ... (页面 HTML 和模态框 HTML 定义保持不变) ...
 const apiManagementPageContent = `
     <nav class="tabs-nav">
         <div class="tabs-container">
@@ -86,78 +89,46 @@ const PROVIDER_CONFIG = {
     claude: { apiKeyPlaceholder: 'sk-ant-...', baseUrlValue: 'https://api.anthropic.com/v1', showApiPath: false }
 };
 
-// ▼▼▼ 新增：定义两个“默认”的可编辑卡片配置 ▼▼▼
-const DEFAULT_EDITABLE_APIS = [
-    { 
-        id: 'default-openai', // 使用一个固定的、特殊的ID
-        provider: 'openai', 
-        name: 'OpenAI', 
-        apiKey: '', 
-        baseUrl: 'https://api.openai.com', 
-        path: '/v1/chat/completions',
-        enabled: true, 
-        model: [] 
-    },
-    { 
-        id: 'default-google', // 使用一个固定的、特殊的ID
-        provider: 'google', 
-        name: 'Google', 
-        apiKey: '', 
-        baseUrl: 'https://generativelanguage.googleapis.com/v1beta', 
-        path: null,
-        enabled: true, 
-        model: [] 
-    }
-];
-
-const BUILT_IN_APIS = [
-    { id: 'built-in-deepseek', name: 'DeepSeek', shortName: 'DS', isBuiltIn: true },
-    { id: 'built-in-siliconflow', name: '硅基流动', shortName: '硅', isBuiltIn: true },
-    { id: 'built-in-openrouter', name: 'OpenRouter', shortName: 'OR', isBuiltIn: true },
-];
+// ▼▼▼ 修改：删除本地的 DEFAULT_EDITABLE_APIS 和 BUILT_IN_APIS 定义，因为它们已从配置文件导入 ▼▼▼
+// (此区域现在为空)
+// ▲▲▲ 修改结束 ▲▲▲
 
 let ui = {};
 
-// ▼▼▼ 新增：检查并创建默认可编辑卡片的函数 ▼▼▼
-/**
- * 确保默认的可编辑 API 配置存在于数据库中。
- * 如果不存在，则创建它们。
- */
 async function ensureDefaultConfigs() {
     const userConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
     let configsChanged = false;
 
-    // 检查每一个我们定义的默认API
     DEFAULT_EDITABLE_APIS.forEach(defaultApi => {
-        // 通过我们设定的特殊ID来查找
         const exists = userConfigs.some(config => config.id === defaultApi.id);
         if (!exists) {
-            // 如果数据库里没有，就把它加进去
-            userConfigs.push(defaultApi);
+            // 将配置文件中的静态部分和动态部分合并后存入
+            userConfigs.push({
+                ...defaultApi,
+                apiKey: '',
+                enabled: true,
+                model: []
+            });
             configsChanged = true;
         }
     });
 
-    // 如果我们添加了新的默认配置，就把更新后的整个列表存回数据库
     if (configsChanged) {
         await dbStorage.setItem(API_CONFIGS_KEY, userConfigs);
     }
 }
 
 async function renderApiCards() {
-    // 1. 获取所有数据（这个逻辑不变）
     const userConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
     const builtInStates = await dbStorage.getItem(BUILT_IN_API_STATES_KEY) || {};
     const builtInUserData = await dbStorage.getItem(BUILT_IN_API_DATA_KEY) || {};
 
-    // 2. 合并只读的内置API数据（这个逻辑不变）
     const processedBuiltInApis = BUILT_IN_APIS.map(api => {
         const userData = builtInUserData[api.id] || {};
         const stateData = builtInStates[api.id] || {};
         return { ...api, ...userData, enabled: stateData.enabled ?? false };
     });
 
-    // 3. 将用户卡片（现在已经包含了我们的默认卡片）和只读卡片合并
     const allConfigs = [...userConfigs, ...processedBuiltInApis];
 
     const container = document.getElementById('text');
@@ -202,7 +173,7 @@ async function renderApiCards() {
     }
 }
 
-// ... (handleAddApi, handleToggleStatus 等其他函数保持不变) ...
+// ... (handleAddApi, handleToggleStatus 等其他函数保持不变，无需修改) ...
 function updateFormForProvider(providerName) {
     const config = PROVIDER_CONFIG[providerName];
     if (!config || !ui.apiKeyInput || !ui.baseUrlInput || !ui.apiPathGroup) return;
@@ -341,12 +312,8 @@ async function handleBulkDelete() {
         exitMultiSelectMode();
     }
 }
-
 async function initializePage() {
-    // ▼▼▼ 关键一步：在页面加载时，首先确保我们的默认卡片已存在 ▼▼▼
     await ensureDefaultConfigs();
-
-    // --- Tab 切换逻辑 (不变) ---
     const indicator = document.querySelector('.active-tab-indicator');
     const tabsNav = document.querySelector('.tabs-nav');
     function updateIndicatorPosition() {
@@ -392,14 +359,12 @@ async function initializePage() {
     if (ui.overlay) { ui.overlay.addEventListener('click', (event) => { if (event.target === ui.overlay) closeApiConfigPanel(); }); }
     if (ui.panelTabsContainer) { ui.panelTabsContainer.addEventListener('click', (event) => { if (event.target.classList.contains('modal-tab')) switchPanelTab(event.target.dataset.tab); }); }
     if (ui.panelContentContainer) { ui.panelContentContainer.addEventListener('click', (event) => { if (event.target.matches('.pill-option')) { const clickedPill = event.target; clickedPill.parentElement.querySelectorAll('.pill-option').forEach(pill => pill.classList.remove('active')); clickedPill.classList.add('active'); updateFormForProvider(clickedPill.dataset.provider); } }); }
-
     const textTabPane = document.getElementById('text');
     if (textTabPane) {
         let longPressTimer;
         let draggedElement = null;
         let isDragging = false;
         let hasMovedSincePress = false;
-
         textTabPane.addEventListener('click', (event) => {
             if (isDragging) return;
             const card = event.target.closest('.api-config-card');
@@ -415,18 +380,14 @@ async function initializePage() {
                 } else if (target.closest('.status-enabled') || target.closest('.status-disabled')) {
                     handleToggleStatus(apiId);
                 } else {
-                    // ★★★ 这个判断逻辑现在完美兼容所有情况 ★★★
                     if (apiId.startsWith('built-in-')) {
                         window.location.href = `./api-room-builtin.html?id=${apiId}`;
                     } else {
-                        // 我们的'default-openai'和'default-google'会走这里
                         window.location.href = `./api-room.html?id=${apiId}`;
                     }
                 }
             }
         });
-
-        // ... (拖拽逻辑 pressStartHandler, pressMoveHandler, pressEndHandler 保持不变) ...
         const pressStartHandler = (event) => {
             const handle = event.target.closest('.card-action-handle');
             if (!handle || isMultiSelectMode || (event.button && event.button !== 0)) return;
@@ -479,7 +440,6 @@ async function initializePage() {
     
     await renderApiCards();
 }
-
 createPageLayout({
     title: '牵引仪',
     contentHtml: apiManagementPageContent,
