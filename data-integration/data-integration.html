@@ -10,6 +10,7 @@
 <body>
 
     <div class="container">
+        <!-- ... (页面主体内容不变) ... -->
         <header class="header">
             <a href="../app.html" class="header-btn back-btn" title="返回">
                 <i class="fa-solid fa-chevron-left"></i>
@@ -45,14 +46,15 @@
     
     <input type="file" id="import-file-input" accept=".zip" style="display: none;">
     
-    <!-- ... 依赖脚本和配置脚本 ... -->
+    <!-- ▼▼▼ 修改开始 ▼▼▼ -->
+    <!-- 依赖脚本 -->
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="../config/profile.config.js"></script>
-    <script src="../config/chat.config.js"></script>
-    <script src="../config/api.config.js"></script>
-    <script src="../config/app.config.js"></script>
-    <script src="data-integration.js"></script>
+    
+    <!-- 主逻辑脚本，以模块方式加载 -->
+    <!-- 浏览器会自动处理 import 语句，所以我们不再需要在这里引入 config 文件 -->
+    <script type="module" src="data-integration.js"></script>
+    <!-- ▲▲▲ 修改结束 ▲▲▲ -->
 
 </body>
 </html>

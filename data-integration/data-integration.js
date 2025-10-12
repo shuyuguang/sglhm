@@ -1,26 +1,32 @@
 // data-integration.js
 
+// ▼▼▼ 修改开始 ▼▼▼
+// 导入需要的配置变量
+import { ALL_APP_DB_KEYS } from '../config/app.config.js';
+import { CHAT_DB_KEYS } from '../config/chat.config.js';
+// ▲▲▲ 修改结束 ▲▲▲
+
 document.addEventListener('DOMContentLoaded', () => {
     // ====================【数据库和配置】====================
     const db = new Dexie('userSettingsDB');
     db.version(1).stores({ keyValueStore: 'key' });
-    const STATIC_DB_KEYS = ALL_APP_DB_KEYS;
+    // ▼▼▼ 修改：直接使用导入的 ALL_APP_DB_KEYS，不再需要中间变量 ▼▼▼
+    // const STATIC_DB_KEYS = ALL_APP_DB_KEYS; // 这行可以删除了
 
     // ====================【DOM 元素获取】====================
-    // 本地功能按钮
+    // ... (这部分代码保持不变) ...
     const exportBtn = document.getElementById('export-local-btn');
     const importBtn = document.getElementById('import-local-btn');
     const clearBtn = document.getElementById('clear-local-btn');
     const importFileInput = document.getElementById('import-file-input');
-
-    // 云端功能按钮
     const exportCloudBtn = document.getElementById('export-cloud-btn');
     const importCloudBtn = document.getElementById('import-cloud-btn');
     const clearCloudBtn = document.getElementById('clear-cloud-btn');
 
     // ====================【通用辅助函数】====================
     const getKeysToProcess = async () => {
-        const keys = new Set(STATIC_DB_KEYS);
+        // ▼▼▼ 修改：使用导入的 ALL_APP_DB_KEYS ▼▼▼
+        const keys = new Set(ALL_APP_DB_KEYS);
         const activeChatListData = await db.keyValueStore.get(CHAT_DB_KEYS.ACTIVE_CHAT_LIST);
         if (activeChatListData && activeChatListData.value) {
             activeChatListData.value.forEach(char => {
@@ -30,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return Array.from(keys);
     };
 
+    // ... (文件其余部分代码保持不变) ...
     const fetchDataFromDB = async (keys) => {
         const items = await db.keyValueStore.bulkGet(keys);
         const data = {};
@@ -48,8 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getExtensionFromMime(mimeType) { return mimeType.split('/')[1] || 'bin'; }
-
-    // ====================【核心功能函数】====================
 
     async function handleExport() {
         try {
@@ -182,7 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('云端功能正在开发中，敬请期待！');
     }
 
-    // ====================【事件监听器绑定】====================
     exportBtn.addEventListener('click', handleExport);
     importBtn.addEventListener('click', () => importFileInput.click());
     importFileInput.addEventListener('change', processImportFile);
