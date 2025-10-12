@@ -123,11 +123,11 @@ html, body {
 }
 
 #actions-toggle-btn { order: 1; }
-#model-toggle-btn { order: 2; }
-#inspiration-btn { order: 3; }
-.chat-input-wrapper { order: 4; }
-#prompt-btn { order: 5; }
-#emoji-toggle-btn { order: 6; }
+/* #model-toggle-btn { order: 2; } <-- 已移除 */
+#inspiration-btn { order: 2; } /* <-- 顺序调整 */
+.chat-input-wrapper { order: 3; } /* <-- 顺序调整 */
+#prompt-btn { order: 4; } /* <-- 顺序调整 */
+#emoji-toggle-btn { order: 5; } /* <-- 顺序调整 */
 
 
 .chat-input-wrapper {
@@ -154,7 +154,6 @@ html, body {
 
 #actions-toggle-btn,
 #emoji-toggle-btn,
-#model-toggle-btn,
 #prompt-btn,
 #inspiration-btn {
     background-color: var(--page-bg);
@@ -172,7 +171,6 @@ html, body {
     transition: background-color 0.3s ease, color 0.3s ease; 
 }
 
-#model-toggle-btn,
 #prompt-btn,
 #inspiration-btn {
     display: none;
@@ -188,10 +186,6 @@ html, body {
 
 #actions-toggle-btn .fa-plus {
     font-weight: 300;
-}
-
-#model-toggle-btn .fa-link {
-    font-weight: 600;
 }
 
 .send-buttons-container {
@@ -239,6 +233,27 @@ html, body {
     filter: brightness(1.1);
 }
 
+/* ▼▼▼ 新增：模型选择胶囊按钮的专属样式 ▼▼▼ */
+.send-action-btn.model-select-btn {
+    background-color: #f1f3f5; /* 默认灰色 */
+    color: #495057;
+    max-width: 120px; /* 限制最大宽度，防止模型名过长 */
+}
+
+.send-action-btn.model-select-btn.active {
+    background-color: var(--send-btn-bg); /* 选中后变为主题紫色 */
+    color: var(--text-light);
+}
+
+#selected-model-name {
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis; /* 超出部分显示... */
+    white-space: nowrap;
+    vertical-align: middle; /* 垂直居中 */
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */
+
 
 /* --- 聚焦（展开）时的样式 --- */
 .chat-input-area.input-focused .chat-input-main {
@@ -254,24 +269,18 @@ html, body {
 .chat-input-area.input-focused .chat-input-controls {
     display: flex;
     order: 2;
-    position: relative; /* <-- 新增：创建新的堆叠上下文 */
-    z-index: 2;         /* <-- 新增：提升层级，确保在最上层可点击 */
 }
 
-/* ▼▼▼ 修改点 ▼▼▼ */
 .chat-input-area.input-focused .chat-input-wrapper {
     order: 1; 
     background-color: transparent; 
     min-height: auto; 
     margin-bottom: -4px;
-    /* flex-grow: 1;  <-- 问题根源就在这里，将其移除 */
     display: flex;
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
 
 .chat-input-area.input-focused #actions-toggle-btn,
 .chat-input-area.input-focused #emoji-toggle-btn,
-.chat-input-area.input-focused #model-toggle-btn,
 .chat-input-area.input-focused #prompt-btn,
 .chat-input-area.input-focused #inspiration-btn {
     background-color: transparent;
@@ -279,7 +288,6 @@ html, body {
     transition: transform 0.2s ease-out;
 }
 
-.chat-input-area.input-focused #model-toggle-btn,
 .chat-input-area.input-focused #prompt-btn,
 .chat-input-area.input-focused #inspiration-btn {
     display: flex;
@@ -304,8 +312,8 @@ html, body {
     overflow-y: auto;  
 }
 
-/* --- /* --- 模型选择面板的样式 (已修正) --- */
-/* 使用 .modal-overlay 替换 .bottom-sheet-overlay */
+/* --- 模型选择面板的样式 (保持之前的修复) --- */
+/* 模态框遮罩层 */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -315,18 +323,19 @@ html, body {
     background-color: rgba(0, 0, 0, 0.4);
     display: flex;
     justify-content: center;
-    align-items: center; /* 确保是垂直居中 */
+    align-items: center; 
     z-index: 1000;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
 }
+
 .modal-overlay.active {
     opacity: 1;
     pointer-events: auto;
 }
 
-/* 修正面板进入动画 */
+/* 模态框面板的进入动画 */
 .modal-overlay .modal-panel {
     transform: scale(0.95);
     opacity: 0;
@@ -338,55 +347,6 @@ html, body {
     opacity: 1;
 }
 
-.bottom-sheet-header {
-    padding: 16px;
-    font-size: 1.1em;
-    font-weight: 600;
-    text-align: center;
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
-}
-.model-list-container {
-    overflow-y: auto;
-    padding: 8px 0;
-}
-.model-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 20px;
-    cursor: pointer;
-}
-.model-item:hover {
-    background-color: #e9ecef;
-}
-.model-info {
-    flex-grow: 1;
-}
-.model-item-name {
-    font-size: 1em;
-    color: var(--text-dark);
-}
-.model-item-api {
-    font-size: 0.8em;
-    color: var(--text-meta);
-}
-.model-item .fa-check {
-    color: var(--send-btn-bg);
-    font-size: 1.1em;
-    visibility: hidden;
-}
-.model-item.active .fa-check {
-    visibility: visible;
-}
-.no-models-message {
-    padding: 30px 20px;
-    text-align: center;
-    color: var(--text-meta);
-}
-/* ====================
-   模型选择模态框样式
-   ==================== */
-
 /* 模态框面板的特定样式 */
 .model-selector-panel {
     width: 90%;
@@ -395,21 +355,24 @@ html, body {
     max-height: 600px;
     display: flex;
     flex-direction: column;
+    background-color: #f8f9fa; 
+    border-radius: 16px; 
+    overflow: hidden; 
 }
 
 /* 让模态框主体内容区域可以滚动 */
 .model-selector-panel .modal-body {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 0 16px 16px; /* 调整内边距 */
-    -webkit-overflow-scrolling: touch; /* 在移动设备上实现平滑滚动 */
+    padding: 8px 16px 16px; 
+    -webkit-overflow-scrolling: touch; 
 }
 
 /* 模型列表容器 */
 .model-list-container {
     display: flex;
     flex-direction: column;
-    gap: 8px; /* 列表项之间的间距 */
+    gap: 8px; 
 }
 
 /* 没有可用模型时的提示信息 */
@@ -427,13 +390,13 @@ html, body {
     justify-content: space-between;
     padding: 12px;
     border-radius: 8px;
-    background-color: #f0f2f5;
+    background-color: #ffffff;
     cursor: pointer;
     transition: background-color 0.2s, box-shadow 0.2s;
 }
 
 .model-item:hover {
-    background-color: #e4e6eb;
+    background-color: #e9ecef;
 }
 
 /* 模型信息（名称和API来源） */
@@ -455,7 +418,7 @@ html, body {
 
 /* 选中状态的对勾图标 */
 .model-item .fa-check {
-    color: #007bff;
+    color: var(--send-btn-bg);
     opacity: 0;
     transform: scale(0.8);
     transition: opacity 0.2s, transform 0.2s;
@@ -463,8 +426,8 @@ html, body {
 
 /* 激活状态下的样式 */
 .model-item.active {
-    background-color: #e7f3ff;
-    box-shadow: 0 0 0 2px #007bff inset;
+    background-color: #f0eefc;
+    box-shadow: 0 0 0 2px var(--send-btn-bg) inset;
 }
 
 .model-item.active .fa-check {

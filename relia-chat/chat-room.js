@@ -1,15 +1,13 @@
 // relia-chat/chat-room.js
 
 import { dbStorage } from '../common/db.js';
-// ▼▼▼ 修改：将所有需要的配置都通过 import 导入 ▼▼▼
 import { API_DB_KEYS, ALL_BUILT_IN_API_DEFINITIONS } from '../config/api.config.js';
 import { PROFILE_DB_KEYS, GENDER_OPTIONS, LONG_PRESS_DURATION } from '../config/profile.config.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
-// ▲▲▲ 修改结束 ▲▲▲
 
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // --- 1 & 2. 获取数据和生成HTML ---
+    // --- 1 & 2. 获取数据和生成HTML (部分修改) ---
     const urlParams = new URLSearchParams(window.location.search);
     const charId = urlParams.get('id');
     if (!charId) {
@@ -29,12 +27,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const currentUser = allUsers ? allUsers.find(u => u.id === currentUserId) : null;
     const user = currentUser || { name: 'User', avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg' };
     
-    // ▼▼▼ 修改开始：移除这里的 modelSelectorHtml 定义 ▼▼▼
-    /*
-    const modelSelectorHtml = `...`; // <-- 删除这一整块
-    */
-    // ▲▲▲ 修改结束 ▲▲▲
-
     const pageHtml = `
         <div class="chat-container">
             <header class="chat-header">
@@ -54,13 +46,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="chat-input-wrapper" id="chat-input-wrapper">
                         <textarea id="chat-input" placeholder="点击输入消息..." rows="1"></textarea>
                         <div class="send-buttons-container" id="send-buttons-container">
+                            <!-- ▼▼▼ 新增：新的模型选择胶囊按钮 ▼▼▼ -->
+                            <button id="select-model-btn" class="send-action-btn model-select-btn">
+                                <span id="selected-model-name">选择模型</span>
+                            </button>
+                            <!-- ▲▲▲ 新增结束 ▲▲▲ -->
                             <button id="respond-btn" class="send-action-btn">响应</button>
                             <button id="send-btn" class="send-action-btn primary">发送</button>
                         </div>
                     </div>
                     <div class="chat-input-controls">
                         <button id="actions-toggle-btn"><i class="fa-solid fa-plus"></i></button>
-                        <button id="model-toggle-btn"><i class="fa-solid fa-link"></i></button>
+                        <!-- ▼▼▼ 移除：旧的链接图标按钮 ▼▼▼ -->
+                        <!-- <button id="model-toggle-btn"><i class="fa-solid fa-link"></i></button> -->
+                        <!-- ▲▲▲ 移除结束 ▲▲▲ -->
                         <button id="prompt-btn"><i class="fa-solid fa-bolt"></i></button>
                         <button id="inspiration-btn"><i class="fa-regular fa-lightbulb"></i></button>
                         <button id="emoji-toggle-btn"><i class="fa-regular fa-face-smile"></i></button>
@@ -85,11 +84,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             </footer>
         </div>
-`; // <-- ▼▼▼ 修改：移除末尾的 ${modelSelectorHtml} ▼▼▼
+`;
     document.body.insertAdjacentHTML('afterbegin', pageHtml);
-    // ▲▲▲ 修改结束 ▲▲▲
 
-    // --- 3. 获取DOM元素和定义变量 ---
+    // --- 3. 获取DOM元素和定义变量 (部分修改) ---
     const chatArea = document.getElementById('chat-messages-area');
     const input = document.getElementById('chat-input');
     const chatInputArea = document.getElementById('chat-input-area');
@@ -98,19 +96,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sendButtonsContainer = document.getElementById('send-buttons-container');
     const sendBtn = document.getElementById('send-btn');
     const respondBtn = document.getElementById('respond-btn');
-    const modelToggleBtn = document.getElementById('model-toggle-btn');
+    // ▼▼▼ 新增/修改：获取新的模型按钮元素 ▼▼▼
+    const selectModelBtn = document.getElementById('select-model-btn');
+    const selectedModelName = document.getElementById('selected-model-name');
+    // ▲▲▲ 新增/修改结束 ▲▲▲
     const modelSelectorOverlay = document.getElementById('model-selector-overlay');
     const modelListContainer = document.getElementById('model-list-container');
-    // ▼▼▼ 新增：获取新的关闭按钮 ▼▼▼
     const closeModelSelectorBtn = document.getElementById('close-model-selector-btn');
-    // ▲▲▲ 新增结束 ▲▲▲
     const promptBtn = document.getElementById('prompt-btn');
     const inspirationBtn = document.getElementById('inspiration-btn');
     let currentChatApi = null;
     const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`;
     let chatHistory = [];
 
-    // --- Profile 编辑器集成逻辑 ---
+    // --- Profile 编辑器集成逻辑 (无变化) ---
+    // ... (这部分代码保持不变) ...
     let profileEditor; 
     function getProfileEditorDOMElements() {
         return {
@@ -222,7 +222,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         profileEditor = { state, ui, data, events };
     }
 
-    // --- 4. 核心功能函数 ---
+    // --- 4. 核心功能函数 (部分修改) ---
+    // ... (constructSystemPrompt, formatChatHistoryForApi, renderMessage, renderSystemMessage, loadAndRenderHistory, updateButtonStates, handleSendMessage 函数保持不变) ...
     function constructSystemPrompt(charProfile, userProfile) { 
         let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
         prompt += `### 角色设定\n`;
@@ -316,7 +317,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
             if (!currentChatApi) {
-                alert('请先点击左下角的“链接”图标选择一个牵引仪模型！');
+                alert('请先点击“选择模型”按钮选择一个牵引仪模型！');
                 return;
             }
             sendBtn.disabled = true;
@@ -377,7 +378,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     }
-    // ▼▼▼ 新增/修改：模型选择器的打开和关闭逻辑 ▼▼▼
+    
+    // ▼▼▼ 新增：更新模型按钮外观和文本的函数 ▼▼▼
+    function updateModelButtonText() {
+        if (currentChatApi) {
+            selectedModelName.textContent = currentChatApi.model;
+            selectModelBtn.classList.add('active');
+        } else {
+            selectedModelName.textContent = '选择模型';
+            selectModelBtn.classList.remove('active');
+        }
+    }
+    // ▲▲▲ 新增结束 ▲▲▲
+
     const closeModelSelector = () => {
         modelSelectorOverlay?.classList.remove('active');
     };
@@ -418,7 +431,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderModelList(availableModels);
         modelSelectorOverlay.classList.add('active');
     }
-    // ▲▲▲ 修改结束 ▲▲▲
     function renderModelList(models) { 
         if (models.length === 0) {
             modelListContainer.innerHTML = `<p class="no-models-message">没有可用的模型<br>请先到“牵引仪”页面启用并选择模型</p>`;
@@ -449,7 +461,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatInputArea.classList.remove('actions-expanded', 'emoji-expanded');
     };
 
-    // --- 5. 绑定事件 ---
+    // --- 5. 绑定事件 (部分修改) ---
     input.addEventListener('input', () => {
         if (input.value.trim() === '') {
             input.style.height = '';
@@ -463,10 +475,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (respondBtn) respondBtn.addEventListener('click', () => handleSendMessage(true));
     if (actionsToggleBtn) actionsToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); chatInputArea.classList.remove('emoji-expanded'); chatInputArea.classList.toggle('actions-expanded'); });
     if (emojiToggleBtn) emojiToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); chatInputArea.classList.remove('actions-expanded'); chatInputArea.classList.toggle('emoji-expanded'); });
-    if (modelToggleBtn) modelToggleBtn.addEventListener('click', openModelSelector);
+    // ▼▼▼ 修改：将点击事件绑定到新的胶囊按钮上 ▼▼▼
+    if (selectModelBtn) selectModelBtn.addEventListener('click', openModelSelector);
+    // ▲▲▲ 修改结束 ▲▲▲
     if (promptBtn) { promptBtn.addEventListener('click', () => { alert('“快捷指令（闪电）”功能待开发'); }); }
     if (inspirationBtn) { inspirationBtn.addEventListener('click', () => { alert('“灵感（灯泡）”功能待开发'); }); }
-    // ▼▼▼ 修改：更新模态框的关闭事件绑定 ▼▼▼
     if (modelSelectorOverlay) { 
         modelSelectorOverlay.addEventListener('click', (e) => { 
             if (e.target === modelSelectorOverlay) { 
@@ -477,7 +490,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (closeModelSelectorBtn) {
         closeModelSelectorBtn.addEventListener('click', closeModelSelector);
     }
-    // ▲▲▲ 修改结束 ▲▲▲
     if (modelListContainer) {
         modelListContainer.addEventListener('click', (e) => {
             const item = e.target.closest('.model-item');
@@ -493,6 +505,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     item.classList.add('active');
                 }
                 console.log('当前选择的API:', currentChatApi);
+                // ▼▼▼ 新增：选择后更新按钮文本 ▼▼▼
+                updateModelButtonText();
+                // ▲▲▲ 新增结束 ▲▲▲
                 setTimeout(() => modelSelectorOverlay.classList.remove('active'), 200);
             }
         });
@@ -511,8 +526,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // --- 6. 初始化页面 ---
+    // --- 6. 初始化页面 (部分修改) ---
     await loadAndRenderHistory();
     updateButtonStates();
+    // ▼▼▼ 新增：初始化按钮状态 ▼▼▼
+    updateModelButtonText();
+    // ▲▲▲ 新增结束 ▲▲▲
     await setupProfileEditor();
 });
