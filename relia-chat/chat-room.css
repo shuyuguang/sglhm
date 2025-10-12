@@ -254,6 +254,8 @@ html, body {
 .chat-input-area.input-focused .chat-input-controls {
     display: flex;
     order: 2;
+    position: relative; /* <-- 新增：创建新的堆叠上下文 */
+    z-index: 2;         /* <-- 新增：提升层级，确保在最上层可点击 */
 }
 
 /* ▼▼▼ 修改点 ▼▼▼ */
