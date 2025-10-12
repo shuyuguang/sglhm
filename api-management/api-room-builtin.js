@@ -197,7 +197,8 @@ async function handleApiTest(apiId) {
     let streamPayload;
 
     if (config.provider === 'google') {
-        endpoint = `${baseUrl}/models/${selectedModel}:generateContent?key=${apiKey}`;
+        // ▼▼▼ 修正点：直接使用 selectedModel，因为它已包含 "models/..." 前缀 ▼▼▼
+        endpoint = `${baseUrl}/${selectedModel}:generateContent?key=${apiKey}`;
         const googlePayload = {
             contents: [{ parts: [{ text: userMessage }] }]
         };
@@ -227,8 +228,9 @@ async function handleApiTest(apiId) {
     try {
         const nonStreamResult = await testNonStreaming(endpoint, { ...fetchOptions, body: JSON.stringify(nonStreamPayload) });
         
+        // ▼▼▼ 修正点：流式URL也直接使用 selectedModel ▼▼▼
         const streamEndpoint = config.provider === 'google' 
-            ? `${baseUrl}/models/${selectedModel}:streamGenerateContent?key=${apiKey}&alt=sse`
+            ? `${baseUrl}/${selectedModel}:streamGenerateContent?key=${apiKey}&alt=sse`
             : endpoint;
         const streamResult = await testStreaming(streamEndpoint, { ...fetchOptions, body: JSON.stringify(streamPayload) });
         
