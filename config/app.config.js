@@ -5,7 +5,8 @@
  * 它会聚合所有功能模块的数据库键。
  */
 
-const ALL_APP_DB_KEYS = [
+// ▼▼▼ 修改：将 const 改为 var，使其成为全局变量 ▼▼▼
+var ALL_APP_DB_KEYS = [
     // 1. 从 Profile 模块导入
     ...ALL_PROFILE_DB_KEYS,
 
@@ -18,3 +19,4 @@ const ALL_APP_DB_KEYS = [
     // 4. 从 Diary 模块导入 (未来扩展)
     // ...ALL_DIARY_DB_KEYS
 ];
+// ▲▲▲ 修改结束 ▲▲▲
