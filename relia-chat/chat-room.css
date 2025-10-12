@@ -256,14 +256,16 @@ html, body {
     order: 2;
 }
 
+/* ▼▼▼ 修改点 ▼▼▼ */
 .chat-input-area.input-focused .chat-input-wrapper {
     order: 1; 
     background-color: transparent; 
     min-height: auto; 
     margin-bottom: -4px;
-    flex-grow: 1;
+    /* flex-grow: 1;  <-- 问题根源就在这里，将其移除 */
     display: flex;
 }
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
 .chat-input-area.input-focused #actions-toggle-btn,
 .chat-input-area.input-focused #emoji-toggle-btn,
@@ -285,15 +287,13 @@ html, body {
     margin-left: auto;
 }
 
-/* ▼▼▼ 核心修复：在聚焦状态下，重置表情包按钮的样式 ▼▼▼ */
 .chat-input-area.input-focused #emoji-toggle-btn {
-    position: relative; /* 取消绝对定位 */
-    right: auto;        /* 重置 right */
-    bottom: auto;       /* 重置 bottom */
-    z-index: auto;      /* 重置 z-index */
-    margin-left: 0;     /* 确保它没有自己的左边距 */
+    position: relative;
+    right: auto;
+    bottom: auto;
+    z-index: auto;
+    margin-left: 0;
 }
-/* ▲▲▲ 修复结束 ▲▲▲ */
 
 .chat-input-area.input-focused #chat-input {
     padding-bottom: 0px; 
