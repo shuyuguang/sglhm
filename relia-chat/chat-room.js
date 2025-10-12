@@ -46,20 +46,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="chat-input-wrapper" id="chat-input-wrapper">
                         <textarea id="chat-input" placeholder="点击输入消息..." rows="1"></textarea>
                         <div class="send-buttons-container" id="send-buttons-container">
-                            <!-- ▼▼▼ 新增：新的模型选择胶囊按钮 ▼▼▼ -->
                             <button id="select-model-btn" class="send-action-btn model-select-btn">
                                 <span id="selected-model-name">选择模型</span>
                             </button>
-                            <!-- ▲▲▲ 新增结束 ▲▲▲ -->
                             <button id="respond-btn" class="send-action-btn">响应</button>
                             <button id="send-btn" class="send-action-btn primary">发送</button>
                         </div>
                     </div>
                     <div class="chat-input-controls">
                         <button id="actions-toggle-btn"><i class="fa-solid fa-plus"></i></button>
-                        <!-- ▼▼▼ 移除：旧的链接图标按钮 ▼▼▼ -->
-                        <!-- <button id="model-toggle-btn"><i class="fa-solid fa-link"></i></button> -->
-                        <!-- ▲▲▲ 移除结束 ▲▲▲ -->
                         <button id="prompt-btn"><i class="fa-solid fa-bolt"></i></button>
                         <button id="inspiration-btn"><i class="fa-regular fa-lightbulb"></i></button>
                         <button id="emoji-toggle-btn"><i class="fa-regular fa-face-smile"></i></button>
@@ -96,10 +91,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sendButtonsContainer = document.getElementById('send-buttons-container');
     const sendBtn = document.getElementById('send-btn');
     const respondBtn = document.getElementById('respond-btn');
-    // ▼▼▼ 新增/修改：获取新的模型按钮元素 ▼▼▼
     const selectModelBtn = document.getElementById('select-model-btn');
     const selectedModelName = document.getElementById('selected-model-name');
-    // ▲▲▲ 新增/修改结束 ▲▲▲
     const modelSelectorOverlay = document.getElementById('model-selector-overlay');
     const modelListContainer = document.getElementById('model-list-container');
     const closeModelSelectorBtn = document.getElementById('close-model-selector-btn');
@@ -110,7 +103,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let chatHistory = [];
 
     // --- Profile 编辑器集成逻辑 (无变化) ---
-    // ... (这部分代码保持不变) ...
     let profileEditor; 
     function getProfileEditorDOMElements() {
         return {
@@ -222,8 +214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         profileEditor = { state, ui, data, events };
     }
 
-    // --- 4. 核心功能函数 (部分修改) ---
-    // ... (constructSystemPrompt, formatChatHistoryForApi, renderMessage, renderSystemMessage, loadAndRenderHistory, updateButtonStates, handleSendMessage 函数保持不变) ...
+    // --- 4. 核心功能函数 (无变化) ---
     function constructSystemPrompt(charProfile, userProfile) { 
         let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
         prompt += `### 角色设定\n`;
@@ -286,8 +277,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (savedHistory && Array.isArray(savedHistory) && savedHistory.length > 0) {
             chatHistory = savedHistory;
             chatHistory.forEach(message => renderMessage(message));
-        } else {
-            // renderSystemMessage(`你现在正在和 ${character.name} 聊天`, 'info'); // 已注释掉
         }
     }
     function updateButtonStates() { 
@@ -379,7 +368,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
     
-    // ▼▼▼ 新增：更新模型按钮外观和文本的函数 ▼▼▼
     function updateModelButtonText() {
         if (currentChatApi) {
             selectedModelName.textContent = currentChatApi.model;
@@ -389,48 +377,64 @@ document.addEventListener('DOMContentLoaded', async () => {
             selectModelBtn.classList.remove('active');
         }
     }
-    // ▲▲▲ 新增结束 ▲▲▲
 
     const closeModelSelector = () => {
         modelSelectorOverlay?.classList.remove('active');
     };
 
-    async function openModelSelector() { 
-        const [userConfigs, builtInData, builtInStates] = await Promise.all([
-            dbStorage.getItem(API_DB_KEYS.CONFIGS) || [],
-            dbStorage.getItem(API_DB_KEYS.BUILT_IN_DATA) || {},
-            dbStorage.getItem(API_DB_KEYS.BUILT_IN_STATES) || {}
-        ]);
-        let availableModels = [];
-        userConfigs
-            .filter(api => api.enabled && api.model?.length > 0)
-            .forEach(api => {
-                api.model.forEach(modelName => {
-                    availableModels.push({
-                        id: `${api.id}-${modelName}`, apiKey: api.apiKey,
-                        baseUrl: api.baseUrl, path: api.path,
-                        model: modelName, apiName: api.name,
-                    });
-                });
-            });
-        Object.keys(builtInStates)
-            .filter(apiId => builtInStates[apiId]?.enabled && builtInData[apiId]?.model?.length > 0)
-            .forEach(apiId => {
-                const userData = builtInData[apiId];
-                const staticData = ALL_BUILT_IN_API_DEFINITIONS[apiId];
-                if (staticData) {
-                    userData.model.forEach(modelName => {
-                         availableModels.push({
-                            id: `${apiId}-${modelName}`, apiKey: userData.apiKey,
-                            baseUrl: staticData.baseUrl, path: staticData.path,
-                            model: modelName, apiName: staticData.name,
+    // ▼▼▼ 修改：这是主要修复点 ▼▼▼
+    async function openModelSelector() {
+        try {
+            const [userConfigs, builtInData, builtInStates] = await Promise.all([
+                dbStorage.getItem(API_DB_KEYS.CONFIGS) || [],
+                dbStorage.getItem(API_DB_KEYS.BUILT_IN_DATA) || {},
+                dbStorage.getItem(API_DB_KEYS.BUILT_IN_STATES) || {}
+            ]);
+
+            let availableModels = [];
+
+            // 处理用户自定义的 API
+            userConfigs
+                .filter(api => api.enabled && Array.isArray(api.model) && api.model.length > 0)
+                .forEach(api => {
+                    api.model.forEach(modelName => {
+                        availableModels.push({
+                            id: `${api.id}-${modelName}`, apiKey: api.apiKey,
+                            baseUrl: api.baseUrl, path: api.path,
+                            model: modelName, apiName: api.name,
                         });
                     });
-                }
-            });
-        renderModelList(availableModels);
-        modelSelectorOverlay.classList.add('active');
+                });
+
+            // 处理内置的 API
+            Object.keys(builtInStates)
+                .forEach(apiId => {
+                    const userData = builtInData[apiId];
+                    // 确保 userData 和 userData.model 都是有效的
+                    if (builtInStates[apiId]?.enabled && userData && Array.isArray(userData.model) && userData.model.length > 0) {
+                        const staticData = ALL_BUILT_IN_API_DEFINITIONS[apiId];
+                        if (staticData) {
+                            userData.model.forEach(modelName => {
+                                availableModels.push({
+                                    id: `${apiId}-${modelName}`, apiKey: userData.apiKey,
+                                    baseUrl: staticData.baseUrl, path: staticData.path,
+                                    model: modelName, apiName: staticData.name,
+                                });
+                            });
+                        }
+                    }
+                });
+            
+            renderModelList(availableModels);
+            modelSelectorOverlay.classList.add('active'); // 现在这行代码可以安全执行了
+
+        } catch (error) {
+            console.error("打开模型选择器失败:", error);
+            alert("加载模型列表失败，请检查控制台获取更多信息。");
+        }
     }
+    // ▲▲▲ 修改结束 ▲▲▲
+
     function renderModelList(models) { 
         if (models.length === 0) {
             modelListContainer.innerHTML = `<p class="no-models-message">没有可用的模型<br>请先到“牵引仪”页面启用并选择模型</p>`;
@@ -461,7 +465,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatInputArea.classList.remove('actions-expanded', 'emoji-expanded');
     };
 
-    // --- 5. 绑定事件 (部分修改) ---
+    // --- 5. 绑定事件 (无变化) ---
     input.addEventListener('input', () => {
         if (input.value.trim() === '') {
             input.style.height = '';
@@ -475,9 +479,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (respondBtn) respondBtn.addEventListener('click', () => handleSendMessage(true));
     if (actionsToggleBtn) actionsToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); chatInputArea.classList.remove('emoji-expanded'); chatInputArea.classList.toggle('actions-expanded'); });
     if (emojiToggleBtn) emojiToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); chatInputArea.classList.remove('actions-expanded'); chatInputArea.classList.toggle('emoji-expanded'); });
-    // ▼▼▼ 修改：将点击事件绑定到新的胶囊按钮上 ▼▼▼
     if (selectModelBtn) selectModelBtn.addEventListener('click', openModelSelector);
-    // ▲▲▲ 修改结束 ▲▲▲
     if (promptBtn) { promptBtn.addEventListener('click', () => { alert('“快捷指令（闪电）”功能待开发'); }); }
     if (inspirationBtn) { inspirationBtn.addEventListener('click', () => { alert('“灵感（灯泡）”功能待开发'); }); }
     if (modelSelectorOverlay) { 
@@ -505,9 +507,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     item.classList.add('active');
                 }
                 console.log('当前选择的API:', currentChatApi);
-                // ▼▼▼ 新增：选择后更新按钮文本 ▼▼▼
                 updateModelButtonText();
-                // ▲▲▲ 新增结束 ▲▲▲
                 setTimeout(() => modelSelectorOverlay.classList.remove('active'), 200);
             }
         });
@@ -526,11 +526,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // --- 6. 初始化页面 (部分修改) ---
+    // --- 6. 初始化页面 (无变化) ---
     await loadAndRenderHistory();
     updateButtonStates();
-    // ▼▼▼ 新增：初始化按钮状态 ▼▼▼
     updateModelButtonText();
-    // ▲▲▲ 新增结束 ▲▲▲
     await setupProfileEditor();
 });

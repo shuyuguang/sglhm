@@ -123,10 +123,11 @@ html, body {
 }
 
 #actions-toggle-btn { order: 1; }
-#inspiration-btn { order: 2; }
-.chat-input-wrapper { order: 3; }
-#prompt-btn { order: 4; }
-#emoji-toggle-btn { order: 5; }
+/* #model-toggle-btn { order: 2; } <-- 已移除 */
+#inspiration-btn { order: 2; } /* <-- 顺序调整 */
+.chat-input-wrapper { order: 3; } /* <-- 顺序调整 */
+#prompt-btn { order: 4; } /* <-- 顺序调整 */
+#emoji-toggle-btn { order: 5; } /* <-- 顺序调整 */
 
 
 .chat-input-wrapper {
@@ -196,14 +197,14 @@ html, body {
     gap: 6px;
     opacity: 0;
     transform: translateY(8px);
-    /* ▼▼▼ 修改：移除了 pointer-events: none; ▼▼▼ */
+    pointer-events: none;
     transition: opacity 0.2s ease-out, transform 0.2s ease-out;
 }
 
 .send-buttons-container.visible {
     opacity: 1;
     transform: translateY(0);
-    /* ▼▼▼ 修改：移除了 pointer-events: auto; ▼▼▼ */
+    pointer-events: auto;
 }
 
 .send-action-btn {
@@ -232,26 +233,28 @@ html, body {
     filter: brightness(1.1);
 }
 
+/* ▼▼▼ 新增：模型选择胶囊按钮的专属样式 (已加宽) ▼▼▼ */
 .send-action-btn.model-select-btn {
-    background-color: #f1f3f5;
+    background-color: #f1f3f5; /* 默认灰色 */
     color: #495057;
-    max-width: 120px;
-    padding-left: 12px;
-    padding-right: 12px; /* 稍微调整了内边距以适应不同长度的模型名称 */
+    max-width: 120px; /* 限制最大宽度，防止模型名过长 */
+    padding-left: 12px;  /* 自定义左内边距 */
+    padding-right: 172px; /* 自定义右内边距 */
 }
 
 .send-action-btn.model-select-btn.active {
-    background-color: var(--send-btn-bg);
+    background-color: var(--send-btn-bg); /* 选中后变为主题紫色 */
     color: var(--text-light);
 }
 
 #selected-model-name {
     display: inline-block;
     overflow: hidden;
-    text-overflow: ellipsis; /* 修改为省略号，更美观 */
+    text-overflow: clip; /* 超出部分直接裁剪，不显示省略号 */
     white-space: nowrap;
-    vertical-align: middle;
+    vertical-align: middle; /* 垂直居中 */
 }
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
 
 /* --- 聚焦（展开）时的样式 --- */
@@ -311,7 +314,8 @@ html, body {
     overflow-y: auto;  
 }
 
-/* --- 模型选择面板的样式 (无变化) --- */
+/* --- 模型选择面板的样式 (保持之前的修复) --- */
+/* 模态框遮罩层 */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -333,6 +337,7 @@ html, body {
     pointer-events: auto;
 }
 
+/* 模态框面板的进入动画 */
 .modal-overlay .modal-panel {
     transform: scale(0.95);
     opacity: 0;
@@ -344,6 +349,7 @@ html, body {
     opacity: 1;
 }
 
+/* 模态框面板的特定样式 */
 .model-selector-panel {
     width: 90%;
     max-width: 400px;
@@ -356,6 +362,7 @@ html, body {
     overflow: hidden; 
 }
 
+/* 让模态框主体内容区域可以滚动 */
 .model-selector-panel .modal-body {
     flex-grow: 1;
     overflow-y: auto;
@@ -363,12 +370,14 @@ html, body {
     -webkit-overflow-scrolling: touch; 
 }
 
+/* 模型列表容器 */
 .model-list-container {
     display: flex;
     flex-direction: column;
     gap: 8px; 
 }
 
+/* 没有可用模型时的提示信息 */
 .no-models-message {
     text-align: center;
     color: #888;
@@ -376,6 +385,7 @@ html, body {
     line-height: 1.6;
 }
 
+/* 单个模型项目 */
 .model-item {
     display: flex;
     align-items: center;
@@ -391,6 +401,7 @@ html, body {
     background-color: #e9ecef;
 }
 
+/* 模型信息（名称和API来源） */
 .model-info {
     display: flex;
     flex-direction: column;
@@ -407,6 +418,7 @@ html, body {
     color: #666;
 }
 
+/* 选中状态的对勾图标 */
 .model-item .fa-check {
     color: var(--send-btn-bg);
     opacity: 0;
@@ -414,6 +426,7 @@ html, body {
     transition: opacity 0.2s, transform 0.2s;
 }
 
+/* 激活状态下的样式 */
 .model-item.active {
     background-color: #f0eefc;
     box-shadow: 0 0 0 2px var(--send-btn-bg) inset;
