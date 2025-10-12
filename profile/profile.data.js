@@ -1,9 +1,10 @@
 // profile.data.js
+import { PROFILE_DB_KEYS } from '../config/profile.config.js';
 
 /**
  * 负责所有数据处理逻辑，如数据库交互、状态管理等
  */
-function createDataManager(db, state, ui) {
+export function createDataManager(db, state, ui) {
     const dbStorage = {
         async setItem(key, value) { try { await db.keyValueStore.put({ key, value: JSON.parse(JSON.stringify(value)) }); } catch (error) { console.error(`[dbStorage] Failed to set item '${key}':`, error); } },
         async getItem(key) { try { const item = await db.keyValueStore.get(key); return item ? item.value : null; } catch (error) { console.error(`[dbStorage] Failed to get item '${key}':`, error); return null; } }

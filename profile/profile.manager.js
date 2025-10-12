@@ -1,10 +1,14 @@
 // profile.manager.js
+import { GENDER_OPTIONS, LONG_PRESS_DURATION } from '../config/profile.config.js';
+import { createUiManager } from './profile.ui.js';
+import { createDataManager } from './profile.data.js';
+import { createEventManager } from './profile.events.js';
 
 /**
  * 管理器创建函数 (指挥中心)
  * 负责组装所有模块并返回公共接口
  */
-function createProfileManager(config) {
+export function createProfileManager(config) {
     // 1. 初始化数据库和共享状态
     const db = new Dexie('userSettingsDB');
     db.version(1).stores({ keyValueStore: 'key' });

@@ -320,22 +320,20 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     
-    <!-- --- ▼▼▼ 修改开始：加载新的模块化JS文件 ▼▼▼ --- -->
+    <!-- --- ▼▼▼ BUG修复：所有JS文件都改为 module 类型加载 ▼▼▼ --- -->
     <!-- 1. 配置和常量 -->
-<!-- ▼▼▼ 修改：加载模块专属的配置文件 ▼▼▼ -->
-<script src="../config/profile.config.js"></script>
-<!-- ▲▲▲ 修改结束 ▲▲▲ -->
+    <script src="../config/profile.config.js" type="module"></script>
 
     <!-- 2. UI操作模块 -->
-    <script src="profile.ui.js"></script>
+    <script src="profile.ui.js" type="module"></script>
     <!-- 3. 数据逻辑模块 (依赖UI模块) -->
-    <script src="profile.data.js"></script>
+    <script src="profile.data.js" type="module"></script>
     <!-- 4. 事件绑定模块 (依赖UI和Data模块) -->
-    <script src="profile.events.js"></script>
+    <script src="profile.events.js" type="module"></script>
     <!-- 5. 管理器组装模块 (依赖所有模块) -->
-    <script src="profile.manager.js"></script>
+    <script src="profile.manager.js" type="module"></script>
     <!-- 6. 主逻辑入口 (最后加载) -->
-    <script src="profile.js"></script>
+    <script src="profile.js" type="module"></script>
     <!-- --- ▲▲▲ 修改结束 ▲▲▲ --- -->
 </body>
 </html>

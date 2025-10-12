@@ -1,4 +1,5 @@
-// profile.js (基本无需改动)
+// profile.js
+import { createProfileManager } from './profile.manager.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 

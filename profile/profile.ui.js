@@ -3,7 +3,7 @@
 /**
  * 负责所有UI相关的操作，如显示/隐藏模态框、渲染DOM等
  */
-function createUiManager(elements, state, config) {
+export function createUiManager(elements, state, config) {
     const {
         modalOverlay, helpTooltip, subEditorPanel, sepTitle, sepTextarea,
         itemEditorPanel, itemEditorTitleHeader, itemEditorTitleInput, itemEditorValueTextarea,

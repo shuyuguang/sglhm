@@ -3,7 +3,7 @@
 /**
  * 负责所有事件监听器的绑定
  */
-function createEventManager(elements, state, ui, data, config) {
+export function createEventManager(elements, state, ui, data, config) {
 
     const handleConfirmAddSection = () => {
         const name = elements.newSectionNameInput?.value.trim();
