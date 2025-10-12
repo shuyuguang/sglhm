@@ -4,18 +4,48 @@
  * API Management 功能模块的配置
  */
 
-// ▼▼▼ 修改点：添加 export ▼▼▼
+// 1. 数据库键 (保持不变)
 export const API_DB_KEYS = {
-    // 用于存储所有【用户自定义】API 配置的键
     CONFIGS: 'api_configs_text',
-
-    // 内置 API 相关的两个键
-    // 用于存储内置 API 的【用户数据】(API Key, 已选模型等)
     BUILT_IN_DATA: 'built_in_api_data',
-    // 用于存储内置 API 的【状态】(是否启用)
     BUILT_IN_STATES: 'built_in_api_states'
 };
-// ▲▲▲ 修改结束 ▲▲▲
 
-// 导出所有键的数组，方便 app.config.js 聚合
 export const ALL_API_DB_KEYS = Object.values(API_DB_KEYS);
+
+
+// ▼▼▼ 新增/修改开始 ▼▼▼
+
+// 2. 默认的可编辑 API 卡片定义 (之前在 api-management.js 中)
+export const DEFAULT_EDITABLE_APIS = [
+    { 
+        id: 'default-openai',
+        provider: 'openai', 
+        name: 'OpenAI', 
+        baseUrl: 'https://api.openai.com', 
+        path: '/v1/chat/completions',
+    },
+    { 
+        id: 'default-google',
+        provider: 'google', 
+        name: 'Google', 
+        baseUrl: 'https://generativelace.googleapis.com/v1beta', 
+        path: null,
+    }
+];
+
+// 3. 内置的(只读) API 卡片定义 (之前在 api-management.js 中)
+export const BUILT_IN_APIS = [
+    { id: 'built-in-deepseek', name: 'DeepSeek', shortName: 'DS', isBuiltIn: true, baseUrl: 'https://api.deepseek.com/v1', path: '/chat/completions' },
+    { id: 'built-in-siliconflow', name: '硅基流动', shortName: '硅', isBuiltIn: true, baseUrl: 'https://api.siliconflow.cn/v1', path: '/chat/completions' },
+    { id: 'built-in-openrouter', name: 'OpenRouter', shortName: 'OR', isBuiltIn: true, baseUrl: 'https://openrouter.ai/api/v1', path: '/chat/completions' },
+];
+
+// 4. 创建一个包含所有 API 定义的查找对象，方便其他模块使用
+const allBuiltInDefinitions = {};
+[...DEFAULT_EDITABLE_APIS, ...BUILT_IN_APIS].forEach(api => {
+    allBuiltInDefinitions[api.id] = api;
+});
+export const ALL_BUILT_IN_API_DEFINITIONS = allBuiltInDefinitions;
+
+// ▲▲▲ 新增/修改结束 ▲▲▲
