@@ -1,9 +1,11 @@
 // relia-chat/chat-room.js
 
 import { dbStorage } from '../common/db.js';
-import { API_DB_KEYS, ALL_BUILT_IN_API_DEFINITIONS } from '../config/api.config.js';
+// ▼▼▼ 新增/修改点：导入缺失的配置文件 ▼▼▼
 import { PROFILE_DB_KEYS } from '../config/profile.config.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
+import { API_DB_KEYS, ALL_BUILT_IN_API_DEFINITIONS } from '../config/api.config.js';
+// ▲▲▲ 修改结束 ▲▲▲
 
 document.addEventListener('DOMContentLoaded', async () => {
     // --- 1 & 2. 获取数据和生成HTML (无变化) ---
