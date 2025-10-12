@@ -122,22 +122,13 @@ html, body {
     display: contents;
 }
 
-/* ▼▼▼ 修改：调整按钮排序和样式 ▼▼▼ */
-#actions-toggle-btn {
-    order: 1;
-}
-/* 新增模型切换按钮 */
-#model-toggle-btn {
-    order: 2; 
-    display: none; /* 默认隐藏 */
-}
-.chat-input-wrapper {
-    order: 3;
-}
-#emoji-toggle-btn {
-    order: 4;
-}
-/* ▲▲▲ 修改结束 ▲▲▲ */
+#actions-toggle-btn { order: 1; }
+#model-toggle-btn { order: 2; }
+#inspiration-btn { order: 3; }
+.chat-input-wrapper { order: 4; }
+#prompt-btn { order: 5; }
+#emoji-toggle-btn { order: 6; }
+
 
 .chat-input-wrapper {
     flex-grow: 1;
@@ -163,7 +154,9 @@ html, body {
 
 #actions-toggle-btn,
 #emoji-toggle-btn,
-#model-toggle-btn { /* <-- 将新按钮加入此规则 */
+#model-toggle-btn,
+#prompt-btn,
+#inspiration-btn {
     background-color: var(--page-bg);
     border: none;
     font-size: 1.2rem;
@@ -179,6 +172,13 @@ html, body {
     transition: background-color 0.3s ease, color 0.3s ease; 
 }
 
+#model-toggle-btn,
+#prompt-btn,
+#inspiration-btn {
+    display: none;
+}
+
+
 #emoji-toggle-btn {
     position: absolute;
     right: 15px;
@@ -188,6 +188,10 @@ html, body {
 
 #actions-toggle-btn .fa-plus {
     font-weight: 300;
+}
+
+#model-toggle-btn .fa-link {
+    font-weight: 600;
 }
 
 .send-buttons-container {
@@ -249,7 +253,6 @@ html, body {
 
 .chat-input-area.input-focused .chat-input-controls {
     display: flex;
-    justify-content: space-between;
     order: 2;
 }
 
@@ -264,29 +267,33 @@ html, body {
 
 .chat-input-area.input-focused #actions-toggle-btn,
 .chat-input-area.input-focused #emoji-toggle-btn,
-.chat-input-area.input-focused #model-toggle-btn { /* <-- 将新按钮加入此规则 */
+.chat-input-area.input-focused #model-toggle-btn,
+.chat-input-area.input-focused #prompt-btn,
+.chat-input-area.input-focused #inspiration-btn {
     background-color: transparent;
     color: var(--text-dark);
     transition: transform 0.2s ease-out;
 }
 
-/* ▼▼▼ 新增：让模型切换按钮在聚焦时显示出来 ▼▼▼ */
-.chat-input-area.input-focused #model-toggle-btn {
+.chat-input-area.input-focused #model-toggle-btn,
+.chat-input-area.input-focused #prompt-btn,
+.chat-input-area.input-focused #inspiration-btn {
     display: flex;
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */
 
-
-.chat-input-area.input-focused #actions-toggle-btn {
-    transform: translate(-5px, 5px);
-}
-.chat-input-area.input-focused #model-toggle-btn {
-    transform: translate(-8px, 5px); /* 微调位置 */
+.chat-input-area.input-focused #prompt-btn {
+    margin-left: auto;
 }
 
+/* ▼▼▼ 核心修复：在聚焦状态下，重置表情包按钮的样式 ▼▼▼ */
 .chat-input-area.input-focused #emoji-toggle-btn {
-    transform: translate(10px, 7px);
+    position: relative; /* 取消绝对定位 */
+    right: auto;        /* 重置 right */
+    bottom: auto;       /* 重置 bottom */
+    z-index: auto;      /* 重置 z-index */
+    margin-left: 0;     /* 确保它没有自己的左边距 */
 }
+/* ▲▲▲ 修复结束 ▲▲▲ */
 
 .chat-input-area.input-focused #chat-input {
     padding-bottom: 0px; 
@@ -295,7 +302,7 @@ html, body {
     overflow-y: auto;  
 }
 
-/* ▼▼▼ 新增：模型选择面板的样式 ▼▼▼ */
+/* --- 模型选择面板的样式 (无变化) --- */
 .bottom-sheet-overlay {
     position: fixed;
     top: 0;
@@ -374,4 +381,3 @@ html, body {
     text-align: center;
     color: var(--text-meta);
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */
