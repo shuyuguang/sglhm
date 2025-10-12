@@ -2,6 +2,8 @@
 
 import { dbStorage } from '../common/db.js';
 import { API_DB_KEYS, ALL_BUILT_IN_API_DEFINITIONS } from '../config/api.config.js';
+import { PROFILE_DB_KEYS } from '../config/profile.config.js';
+import { CHAT_DB_KEYS } from '../config/chat.config.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // --- 1 & 2. 获取数据和生成HTML (无变化) ---
