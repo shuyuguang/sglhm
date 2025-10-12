@@ -26,11 +26,11 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center; /* 用于标题居中 */
-    padding: 12px 15px;
+    padding: 6px 15px;
     background-color: var(--header-bg);
     flex-shrink: 0;
     position: relative; /* 为返回按钮的绝对定位提供参照 */
-    border-bottom: 1px solid var(--border-color);
+
 }
 
 .back-btn {
