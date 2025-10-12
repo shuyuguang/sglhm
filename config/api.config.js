@@ -14,9 +14,9 @@ export const API_DB_KEYS = {
 export const ALL_API_DB_KEYS = Object.values(API_DB_KEYS);
 
 
-// ▼▼▼ 新增/修改开始 ▼▼▼
+// ▼▼▼ 修改开始 ▼▼▼
 
-// 2. 默认的可编辑 API 卡片定义 (之前在 api-management.js 中)
+// 2. 默认的可编辑 API 卡片定义
 export const DEFAULT_EDITABLE_APIS = [
     { 
         id: 'default-openai',
@@ -29,12 +29,12 @@ export const DEFAULT_EDITABLE_APIS = [
         id: 'default-google',
         provider: 'google', 
         name: 'Google', 
-        baseUrl: 'https://generativelace.googleapis.com/v1beta', 
+        baseUrl: 'https://generativelanguage.googleapis.com/v1beta', 
         path: null,
     }
 ];
 
-// 3. 内置的(只读) API 卡片定义 (之前在 api-management.js 中)
+// 3. 内置的(只读) API 卡片定义
 export const BUILT_IN_APIS = [
     { id: 'built-in-deepseek', name: 'DeepSeek', shortName: 'DS', isBuiltIn: true, baseUrl: 'https://api.deepseek.com/v1', path: '/chat/completions' },
     { id: 'built-in-siliconflow', name: '硅基流动', shortName: '硅', isBuiltIn: true, baseUrl: 'https://api.siliconflow.cn/v1', path: '/chat/completions' },
@@ -48,4 +48,4 @@ const allBuiltInDefinitions = {};
 });
 export const ALL_BUILT_IN_API_DEFINITIONS = allBuiltInDefinitions;
 
-// ▲▲▲ 新增/修改结束 ▲▲▲
+// ▲▲▲ 修改结束 ▲▲▲
