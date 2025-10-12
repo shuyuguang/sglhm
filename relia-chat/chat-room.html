@@ -145,7 +145,22 @@
     <div class="cropper-overlay" id="cropper-overlay"><div class="cropper-container"><div class="cropper-image-container"><img id="cropper-image" src="" alt="Image to crop"></div><div class="cropper-actions"><button id="cancel-crop-btn" class="prompt-btn prompt-btn-cancel">取消</button><button id="confirm-crop-btn" class="prompt-btn prompt-btn-confirm">确认</button></div></div></div>
     <!-- ▲▲▲ 新增结束 ▲▲▲ -->
 
-
+<!-- ▼▼▼ 新增：在这里添加模型选择模态框 ▼▼▼ -->
+    <div class="modal-overlay" id="model-selector-overlay">
+        <div class="modal-panel model-selector-panel">
+            <div class="modal-header">
+                <h3 class="modal-title">选择牵引仪模型</h3>
+                <button class="modal-close" id="close-model-selector-btn" title="关闭">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="model-list-container" id="model-list-container">
+                    <!-- 模型列表将在这里动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ▲▲▲ 新增结束 ▲▲▲ -->
+    
     <!-- 依赖脚本 -->
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>

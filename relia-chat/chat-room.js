@@ -9,7 +9,7 @@ import { CHAT_DB_KEYS } from '../config/chat.config.js';
 
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // --- 1 & 2. 获取数据和生成HTML (无变化) ---
+    // --- 1 & 2. 获取数据和生成HTML ---
     const urlParams = new URLSearchParams(window.location.search);
     const charId = urlParams.get('id');
     if (!charId) {
@@ -28,14 +28,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     const currentUser = allUsers ? allUsers.find(u => u.id === currentUserId) : null;
     const user = currentUser || { name: 'User', avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg' };
-    const modelSelectorHtml = `
-        <div class="bottom-sheet-overlay" id="model-selector-overlay">
-            <div class="bottom-sheet">
-                <div class="bottom-sheet-header">选择牵引仪模型</div>
-                <div class="model-list-container" id="model-list-container"></div>
-            </div>
-        </div>
-    `;
+    
+    // ▼▼▼ 修改开始：移除这里的 modelSelectorHtml 定义 ▼▼▼
+    /*
+    const modelSelectorHtml = `...`; // <-- 删除这一整块
+    */
+    // ▲▲▲ 修改结束 ▲▲▲
+
     const pageHtml = `
         <div class="chat-container">
             <header class="chat-header">
@@ -86,11 +85,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             </footer>
         </div>
-        ${modelSelectorHtml}
-    `;
+`; // <-- ▼▼▼ 修改：移除末尾的 ${modelSelectorHtml} ▼▼▼
     document.body.insertAdjacentHTML('afterbegin', pageHtml);
+    // ▲▲▲ 修改结束 ▲▲▲
 
-    // --- 3. 获取DOM元素和定义变量 (无变化) ---
+    // --- 3. 获取DOM元素和定义变量 ---
     const chatArea = document.getElementById('chat-messages-area');
     const input = document.getElementById('chat-input');
     const chatInputArea = document.getElementById('chat-input-area');
@@ -102,6 +101,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const modelToggleBtn = document.getElementById('model-toggle-btn');
     const modelSelectorOverlay = document.getElementById('model-selector-overlay');
     const modelListContainer = document.getElementById('model-list-container');
+    // ▼▼▼ 新增：获取新的关闭按钮 ▼▼▼
+    const closeModelSelectorBtn = document.getElementById('close-model-selector-btn');
+    // ▲▲▲ 新增结束 ▲▲▲
     const promptBtn = document.getElementById('prompt-btn');
     const inspirationBtn = document.getElementById('inspiration-btn');
     let currentChatApi = null;
@@ -375,6 +377,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     }
+    // ▼▼▼ 新增/修改：模型选择器的打开和关闭逻辑 ▼▼▼
+    const closeModelSelector = () => {
+        modelSelectorOverlay?.classList.remove('active');
+    };
+
     async function openModelSelector() { 
         const [userConfigs, builtInData, builtInStates] = await Promise.all([
             dbStorage.getItem(API_DB_KEYS.CONFIGS) || [],
@@ -411,6 +418,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderModelList(availableModels);
         modelSelectorOverlay.classList.add('active');
     }
+    // ▲▲▲ 修改结束 ▲▲▲
     function renderModelList(models) { 
         if (models.length === 0) {
             modelListContainer.innerHTML = `<p class="no-models-message">没有可用的模型<br>请先到“牵引仪”页面启用并选择模型</p>`;
@@ -458,7 +466,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (modelToggleBtn) modelToggleBtn.addEventListener('click', openModelSelector);
     if (promptBtn) { promptBtn.addEventListener('click', () => { alert('“快捷指令（闪电）”功能待开发'); }); }
     if (inspirationBtn) { inspirationBtn.addEventListener('click', () => { alert('“灵感（灯泡）”功能待开发'); }); }
-    if (modelSelectorOverlay) { modelSelectorOverlay.addEventListener('click', (e) => { if (e.target === modelSelectorOverlay) { modelSelectorOverlay.classList.remove('active'); } }); }
+    // ▼▼▼ 修改：更新模态框的关闭事件绑定 ▼▼▼
+    if (modelSelectorOverlay) { 
+        modelSelectorOverlay.addEventListener('click', (e) => { 
+            if (e.target === modelSelectorOverlay) { 
+                closeModelSelector(); 
+            } 
+        }); 
+    }
+    if (closeModelSelectorBtn) {
+        closeModelSelectorBtn.addEventListener('click', closeModelSelector);
+    }
+    // ▲▲▲ 修改结束 ▲▲▲
     if (modelListContainer) {
         modelListContainer.addEventListener('click', (e) => {
             const item = e.target.closest('.model-item');
