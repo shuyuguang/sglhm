@@ -277,7 +277,7 @@ html, body {
     order: 1; 
     background-color: transparent; 
     min-height: auto; 
-    margin-bottom: -4px;
+    margin-bottom: 0px;
     display: flex;
 }
 
