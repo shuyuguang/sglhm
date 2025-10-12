@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 `;
     document.body.insertAdjacentHTML('afterbegin', pageHtml);
 
-    // --- 3. 获取DOM元素和定义变量 (部分修改) ---
+    // --- 3. 获取DOM元素和定义变量 (无变化) ---
     const chatArea = document.getElementById('chat-messages-area');
     const input = document.getElementById('chat-input');
     const chatInputArea = document.getElementById('chat-input-area');
@@ -385,15 +385,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ▼▼▼ 修改：这是主要修复点 ▼▼▼
     async function openModelSelector() {
         try {
+            // 1. 安全地从数据库获取数据，并提供默认值
             const [userConfigs, builtInData, builtInStates] = await Promise.all([
-                dbStorage.getItem(API_DB_KEYS.CONFIGS) || [],
-                dbStorage.getItem(API_DB_KEYS.BUILT_IN_DATA) || {},
-                dbStorage.getItem(API_DB_KEYS.BUILT_IN_STATES) || {}
+                dbStorage.getItem(API_DB_KEYS.CONFIGS).then(res => res || []),
+                dbStorage.getItem(API_DB_KEYS.BUILT_IN_DATA).then(res => res || {}),
+                dbStorage.getItem(API_DB_KEYS.BUILT_IN_STATES).then(res => res || {})
             ]);
 
             let availableModels = [];
 
-            // 处理用户自定义的 API
+            // 2. 处理用户自定义的 API (逻辑不变，但现在 userConfigs 是安全的)
             userConfigs
                 .filter(api => api.enabled && Array.isArray(api.model) && api.model.length > 0)
                 .forEach(api => {
@@ -406,11 +407,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     });
                 });
 
-            // 处理内置的 API
+            // 3. 处理内置的 API (逻辑不变，但现在 builtInData 和 builtInStates 是安全的)
             Object.keys(builtInStates)
                 .forEach(apiId => {
                     const userData = builtInData[apiId];
-                    // 确保 userData 和 userData.model 都是有效的
                     if (builtInStates[apiId]?.enabled && userData && Array.isArray(userData.model) && userData.model.length > 0) {
                         const staticData = ALL_BUILT_IN_API_DEFINITIONS[apiId];
                         if (staticData) {
@@ -426,7 +426,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             
             renderModelList(availableModels);
-            modelSelectorOverlay.classList.add('active'); // 现在这行代码可以安全执行了
+            modelSelectorOverlay.classList.add('active');
 
         } catch (error) {
             console.error("打开模型选择器失败:", error);
