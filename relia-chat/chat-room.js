@@ -3,13 +3,11 @@
 import { dbStorage } from '../common/db.js';
 import { API_DB_KEYS, ALL_BUILT_IN_API_DEFINITIONS } from '../config/api.config.js';
 import { PROFILE_DB_KEYS, GENDER_OPTIONS, LONG_PRESS_DURATION } from '../config/profile.config.js';
-// ▼▼▼ 修改：导入我们刚刚定义的新键名 ▼▼▼
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
-// ▲▲▲ 修改结束 ▲▲▲
 
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // --- 1 & 2. 获取数据和生成HTML (无变化) ---
+    // --- 1 & 2. 获取数据和生成HTML (部分修改) ---
     const urlParams = new URLSearchParams(window.location.search);
     const charId = urlParams.get('id');
     if (!charId) {
@@ -84,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 `;
     document.body.insertAdjacentHTML('afterbegin', pageHtml);
 
-    // --- 3. 获取DOM元素和定义变量 (部分修改) ---
+    // --- 3. 获取DOM元素和定义变量 (无变化) ---
     const chatArea = document.getElementById('chat-messages-area');
     const input = document.getElementById('chat-input');
     const chatInputArea = document.getElementById('chat-input-area');
@@ -220,20 +218,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // --- 4. 核心功能函数 (无变化) ---
-    function constructSystemPrompt(charProfile, userProfile) { /* ... */ }
-    function formatChatHistoryForApi(history) { /* ... */ }
-    function renderMessage({ text, sender }) { /* ... */ }
-    function renderSystemMessage(text, type = 'loading') { /* ... */ }
-    async function loadAndRenderHistory() { /* ... */ }
-    function updateButtonStates() { /* ... */ }
-    async function handleSendMessage(shouldTriggerReply) { /* ... */ }
-    function updateModelButtonText() { /* ... */ }
-    const closeModelSelector = () => { /* ... */ };
-    async function openModelSelector() { /* ... */ }
-    function renderModelList(models) { /* ... */ }
-    const expandInputLayout = () => { /* ... */ };
-    const collapseInputLayout = () => { /* ... */ };
-    // (以上函数内容与上一版完全相同，为简洁省略)
     function constructSystemPrompt(charProfile, userProfile) { 
         let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
         prompt += `### 角色设定\n`;
@@ -386,6 +370,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     }
+    
     function updateModelButtonText() {
         if (currentChatApi) {
             selectedModelName.textContent = currentChatApi.model;
@@ -395,17 +380,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             selectModelBtn.classList.remove('active');
         }
     }
+
     const closeModelSelector = () => {
         modelSelectorOverlay?.classList.remove('active');
     };
+
+    // ▼▼▼ 修改：这是主要修复点 ▼▼▼
     async function openModelSelector() {
         try {
+            // 1. 安全地从数据库获取数据，并提供默认值
             const [userConfigs, builtInData, builtInStates] = await Promise.all([
                 dbStorage.getItem(API_DB_KEYS.CONFIGS).then(res => res || []),
                 dbStorage.getItem(API_DB_KEYS.BUILT_IN_DATA).then(res => res || {}),
                 dbStorage.getItem(API_DB_KEYS.BUILT_IN_STATES).then(res => res || {})
             ]);
+
             let availableModels = [];
+
+            // 2. 处理用户自定义的 API (逻辑不变，但现在 userConfigs 是安全的)
             userConfigs
                 .filter(api => api.enabled && Array.isArray(api.model) && api.model.length > 0)
                 .forEach(api => {
@@ -417,6 +409,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                         });
                     });
                 });
+
+            // 3. 处理内置的 API (逻辑不变，但现在 builtInData 和 builtInStates 是安全的)
             Object.keys(builtInStates)
                 .forEach(apiId => {
                     const userData = builtInData[apiId];
@@ -433,13 +427,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                     }
                 });
+            
             renderModelList(availableModels);
             modelSelectorOverlay.classList.add('active');
+
         } catch (error) {
             console.error("打开模型选择器失败:", error);
             alert("加载模型列表失败，请检查控制台获取更多信息。");
         }
     }
+    // ▲▲▲ 修改结束 ▲▲▲
+
     function renderModelList(models) { 
         if (models.length === 0) {
             modelListContainer.innerHTML = `<p class="no-models-message">没有可用的模型<br>请先到“牵引仪”页面启用并选择模型</p>`;
@@ -470,18 +468,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatInputArea.classList.remove('actions-expanded', 'emoji-expanded');
     };
 
-    // --- 5. 绑定事件 (部分修改) ---
-    input.addEventListener('input', () => { /* ... */ });
+    // --- 5. 绑定事件 (无变化) ---
+    input.addEventListener('input', () => {
+        if (input.value.trim() === '') {
+            input.style.height = '';
+        } else {
+            input.style.height = 'auto';
+            input.style.height = (input.scrollHeight) + 'px';
+        }
+        updateButtonStates();
+    });
     if (sendBtn) sendBtn.addEventListener('click', () => handleSendMessage(false));
     if (respondBtn) respondBtn.addEventListener('click', () => handleSendMessage(true));
-    if (actionsToggleBtn) actionsToggleBtn.addEventListener('click', (e) => { /* ... */ });
-    if (emojiToggleBtn) emojiToggleBtn.addEventListener('click', (e) => { /* ... */ });
+    if (actionsToggleBtn) actionsToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); chatInputArea.classList.remove('emoji-expanded'); chatInputArea.classList.toggle('actions-expanded'); });
+    if (emojiToggleBtn) emojiToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); chatInputArea.classList.remove('actions-expanded'); chatInputArea.classList.toggle('emoji-expanded'); });
     if (selectModelBtn) selectModelBtn.addEventListener('click', openModelSelector);
-    if (promptBtn) { promptBtn.addEventListener('click', () => { /* ... */ }); }
-    if (inspirationBtn) { inspirationBtn.addEventListener('click', () => { /* ... */ }); }
-    if (modelSelectorOverlay) { modelSelectorOverlay.addEventListener('click', (e) => { /* ... */ }); }
-    if (closeModelSelectorBtn) { closeModelSelectorBtn.addEventListener('click', closeModelSelector); }
-    
+    if (promptBtn) { promptBtn.addEventListener('click', () => { alert('“快捷指令（闪电）”功能待开发'); }); }
+    if (inspirationBtn) { inspirationBtn.addEventListener('click', () => { alert('“灵感（灯泡）”功能待开发'); }); }
+    if (modelSelectorOverlay) { 
+        modelSelectorOverlay.addEventListener('click', (e) => { 
+            if (e.target === modelSelectorOverlay) { 
+                closeModelSelector(); 
+            } 
+        }); 
+    }
+    if (closeModelSelectorBtn) {
+        closeModelSelectorBtn.addEventListener('click', closeModelSelector);
+    }
     // ▼▼▼ 修改：这是“写日记”的地方 ▼▼▼
     if (modelListContainer) {
         modelListContainer.addEventListener('click', async (e) => { // 1. 变成 async 函数
@@ -508,12 +521,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
     // ▲▲▲ 修改结束 ▲▲▲
-
-    input.addEventListener('focus', () => { /* ... */ });
-    document.addEventListener('click', (event) => { /* ... */ });
+    input.addEventListener('focus', () => { expandInputLayout(); chatInputArea.classList.remove('actions-expanded', 'emoji-expanded'); });
+    document.addEventListener('click', (event) => { if (!chatInputArea.contains(event.target)) { collapseInputLayout(); } });
     const charAvatarInHeader = document.querySelector('.char-info-avatar');
     if (charAvatarInHeader) {
-        charAvatarInHeader.addEventListener('click', async () => { /* ... */ });
+        charAvatarInHeader.addEventListener('click', async () => {
+            if (!profileEditor) {
+                console.error("Profile Editor尚未初始化！");
+                return;
+            }
+            await profileEditor.data.loadProfileData(charId);
+            profileEditor.ui.openModal();
+        });
     }
 
     // --- 6. 初始化页面 (部分修改) ---
