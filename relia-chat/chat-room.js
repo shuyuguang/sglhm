@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`;
     let chatHistory = [];
 
-    // --- 4. 核心功能函数 (handleSendMessage 已重构) ---
+    // --- 4. 核心功能函数 (有修改) ---
     function constructSystemPrompt(charProfile, userProfile) { /* ... 无变化 ... */ 
         let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
         prompt += `### 角色设定\n`;
@@ -171,111 +171,110 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // ▼▼▼ 修改点 1/2：重构 handleSendMessage 函数 ▼▼▼
-    /**
-     * 处理发送消息的核心函数
-     * @param {boolean} shouldTriggerReply - 是否需要触发 AI 回复
-     */
+    // ▼▼▼ 修改点 1/3：新增一个函数来更新按钮状态 ▼▼▼
+    function updateButtonStates() {
+        const hasText = input.value.trim() !== '';
+        // "发送"按钮：仅在输入框有文本时启用
+        sendBtn.disabled = !hasText;
+        // "响应"按钮：始终启用
+        respondBtn.disabled = false;
+    }
+
+    // ▼▼▼ 修改点 2/3：再次重构 handleSendMessage 函数 ▼▼▼
     async function handleSendMessage(shouldTriggerReply) {
         const text = input.value.trim();
-        if (text === '') return;
 
-        // --- 步骤 1: 公共操作 (无论哪个按钮都执行) ---
-        // 渲染用户消息到界面，并保存到历史记录
-        const userMessage = { text, sender: 'user' };
-        renderMessage(userMessage);
-        chatHistory.push(userMessage);
-        await dbStorage.setItem(historyKey, chatHistory);
-        
-        // 清空输入框并重新聚焦
-        input.value = '';
-        input.style.height = '';
-        input.focus();
-
-        // --- 步骤 2: 条件判断 ---
-        // 如果是“发送”按钮，到此为止，直接返回
-        if (!shouldTriggerReply) {
+        // 场景1: 如果输入框有文本，则发送消息
+        if (text !== '') {
+            const userMessage = { text, sender: 'user' };
+            renderMessage(userMessage);
+            chatHistory.push(userMessage);
+            await dbStorage.setItem(historyKey, chatHistory);
+            
+            input.value = '';
+            input.style.height = '';
+            updateButtonStates(); // 发送后更新按钮状态
+            input.focus();
+        } 
+        // 场景2: 如果输入框为空，且是“发送”操作，则什么也不做
+        else if (!shouldTriggerReply) {
             return;
         }
 
-        // --- 步骤 3: AI 回复逻辑 (仅当点击“响应”时执行) ---
-        if (!currentChatApi) {
-            alert('请先点击左下角的“链接”图标选择一个牵引仪模型！');
-            return;
-        }
-
-        // 禁用发送按钮，防止重复请求
-        sendBtn.disabled = true;
-        respondBtn.disabled = true;
-
-        const systemPrompt = constructSystemPrompt(character, user);
-        const historyForApi = formatChatHistoryForApi(chatHistory);
-        const messages = [ { role: 'system', content: systemPrompt }, ...historyForApi ];
-        const endpoint = (currentChatApi.baseUrl.replace(/\/$/, '')) + (currentChatApi.path || '/v1/chat/completions');
-        const payload = { model: currentChatApi.model, messages: messages, stream: true };
-        
-        const thinkingBubble = renderMessage({ text: '...', sender: 'character' });
-        let fullReply = '';
-
-        try {
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentChatApi.apiKey}` },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error?.message || `API 请求失败，状态码: ${response.status}`);
+        // 场景3: 触发AI回复 (无论输入框是否为空，只要是“响应”操作)
+        if (shouldTriggerReply) {
+            if (chatHistory.length === 0) {
+                alert('还没有聊天记录，请先说点什么吧！');
+                return;
+            }
+            if (!currentChatApi) {
+                alert('请先点击左下角的“链接”图标选择一个牵引仪模型！');
+                return;
             }
 
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder('utf-8');
-            thinkingBubble.textContent = ''; // 清空"..."
+            sendBtn.disabled = true;
+            respondBtn.disabled = true;
 
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
+            const systemPrompt = constructSystemPrompt(character, user);
+            const historyForApi = formatChatHistoryForApi(chatHistory);
+            const messages = [ { role: 'system', content: systemPrompt }, ...historyForApi ];
+            const endpoint = (currentChatApi.baseUrl.replace(/\/$/, '')) + (currentChatApi.path || '/v1/chat/completions');
+            const payload = { model: currentChatApi.model, messages: messages, stream: true };
+            
+            const thinkingBubble = renderMessage({ text: '...', sender: 'character' });
+            let fullReply = '';
 
-                const chunk = decoder.decode(value);
-                const lines = chunk.split('\n\n');
-
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        const dataStr = line.substring(6);
-                        if (dataStr === '[DONE]') break;
-                        try {
-                            const data = JSON.parse(dataStr);
-                            const content = data.choices[0]?.delta?.content;
-                            if (content) {
-                                fullReply += content;
-                                thinkingBubble.textContent = fullReply;
-                                chatArea.scrollTop = chatArea.scrollHeight;
-                            }
-                        } catch (e) { /* 忽略解析错误 */ }
+            try {
+                // ... (fetch 和流式处理逻辑保持不变) ...
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentChatApi.apiKey}` },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || `API 请求失败，状态码: ${response.status}`);
+                }
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                thinkingBubble.textContent = '';
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n\n');
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const dataStr = line.substring(6);
+                            if (dataStr === '[DONE]') break;
+                            try {
+                                const data = JSON.parse(dataStr);
+                                const content = data.choices[0]?.delta?.content;
+                                if (content) {
+                                    fullReply += content;
+                                    thinkingBubble.textContent = fullReply;
+                                    chatArea.scrollTop = chatArea.scrollHeight;
+                                }
+                            } catch (e) { /* 忽略解析错误 */ }
+                        }
                     }
                 }
+                if (fullReply) {
+                    const replyMessage = { text: fullReply, sender: 'character' };
+                    chatHistory.push(replyMessage);
+                    await dbStorage.setItem(historyKey, chatHistory);
+                }
+            } catch (error) {
+                console.error('AI 回复生成失败:', error);
+                renderSystemMessage(`错误: ${error.message}`, 'error');
+                thinkingBubble.remove();
+            } finally {
+                updateButtonStates(); // AI响应后也要更新按钮状态
+                input.focus();
             }
-
-            if (fullReply) {
-                const replyMessage = { text: fullReply, sender: 'character' };
-                chatHistory.push(replyMessage);
-                await dbStorage.setItem(historyKey, chatHistory);
-            }
-
-        } catch (error) {
-            console.error('AI 回复生成失败:', error);
-            renderSystemMessage(`错误: ${error.message}`, 'error');
-            thinkingBubble.remove();
-        } finally {
-            // 重新启用发送按钮
-            sendBtn.disabled = false;
-            respondBtn.disabled = false;
-            input.focus();
         }
     }
-    // ▲▲▲ 修改结束 ▲▲▲
-
+    
     async function openModelSelector() { /* ... 无变化 ... */ 
         const [userConfigs, builtInData, builtInStates] = await Promise.all([
             dbStorage.getItem(API_DB_KEYS.CONFIGS) || [],
@@ -331,6 +330,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!chatInputArea.classList.contains('input-focused')) {
             chatInputArea.classList.add('input-focused');
             sendButtonsContainer.classList.add('visible');
+            updateButtonStates(); // 聚焦时也更新一次按钮状态
         }
     };
     const collapseInputLayout = () => { /* ... 无变化 ... */ 
@@ -342,15 +342,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     // --- 5. 绑定事件 (有修改) ---
-    input.addEventListener('input', () => { if (input.value.trim() === '') { input.style.height = ''; } else { input.style.height = 'auto'; input.style.height = (input.scrollHeight) + 'px'; } });
+    // ▼▼▼ 修改点 3/3：更新 input 事件监听器 ▼▼▼
+    input.addEventListener('input', () => {
+        // 调整高度
+        if (input.value.trim() === '') {
+            input.style.height = '';
+        } else {
+            input.style.height = 'auto';
+            input.style.height = (input.scrollHeight) + 'px';
+        }
+        // 实时更新按钮状态
+        updateButtonStates();
+    });
 
-    // ▼▼▼ 修改点 2/2：更新按钮的点击事件 ▼▼▼
-    // "发送" 按钮：调用函数，但不触发AI回复
     if (sendBtn) sendBtn.addEventListener('click', () => handleSendMessage(false));
-    // "响应" 按钮：调用函数，并触发AI回复
     if (respondBtn) respondBtn.addEventListener('click', () => handleSendMessage(true));
-    // ▲▲▲ 修改结束 ▲▲▲
-
     if (actionsToggleBtn) actionsToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); chatInputArea.classList.remove('emoji-expanded'); chatInputArea.classList.toggle('actions-expanded'); });
     if (emojiToggleBtn) emojiToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); chatInputArea.classList.remove('actions-expanded'); chatInputArea.classList.toggle('emoji-expanded'); });
     if (modelToggleBtn) modelToggleBtn.addEventListener('click', openModelSelector);
@@ -379,6 +385,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     input.addEventListener('focus', () => { expandInputLayout(); chatInputArea.classList.remove('actions-expanded', 'emoji-expanded'); });
     document.addEventListener('click', (event) => { if (!chatInputArea.contains(event.target)) { collapseInputLayout(); } });
 
-    // --- 6. 初始化页面 (无变化) ---
+    // --- 6. 初始化页面 (有修改) ---
     await loadAndRenderHistory();
+    updateButtonStates(); // 页面加载后立即设置一次按钮的初始状态
 });
