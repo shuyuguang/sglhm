@@ -1,12 +1,10 @@
 // relia-chat/chat-room.js
 
 import { dbStorage } from '../common/db.js';
-// ▼▼▼ 修改：导入 API_DB_KEYS 和完整的 API 定义 ▼▼▼
 import { API_DB_KEYS, ALL_BUILT_IN_API_DEFINITIONS } from '../config/api.config.js';
-// ▲▲▲ 修改结束 ▲▲▲
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // --- 1. 获取角色ID和数据 (无变化) ---
+    // --- 1 & 2. 获取数据和生成HTML (无变化) ---
     const urlParams = new URLSearchParams(window.location.search);
     const charId = urlParams.get('id');
     if (!charId) {
@@ -25,8 +23,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     const currentUser = allUsers ? allUsers.find(u => u.id === currentUserId) : null;
     const user = currentUser || { name: 'User', avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg' };
-
-    // --- 2. 动态生成页面HTML (无变化) ---
     const modelSelectorHtml = `
         <div class="bottom-sheet-overlay" id="model-selector-overlay">
             <div class="bottom-sheet">
@@ -107,7 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`;
     let chatHistory = [];
 
-    // --- 4. 核心功能函数 (openModelSelector 已修复) ---
+    // --- 4. 核心功能函数 (handleSendMessage 已重构) ---
     function constructSystemPrompt(charProfile, userProfile) { /* ... 无变化 ... */ 
         let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
         prompt += `### 角色设定\n`;
@@ -174,47 +170,76 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderSystemMessage(`你现在正在和 ${character.name} 聊天`, 'info');
         }
     }
-    async function handleSendMessage(actionType = 'send') { /* ... 无变化 ... */ 
+
+    // ▼▼▼ 修改点 1/2：重构 handleSendMessage 函数 ▼▼▼
+    /**
+     * 处理发送消息的核心函数
+     * @param {boolean} shouldTriggerReply - 是否需要触发 AI 回复
+     */
+    async function handleSendMessage(shouldTriggerReply) {
         const text = input.value.trim();
         if (text === '') return;
-        if (!currentChatApi) {
-            alert('请先点击左下角的“链接”图标选择一个牵引仪模型！');
-            return;
-        }
+
+        // --- 步骤 1: 公共操作 (无论哪个按钮都执行) ---
+        // 渲染用户消息到界面，并保存到历史记录
         const userMessage = { text, sender: 'user' };
         renderMessage(userMessage);
         chatHistory.push(userMessage);
         await dbStorage.setItem(historyKey, chatHistory);
+        
+        // 清空输入框并重新聚焦
         input.value = '';
         input.style.height = '';
         input.focus();
+
+        // --- 步骤 2: 条件判断 ---
+        // 如果是“发送”按钮，到此为止，直接返回
+        if (!shouldTriggerReply) {
+            return;
+        }
+
+        // --- 步骤 3: AI 回复逻辑 (仅当点击“响应”时执行) ---
+        if (!currentChatApi) {
+            alert('请先点击左下角的“链接”图标选择一个牵引仪模型！');
+            return;
+        }
+
+        // 禁用发送按钮，防止重复请求
         sendBtn.disabled = true;
         respondBtn.disabled = true;
+
         const systemPrompt = constructSystemPrompt(character, user);
         const historyForApi = formatChatHistoryForApi(chatHistory);
         const messages = [ { role: 'system', content: systemPrompt }, ...historyForApi ];
         const endpoint = (currentChatApi.baseUrl.replace(/\/$/, '')) + (currentChatApi.path || '/v1/chat/completions');
         const payload = { model: currentChatApi.model, messages: messages, stream: true };
+        
         const thinkingBubble = renderMessage({ text: '...', sender: 'character' });
         let fullReply = '';
+
         try {
             const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentChatApi.apiKey}` },
                 body: JSON.stringify(payload)
             });
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error?.message || `API 请求失败，状态码: ${response.status}`);
             }
+
             const reader = response.body.getReader();
             const decoder = new TextDecoder('utf-8');
-            thinkingBubble.textContent = '';
+            thinkingBubble.textContent = ''; // 清空"..."
+
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
+
                 const chunk = decoder.decode(value);
                 const lines = chunk.split('\n\n');
+
                 for (const line of lines) {
                     if (line.startsWith('data: ')) {
                         const dataStr = line.substring(6);
@@ -227,77 +252,66 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 thinkingBubble.textContent = fullReply;
                                 chatArea.scrollTop = chatArea.scrollHeight;
                             }
-                        } catch (e) {}
+                        } catch (e) { /* 忽略解析错误 */ }
                     }
                 }
             }
+
             if (fullReply) {
                 const replyMessage = { text: fullReply, sender: 'character' };
                 chatHistory.push(replyMessage);
                 await dbStorage.setItem(historyKey, chatHistory);
             }
+
         } catch (error) {
             console.error('AI 回复生成失败:', error);
             renderSystemMessage(`错误: ${error.message}`, 'error');
             thinkingBubble.remove();
         } finally {
+            // 重新启用发送按钮
             sendBtn.disabled = false;
             respondBtn.disabled = false;
             input.focus();
         }
     }
-    
-    // ▼▼▼ 修改：修复并优化 openModelSelector 函数 ▼▼▼
-    async function openModelSelector() {
+    // ▲▲▲ 修改结束 ▲▲▲
+
+    async function openModelSelector() { /* ... 无变化 ... */ 
         const [userConfigs, builtInData, builtInStates] = await Promise.all([
             dbStorage.getItem(API_DB_KEYS.CONFIGS) || [],
             dbStorage.getItem(API_DB_KEYS.BUILT_IN_DATA) || {},
             dbStorage.getItem(API_DB_KEYS.BUILT_IN_STATES) || {}
         ]);
-
         let availableModels = [];
-
-        // 1. 处理所有用户配置的 API (包括自定义的和默认的 OpenAI/Google)
         userConfigs
             .filter(api => api.enabled && api.model?.length > 0)
             .forEach(api => {
                 api.model.forEach(modelName => {
                     availableModels.push({
-                        id: `${api.id}-${modelName}`, // 唯一ID
-                        apiKey: api.apiKey,
-                        baseUrl: api.baseUrl,
-                        path: api.path,
-                        model: modelName,
-                        apiName: api.name, // 显示名称
+                        id: `${api.id}-${modelName}`, apiKey: api.apiKey,
+                        baseUrl: api.baseUrl, path: api.path,
+                        model: modelName, apiName: api.name,
                     });
                 });
             });
-        
-        // 2. 处理内置的只读 API
         Object.keys(builtInStates)
             .filter(apiId => builtInStates[apiId]?.enabled && builtInData[apiId]?.model?.length > 0)
             .forEach(apiId => {
                 const userData = builtInData[apiId];
-                const staticData = ALL_BUILT_IN_API_DEFINITIONS[apiId]; // 从导入的配置中安全地获取信息
+                const staticData = ALL_BUILT_IN_API_DEFINITIONS[apiId];
                 if (staticData) {
                     userData.model.forEach(modelName => {
                          availableModels.push({
-                            id: `${apiId}-${modelName}`, // 唯一ID
-                            apiKey: userData.apiKey,
-                            baseUrl: staticData.baseUrl, 
-                            path: staticData.path,
-                            model: modelName,
-                            apiName: staticData.name, // 显示名称
+                            id: `${apiId}-${modelName}`, apiKey: userData.apiKey,
+                            baseUrl: staticData.baseUrl, path: staticData.path,
+                            model: modelName, apiName: staticData.name,
                         });
                     });
                 }
             });
-
         renderModelList(availableModels);
         modelSelectorOverlay.classList.add('active');
     }
-    // ▲▲▲ 修改结束 ▲▲▲
-
     function renderModelList(models) { /* ... 无变化 ... */ 
         if (models.length === 0) {
             modelListContainer.innerHTML = `<p class="no-models-message">没有可用的模型<br>请先到“牵引仪”页面启用并选择模型</p>`;
@@ -327,10 +341,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatInputArea.classList.remove('actions-expanded', 'emoji-expanded');
     };
 
-    // --- 5. 绑定事件 (无变化) ---
+    // --- 5. 绑定事件 (有修改) ---
     input.addEventListener('input', () => { if (input.value.trim() === '') { input.style.height = ''; } else { input.style.height = 'auto'; input.style.height = (input.scrollHeight) + 'px'; } });
-    if (sendBtn) sendBtn.addEventListener('click', () => handleSendMessage('发送'));
-    if (respondBtn) respondBtn.addEventListener('click', () => handleSendMessage('响应'));
+
+    // ▼▼▼ 修改点 2/2：更新按钮的点击事件 ▼▼▼
+    // "发送" 按钮：调用函数，但不触发AI回复
+    if (sendBtn) sendBtn.addEventListener('click', () => handleSendMessage(false));
+    // "响应" 按钮：调用函数，并触发AI回复
+    if (respondBtn) respondBtn.addEventListener('click', () => handleSendMessage(true));
+    // ▲▲▲ 修改结束 ▲▲▲
+
     if (actionsToggleBtn) actionsToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); chatInputArea.classList.remove('emoji-expanded'); chatInputArea.classList.toggle('actions-expanded'); });
     if (emojiToggleBtn) emojiToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); chatInputArea.classList.remove('actions-expanded'); chatInputArea.classList.toggle('emoji-expanded'); });
     if (modelToggleBtn) modelToggleBtn.addEventListener('click', openModelSelector);
