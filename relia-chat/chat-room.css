@@ -302,8 +302,9 @@ html, body {
     overflow-y: auto;  
 }
 
-/* --- 模型选择面板的样式 (无变化) --- */
-.bottom-sheet-overlay {
+/* --- /* --- 模型选择面板的样式 (已修正) --- */
+/* 使用 .modal-overlay 替换 .bottom-sheet-overlay */
+.modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -312,30 +313,29 @@ html, body {
     background-color: rgba(0, 0, 0, 0.4);
     display: flex;
     justify-content: center;
-    align-items: flex-end;
+    align-items: center; /* 确保是垂直居中 */
     z-index: 1000;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
 }
-.bottom-sheet-overlay.active {
+.modal-overlay.active {
     opacity: 1;
     pointer-events: auto;
 }
-.bottom-sheet {
-    background-color: #f8f9fa;
-    width: 100%;
-    max-height: 60vh;
-    border-top-left-radius: 16px;
-    border-top-right-radius: 16px;
-    display: flex;
-    flex-direction: column;
-    transform: translateY(100%);
-    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+/* 修正面板进入动画 */
+.modal-overlay .modal-panel {
+    transform: scale(0.95);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease;
 }
-.bottom-sheet-overlay.active .bottom-sheet {
-    transform: translateY(0);
+
+.modal-overlay.active .modal-panel {
+    transform: scale(1);
+    opacity: 1;
 }
+
 .bottom-sheet-header {
     padding: 16px;
     font-size: 1.1em;
