@@ -103,11 +103,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`;
     let chatHistory = [];
 
-    // --- ▼▼▼ 新增：Profile 编辑器集成逻辑 ▼▼▼ ---
-
-    let profileEditor; // 用于存放编辑器实例
-
-    // 辅助函数：获取 Profile 编辑器所需的所有 DOM 元素
+    // --- Profile 编辑器集成逻辑 ---
+    let profileEditor; 
     function getProfileEditorDOMElements() {
         return {
             globalHelpBtn: document.getElementById('global-help-btn'),
@@ -180,41 +177,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             confirmRelTypeBtn: document.getElementById('confirm-rel-type-btn'),
         };
     }
-
-    // 初始化 Profile 编辑器
     async function setupProfileEditor() {
         const elements = getProfileEditorDOMElements();
         const db = new Dexie('userSettingsDB');
         db.version(1).stores({ keyValueStore: 'key' });
-
         const state = {
-            elements: elements,
-            uiStyle: 'YDM', // 指定一个UI风格，用于数据库键
-            renderSwitcher: () => {},
+            elements: elements, uiStyle: 'YDM', renderSwitcher: () => {},
             onProfileSave: (savedProfile) => {
-                // 保存成功后的回调：更新聊天页面的头像和名称
                 const charInfoAvatar = document.querySelector('.char-info-avatar');
                 const charInfoName = document.querySelector('.char-info-name');
                 if (charInfoAvatar) charInfoAvatar.src = savedProfile.avatar;
                 if (charInfoName) charInfoName.textContent = savedProfile.name;
             },
-            profileData: [],
-            presetContentStore: {},
-            currentProfileId: null,
-            currentMode: 'TA', // 强制设置为'TA'模式，因为我们只编辑角色
+            profileData: [], presetContentStore: {}, currentProfileId: null, currentMode: 'TA',
             activeCustomPane: null, currentPromptAction: null, elementBeingEdited: null,
             longPressTimer: null, isLongPress: false, currentSaveCallback: null,
             currentItemEditingContext: {}, croppingContext: {}, selectedProfileIds: [],
             isMultiSelectMode: false, selectedCharForRel: null, selectedRelationshipTypes: [],
         };
-
         const ui = createUiManager(elements, state, { GENDER_OPTIONS });
         const data = createDataManager(db, state, ui);
         const events = createEventManager(elements, state, ui, data, { LONG_PRESS_DURATION, GENDER_OPTIONS });
-
-        events.bindSharedEvents(); // 绑定模态框的所有交互事件
-
-        // 手动加载预设数据，这是正常初始化的一部分
+        events.bindSharedEvents();
         state.profileData = await data.dbStorage.getItem(PROFILE_DB_KEYS.CHAR_PROFILES) || [];
         state.presetContentStore = await data.dbStorage.getItem(PROFILE_DB_KEYS.PRESETS) || {};
         const presetContainer = state.elements.presetTagsContainer;
@@ -228,14 +212,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 presetContainer.appendChild(newTag);
             });
         }
-        
         profileEditor = { state, ui, data, events };
     }
-    // --- ▲▲▲ 新增结束 ▲▲▲ ---
 
-
-    // --- 4. 核心功能函数 (无变化) ---
-    function constructSystemPrompt(charProfile, userProfile) { /* ... 无变化 ... */ 
+    // --- 4. 核心功能函数 ---
+    function constructSystemPrompt(charProfile, userProfile) { 
         let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
         prompt += `### 角色设定\n`;
         prompt += `- 名字: ${charProfile.name || '未命名'}\n`;
@@ -263,13 +244,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         prompt += `- 你的回复应该是自然的、符合角色的，就像TA真的在和 **${userProfile.name}** 聊天一样。`;
         return prompt;
     }
-    function formatChatHistoryForApi(history) { /* ... 无变化 ... */ 
+    function formatChatHistoryForApi(history) { 
         return history.map(msg => ({
             role: msg.sender === 'user' ? 'user' : 'assistant',
             content: msg.text
         }));
     }
-    function renderMessage({ text, sender }) { /* ... 无变化 ... */ 
+    function renderMessage({ text, sender }) { 
         const messageRow = document.createElement('div');
         messageRow.className = `message-row ${sender}`;
         const avatar = document.createElement('img');
@@ -284,7 +265,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatArea.scrollTop = chatArea.scrollHeight;
         return bubble;
     }
-    function renderSystemMessage(text, type = 'loading') { /* ... 无变化 ... */ 
+    function renderSystemMessage(text, type = 'loading') { 
         const messageRow = document.createElement('div');
         messageRow.className = `message-row system ${type}`;
         messageRow.innerHTML = `<div class="chat-bubble system">${text}</div>`;
@@ -292,21 +273,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatArea.scrollTop = chatArea.scrollHeight;
         return messageRow;
     }
-    async function loadAndRenderHistory() { /* ... 无变化 ... */ 
+    async function loadAndRenderHistory() { 
         const savedHistory = await dbStorage.getItem(historyKey);
         if (savedHistory && Array.isArray(savedHistory) && savedHistory.length > 0) {
             chatHistory = savedHistory;
             chatHistory.forEach(message => renderMessage(message));
         } else {
-            renderSystemMessage(`你现在正在和 ${character.name} 聊天`, 'info');
+            // renderSystemMessage(`你现在正在和 ${character.name} 聊天`, 'info'); // 已注释掉
         }
     }
-    function updateButtonStates() { /* ... 无变化 ... */ 
+    function updateButtonStates() { 
         const hasText = input.value.trim() !== '';
         sendBtn.disabled = !hasText;
         respondBtn.disabled = false;
     }
-    async function handleSendMessage(shouldTriggerReply) { /* ... 无变化 ... */ 
+    async function handleSendMessage(shouldTriggerReply) { 
         const text = input.value.trim();
         if (text !== '') {
             const userMessage = { text, sender: 'user' };
@@ -389,7 +370,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
     }
-    async function openModelSelector() { /* ... 无变化 ... */ 
+    async function openModelSelector() { 
         const [userConfigs, builtInData, builtInStates] = await Promise.all([
             dbStorage.getItem(API_DB_KEYS.CONFIGS) || [],
             dbStorage.getItem(API_DB_KEYS.BUILT_IN_DATA) || {},
@@ -425,7 +406,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderModelList(availableModels);
         modelSelectorOverlay.classList.add('active');
     }
-    function renderModelList(models) { /* ... 无变化 ... */ 
+    function renderModelList(models) { 
         if (models.length === 0) {
             modelListContainer.innerHTML = `<p class="no-models-message">没有可用的模型<br>请先到“牵引仪”页面启用并选择模型</p>`;
             return;
@@ -440,14 +421,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         `).join('');
     }
-    const expandInputLayout = () => { /* ... 无变化 ... */ 
+    const expandInputLayout = () => { 
         if (!chatInputArea.classList.contains('input-focused')) {
             chatInputArea.classList.add('input-focused');
             sendButtonsContainer.classList.add('visible');
             updateButtonStates();
         }
     };
-    const collapseInputLayout = () => { /* ... 无变化 ... */ 
+    const collapseInputLayout = () => { 
         if (chatInputArea.classList.contains('input-focused')) {
             chatInputArea.classList.remove('input-focused');
             sendButtonsContainer.classList.remove('visible');
@@ -465,7 +446,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         updateButtonStates();
     });
-
     if (sendBtn) sendBtn.addEventListener('click', () => handleSendMessage(false));
     if (respondBtn) respondBtn.addEventListener('click', () => handleSendMessage(true));
     if (actionsToggleBtn) actionsToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); chatInputArea.classList.remove('emoji-expanded'); chatInputArea.classList.toggle('actions-expanded'); });
@@ -495,8 +475,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     input.addEventListener('focus', () => { expandInputLayout(); chatInputArea.classList.remove('actions-expanded', 'emoji-expanded'); });
     document.addEventListener('click', (event) => { if (!chatInputArea.contains(event.target)) { collapseInputLayout(); } });
-
-    // --- ▼▼▼ 新增：为角色头像绑定打开编辑器的事件 ▼▼▼ ---
     const charAvatarInHeader = document.querySelector('.char-info-avatar');
     if (charAvatarInHeader) {
         charAvatarInHeader.addEventListener('click', async () => {
@@ -504,16 +482,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.error("Profile Editor尚未初始化！");
                 return;
             }
-            // 使用 data 模块的 loadProfileData 函数，它会处理好所有数据加载和UI填充
             await profileEditor.data.loadProfileData(charId);
-            // 打开模态框
             profileEditor.ui.openModal();
         });
     }
-    // --- ▲▲▲ 新增结束 ▲▲▲ ---
 
     // --- 6. 初始化页面 ---
     await loadAndRenderHistory();
     updateButtonStates();
-    await setupProfileEditor(); // 在页面末尾执行编辑器初始化
+    await setupProfileEditor();
 });
