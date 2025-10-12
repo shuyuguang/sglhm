@@ -233,11 +233,13 @@ html, body {
     filter: brightness(1.1);
 }
 
-/* ▼▼▼ 新增：模型选择胶囊按钮的专属样式 ▼▼▼ */
+/* ▼▼▼ 新增：模型选择胶囊按钮的专属样式 (已加宽) ▼▼▼ */
 .send-action-btn.model-select-btn {
     background-color: #f1f3f5; /* 默认灰色 */
     color: #495057;
     max-width: 120px; /* 限制最大宽度，防止模型名过长 */
+    padding-left: 12px;  /* 自定义左内边距 */
+    padding-right: 172px; /* 自定义右内边距 */
 }
 
 .send-action-btn.model-select-btn.active {
@@ -248,11 +250,11 @@ html, body {
 #selected-model-name {
     display: inline-block;
     overflow: hidden;
-    text-overflow: ellipsis; /* 超出部分显示... */
+    text-overflow: clip; /* 超出部分直接裁剪，不显示省略号 */
     white-space: nowrap;
     vertical-align: middle; /* 垂直居中 */
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
 
 /* --- 聚焦（展开）时的样式 --- */
