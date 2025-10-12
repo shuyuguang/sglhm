@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <header class="chat-header">
                 <a href="./relia-chat.html" class="chat-header-btn back-btn"><i class="fa-solid fa-chevron-left"></i></a>
                 <div class="char-info">
-                    <img src="${character.avatar}" alt="${character.name}" class="char-info-avatar">
+                    <img src="${character.avatar}" alt="${character.name}" class="char-info-avatar" title="编辑角色档案">
                     <div class="char-info-text">
                         <span class="char-info-name">${character.name || '未命名'}</span>
                         <span class="char-info-status">在线</span>
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
         ${modelSelectorHtml}
     `;
-    document.body.innerHTML = pageHtml;
+    document.body.insertAdjacentHTML('afterbegin', pageHtml);
 
     // --- 3. 获取DOM元素和定义变量 (无变化) ---
     const chatArea = document.getElementById('chat-messages-area');
@@ -103,7 +103,138 @@ document.addEventListener('DOMContentLoaded', async () => {
     const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`;
     let chatHistory = [];
 
-    // --- 4. 核心功能函数 (有修改) ---
+    // --- ▼▼▼ 新增：Profile 编辑器集成逻辑 ▼▼▼ ---
+
+    let profileEditor; // 用于存放编辑器实例
+
+    // 辅助函数：获取 Profile 编辑器所需的所有 DOM 元素
+    function getProfileEditorDOMElements() {
+        return {
+            globalHelpBtn: document.getElementById('global-help-btn'),
+            globalHelpTooltip: document.getElementById('global-help-tooltip'),
+            modalOverlay: document.getElementById('edit-modal-overlay'),
+            closeModalButton: document.getElementById('close-modal-btn'),
+            saveButton: document.getElementById('save-btn'),
+            helpButton: document.getElementById('help-btn'),
+            helpTooltip: document.getElementById('help-tooltip'),
+            modalSidebar: document.querySelector('.modal-sidebar'),
+            modalMainContent: document.querySelector('.modal-main-content'),
+            addSectionBtn: document.getElementById('add-section-btn'),
+            namePromptOverlay: document.getElementById('name-prompt-overlay'),
+            namePromptTitle: document.querySelector('#name-prompt-overlay h4'),
+            newSectionNameInput: document.getElementById('new-section-name-input'),
+            confirmPromptBtn: document.getElementById('confirm-prompt-btn'),
+            cancelPromptBtn: document.getElementById('cancel-prompt-btn'),
+            sidebarNavList: document.querySelector('.sidebar-nav-list'),
+            avatarUrlInput: document.getElementById('edit-avatar-url'),
+            bannerUrlInput: document.getElementById('edit-banner-url'),
+            avatarPreviewImg: document.getElementById('avatar-preview-img'),
+            bannerPreviewImg: document.getElementById('banner-preview-img'),
+            avatarUploadInput: document.getElementById('avatar-upload-input'),
+            bannerUploadInput: document.getElementById('banner-upload-input'),
+            cropperOverlay: document.getElementById('cropper-overlay'),
+            cropperImage: document.getElementById('cropper-image'),
+            confirmCropBtn: document.getElementById('confirm-crop-btn'),
+            cancelCropBtn: document.getElementById('cancel-crop-btn'),
+            customSectionOptionsOverlay: document.getElementById('custom-section-options-overlay'),
+            customSectionOptionsSheet: document.getElementById('custom-section-options-sheet'),
+            cancelOptionsSheetBtn: document.getElementById('cancel-options-sheet-btn'),
+            addSectionSheetOverlay: document.getElementById('add-section-sheet-overlay'),
+            presetTagsContainer: document.getElementById('preset-tags-container'),
+            cancelAddSheetBtn: document.getElementById('cancel-add-sheet-btn'),
+            subEditorPanel: document.getElementById('sub-editor-panel'),
+            sepTitle: document.getElementById('sep-title'),
+            sepTextarea: document.getElementById('sep-textarea'),
+            sepBackBtn: document.getElementById('sep-back-btn'),
+            sepSaveBtn: document.getElementById('sep-save-btn'),
+            editAgeTrigger: document.getElementById('edit-age-trigger'),
+            editBioTrigger: document.getElementById('edit-bio-trigger'),
+            editRaceTrigger: document.getElementById('edit-race-trigger'),
+            editOccupationTrigger: document.getElementById('edit-occupation-trigger'),
+            itemEditorPanel: document.getElementById('item-editor-panel'),
+            itemEditorTitleHeader: document.getElementById('item-editor-title-header'),
+            itemEditorTitleInput: document.getElementById('item-editor-title-input'),
+            itemEditorValueTextarea: document.getElementById('item-editor-value-textarea'),
+            itemEditorBackBtn: document.getElementById('item-editor-back-btn'),
+            itemEditorSaveBtn: document.getElementById('item-editor-save-btn'),
+            switcherSettingsModal: document.getElementById('switcher-settings-modal-overlay'),
+            settingsUserList: document.getElementById('settings-user-list'),
+            settingsCloseBtn: document.getElementById('settings-close-btn'),
+            settingsImportBtn: document.getElementById('settings-import-btn'),
+            settingsExportBtn: document.getElementById('settings-export-btn'),
+            settingsMultiSelectBtn: document.getElementById('settings-multi-select-btn'),
+            settingsDeleteBtn: document.getElementById('settings-delete-btn'),
+            editGenderTrigger: document.getElementById('edit-gender-trigger'),
+            usernameLabel: document.getElementById('username-label'),
+            switcherSettingsTitle: document.getElementById('switcher-settings-title'),
+            addRelationshipBtn: document.getElementById('add-relationship-btn'),
+            relationshipItemsContainer: document.getElementById('relationship-items-container'),
+            characterSelectorOverlay: document.getElementById('character-selector-overlay'),
+            cancelCharSelectorBtn: document.getElementById('cancel-char-selector-btn'),
+            charSearchInput: document.getElementById('char-search-input'),
+            charSelectorList: document.getElementById('char-selector-list'),
+            confirmCharSelectionBtn: document.getElementById('confirm-char-selection-btn'),
+            relationshipTypeOverlay: document.getElementById('relationship-type-overlay'),
+            cancelRelTypeBtn: document.getElementById('cancel-rel-type-btn'),
+            relationshipTypeOptions: document.getElementById('relationship-type-options'),
+            confirmRelTypeBtn: document.getElementById('confirm-rel-type-btn'),
+        };
+    }
+
+    // 初始化 Profile 编辑器
+    async function setupProfileEditor() {
+        const elements = getProfileEditorDOMElements();
+        const db = new Dexie('userSettingsDB');
+        db.version(1).stores({ keyValueStore: 'key' });
+
+        const state = {
+            elements: elements,
+            uiStyle: 'YDM', // 指定一个UI风格，用于数据库键
+            renderSwitcher: () => {},
+            onProfileSave: (savedProfile) => {
+                // 保存成功后的回调：更新聊天页面的头像和名称
+                const charInfoAvatar = document.querySelector('.char-info-avatar');
+                const charInfoName = document.querySelector('.char-info-name');
+                if (charInfoAvatar) charInfoAvatar.src = savedProfile.avatar;
+                if (charInfoName) charInfoName.textContent = savedProfile.name;
+            },
+            profileData: [],
+            presetContentStore: {},
+            currentProfileId: null,
+            currentMode: 'TA', // 强制设置为'TA'模式，因为我们只编辑角色
+            activeCustomPane: null, currentPromptAction: null, elementBeingEdited: null,
+            longPressTimer: null, isLongPress: false, currentSaveCallback: null,
+            currentItemEditingContext: {}, croppingContext: {}, selectedProfileIds: [],
+            isMultiSelectMode: false, selectedCharForRel: null, selectedRelationshipTypes: [],
+        };
+
+        const ui = createUiManager(elements, state, { GENDER_OPTIONS });
+        const data = createDataManager(db, state, ui);
+        const events = createEventManager(elements, state, ui, data, { LONG_PRESS_DURATION, GENDER_OPTIONS });
+
+        events.bindSharedEvents(); // 绑定模态框的所有交互事件
+
+        // 手动加载预设数据，这是正常初始化的一部分
+        state.profileData = await data.dbStorage.getItem(PROFILE_DB_KEYS.CHAR_PROFILES) || [];
+        state.presetContentStore = await data.dbStorage.getItem(PROFILE_DB_KEYS.PRESETS) || {};
+        const presetContainer = state.elements.presetTagsContainer;
+        if (presetContainer) {
+            presetContainer.querySelectorAll('.preset-tag:not(.preset-tag-custom)').forEach(tag => tag.remove());
+            Object.keys(state.presetContentStore).forEach(name => {
+                const newTag = document.createElement('button');
+                newTag.className = 'preset-tag';
+                newTag.dataset.presetName = name;
+                newTag.textContent = name;
+                presetContainer.appendChild(newTag);
+            });
+        }
+        
+        profileEditor = { state, ui, data, events };
+    }
+    // --- ▲▲▲ 新增结束 ▲▲▲ ---
+
+
+    // --- 4. 核心功能函数 (无变化) ---
     function constructSystemPrompt(charProfile, userProfile) { /* ... 无变化 ... */ 
         let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
         prompt += `### 角色设定\n`;
@@ -170,21 +301,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderSystemMessage(`你现在正在和 ${character.name} 聊天`, 'info');
         }
     }
-
-    // ▼▼▼ 修改点 1/3：新增一个函数来更新按钮状态 ▼▼▼
-    function updateButtonStates() {
+    function updateButtonStates() { /* ... 无变化 ... */ 
         const hasText = input.value.trim() !== '';
-        // "发送"按钮：仅在输入框有文本时启用
         sendBtn.disabled = !hasText;
-        // "响应"按钮：始终启用
         respondBtn.disabled = false;
     }
-
-    // ▼▼▼ 修改点 2/3：再次重构 handleSendMessage 函数 ▼▼▼
-    async function handleSendMessage(shouldTriggerReply) {
+    async function handleSendMessage(shouldTriggerReply) { /* ... 无变化 ... */ 
         const text = input.value.trim();
-
-        // 场景1: 如果输入框有文本，则发送消息
         if (text !== '') {
             const userMessage = { text, sender: 'user' };
             renderMessage(userMessage);
@@ -193,15 +316,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             input.value = '';
             input.style.height = '';
-            updateButtonStates(); // 发送后更新按钮状态
+            updateButtonStates();
             input.focus();
         } 
-        // 场景2: 如果输入框为空，且是“发送”操作，则什么也不做
         else if (!shouldTriggerReply) {
             return;
         }
-
-        // 场景3: 触发AI回复 (无论输入框是否为空，只要是“响应”操作)
         if (shouldTriggerReply) {
             if (chatHistory.length === 0) {
                 alert('还没有聊天记录，请先说点什么吧！');
@@ -211,21 +331,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 alert('请先点击左下角的“链接”图标选择一个牵引仪模型！');
                 return;
             }
-
             sendBtn.disabled = true;
             respondBtn.disabled = true;
-
             const systemPrompt = constructSystemPrompt(character, user);
             const historyForApi = formatChatHistoryForApi(chatHistory);
             const messages = [ { role: 'system', content: systemPrompt }, ...historyForApi ];
             const endpoint = (currentChatApi.baseUrl.replace(/\/$/, '')) + (currentChatApi.path || '/v1/chat/completions');
             const payload = { model: currentChatApi.model, messages: messages, stream: true };
-            
             const thinkingBubble = renderMessage({ text: '...', sender: 'character' });
             let fullReply = '';
-
             try {
-                // ... (fetch 和流式处理逻辑保持不变) ...
                 const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentChatApi.apiKey}` },
@@ -269,12 +384,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 renderSystemMessage(`错误: ${error.message}`, 'error');
                 thinkingBubble.remove();
             } finally {
-                updateButtonStates(); // AI响应后也要更新按钮状态
+                updateButtonStates();
                 input.focus();
             }
         }
     }
-    
     async function openModelSelector() { /* ... 无变化 ... */ 
         const [userConfigs, builtInData, builtInStates] = await Promise.all([
             dbStorage.getItem(API_DB_KEYS.CONFIGS) || [],
@@ -330,7 +444,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!chatInputArea.classList.contains('input-focused')) {
             chatInputArea.classList.add('input-focused');
             sendButtonsContainer.classList.add('visible');
-            updateButtonStates(); // 聚焦时也更新一次按钮状态
+            updateButtonStates();
         }
     };
     const collapseInputLayout = () => { /* ... 无变化 ... */ 
@@ -341,17 +455,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatInputArea.classList.remove('actions-expanded', 'emoji-expanded');
     };
 
-    // --- 5. 绑定事件 (有修改) ---
-    // ▼▼▼ 修改点 3/3：更新 input 事件监听器 ▼▼▼
+    // --- 5. 绑定事件 ---
     input.addEventListener('input', () => {
-        // 调整高度
         if (input.value.trim() === '') {
             input.style.height = '';
         } else {
             input.style.height = 'auto';
             input.style.height = (input.scrollHeight) + 'px';
         }
-        // 实时更新按钮状态
         updateButtonStates();
     });
 
@@ -385,7 +496,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     input.addEventListener('focus', () => { expandInputLayout(); chatInputArea.classList.remove('actions-expanded', 'emoji-expanded'); });
     document.addEventListener('click', (event) => { if (!chatInputArea.contains(event.target)) { collapseInputLayout(); } });
 
-    // --- 6. 初始化页面 (有修改) ---
+    // --- ▼▼▼ 新增：为角色头像绑定打开编辑器的事件 ▼▼▼ ---
+    const charAvatarInHeader = document.querySelector('.char-info-avatar');
+    if (charAvatarInHeader) {
+        charAvatarInHeader.addEventListener('click', async () => {
+            if (!profileEditor) {
+                console.error("Profile Editor尚未初始化！");
+                return;
+            }
+            // 使用 data 模块的 loadProfileData 函数，它会处理好所有数据加载和UI填充
+            await profileEditor.data.loadProfileData(charId);
+            // 打开模态框
+            profileEditor.ui.openModal();
+        });
+    }
+    // --- ▲▲▲ 新增结束 ▲▲▲ ---
+
+    // --- 6. 初始化页面 ---
     await loadAndRenderHistory();
-    updateButtonStates(); // 页面加载后立即设置一次按钮的初始状态
+    updateButtonStates();
+    await setupProfileEditor(); // 在页面末尾执行编辑器初始化
 });
