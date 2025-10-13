@@ -80,10 +80,9 @@ html, body {
 }
 
 .chat-input-area.actions-expanded .chat-actions-bar {
-    max-height: 220px;
+    max-height: 225px;
     opacity: 1;
     padding: 30px 15px;
-    /* [修改] 允许在内容超出时显示垂直滚动条 */
     overflow-y: auto;
 }
 
@@ -248,10 +247,6 @@ html, body {
     padding-right: 172px;
 }
 
-.send-action-btn.model-select-btn.active {
-    background-color: var(--send-btn-bg); 
-    color: var(--text-light);
-}
 
 #selected-model-name {
     display: inline-block;
