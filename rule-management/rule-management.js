@@ -29,19 +29,19 @@ const ruleManagementPageContent = `
                     <div class="capsule-content">
                         <div id="sub-chat-short" class="capsule-pane active">
                             <div class="rule-cards-container"></div>
-                            <p class="no-rules-placeholder">暂无规则，点击右下角羽毛笔添加。</p>
+                            <p class="no-rules-placeholder">暂无规则，点击右上角羽毛笔添加。</p>
                         </div>
                         <div id="sub-chat-dialogue" class="capsule-pane">
                             <div class="rule-cards-container"></div>
-                            <p class="no-rules-placeholder">暂无规则，点击右下角羽毛笔添加。</p>
+                            <p class="no-rules-placeholder">暂无规则，点击右上角羽毛笔添加。</p>
                         </div>
                         <div id="sub-chat-novel" class="capsule-pane">
                             <div class="rule-cards-container"></div>
-                            <p class="no-rules-placeholder">暂无规则，点击右下角羽毛笔添加。</p>
+                            <p class="no-rules-placeholder">暂无规则，点击右上角羽毛笔添加。</p>
                         </div>
                         <div id="sub-chat-rpg" class="capsule-pane">
                             <div class="rule-cards-container"></div>
-                            <p class="no-rules-placeholder">暂无规则，点击右下角羽毛笔添加。</p>
+                            <p class="no-rules-placeholder">暂无规则，点击右上角羽毛笔添加。</p>
                         </div>
                     </div>
                 </div>
