@@ -4,17 +4,16 @@
  * API Management 功能模块的配置
  */
 
-// 1. 数据库键 (保持不变)
+// 1. 数据库键
 export const API_DB_KEYS = {
     CONFIGS: 'api_configs_text',
     BUILT_IN_DATA: 'built_in_api_data',
-    BUILT_IN_STATES: 'built_in_api_states'
+    BUILT_IN_STATES: 'built_in_api_states',
+    // ▼▼▼ 新增：用于存储所有API卡片顺序的键 ▼▼▼
+    API_ORDER: 'api_display_order'
 };
 
 export const ALL_API_DB_KEYS = Object.values(API_DB_KEYS);
-
-
-// ▼▼▼ 修改开始 ▼▼▼
 
 // 2. 默认的可编辑 API 卡片定义
 export const DEFAULT_EDITABLE_APIS = [
@@ -47,5 +46,3 @@ const allBuiltInDefinitions = {};
     allBuiltInDefinitions[api.id] = api;
 });
 export const ALL_BUILT_IN_API_DEFINITIONS = allBuiltInDefinitions;
-
-// ▲▲▲ 修改结束 ▲▲▲
