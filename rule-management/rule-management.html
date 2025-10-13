@@ -13,7 +13,14 @@
 </head>
 <body>
     <!-- 页面 body 初始为空 -->
-    <!-- 2. 只引入一个入口模块脚本 -->
+
+    <!-- 2. 引入依赖的库文件 -->
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <!-- ▼▼▼ 新增：引入 SortableJS 库 ▼▼▼ -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <!-- ▲▲▲ 新增结束 ▲▲▲ -->
+
+    <!-- 3. 引入入口模块脚本 -->
     <script src="rule-management.js" type="module"></script>
 </body>
 </html>
