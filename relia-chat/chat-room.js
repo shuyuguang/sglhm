@@ -2,12 +2,13 @@
 
 import { dbStorage } from '../common/db.js';
 import { API_DB_KEYS, ALL_BUILT_IN_API_DEFINITIONS } from '../config/api.config.js';
-import { PROFILE_DB_KEYS, GENDER_OPTIONS, LONG_PRESS_DURATION } from '../config/profile.config.js';
+import { PROFILE_DB_KEYS } from '../config/profile.config.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
-
+// [修改] 引入新的 bridge 模块
+import { createChatEditor } from './chat-editor-bridge.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // --- 1 & 2. 获取数据和生成HTML (部分修改) ---
+    // --- 1 & 2. 获取数据和生成HTML ---
     const urlParams = new URLSearchParams(window.location.search);
     const charId = urlParams.get('id');
     if (!charId) {
@@ -19,7 +20,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         dbStorage.getItem(PROFILE_DB_KEYS.USER_PROFILES),
         dbStorage.getItem(PROFILE_DB_KEYS.USER_CURRENT_ID)
     ]);
-    const character = allChars ? allChars.find(c => c.id === charId) : null;
+    
+    let character = allChars ? allChars.find(c => c.id === charId) : null;
+
     if (!character) {
         document.body.innerHTML = `<p style="text-align: center; margin-top: 50px;">错误：找不到ID为 ${charId} 的角色。</p>`;
         return;
@@ -32,13 +35,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             <header class="chat-header">
                 <a href="./relia-chat.html" class="chat-header-btn back-btn"><i class="fa-solid fa-chevron-left"></i></a>
                 <div class="char-info">
-                    <img src="${character.avatar}" alt="${character.name}" class="char-info-avatar" title="编辑角色档案">
+                    <img src="${character.avatar}" alt="${character.name}" class="char-info-avatar">
                     <div class="char-info-text">
                         <span class="char-info-name">${character.name || '未命名'}</span>
                         <span class="char-info-status">在线</span>
                     </div>
                 </div>
-                <a href="./chat-setting.html?id=${charId}" class="chat-header-btn options-btn"><i class="fa-solid fa-ellipsis-vertical"></i></a>
+                <a id="options-btn" class="chat-header-btn options-btn"><i class="fa-solid fa-ellipsis-vertical"></i></a>
             </header>
             <main class="chat-messages" id="chat-messages-area"></main>
             <footer class="chat-input-area" id="chat-input-area">
@@ -65,14 +68,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-camera"></i></button><span>拍照</span></div>
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-microphone"></i></button><span>音频</span></div>
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-palette"></i></button><span>主题</span></div>
+                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-save"></i></button><span>存档</span></div>
+                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-list-check"></i></button><span>DIY</span></div>                    <div class="action-item"><button class="action-btn" id="edit-settings-btn"><i class="fa-solid fa-pencil"></i></button><span>编辑</span></div>
+                    <div class="action-item"><button class="action-btn" id="search-history-btn"><i class="fa-solid fa-magnifying-glass"></i></button><span>记录</span></div>
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-money-bill-transfer"></i></button><span>转账</span></div>
+                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-sack-dollar"></i></button><span>收款</span></div>
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-gift"></i></button><span>礼物</span></div>
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-phone"></i></button><span>通话</span></div>
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-location-dot"></i></button><span>位置</span></div>
-                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-save"></i></button><span>存档</span></div>
-                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-arrows-rotate"></i></button><span>风格</span></div>
-                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-list-check"></i></button><span>DIY</span></div>
-                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-music"></i></button><span>音乐</span></div>
+                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-music"></i></button><span>听歌</span></div>
+                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-calendar-check"></i></button><span>打卡</span></div>
+                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-link"></i></button><span>接龙</span></div>
                 </div>
                 <div class="emoji-picker-bar">
                     <div class="emoji-placeholder">表情面板功能待开发...</div>
@@ -82,7 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 `;
     document.body.insertAdjacentHTML('afterbegin', pageHtml);
 
-    // --- 3. 获取DOM元素和定义变量 (无变化) ---
+    // --- 3. 获取DOM元素和定义变量 ---
     const chatArea = document.getElementById('chat-messages-area');
     const input = document.getElementById('chat-input');
     const chatInputArea = document.getElementById('chat-input-area');
@@ -98,123 +104,39 @@ document.addEventListener('DOMContentLoaded', async () => {
     const closeModelSelectorBtn = document.getElementById('close-model-selector-btn');
     const promptBtn = document.getElementById('prompt-btn');
     const inspirationBtn = document.getElementById('inspiration-btn');
+    const optionsBtn = document.getElementById('options-btn');
+    const editSettingsBtn = document.getElementById('edit-settings-btn');
+    const searchHistoryBtn = document.getElementById('search-history-btn');
+    
     let currentChatApi = null;
-    // ▼▼▼ 修改：定义两个独立的、与角色ID绑定的存储键 ▼▼▼
     const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`;
     const selectedApiKey = `${CHAT_DB_KEYS.CHAT_SELECTED_API}_${charId}`;
-    // ▲▲▲ 修改结束 ▲▲▲
     let chatHistory = [];
-
-    // --- Profile 编辑器集成逻辑 (无变化) ---
-    let profileEditor; 
-    function getProfileEditorDOMElements() {
-        return {
-            globalHelpBtn: document.getElementById('global-help-btn'),
-            globalHelpTooltip: document.getElementById('global-help-tooltip'),
-            modalOverlay: document.getElementById('edit-modal-overlay'),
-            closeModalButton: document.getElementById('close-modal-btn'),
-            saveButton: document.getElementById('save-btn'),
-            helpButton: document.getElementById('help-btn'),
-            helpTooltip: document.getElementById('help-tooltip'),
-            modalSidebar: document.querySelector('.modal-sidebar'),
-            modalMainContent: document.querySelector('.modal-main-content'),
-            addSectionBtn: document.getElementById('add-section-btn'),
-            namePromptOverlay: document.getElementById('name-prompt-overlay'),
-            namePromptTitle: document.querySelector('#name-prompt-overlay h4'),
-            newSectionNameInput: document.getElementById('new-section-name-input'),
-            confirmPromptBtn: document.getElementById('confirm-prompt-btn'),
-            cancelPromptBtn: document.getElementById('cancel-prompt-btn'),
-            sidebarNavList: document.querySelector('.sidebar-nav-list'),
-            avatarUrlInput: document.getElementById('edit-avatar-url'),
-            bannerUrlInput: document.getElementById('edit-banner-url'),
-            avatarPreviewImg: document.getElementById('avatar-preview-img'),
-            bannerPreviewImg: document.getElementById('banner-preview-img'),
-            avatarUploadInput: document.getElementById('avatar-upload-input'),
-            bannerUploadInput: document.getElementById('banner-upload-input'),
-            cropperOverlay: document.getElementById('cropper-overlay'),
-            cropperImage: document.getElementById('cropper-image'),
-            confirmCropBtn: document.getElementById('confirm-crop-btn'),
-            cancelCropBtn: document.getElementById('cancel-crop-btn'),
-            customSectionOptionsOverlay: document.getElementById('custom-section-options-overlay'),
-            customSectionOptionsSheet: document.getElementById('custom-section-options-sheet'),
-            cancelOptionsSheetBtn: document.getElementById('cancel-options-sheet-btn'),
-            addSectionSheetOverlay: document.getElementById('add-section-sheet-overlay'),
-            presetTagsContainer: document.getElementById('preset-tags-container'),
-            cancelAddSheetBtn: document.getElementById('cancel-add-sheet-btn'),
-            subEditorPanel: document.getElementById('sub-editor-panel'),
-            sepTitle: document.getElementById('sep-title'),
-            sepTextarea: document.getElementById('sep-textarea'),
-            sepBackBtn: document.getElementById('sep-back-btn'),
-            sepSaveBtn: document.getElementById('sep-save-btn'),
-            editAgeTrigger: document.getElementById('edit-age-trigger'),
-            editBioTrigger: document.getElementById('edit-bio-trigger'),
-            editRaceTrigger: document.getElementById('edit-race-trigger'),
-            editOccupationTrigger: document.getElementById('edit-occupation-trigger'),
-            itemEditorPanel: document.getElementById('item-editor-panel'),
-            itemEditorTitleHeader: document.getElementById('item-editor-title-header'),
-            itemEditorTitleInput: document.getElementById('item-editor-title-input'),
-            itemEditorValueTextarea: document.getElementById('item-editor-value-textarea'),
-            itemEditorBackBtn: document.getElementById('item-editor-back-btn'),
-            itemEditorSaveBtn: document.getElementById('item-editor-save-btn'),
-            switcherSettingsModal: document.getElementById('switcher-settings-modal-overlay'),
-            settingsUserList: document.getElementById('settings-user-list'),
-            settingsCloseBtn: document.getElementById('settings-close-btn'),
-            settingsImportBtn: document.getElementById('settings-import-btn'),
-            settingsExportBtn: document.getElementById('settings-export-btn'),
-            settingsMultiSelectBtn: document.getElementById('settings-multi-select-btn'),
-            settingsDeleteBtn: document.getElementById('settings-delete-btn'),
-            editGenderTrigger: document.getElementById('edit-gender-trigger'),
-            usernameLabel: document.getElementById('username-label'),
-            switcherSettingsTitle: document.getElementById('switcher-settings-title'),
-            addRelationshipBtn: document.getElementById('add-relationship-btn'),
-            relationshipItemsContainer: document.getElementById('relationship-items-container'),
-            characterSelectorOverlay: document.getElementById('character-selector-overlay'),
-            cancelCharSelectorBtn: document.getElementById('cancel-char-selector-btn'),
-            charSearchInput: document.getElementById('char-search-input'),
-            charSelectorList: document.getElementById('char-selector-list'),
-            confirmCharSelectionBtn: document.getElementById('confirm-char-selection-btn'),
-            relationshipTypeOverlay: document.getElementById('relationship-type-overlay'),
-            cancelRelTypeBtn: document.getElementById('cancel-rel-type-btn'),
-            relationshipTypeOptions: document.getElementById('relationship-type-options'),
-            confirmRelTypeBtn: document.getElementById('confirm-rel-type-btn'),
-        };
-    }
-    async function setupProfileEditor() {
-        const elements = getProfileEditorDOMElements();
-        const db = new Dexie('userSettingsDB');
-        db.version(1).stores({ keyValueStore: 'key' });
-        const state = {
-            elements: elements, uiStyle: 'YDM', renderSwitcher: () => {},
-            onProfileSave: (savedProfile) => {
-                const charInfoAvatar = document.querySelector('.char-info-avatar');
-                const charInfoName = document.querySelector('.char-info-name');
-                if (charInfoAvatar) charInfoAvatar.src = savedProfile.avatar;
-                if (charInfoName) charInfoName.textContent = savedProfile.name;
-            },
-            profileData: [], presetContentStore: {}, currentProfileId: null, currentMode: 'TA',
-            activeCustomPane: null, currentPromptAction: null, elementBeingEdited: null,
-            longPressTimer: null, isLongPress: false, currentSaveCallback: null,
-            currentItemEditingContext: {}, croppingContext: {}, selectedProfileIds: [],
-            isMultiSelectMode: false, selectedCharForRel: null, selectedRelationshipTypes: [],
-        };
-        const ui = createUiManager(elements, state, { GENDER_OPTIONS });
-        const data = createDataManager(db, state, ui);
-        const events = createEventManager(elements, state, ui, data, { LONG_PRESS_DURATION, GENDER_OPTIONS });
-        events.bindSharedEvents();
-        state.profileData = await data.dbStorage.getItem(PROFILE_DB_KEYS.CHAR_PROFILES) || [];
-        state.presetContentStore = await data.dbStorage.getItem(PROFILE_DB_KEYS.PRESETS) || {};
-        const presetContainer = state.elements.presetTagsContainer;
-        if (presetContainer) {
-            presetContainer.querySelectorAll('.preset-tag:not(.preset-tag-custom)').forEach(tag => tag.remove());
-            Object.keys(state.presetContentStore).forEach(name => {
-                const newTag = document.createElement('button');
-                newTag.className = 'preset-tag';
-                newTag.dataset.presetName = name;
-                newTag.textContent = name;
-                presetContainer.appendChild(newTag);
-            });
+    
+    // [修改] 初始化功能完整的编辑器
+    let chatEditor = null;
+    const onProfileUpdate = async (updatedProfile) => {
+        console.log('角色设定已在聊天室中更新:', updatedProfile);
+        
+        character = updatedProfile; 
+        
+        const allCharacterProfiles = await dbStorage.getItem(PROFILE_DB_KEYS.CHAR_PROFILES) || [];
+        const charIndex = allCharacterProfiles.findIndex(c => c.id === character.id);
+        if (charIndex !== -1) {
+            allCharacterProfiles[charIndex] = character;
+            await dbStorage.setItem(PROFILE_DB_KEYS.CHAR_PROFILES, allCharacterProfiles);
+            console.log('角色数据已成功同步回数据库。');
         }
-        profileEditor = { state, ui, data, events };
+        
+        document.querySelector('.char-info-name').textContent = character.name || '未命名';
+        document.querySelector('.char-info-avatar').src = character.avatar;
+        
+        // [新增] 通知编辑器内部数据已更新
+        chatEditor?.updateProfile(character);
+    };
+
+    if(character) {
+        chatEditor = createChatEditor(character, onProfileUpdate);
     }
 
     // --- 4. 核心功能函数 (无变化) ---
@@ -385,10 +307,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         modelSelectorOverlay?.classList.remove('active');
     };
 
-    // ▼▼▼ 修改：这是主要修复点 ▼▼▼
     async function openModelSelector() {
         try {
-            // 1. 安全地从数据库获取数据，并提供默认值
             const [userConfigs, builtInData, builtInStates] = await Promise.all([
                 dbStorage.getItem(API_DB_KEYS.CONFIGS).then(res => res || []),
                 dbStorage.getItem(API_DB_KEYS.BUILT_IN_DATA).then(res => res || {}),
@@ -397,7 +317,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             let availableModels = [];
 
-            // 2. 处理用户自定义的 API (逻辑不变，但现在 userConfigs 是安全的)
             userConfigs
                 .filter(api => api.enabled && Array.isArray(api.model) && api.model.length > 0)
                 .forEach(api => {
@@ -410,7 +329,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     });
                 });
 
-            // 3. 处理内置的 API (逻辑不变，但现在 builtInData 和 builtInStates 是安全的)
             Object.keys(builtInStates)
                 .forEach(apiId => {
                     const userData = builtInData[apiId];
@@ -436,7 +354,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert("加载模型列表失败，请检查控制台获取更多信息。");
         }
     }
-    // ▲▲▲ 修改结束 ▲▲▲
 
     function renderModelList(models) { 
         if (models.length === 0) {
@@ -468,7 +385,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatInputArea.classList.remove('actions-expanded', 'emoji-expanded');
     };
 
-    // --- 5. 绑定事件 (无变化) ---
+    // --- 5. 绑定事件 ---
     input.addEventListener('input', () => {
         if (input.value.trim() === '') {
             input.style.height = '';
@@ -485,6 +402,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (selectModelBtn) selectModelBtn.addEventListener('click', openModelSelector);
     if (promptBtn) { promptBtn.addEventListener('click', () => { alert('“快捷指令（闪电）”功能待开发'); }); }
     if (inspirationBtn) { inspirationBtn.addEventListener('click', () => { alert('“灵感（灯泡）”功能待开发'); }); }
+    
+    if (optionsBtn) { optionsBtn.addEventListener('click', () => { alert('“聊天风格选择”功能待开发'); }); }
+    if (editSettingsBtn) { 
+        editSettingsBtn.addEventListener('click', () => {
+            if (chatEditor) {
+                chatEditor.open();
+            } else {
+                alert('编辑器初始化失败！');
+            }
+        }); 
+    }
+    if (searchHistoryBtn) { searchHistoryBtn.addEventListener('click', () => { alert('“聊天记录”功能待开发'); }); }
+
     if (modelSelectorOverlay) { 
         modelSelectorOverlay.addEventListener('click', (e) => { 
             if (e.target === modelSelectorOverlay) { 
@@ -495,9 +425,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (closeModelSelectorBtn) {
         closeModelSelectorBtn.addEventListener('click', closeModelSelector);
     }
-    // ▼▼▼ 修改：这是“写日记”的地方 ▼▼▼
     if (modelListContainer) {
-        modelListContainer.addEventListener('click', async (e) => { // 1. 变成 async 函数
+        modelListContainer.addEventListener('click', async (e) => {
             const item = e.target.closest('.model-item');
             if (item) {
                 const modelInfo = JSON.parse(item.dataset.modelInfo);
@@ -511,7 +440,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     item.classList.add('active');
                 }
                 
-                // 2. 把选择存入数据库
                 await dbStorage.setItem(selectedApiKey, currentChatApi);
                 console.log('已保存API选择:', currentChatApi);
 
@@ -520,38 +448,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
-    // ▲▲▲ 修改结束 ▲▲▲
     input.addEventListener('focus', () => { expandInputLayout(); chatInputArea.classList.remove('actions-expanded', 'emoji-expanded'); });
     document.addEventListener('click', (event) => { if (!chatInputArea.contains(event.target)) { collapseInputLayout(); } });
-    const charAvatarInHeader = document.querySelector('.char-info-avatar');
-    if (charAvatarInHeader) {
-        charAvatarInHeader.addEventListener('click', async () => {
-            if (!profileEditor) {
-                console.error("Profile Editor尚未初始化！");
-                return;
-            }
-            await profileEditor.data.loadProfileData(charId);
-            profileEditor.ui.openModal();
-        });
-    }
 
-    // --- 6. 初始化页面 (部分修改) ---
-    // ▼▼▼ 修改：这是“读日记”的地方 ▼▼▼
+    // --- 6. 初始化页面 ---
     async function initializeChatState() {
-        // 1. 先从数据库加载上次的选择
         const savedApi = await dbStorage.getItem(selectedApiKey);
         if (savedApi) {
             currentChatApi = savedApi;
             console.log('已加载API选择:', currentChatApi);
         }
         
-        // 2. 然后再加载历史记录和更新UI
         await loadAndRenderHistory();
         updateButtonStates();
-        updateModelButtonText(); // 确保按钮文本正确显示
+        updateModelButtonText();
     }
 
     await initializeChatState();
-    // ▲▲▲ 修改结束 ▲▲▲
-    await setupProfileEditor();
+
 });

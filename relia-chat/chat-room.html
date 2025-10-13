@@ -8,22 +8,32 @@
     <!-- 引入公共资源 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+    
+    <!-- 引入本页面的专属 CSS -->
+    <link rel="stylesheet" href="chat-room.css">
 
-    <!-- ▼▼▼ 新增：引入 Profile 编辑器所需的 CSS ▼▼▼ -->
+    <!-- [修改] 引入 profile 面板所需的全部 CSS -->
     <link rel="stylesheet" href="../profile/base.css">
     <link rel="stylesheet" href="../profile/components.css">
     <link rel="stylesheet" href="../profile/modals.css">
-    <link rel="stylesheet" href="../profile/utilities.css">
-    <!-- ▲▲▲ 新增结束 ▲▲▲ -->
-
-    <!-- 引入本页面的专属 CSS -->
-    <link rel="stylesheet" href="chat-room.css">
 </head>
 <body>
-    <!-- 所有内容将由 chat-room.js 动态生成 -->
+    <!-- 聊天室UI将由JS动态生成 -->
 
-    <!-- ▼▼▼ 新增：从 profile.html 复制过来的共用 Modals 和 Overlays ▼▼▼ -->
-    <!-- 编辑面板 -->
+    <!-- 模型选择模态框 -->
+    <div class="modal-overlay" id="model-selector-overlay">
+        <div class="modal-panel model-selector-panel">
+            <div class="modal-header">
+                <h3 class="modal-title">选择牵引仪模型</h3>
+                <button class="modal-close" id="close-model-selector-btn" title="关闭">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="model-list-container" id="model-list-container"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- [修改] 从 profile.html 复制过来的【完整版】角色编辑面板及所有子面板 -->
     <div class="modal-overlay" id="edit-modal-overlay">
         <div class="modal-panel">
             <div class="modal-header">
@@ -34,16 +44,7 @@
                     <button class="btn-save" id="save-btn" title="保存"><i class="fa-solid fa-check"></i></button>
                 </div>
             </div>
-            <div id="help-tooltip" class="help-tooltip">
-        <p>存为预设的栏目是YOU/TA设定面板全局共享的</p>
-        <ol class="help-list">
-            <li>图片可填写URL/本地上传</li>
-            <li>YOU锁♀，TA可选♀/♂/⚲</li>
-            <li>至少填写姓名年龄简介</li>
-            <li>存为预设条目后记得加载条目内容，更新条目需再次加载</li>
-        </ol>
-        <p>功能尚未完善，自行探索~</p>
-    </div>
+            <div id="help-tooltip" class="help-tooltip"><p>在这里修改的设定将实时同步。</p></div>
             <div class="modal-body">
                 <div class="modal-sidebar">
                     <div class="sidebar-nav-list">
@@ -55,130 +56,50 @@
                 </div>
                 <div class="modal-main-content">
                     <div id="modal-section-visuals" class="modal-section-pane active">
-    <div class="visual-edit-item">
-        <div class="form-row"><label for="edit-avatar-url">头像</label><input type="text" id="edit-avatar-url" placeholder="输入图片 URL 或点击下方图片上传"></div>
-        <div class="visual-preview-container">
-            <div class="visual-preview-wrapper avatar-wrapper">
-                <img src="" alt="Avatar Preview" id="avatar-preview-img" class="visual-preview">
-            </div>
-            <div class="edit-icon-overlay"><i class="fa-solid fa-pencil"></i></div>
-        </div>
-        <input type="file" id="avatar-upload-input" accept="image/*" style="display: none;">
-    </div>
-    <div class="visual-edit-item">
-        <div class="form-row"><label for="edit-banner-url">背景</label><input type="text" id="edit-banner-url" placeholder="输入图片 URL 或点击下方图片上传"></div>
-        <div class="visual-preview-container">
-            <div class="visual-preview-wrapper banner-wrapper">
-                <img src="" alt="Banner Preview" id="banner-preview-img" class="visual-preview">
-            </div>
-            <div class="edit-icon-overlay"><i class="fa-solid fa-pencil"></i></div>
-        </div>
-        <input type="file" id="banner-upload-input" accept="image/*" style="display: none;">
-    </div>
-</div>
+                        <div class="visual-edit-item">
+                            <div class="form-row"><label for="edit-avatar-url">头像</label><input type="text" id="edit-avatar-url" placeholder="输入图片 URL 或点击下方图片上传"></div>
+                            <div class="visual-preview-container"><div class="visual-preview-wrapper avatar-wrapper"><img src="" alt="Avatar Preview" id="avatar-preview-img" class="visual-preview"></div><div class="edit-icon-overlay"><i class="fa-solid fa-pencil"></i></div></div>
+                            <input type="file" id="avatar-upload-input" accept="image/*" style="display: none;">
+                        </div>
+                        <div class="visual-edit-item">
+                            <div class="form-row"><label for="edit-banner-url">背景</label><input type="text" id="edit-banner-url" placeholder="输入图片 URL 或点击下方图片上传"></div>
+                            <div class="visual-preview-container"><div class="visual-preview-wrapper banner-wrapper"><img src="" alt="Banner Preview" id="banner-preview-img" class="visual-preview"></div><div class="edit-icon-overlay"><i class="fa-solid fa-pencil"></i></div></div>
+                            <input type="file" id="banner-upload-input" accept="image/*" style="display: none;">
+                        </div>
+                    </div>
                     <div id="modal-section-basic-info" class="modal-section-pane">
-                        <div class="form-group"><label for="edit-username" id="username-label">用户名</label><input type="text" id="edit-username" placeholder="名称限1-10字符" minlength="1" maxlength="10"></div>
-                        <div class="form-group"><label>性别</label><div class="form-group-clickable" id="edit-gender-trigger"><span class="value-display">♀（女）</span><i class="fa-solid fa-arrows-rotate"></i></div></div>
-                        <div class="form-group"><label>年龄</label><div class="form-group-clickable" id="edit-age-trigger"><span class="value-display placeholder">请填写年龄、生日或描述</span><i class="fa-solid fa-chevron-right"></i></div></div>
-                        <div class="form-group"><label>种族</label><div class="form-group-clickable" id="edit-race-trigger"><span class="value-display placeholder">请填写种族</span><i class="fa-solid fa-chevron-right"></i></div></div>
-                        <div class="form-group"><label>职业</label><div class="form-group-clickable" id="edit-occupation-trigger"><span class="value-display placeholder">请填写职业</span><i class="fa-solid fa-chevron-right"></i></div></div>
-                        <div class="form-group"><label>简介</label><div class="form-group-clickable" id="edit-bio-trigger"><span class="value-display placeholder">请填写简介</span><i class="fa-solid fa-chevron-right"></i></div></div>
+                        <div class="form-group"><label for="edit-username">角色名</label><input type="text" id="edit-username" placeholder="名称限1-10字符" maxlength="10"></div>
+                        <div class="form-group"><label>性别</label><div class="form-group-clickable" id="edit-gender-trigger"><span class="value-display"></span><i class="fa-solid fa-arrows-rotate"></i></div></div>
+                        <div class="form-group"><label>年龄</label><div class="form-group-clickable" id="edit-age-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div>
+                        <div class="form-group"><label>种族</label><div class="form-group-clickable" id="edit-race-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div>
+                        <div class="form-group"><label>职业</label><div class="form-group-clickable" id="edit-occupation-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div>
+                        <div class="form-group"><label>简介</label><div class="form-group-clickable" id="edit-bio-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div>
                     </div>
-                    <div id="modal-section-relationship" class="modal-section-pane"><div class="pane-header-container"><h4 class="pane-title-capsule">关系</h4>
-                        </div>
-                        <div class="custom-items-container" id="relationship-items-container">
-                        </div>
-                        <button class="add-item-btn" id="add-relationship-btn">
-                            <i class="fa-solid fa-plus"></i>
-                            <span>添加关系</span>
-                        </button>
-                    </div>
+                    <div id="modal-section-relationship" class="modal-section-pane"></div>
                 </div>
             </div>
-            <div class="sub-editor-panel" id="sub-editor-panel"><div class="sep-header"><button class="sep-btn" id="sep-back-btn"><i class="fa-solid fa-chevron-left"></i></button><h3 class="sep-title" id="sep-title">编辑</h3><button class="sep-btn sep-btn-save" id="sep-save-btn"><i class="fa-solid fa-check"></i></button></div><div class="sep-body"><textarea id="sep-textarea" placeholder="在此输入内容..."></textarea></div></div>
-            <div class="sub-editor-panel" id="item-editor-panel"><div class="sep-header"><button class="sep-btn" id="item-editor-back-btn"><i class="fa-solid fa-chevron-left"></i></button><h3 class="sep-title" id="item-editor-title-header">编辑条目</h3><button class="sep-btn sep-btn-save" id="item-editor-save-btn"><i class="fa-solid fa-check"></i></button></div><div class="sep-body iep-body"><input type="text" id="item-editor-title-input" placeholder="在此填入标题" maxlength="10"><textarea id="item-editor-value-textarea" placeholder="在此输入内容..."></textarea></div></div>
+            <div class="sub-editor-panel" id="sub-editor-panel"><div class="sep-header"><button class="sep-btn" id="sep-back-btn"><i class="fa-solid fa-chevron-left"></i></button><h3 class="sep-title" id="sep-title">编辑</h3><button class="sep-btn sep-btn-save" id="sep-save-btn"><i class="fa-solid fa-check"></i></button></div><div class="sep-body"><textarea id="sep-textarea"></textarea></div></div>
+            <div class="sub-editor-panel" id="item-editor-panel"><div class="sep-header"><button class="sep-btn" id="item-editor-back-btn"><i class="fa-solid fa-chevron-left"></i></button><h3 class="sep-title" id="item-editor-title-header">编辑条目</h3><button class="sep-btn sep-btn-save" id="item-editor-save-btn"><i class="fa-solid fa-check"></i></button></div><div class="sep-body iep-body"><input type="text" id="item-editor-title-input" placeholder="在此填入标题" maxlength="10"><textarea id="item-editor-value-textarea"></textarea></div></div>
         </div>
     </div>
-    <!-- 命名框 -->
-    <div class="prompt-overlay" id="name-prompt-overlay"><div class="prompt-box"><h4>为新栏目命名</h4><input type="text" id="new-section-name-input" placeholder="请输入 2-4 个字符" maxlength="4"><div class="prompt-actions"><button id="cancel-prompt-btn" class="prompt-btn prompt-btn-cancel">取消</button><button id="confirm-prompt-btn" class="prompt-btn prompt-btn-confirm">确认</button></div></div></div>
-    <!-- 底部操作表 -->
-    <div class="bottom-sheet-overlay" id="custom-section-options-overlay"><div class="bottom-sheet" id="custom-section-options-sheet"><div class="bottom-sheet-header"><span class="bottom-sheet-title">栏目操作</span></div><ul class="bottom-sheet-actions"><li><button class="action-button" data-action="rename">编辑栏目名称</button></li><li><button class="action-button" data-action="save-preset">存为预设栏目</button></li><li><button class="action-button" data-action="load-content">加载条目内容</button></li><li><button class="action-button action-delete" data-action="delete">删除此栏目</button></li></ul><button class="bottom-sheet-cancel" id="cancel-options-sheet-btn">取消</button></div></div>
-    <div class="bottom-sheet-overlay" id="add-section-sheet-overlay"><div class="bottom-sheet" id="add-section-sheet"><div class="bottom-sheet-header"><span class="bottom-sheet-title">添加新栏目</span></div><div class="preset-tags-container" id="preset-tags-container"><button class="preset-tag preset-tag-custom" data-action="custom"><i class="fa-solid fa-plus"></i><span>自定义栏目</span></button></div><button class="bottom-sheet-cancel" id="cancel-add-sheet-btn">取消</button></div></div>
-    <!-- 角色选择半屏 -->
-    <div class="bottom-sheet-overlay" id="character-selector-overlay">
-        <div class="bottom-sheet" id="character-selector-sheet">
-            <div class="bottom-sheet-header-flex">
-                <h4 class="bottom-sheet-title-main">选择角色</h4>
-                <div class="sheet-header-controls">
-                    <div class="sheet-search-wrapper">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="char-search-input" placeholder="搜索...">
-                    </div>
-                    <button class="sheet-close-btn" id="cancel-char-selector-btn">&times;</button>
-                </div>
-            </div>
-            <div class="sheet-body-list" id="char-selector-list"></div>
-            <div class="sheet-footer"><button class="sheet-confirm-btn" id="confirm-char-selection-btn">确认</button></div>
-        </div>
-    </div>
-    <!-- 关系类型选择半屏 -->
-    <div class="bottom-sheet-overlay" id="relationship-type-overlay">
-        <div class="bottom-sheet" id="relationship-type-sheet">
-            <div class="bottom-sheet-header-flex">
-                <h4 class="bottom-sheet-title-main">设置关系</h4>
-                <button class="sheet-close-btn" id="cancel-rel-type-btn">&times;</button>
-            </div>
-            <div class="sheet-body-options" id="relationship-type-options">
-                <button class="option-tag" data-type="挚友">挚友</button>
-                <button class="option-tag" data-type="床伴">床伴</button>
-                <button class="option-tag" data-type="恋人">恋人</button>
-                <button class="option-tag" data-type="亲属">亲属</button>
-                <button class="option-tag" data-type="宿敌">宿敌</button>
-                <button class="option-tag" data-type="同道">同道</button>
-            </div>
-            <div class="sheet-footer"><button class="sheet-confirm-btn" id="confirm-rel-type-btn">确认</button></div>
-        </div>
-    </div>
-    <!-- 管理面板 -->
-    <div class="modal-overlay" id="switcher-settings-modal-overlay"><div class="modal-panel settings-modal-panel"><div class="modal-header"><div class="modal-header-content"><h3 class="modal-title" id="switcher-settings-title">管理</h3></div><button class="modal-close" id="settings-close-btn" title="关闭">&times;</button></div><div class="modal-body settings-modal-body"><ul class="settings-user-list" id="settings-user-list"></ul></div><div class="settings-modal-footer v2"><button class="footer-action-btn" id="settings-import-btn" title="暂未开放"><i class="fa-solid fa-upload"></i>导入</button><button class="footer-action-btn" id="settings-export-btn" title="暂未开放"><i class="fa-solid fa-download"></i>导出</button><button class="footer-action-btn" id="settings-multi-select-btn"><i class="fa-solid fa-check-double"></i>多选</button><button class="footer-action-btn btn-danger" id="settings-delete-btn" disabled><i class="fa-solid fa-trash-can"></i>删除</button></div></div></div>
-    <!-- 图片裁剪 -->
-    <div class="cropper-overlay" id="cropper-overlay"><div class="cropper-container"><div class="cropper-image-container"><img id="cropper-image" src="" alt="Image to crop"></div><div class="cropper-actions"><button id="cancel-crop-btn" class="prompt-btn prompt-btn-cancel">取消</button><button id="confirm-crop-btn" class="prompt-btn prompt-btn-confirm">确认</button></div></div></div>
-    <!-- ▲▲▲ 新增结束 ▲▲▲ -->
-
-<!-- ▼▼▼ 新增：在这里添加模型选择模态框 ▼▼▼ -->
-    <div class="modal-overlay" id="model-selector-overlay">
-        <div class="modal-panel model-selector-panel">
-            <div class="modal-header">
-                <h3 class="modal-title">选择牵引仪模型</h3>
-                <button class="modal-close" id="close-model-selector-btn" title="关闭">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="model-list-container" id="model-list-container">
-                    <!-- 模型列表将在这里动态生成 -->
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- ▲▲▲ 新增结束 ▲▲▲ -->
+    <div class="prompt-overlay" id="name-prompt-overlay"><div class="prompt-box"><h4>为新栏目命名</h4><input type="text" id="new-section-name-input" placeholder="请输入 2-4 个字符" maxlength="4"><div class="prompt-actions"><button id="cancel-prompt-btn" class="prompt-btn">取消</button><button id="confirm-prompt-btn" class="prompt-btn">确认</button></div></div></div>
+    <div class="bottom-sheet-overlay" id="custom-section-options-overlay"><div class="bottom-sheet"><ul class="bottom-sheet-actions"><li><button class="action-button" data-action="rename">编辑栏目名称</button></li><li><button class="action-button action-delete" data-action="delete">删除此栏目</button></li></ul><button class="bottom-sheet-cancel" id="cancel-options-sheet-btn">取消</button></div></div>
+    <div class="bottom-sheet-overlay" id="add-section-sheet-overlay"><div class="bottom-sheet"><div class="preset-tags-container" id="preset-tags-container"><button class="preset-tag preset-tag-custom" data-action="custom"><i class="fa-solid fa-plus"></i><span>自定义栏目</span></button></div><button class="bottom-sheet-cancel" id="cancel-add-sheet-btn">取消</button></div></div>
+    <div class="cropper-overlay" id="cropper-overlay"><div class="cropper-container"><div class="cropper-image-container"><img id="cropper-image" src=""></div><div class="cropper-actions"><button id="cancel-crop-btn" class="prompt-btn">取消</button><button id="confirm-crop-btn" class="prompt-btn">确认</button></div></div></div>
+    <!-- [新增结束] -->
     
-    <!-- 依赖脚本 -->
-    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <!-- JS 库 -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
-
-    <!-- ▼▼▼ 修改点：移除不再需要的 config 脚本 ▼▼▼ -->
-    <!-- 
-        <script src="../config/profile.config.js"></script>
-        <script src="../config/chat.config.js"></script>
-        <script src="../config/api.config.js"></script>
-    -->
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     
-    <!-- 引入 Profile 编辑器核心模块 -->
-    <script src="../profile/profile.ui.js"></script>
-    <script src="../profile/profile.data.js"></script>
-    <script src="../profile/profile.events.js"></script>
-    <!-- ▲▲▲ 修改结束 ▲▲▲ -->
-
-    <!-- 引入本页面的专属 JS 逻辑 (最后加载) -->
+    <!-- [修改] 引入 profile 模块作为依赖 -->
+    <script src="../config/profile.config.js" type="module"></script>
+    <script src="../profile/profile.ui.js" type="module"></script>
+    <script src="../profile/profile.events.js" type="module"></script>
+    
+    <!-- 引入本页面的专属 JS 逻辑 -->
+    <script src="chat-editor-bridge.js" type="module"></script>
     <script src="chat-room.js" type="module"></script>
 </body>
+</html>
