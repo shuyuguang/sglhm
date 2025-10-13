@@ -80,7 +80,7 @@ html, body {
 }
 
 .chat-input-area.actions-expanded .chat-actions-bar {
-    max-height: 225px;
+    max-height: 230px;
     opacity: 1;
     padding: 30px 15px;
     overflow-y: auto;
