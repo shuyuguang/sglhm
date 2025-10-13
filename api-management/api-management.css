@@ -385,13 +385,14 @@ body {
 
 .api-config-card {
     background-color: var(--color-bg-light);
-    padding: 16px 4px 16px 16px;
+    /* ▼▼▼ 修改：调整了卡片左右内边距，为拖拽手柄留出空间 ▼▼▼ */
+    padding: 16px;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
     border-radius: 12px;
     margin: 0 -10px 12px -10px;
     font-weight: 500;
     color: var(--color-text-dark);
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
 }
 
 
@@ -487,218 +488,66 @@ body {
     gap: 12px;
 }
 
-
-
-/* 新增：拖拽过程中的卡片样式 */
-.api-config-card.dragging {
-    opacity: 0.5;
-    background: #e9ecef;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    transform: scale(1.02);
-}
-/* ==========================================================================
-   12. CROSS-PLATFORM DRAG & DROP (跨平台拖拽样式)
-   ========================================================================== */
-
-
-
-/* 正在被拖拽的卡片的样式 */
-.api-config-card.dragging {
-    opacity: 0.8;
-    background: #e9ecef;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    transform: scale(1.02);
-    cursor: grabbing;
-}
-
-/* 在拖拽期间，禁止页面上的文本被选中 */
-body.user-select-none {
-    user-select: none;
-    -webkit-user-select: none; /* 兼容旧版 Safari/Chrome */
-    -moz-user-select: none;
-    -ms-user-select: none;
-}
-/* ==========================================================================
-   13. MULTI-SELECT MODE (多选模式样式)
-   ========================================================================== */
-
-/* --- 多选操作栏 --- */
-.multi-select-footer {
-    position: fixed;
-    bottom: -100px; /* 默认在屏幕外 */
-    left: 0;
-    width: 100%;
-    background-color: var(--color-bg-light);
-    padding: 16px;
-    padding-bottom: calc(16px + env(safe-area-inset-bottom)); /* 适配 iPhone X 等设备 */
-    display: flex;
-    gap: 12px;
-    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
-    z-index: 900;
-    transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* 当 body 有 multi-select-active 类时，显示操作栏 */
-body.multi-select-active .multi-select-footer {
-    bottom: 0;
-}
-
-.footer-btn {
-    flex-grow: 1;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1em;
-    font-weight: 600;
-    cursor: pointer;
-    background-color: var(--color-bg-grey);
-    color: var(--color-text-medium);
-    transition: background-color 0.2s;
-}
-.footer-btn:hover {
-    background-color: var(--color-bg-grey-hover);
-}
-
-.footer-btn.btn-delete {
-    background-color: #ffe3e3;
-    color: #f03e3e;
-}
-.footer-btn.btn-delete:not(:disabled):hover {
-    background-color: #f03e3e;
-    color: white;
-}
-.footer-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-
-/* --- 卡片内的复选框 --- */
-.card-checkbox-wrapper {
-    width: 0;
-    opacity: 0;
-    transform: scale(0.5);
-    transition: all 0.3s ease;
+/* ▼▼▼ 修改/新增：整合并美化三点图标样式 ▼▼▼ */
+.card-action-handle {
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-}
-
-body.multi-select-active .card-checkbox-wrapper {
-    width: 40px; /* 展开宽度 */
-    opacity: 1;
-    transform: scale(1);
-}
-
-.custom-checkbox {
-    width: 22px;
-    height: 22px;
-    border: 2px solid #ced4da;
-    border-radius: 50%;
-    background-color: white;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
-}
-
-/* --- 卡片选中状态 --- */
-.api-config-card.card-selected {
-    background-color: #e0f2ff; /* 选中时背景变淡蓝色 */
-}
-
-.api-config-card.card-selected .custom-checkbox {
-    background-color: var(--color-primary);
-    border-color: var(--color-primary);
-    /* 添加一个对勾图标 */
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M3 8l3 3 7-7'/%3e%3c/svg%3e");
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: 60%;
-}
-
-/* --- 在多选模式下，隐藏操作手柄，避免误操作 --- */
-body.multi-select-active .card-action-handle {
-    opacity: 0;
-    pointer-events: none;
-    width: 0;           /* 新增：宽度变为0 */
-    padding: 0;         /* 新增：内边距变为0 */
-    overflow: hidden;   /* 新增：隐藏溢出的内容 */
-}
-
-/* --- 重命名 .drag-handle 为 .card-action-handle --- */
-.card-action-handle {
-    color: #adb5bd;
-    font-size: 1.2em;
-    cursor: pointer; /* 普通点击是 pointer */
     
-    /* ▼▼▼ 新增/修改 ▼▼▼ */
-    width: 16px;                 /* 1. 设定与复选框相同的宽度 */
-    display: flex;               /* 2. 使用 flex 布局 */
-    align-items: center;         /* 3. 垂直居中图标 */
-    justify-content: center;     /* 4. 水平居中图标 */
-    /* ▲▲▲ 新增/修改 ▲▲▲ */
-
-    transition: all 0.3s ease; 
-    /* padding: 0 4px; */ /* padding 不再需要，可以删除或注释掉 */
+    font-size: 1.2em;
+    color: #8D9BA8; /* 2. 设置了默认灰色 */
+    cursor: grab;
+    transition: color 0.2s ease; /* 增加平滑的颜色过渡效果 */
 }
 
-body:not(.multi-select-active) .card-action-handle:hover {
-    color: var(--color-text-medium);
+.card-action-handle:hover {
+    color: var(--color-text-medium); /* 鼠标悬停时颜色变深，提供反馈 */
 }
+
+.card-action-handle:active {
+    cursor: grabbing;
+}
+/* ▲▲▲ 修改/新增结束 ▲▲▲ */
+
+
 /* ==========================================================================
-   12. STYLED MODEL CONTAINER (美化后的模型容器)
+   12. STYLED MODEL CONTAINER & OTHERS (其他组件样式)
    ========================================================================== */
 
 #selected-models-container {
-    /* 1. 借用输入框的核心样式 */
     width: 100%;
     padding: 12px;
     border: 1px solid #ced4da;
     border-radius: 8px;
     background-color: var(--color-bg-light);
     transition: border-color 0.2s, box-shadow 0.2s;
-
-    /* 2. 关键：设置最小高度，让它可以自适应内容增高 */
-    min-height: 49px; /* 与输入框高度保持一致 */
-
-    /* 3. 内部使用 Flex 布局来排列标签 */
+    min-height: 49px;
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    align-items: center; /* 垂直居中对齐标签 */
+    align-items: center;
 }
 
-/* 当父级 .form-group 获得焦点时（虽然div不能真聚焦，但:focus-within可以检测子元素），
-   让我们的容器也显示高亮边框，行为与输入框统一 */
 .form-group:focus-within #selected-models-container {
     border-color: var(--color-primary);
 }
 
-/* 微调一下“未选择模型”的提示文本，让它在框内更好看 */
 #selected-models-container .no-models-selected {
-    padding: 0; /* 移除原有的垂直 padding */
-    width: 100%; /* 占满整行 */
+    padding: 0;
+    width: 100%;
 }
-/* 为所有内置 API 设置统一的颜色 */
+
 .provider-icon.provider-built-in {
-    background-color: #A7CEEA; /* 你的专属颜色 */
+    background-color: #A7CEEA;
 }
 
-/* （可选）让内置卡片在鼠标悬浮时没有拖拽动效，感觉更“固定” */
-.api-config-card.built-in-card:hover {
-    transform: none;
-    box-shadow: none;
-}
-/* api-management.css 末尾追加 */
-
-/* --- 模板卡片专属样式 --- */
 .api-config-card.template-card {
-    background-color: #f8f9fa; /* 淡灰色背景 */
-    border: 1px dashed #dee2e6; /* 虚线边框 */
+    background-color: #f8f9fa;
+    border: 1px dashed #dee2e6;
 }
 
 .api-config-card.template-card.disabled {
-    background-color: #f8f9fa; /* 覆盖默认的禁用背景色 */
+    background-color: #f8f9fa;
 }
 
 .template-prompt {
@@ -706,4 +555,22 @@ body:not(.multi-select-active) .card-action-handle:hover {
     font-weight: 500;
     color: var(--color-primary);
     padding-right: 12px;
+}
+
+/* ▼▼▼ 修改：移除了之前添加在这里的样式，统一整合到上面的 .card-action-handle 规则中 ▼▼▼ */
+/* 之前的 .card-action-handle, :active 等样式已被整合，这里不再需要 */
+/* ▲▲▲ 修改结束 ▲▲▲ */
+
+
+/* SortableJS 拖拽过程中的样式 (保持不变) */
+.sortable-ghost {
+    opacity: 0.4;
+    background-color: #eef2ff;
+    border: 2px dashed var(--color-primary);
+}
+
+.sortable-drag {
+    opacity: 0.9 !important;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2) !important;
+    transform: rotate(2deg);
 }

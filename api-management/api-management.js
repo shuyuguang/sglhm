@@ -2,18 +2,18 @@
 
 import { createPageLayout } from '../common/template.js';
 import { dbStorage } from '../common/db.js';
-// ▼▼▼ 修改：从配置文件导入 API 定义 ▼▼▼
+// ▼▼▼ 修改：导入新增的 API_ORDER 键 ▼▼▼
 import { API_DB_KEYS, DEFAULT_EDITABLE_APIS, BUILT_IN_APIS } from '../config/api.config.js';
-// ▲▲▲ 修改结束 ▲▲▲
 
-// ▼▼▼ 修改：现在这些键名都从 API_DB_KEYS 中获取 ▼▼▼
 const API_CONFIGS_KEY = API_DB_KEYS.CONFIGS;
 const BUILT_IN_API_STATES_KEY = API_DB_KEYS.BUILT_IN_STATES;
 const BUILT_IN_API_DATA_KEY = API_DB_KEYS.BUILT_IN_DATA;
+// 新增：获取 API 顺序的键
+const API_ORDER_KEY = API_DB_KEYS.API_ORDER;
 // ▲▲▲ 修改结束 ▲▲▲
 
-let isMultiSelectMode = false;
 
+// ... (页面和模态框的 HTML 字符串保持不变) ...
 const apiManagementPageContent = `
     <nav class="tabs-nav">
         <div class="tabs-container">
@@ -31,10 +31,6 @@ const apiManagementPageContent = `
                 <div id="voice" class="tab-pane"><p>语音 API 配置。</p></div>
             </div>
         </main>
-    </div>
-    <div id="multi-select-footer" class="multi-select-footer">
-        <button class="footer-btn" id="cancel-multi-select">取消</button>
-        <button class="footer-btn btn-delete" id="delete-selected-btn" disabled>删除</button>
     </div>
 `;
 const apiConfigPanelHtml = `
@@ -77,7 +73,6 @@ const helpTooltipHtml = `
             <li>已添加的API卡片可切换启动/禁用状态</li>
             <li>点击API卡片跳转编辑页面，可拉取、搜索和多选模型</li>
             <li>长按卡片右侧三点图标可拖动卡片位置</li>
-            <li>单击三点图标可多选删除，或在编辑页面右上删除</li>
         </ol>
         <p class="help-reminder">拉取模型后记得右上保存嗷~</p>
     </div>
@@ -89,11 +84,32 @@ const PROVIDER_CONFIG = {
     claude: { apiKeyPlaceholder: 'sk-ant-...', baseUrlValue: 'https://api.anthropic.com/v1', showApiPath: false }
 };
 
-// ▼▼▼ 修改：删除本地的 DEFAULT_EDITABLE_APIS 和 BUILT_IN_APIS 定义，因为它们已从配置文件导入 ▼▼▼
-// (此区域现在为空)
-// ▲▲▲ 修改结束 ▲▲▲
-
 let ui = {};
+
+// ▼▼▼ 新增：保存 API 顺序的函数 ▼▼▼
+async function saveApiOrder() {
+    const container = document.getElementById('text');
+    if (!container) return;
+    const cards = container.querySelectorAll('.api-config-card');
+    const orderedIds = Array.from(cards).map(card => card.dataset.id);
+    await dbStorage.setItem(API_ORDER_KEY, orderedIds);
+    console.log('API 卡片顺序已保存:', orderedIds);
+}
+
+// ▼▼▼ 新增：初始化拖拽功能的函数 ▼▼▼
+function initializeDragAndDrop() {
+    const container = document.getElementById('text');
+    if (!container) return;
+
+    Sortable.create(container, {
+        handle: '.card-action-handle', // 指定三点图标为拖拽手柄
+        animation: 150,
+        delay: 200, // 长按 200ms 触发
+        delayOnTouchOnly: true, // 仅在触摸设备上启用长按
+        onEnd: saveApiOrder // 拖拽结束后调用保存函数
+    });
+    console.log('API 卡片拖拽功能已初始化。');
+}
 
 async function ensureDefaultConfigs() {
     const userConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
@@ -102,7 +118,6 @@ async function ensureDefaultConfigs() {
     DEFAULT_EDITABLE_APIS.forEach(defaultApi => {
         const exists = userConfigs.some(config => config.id === defaultApi.id);
         if (!exists) {
-            // 将配置文件中的静态部分和动态部分合并后存入
             userConfigs.push({
                 ...defaultApi,
                 apiKey: '',
@@ -118,19 +133,36 @@ async function ensureDefaultConfigs() {
     }
 }
 
+// ▼▼▼ 修改：renderApiCards 函数，使其支持自定义排序 ▼▼▼
 async function renderApiCards() {
+    // 1. 获取所有数据源，包括我们保存的顺序
     const userConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
     const builtInStates = await dbStorage.getItem(BUILT_IN_API_STATES_KEY) || {};
     const builtInUserData = await dbStorage.getItem(BUILT_IN_API_DATA_KEY) || {};
+    const savedOrder = await dbStorage.getItem(API_ORDER_KEY) || [];
 
+    // 2. 整合所有 API 配置
     const processedBuiltInApis = BUILT_IN_APIS.map(api => {
         const userData = builtInUserData[api.id] || {};
         const stateData = builtInStates[api.id] || {};
         return { ...api, ...userData, enabled: stateData.enabled ?? false };
     });
+    let allConfigs = [...userConfigs, ...processedBuiltInApis];
 
-    const allConfigs = [...userConfigs, ...processedBuiltInApis];
+    // 3. 根据保存的顺序对 allConfigs 进行排序
+    if (savedOrder.length > 0) {
+        const orderMap = new Map(savedOrder.map((id, index) => [id, index]));
+        allConfigs.sort((a, b) => {
+            const indexA = orderMap.get(String(a.id));
+            const indexB = orderMap.get(String(b.id));
+            if (indexA !== undefined && indexB !== undefined) return indexA - indexB; // 都在排序列表中
+            if (indexA !== undefined) return -1; // a 在，b 不在，a 靠前
+            if (indexB !== undefined) return 1;  // b 在，a 不在，b 靠前
+            return 0; // 都不在 (例如新添加的)，保持原相对顺序
+        });
+    }
 
+    // 4. 渲染卡片 (现在是按照排序后的顺序)
     const container = document.getElementById('text');
     if (!container) return;
 
@@ -152,8 +184,8 @@ async function renderApiCards() {
             
             const modelCapsule = `<span class="status-capsule status-model">${(config.model?.length || 0)}个模型</span>`;
             
-            const actionHandle = `<div class="card-action-handle"><i class="fa-solid fa-ellipsis-vertical"></i></div>`;
-            const checkboxWrapper = `<div class="card-checkbox-wrapper"><div class="custom-checkbox"></div></div>`;
+            // 修改：给三点图标加上 title 提示
+            const actionHandle = `<div class="card-action-handle" title="长按拖拽排序"><i class="fa-solid fa-ellipsis-vertical"></i></div>`;
             const builtInCardClass = config.isBuiltIn ? 'built-in-card' : '';
 
             return `
@@ -165,15 +197,14 @@ async function renderApiCards() {
                     <div class="card-right-content">
                         <div class="card-capsules">${modelCapsule}${statusCapsule}</div>
                         ${actionHandle}
-                        ${checkboxWrapper}
                     </div>
                 </div>
             `;
         }).join('');
     }
 }
+// ▲▲▲ 修改结束 ▲▲▲
 
-// ... (handleAddApi, handleToggleStatus 等其他函数保持不变，无需修改) ...
 function updateFormForProvider(providerName) {
     const config = PROVIDER_CONFIG[providerName];
     if (!config || !ui.apiKeyInput || !ui.baseUrlInput || !ui.apiPathGroup) return;
@@ -234,6 +265,13 @@ async function handleAddApi() {
     const existingConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
     existingConfigs.push(newConfig);
     await dbStorage.setItem(API_CONFIGS_KEY, existingConfigs);
+    
+    // ▼▼▼ 新增：添加新API后，也更新顺序列表 ▼▼▼
+    const savedOrder = await dbStorage.getItem(API_ORDER_KEY) || [];
+    savedOrder.push(String(newConfig.id)); // 将新ID添加到顺序末尾
+    await dbStorage.setItem(API_ORDER_KEY, savedOrder);
+    // ▲▲▲ 新增结束 ▲▲▲
+
     await renderApiCards();
     closeApiConfigPanel();
 }
@@ -254,66 +292,10 @@ async function handleToggleStatus(apiId) {
     }
     await renderApiCards();
 }
-async function saveCardOrder() {
-    const cardElements = document.querySelectorAll('#text .api-config-card');
-    const newOrderIds = Array.from(cardElements).map(card => card.dataset.id);
-    const userApiOrderIds = newOrderIds.filter(id => !id.startsWith('built-in-'));
-    const allConfigs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
-    const configMap = new Map(allConfigs.map(c => [String(c.id), c]));
-    const newSortedConfigs = userApiOrderIds.map(id => configMap.get(id)).filter(Boolean);
-    await dbStorage.setItem(API_CONFIGS_KEY, newSortedConfigs);
-}
-function enterMultiSelectMode(clickedCard) {
-    isMultiSelectMode = true;
-    document.body.classList.add('multi-select-active');
-    if (clickedCard) {
-        clickedCard.classList.add('card-selected');
-    }
-    updateMultiSelectFooter();
-}
-function exitMultiSelectMode() {
-    isMultiSelectMode = false;
-    document.body.classList.remove('multi-select-active');
-    document.querySelectorAll('.api-config-card.card-selected').forEach(card => {
-        card.classList.remove('card-selected');
-    });
-}
-function updateMultiSelectFooter() {
-    const selectedCount = document.querySelectorAll('.api-config-card.card-selected').length;
-    const deleteBtn = document.getElementById('delete-selected-btn');
-    if (deleteBtn) {
-        if (selectedCount > 0) {
-            deleteBtn.disabled = false;
-            deleteBtn.textContent = `删除 (${selectedCount})`;
-        } else {
-            deleteBtn.disabled = true;
-            deleteBtn.textContent = '删除';
-        }
-    }
-}
-async function handleBulkDelete() {
-    const selectedCards = document.querySelectorAll('.api-config-card.card-selected');
-    if (selectedCards.length === 0) return;
-    const selectedIds = Array.from(selectedCards).map(card => card.dataset.id);
-    const selectedBuiltInApis = selectedIds
-        .map(id => BUILT_IN_APIS.find(api => api.id === id))
-        .filter(Boolean);
-    if (selectedBuiltInApis.length > 0) {
-        const names = selectedBuiltInApis.map(api => `“${api.name}”`).join('、');
-        alert(`内置API卡片 ${names} 无法删除，请取消勾选，试着勾选自定义添加的API卡片吧`);
-        return;
-    }
-    if (confirm(`确定要删除这 ${selectedIds.length} 个配置吗？`)) {
-        const idsToDelete = new Set(selectedIds);
-        let configs = await dbStorage.getItem(API_CONFIGS_KEY) || [];
-        const updatedConfigs = configs.filter(config => !idsToDelete.has(String(config.id)));
-        await dbStorage.setItem(API_CONFIGS_KEY, updatedConfigs);
-        await renderApiCards();
-        exitMultiSelectMode();
-    }
-}
+
 async function initializePage() {
     await ensureDefaultConfigs();
+
     const indicator = document.querySelector('.active-tab-indicator');
     const tabsNav = document.querySelector('.tabs-nav');
     function updateIndicatorPosition() {
@@ -359,87 +341,38 @@ async function initializePage() {
     if (ui.overlay) { ui.overlay.addEventListener('click', (event) => { if (event.target === ui.overlay) closeApiConfigPanel(); }); }
     if (ui.panelTabsContainer) { ui.panelTabsContainer.addEventListener('click', (event) => { if (event.target.classList.contains('modal-tab')) switchPanelTab(event.target.dataset.tab); }); }
     if (ui.panelContentContainer) { ui.panelContentContainer.addEventListener('click', (event) => { if (event.target.matches('.pill-option')) { const clickedPill = event.target; clickedPill.parentElement.querySelectorAll('.pill-option').forEach(pill => pill.classList.remove('active')); clickedPill.classList.add('active'); updateFormForProvider(clickedPill.dataset.provider); } }); }
+    
     const textTabPane = document.getElementById('text');
     if (textTabPane) {
-        let longPressTimer;
-        let draggedElement = null;
-        let isDragging = false;
-        let hasMovedSincePress = false;
         textTabPane.addEventListener('click', (event) => {
-            if (isDragging) return;
             const card = event.target.closest('.api-config-card');
             if (!card) return;
-            if (isMultiSelectMode) {
-                card.classList.toggle('card-selected');
-                updateMultiSelectFooter();
+
+            // 如果点击的是三点图标，则不执行任何操作，把事件留给 SortableJS 处理
+            if (event.target.closest('.card-action-handle')) {
+                 return;
+            }
+
+            const apiId = card.dataset.id;
+            const target = event.target;
+            if (target.closest('.status-enabled') || target.closest('.status-disabled')) {
+                handleToggleStatus(apiId);
             } else {
-                const apiId = card.dataset.id;
-                const target = event.target;
-                if (target.closest('.card-action-handle')) {
-                    enterMultiSelectMode(card);
-                } else if (target.closest('.status-enabled') || target.closest('.status-disabled')) {
-                    handleToggleStatus(apiId);
+                if (apiId.startsWith('built-in-')) {
+                    window.location.href = `./api-room-builtin.html?id=${apiId}`;
                 } else {
-                    if (apiId.startsWith('built-in-')) {
-                        window.location.href = `./api-room-builtin.html?id=${apiId}`;
-                    } else {
-                        window.location.href = `./api-room.html?id=${apiId}`;
-                    }
+                    window.location.href = `./api-room.html?id=${apiId}`;
                 }
             }
         });
-        const pressStartHandler = (event) => {
-            const handle = event.target.closest('.card-action-handle');
-            if (!handle || isMultiSelectMode || (event.button && event.button !== 0)) return;
-            hasMovedSincePress = false;
-            draggedElement = handle.closest('.api-config-card');
-            longPressTimer = setTimeout(() => {
-                if (hasMovedSincePress) return;
-                isDragging = true;
-                draggedElement.classList.add('dragging');
-                document.body.classList.add('user-select-none');
-            }, 300);
-            document.addEventListener('mousemove', pressMoveHandler);
-            document.addEventListener('touchmove', pressMoveHandler, { passive: false });
-            document.addEventListener('mouseup', pressEndHandler, { once: true });
-            document.addEventListener('touchend', pressEndHandler, { once: true });
-        };
-        const pressMoveHandler = (event) => {
-            hasMovedSincePress = true;
-            if (isDragging) {
-                event.preventDefault();
-                const currentY = event.type === 'touchmove' ? event.touches[0].clientY : event.clientY;
-                const targetCard = document.elementFromPoint(
-                    event.type === 'touchmove' ? event.touches[0].clientX : event.clientX,
-                    currentY
-                )?.closest('.api-config-card');
-                if (targetCard && targetCard !== draggedElement) {
-                    const rect = targetCard.getBoundingClientRect();
-                    const midpoint = rect.top + rect.height / 2;
-                    textTabPane.insertBefore(draggedElement, currentY < midpoint ? targetCard : targetCard.nextSibling);
-                }
-            }
-        };
-        const pressEndHandler = () => {
-            clearTimeout(longPressTimer);
-            document.removeEventListener('mousemove', pressMoveHandler);
-            document.removeEventListener('touchmove', pressMoveHandler);
-            if (isDragging) {
-                draggedElement.classList.remove('dragging');
-                document.body.classList.remove('user-select-none');
-                saveCardOrder();
-                setTimeout(() => { isDragging = false; }, 0);
-            }
-            draggedElement = null;
-        };
-        textTabPane.addEventListener('mousedown', pressStartHandler);
-        textTabPane.addEventListener('touchstart', pressStartHandler, { passive: false });
-        document.getElementById('cancel-multi-select').addEventListener('click', exitMultiSelectMode);
-        document.getElementById('delete-selected-btn').addEventListener('click', handleBulkDelete);
     }
     
     await renderApiCards();
+    
+    // ▼▼▼ 新增：在所有卡片渲染完成后，初始化拖拽功能 ▼▼▼
+    initializeDragAndDrop();
 }
+
 createPageLayout({
     title: '牵引仪',
     contentHtml: apiManagementPageContent,
