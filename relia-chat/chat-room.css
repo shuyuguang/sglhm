@@ -233,7 +233,7 @@ html, body {
     filter: brightness(1.1);
 }
 
-/* ▼▼▼ 新增：模型选择胶囊按钮的专属样式 (已加宽) ▼▼▼ */
+/* ▼▼▼ 修改点：模型选择胶囊按钮的专属样式 (已加宽) ▼▼▼ */
 .send-action-btn.model-select-btn {
     background-color: #f1f3f5; /* 默认灰色 */
     color: #495057;
@@ -242,10 +242,18 @@ html, body {
     padding-right: 172px; /* 自定义右内边距 */
 }
 
+/*
+ * ▼▼▼ 这里是修改的地方 ▼▼▼
+ * 我已经将下面这块控制按钮变色的CSS代码注释掉了。
+ */
+/*
 .send-action-btn.model-select-btn.active {
-    background-color: var(--send-btn-bg); /* 选中后变为主题紫色 */
+    background-color: var(--send-btn-bg); 
     color: var(--text-light);
 }
+*/
+/* ▲▲▲ 修改结束 ▲▲▲ */
+
 
 #selected-model-name {
     display: inline-block;
@@ -254,7 +262,6 @@ html, body {
     white-space: nowrap;
     vertical-align: middle; /* 垂直居中 */
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
 
 
 /* --- 聚焦（展开）时的样式 --- */
