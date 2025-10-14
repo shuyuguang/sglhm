@@ -195,7 +195,7 @@ export function createChatPromptPanel({ triggerElement, container, onSave, charI
         <div class="modal-overlay" id="chat-prompt-overlay">
             <div class="modal-panel" id="chat-prompt-panel">
                 <div class="modal-header">
-                    <i class="fa-solid fa-heart style-header-icon"></i>
+                    <!-- 我把手动添加的爱心图标删掉了 -->
                     <h3 class="modal-title">聊天风格面板</h3>
                 </div>
                 <div class="modal-content-container">
