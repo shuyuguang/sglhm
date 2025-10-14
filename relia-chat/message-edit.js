@@ -74,8 +74,8 @@ function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
         { action: 'reply', icon: 'fa-solid fa-quote-left', text: '回复' },
         { action: 'favorite', icon: 'fa-regular fa-star', text: '收藏' },
         { action: 'delete', icon: 'fa-regular fa-trash-can', text: '删除', isDestructive: true },
-        { action: 'copy', icon: 'fa-regular fa-copy', text: '复制' },
         { action: 'forward', icon: 'fa-solid fa-share', text: '转发' },
+        { action: 'copy', icon: 'fa-regular fa-copy', text: '复制' },
         { action: 'multiselect', icon: 'fa-solid fa-check-double', text: '多选' },
         { action: 'other', icon: 'fa-solid fa-ellipsis', text: '其它' }
     ];
