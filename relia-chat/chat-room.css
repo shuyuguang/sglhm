@@ -428,20 +428,20 @@ html, body {
 }
 
 
-/* [新增] 消息操作菜单样式 */
+/* ▼▼▼ 修改：消息操作菜单样式 ▼▼▼ */
 .message-menu-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.2); /* 半透明黑色遮罩 */
+    background-color: rgba(0, 0, 0, 0.2);
     z-index: 999;
-    display: none; /* 默认隐藏 */
+    display: none;
 }
 
 .message-menu-overlay.active {
-    display: block; /* 激活时显示 */
+    display: block;
 }
 
 .message-menu {
@@ -449,22 +449,24 @@ html, body {
     background-color: #ffffff;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-    padding: 8px;
-    width: 120px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    padding: 12px;
+    width: 280px; /* 适应4列布局的宽度 */
+    display: grid; /* 使用 grid 布局 */
+    grid-template-columns: repeat(4, 1fr); /* 创建一个4列网格 */
+    gap: 12px 8px; /* 设置行间距和列间距 */
     /* top 和 left 将由 JS 设置 */
 }
 
 .message-menu-item {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px;
+    flex-direction: column; /* 垂直排列：图标在上，文字在下 */
+    align-items: center;   /* 水平居中 */
+    justify-content: center;
+    gap: 6px; /* 图标和文字之间的间距 */
+    padding: 8px 0;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.8rem; /* 调整文字大小以适应布局 */
     color: #333;
     transition: background-color 0.2s ease;
 }
@@ -474,136 +476,38 @@ html, body {
 }
 
 .message-menu-item i {
-    width: 18px; /* 固定图标宽度，让文字对齐 */
-    text-align: center;
-    color: #555;
+    font-size: 1.2rem; /* 增大图标尺寸 */
+    color: #333;
+    /* 不再需要固定宽度来对齐文字 */
 }
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
-/* ▼▼▼ 新增：聊天风格选择面板 (chat-prompt.js) 的专属样式 (已重构) ▼▼▼ */
+/* --- 聊天风格选择面板 (chat-prompt.js) 的专属样式 (无变化) --- */
 
-/* 使用 profile.css 的 modal-header 基础样式，这里只做微调 */
-#chat-prompt-panel .modal-header {
-    display: flex;
-    align-items: center;
-    padding: 14px 16px;
-    border-bottom: 1px solid var(--border-color);
-}
-#chat-prompt-panel .modal-header .modal-title {
-    font-size: 1.1em;
-    font-weight: 600;
-    margin: 0;
-}
-.style-header-icon {
-    color: var(--send-btn-bg); /* 紫色爱心 */
-    margin-right: 10px;
-    font-size: 1.1em;
-}
-
-/* 调整面板尺寸 */
-#chat-prompt-panel {
-    width: 90%;
-    max-width: 340px; /* 减小最大宽度 */
-    height: auto; /* 高度自适应 */
-}
-
-/* 胶囊按钮容器 */
-.style-buttons-container {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin: 10px 0 20px 0;
-}
-
-/* 胶囊按钮样式 */
-.style-button {
-    padding: 7px 18px;
-    border-radius: 20px;
-    border: 1px solid #dee2e6;
-    background-color: #f8f9fa;
-    color: #495057;
-    font-size: 0.9em;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-.style-button:hover {
-    background-color: #f1f3f5;
-}
-.style-button.active {
-    background-color: #f0eefc; /* 淡紫色背景 */
-    color: var(--send-btn-bg);
-    border-color: var(--send-btn-bg);
-}
+#chat-prompt-panel .modal-header { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
+#chat-prompt-panel .modal-header .modal-title { font-size: 1.1em; font-weight: 600; margin: 0; }
+.style-header-icon { color: var(--send-btn-bg); margin-right: 10px; font-size: 1.1em; }
+#chat-prompt-panel { width: 90%; max-width: 340px; height: auto; }
+.style-buttons-container { display: flex; justify-content: center; gap: 12px; margin: 10px 0 20px 0; }
+.style-button { padding: 7px 18px; border-radius: 20px; border: 1px solid #dee2e6; background-color: #f8f9fa; color: #495057; font-size: 0.9em; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+.style-button:hover { background-color: #f1f3f5; }
+.style-button.active { background-color: #f0eefc; color: var(--send-btn-bg); border-color: var(--send-btn-bg); }
+#chat-prompt-panel .modal-content-container { padding: 16px; }
+#chat-prompt-panel .sheet-footer { padding: 16px; display: flex; gap: 10px; border-top: 1px solid var(--border-color); flex-shrink: 0; }
+#chat-prompt-panel .sheet-btn { flex-grow: 1; padding: 12px; border: none; border-radius: 8px; font-size: 1em; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
+#chat-prompt-panel .sheet-btn-cancel { background-color: #f1f3f5; color: #495057; }
+#chat-prompt-panel .sheet-btn-cancel:hover { background-color: #e9ecef; }
+#chat-prompt-panel .sheet-btn-confirm { background-color: var(--send-btn-bg); color: white; }
+#chat-prompt-panel .sheet-btn-confirm:hover { filter: brightness(1.1); }
+#chat-prompt-panel .prompt-description { font-size: 0.9em; color: #666; margin-top: 0; margin-bottom: 12px; line-height: 1.5; }
+#chat-prompt-panel .prompt-template-input { width: 100%; height: 120px; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; font-family: monospace; font-size: 0.85em; background-color: #f8f9fa; color: #495057; resize: none; box-sizing: border-box; }
 
 
-/* 沿用 relia-chat.css 的模态框内容和底部样式 */
-#chat-prompt-panel .modal-content-container {
-    padding: 16px;
-}
-#chat-prompt-panel .sheet-footer {
-    padding: 16px;
-    display: flex;
-    gap: 10px;
-    border-top: 1px solid var(--border-color);
-    flex-shrink: 0;
-}
-#chat-prompt-panel .sheet-btn {
-    flex-grow: 1;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1em;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-#chat-prompt-panel .sheet-btn-cancel {
-    background-color: #f1f3f5;
-    color: #495057;
-}
-#chat-prompt-panel .sheet-btn-cancel:hover {
-    background-color: #e9ecef;
-}
-#chat-prompt-panel .sheet-btn-confirm {
-    background-color: var(--send-btn-bg);
-    color: white;
-}
-#chat-prompt-panel .sheet-btn-confirm:hover {
-    filter: brightness(1.1);
-}
-
-/* 面板内部内容样式 */
-#chat-prompt-panel .prompt-description {
-    font-size: 0.9em;
-    color: #666;
-    margin-top: 0;
-    margin-bottom: 12px;
-    line-height: 1.5;
-}
-
-#chat-prompt-panel .prompt-template-input {
-    width: 100%;
-    height: 120px; /* 减小高度 */
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 10px;
-    font-family: monospace;
-    font-size: 0.85em;
-    background-color: #f8f9fa;
-    color: #495057;
-    resize: none;
-    box-sizing: border-box;
-}
-
-/* ▲▲▲ 新增结束 ▲▲▲ */ 
-
-
-/* [新增] 消息原地编辑样式 */
+/* --- 消息原地编辑样式 (无变化) --- */
 .message-edit-container {
     display: flex;
     flex-direction: column;
     width: 100%;
-    /* 移除背景、圆角和内边距样式，使其完全由父级 .chat-bubble 控制外观 */
     box-sizing: border-box;
 }
 

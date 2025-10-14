@@ -37,12 +37,9 @@ export function initializeMessageMenu(container, getChatHistory, updateChatHisto
         
         const bubble = e.target.closest('.chat-bubble');
         
-        // ▼▼▼ 修改点 1：增加一个判断条件 ▼▼▼
-        // 如果消息气泡是长按，或者它正处于编辑状态（有 'editing' 类），则直接返回，不显示菜单
         if (!bubble || isLongPress || bubble.classList.contains('editing')) {
             return;
         }
-        // ▲▲▲ 修改结束 ▲▲▲
 
         // --- 如果不是长按，这就是一次单击 ---
         e.preventDefault();
@@ -63,7 +60,6 @@ export function initializeMessageMenu(container, getChatHistory, updateChatHisto
 
 /**
  * 显示操作菜单。
- * (此函数无变化)
  */
 function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
     const menu = document.getElementById('message-menu');
@@ -73,15 +69,18 @@ function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
 
     if (!message) return;
 
+    // ▼▼▼ 修改点 1：更新菜单项为指定的 8 个 ▼▼▼
     const menuItems = [
         { action: 'edit', icon: 'fa-regular fa-pen-to-square', text: '编辑' },
         { action: 'reply', icon: 'fa-solid fa-reply', text: '回复' },
         { action: 'forward', icon: 'fa-solid fa-share', text: '转发' },
         { action: 'copy', icon: 'fa-regular fa-copy', text: '复制' },
-        { action: 'favorite', icon: 'fa-regular fa-star', text: '收藏' },
         { action: 'delete', icon: 'fa-regular fa-trash-can', text: '删除', isDestructive: true },
-        { action: 'multiselect', icon: 'fa-solid fa-check-double', text: '多选' }
+        { action: 'favorite', icon: 'fa-regular fa-star', text: '收藏' },
+        { action: 'multiselect', icon: 'fa-solid fa-check-double', text: '多选' },
+        { action: 'other', icon: 'fa-solid fa-ellipsis', text: '其它' }
     ];
+    // ▲▲▲ 修改结束 ▲▲▲
 
     menu.innerHTML = menuItems.map(item => `
         <div class="message-menu-item" data-action="${item.action}" ${item.isDestructive ? 'style="color: #e53e3e;"' : ''}>
@@ -120,8 +119,11 @@ function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
         hideMenu();
     };
 
-    const menuWidth = 120;
-    const menuHeight = 290;
+    // ▼▼▼ 修改点 2：根据新的 2x4 网格布局，调整菜单的估算宽高 ▼▼▼
+    const menuWidth = 280;  // 4个图标宽度 + 间距
+    const menuHeight = 140; // 2行图标高度 + 间距
+    // ▲▲▲ 修改结束 ▲▲▲
+
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
 
@@ -152,13 +154,9 @@ function hideMenu() {
 
 /**
  * 将消息气泡变为可编辑状态。
- * @param {HTMLElement} bubble - 要编辑的消息气泡元素。
- * @param {number} index - 消息索引。
- * @param {function} getChatHistory - 获取聊天历史的函数。
- * @param {function} updateChatHistory - 更新聊天历史的函数。
+ * (此函数无变化)
  */
 function startEditing(bubble, index, getChatHistory, updateChatHistory) {
-    // ▼▼▼ 修改点 2：在开始编辑时，给气泡添加 'editing' 标记 ▼▼▼
     bubble.classList.add('editing');
     
     const originalText = getChatHistory()[index].text;
@@ -184,7 +182,6 @@ function startEditing(bubble, index, getChatHistory, updateChatHistory) {
     });
 
     const stopEditing = (shouldSave) => {
-        // ▼▼▼ 修改点 3：无论保存还是取消，都移除 'editing' 标记 ▼▼▼
         bubble.classList.remove('editing');
 
         if (shouldSave) {
