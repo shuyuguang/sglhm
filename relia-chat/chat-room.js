@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const charId = urlParams.get('id');
     if (!charId) {
-        appContainer.innerHTML = '<p style="text-align: center; margin-top: 50px;">错误：未指定角色ID。</p>';
+        appContainer.innerHTML = '<p style="text-align: center; margin-top: 50px;">错误：未指定角色ID。<br>请从聊天列表页点击角色卡片进入。</p>';
         return;
     }
     const [allChars, allUsers, currentUserId] = await Promise.all([
@@ -29,7 +29,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         dbStorage.getItem(PROFILE_DB_KEYS.USER_CURRENT_ID)
     ]);
     
-    let character = allChars ? allChars.find(c => c.id === charId) : null;
+    // ▼▼▼ 新增：健壮性检查，防止因数据库无角色数据导致白屏 ▼▼▼
+    if (!allChars || allChars.length === 0) {
+        appContainer.innerHTML = `
+            <p style="text-align: center; margin-top: 50px;">
+                错误：在数据库中未找到任何角色信息。<br>
+                请先前往“TA的档案”页面创建角色。
+            </p>`;
+        return;
+    }
+    // ▲▲▲ 新增结束 ▲▲▲
+
+    let character = allChars.find(c => c.id === charId);
 
     if (!character) {
         appContainer.innerHTML = `<p style="text-align: center; margin-top: 50px;">错误：找不到ID为 ${charId} 的角色。</p>`;
@@ -378,7 +389,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (inspirationBtn) { inspirationBtn.addEventListener('click', () => { alert('“灵感（灯泡）”功能待开发'); }); }
     
     if (optionsBtn) {
-        // ▼▼▼ 修改这里 ▼▼▼
         createChatPromptPanel({
             triggerElement: optionsBtn,
             container: document.body,
@@ -388,7 +398,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 currentChatStyle = styleObject;
             }
         });
-        // ▲▲▲ 修改结束 ▲▲▲
     }
 
     if (editSettingsBtn) { editSettingsBtn.addEventListener('click', () => chatEditor ? chatEditor.open() : alert('编辑器初始化失败！')); }
