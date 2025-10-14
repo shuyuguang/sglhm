@@ -59,91 +59,89 @@ async function defaultStreamHandler(context) {
  * “对话体”专用的流式响应处理器（支持多条消息）
  * @param {object} context - 从 chat-room.js 传入的上下文对象
  */
-// ▼▼▼ 将整个函数替换为以下内容 ▼▼▼
 async function dialogueStreamHandler(context) {
     const { reader, decoder, renderMessage, chatHistory, historyKey, chatArea, loadAndRenderHistory } = context;
 
     let currentBubble = renderMessage({ text: '...', sender: 'character' }, -1);
     let currentBubbleRow = currentBubble.parentElement;
-    let messageBuffer = ''; // 用于累积解码后的字符串
+    let messageBuffer = '';
     let fullReplyForHistory = [];
 
     try {
-        currentBubble.textContent = ''; // 清空初始的"..."
-
+        currentBubble.textContent = '';
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
+            
+            const chunk = decoder.decode(value, { stream: true });
+            messageBuffer += chunk;
 
-            // 【核心修正 ①】: 使用 stream: true 解码，并将结果持续追加到 buffer
-            messageBuffer += decoder.decode(value, { stream: true });
+            // 检查并处理分隔符 [split]
+            while (messageBuffer.includes('[split]')) {
+                const parts = messageBuffer.split('[split]');
+                const completeMessage = parts.shift().trim();
 
-            // 【核心修正 ②】: 用一种更健壮的方式处理 SSE (Server-Sent Events) 数据
-            // 我们只处理 buffer 中可以被完整解析的部分
-            let boundary;
-            while ((boundary = messageBuffer.indexOf('\n\n')) !== -1) {
-                const completeChunk = messageBuffer.substring(0, boundary);
-                messageBuffer = messageBuffer.substring(boundary + 2); // 从 buffer 中移除已处理的部分
+                if (completeMessage) {
+                    currentBubble.textContent = completeMessage;
+                    fullReplyForHistory.push(completeMessage);
+                } else {
+                    currentBubble.parentElement.remove(); // 如果是空消息，移除气泡
+                }
 
-                const lines = completeChunk.split('\n');
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        const dataStr = line.substring(6);
-                        if (dataStr === '[DONE]') continue;
-                        try {
-                            const data = JSON.parse(dataStr);
-                            const content = data.choices[0]?.delta?.content;
-                            if (content) {
-                                // 将获取到的内容追加到当前气泡
-                                currentBubble.textContent += content;
+                messageBuffer = parts.join('[split]');
 
-                                // 【核心修正 ③】: 在内容追加后，检查是否包含分隔符
-                                while (currentBubble.textContent.includes('[split]')) {
-                                    const parts = currentBubble.textContent.split('[split]');
-                                    const completeMessage = parts.shift().trim();
+                // 创建下一个新气泡
+                currentBubble = renderMessage({ text: '...', sender: 'character' }, -1);
+                currentBubble.textContent = '';
+                currentBubbleRow = currentBubble.parentElement;
+            }
 
-                                    // 最终确定当前气泡的内容
-                                    currentBubble.textContent = completeMessage;
-                                    if (completeMessage) {
-                                        fullReplyForHistory.push(completeMessage);
-                                    }
+            // 实时渲染当前气泡的内容 (解析SSE数据)
+            let currentContent = currentBubble.textContent;
+            const lines = messageBuffer.split('\n\n');
+            messageBuffer = ''; // 清空buffer，因为它可能包含不完整的JSON
 
-                                    // 创建一个新的气泡，并将 [split] 后的剩余内容放入
-                                    currentBubble = renderMessage({ text: '...', sender: 'character' }, -1);
-                                    currentBubble.textContent = parts.join('[split]'); // 放入剩余内容
-                                    currentBubbleRow = currentBubble.parentElement;
-                                }
-                            }
-                        } catch (e) {
-                            // 忽略无法解析的 JSON，因为我们已经确保了块的完整性
+            for (const line of lines) {
+                 if (line.startsWith('data: ')) {
+                    const dataStr = line.substring(6);
+                    if (dataStr === '[DONE]') continue;
+                    try {
+                        const data = JSON.parse(dataStr);
+                        const content = data.choices[0]?.delta?.content;
+                        if (content) {
+                            currentContent += content;
                         }
+                    } catch (e) { 
+                        // 如果解析失败，说明JSON不完整，把它放回buffer
+                        messageBuffer += line;
                     }
+                } else {
+                    messageBuffer += line;
                 }
             }
+            currentBubble.textContent = currentContent;
             chatArea.scrollTop = chatArea.scrollHeight;
         }
-
-        // 流结束后，处理最后一个气泡和历史记录
+        
         const finalMessage = currentBubble.textContent.trim();
         if (finalMessage) {
             fullReplyForHistory.push(finalMessage);
         } else {
-            currentBubbleRow.remove(); // 如果最后一个气泡是空的，就移除它
+            currentBubbleRow.remove();
         }
 
         if (fullReplyForHistory.length > 0) {
             const newMessages = fullReplyForHistory.map(text => ({ text, sender: 'character' }));
             chatHistory.push(...newMessages);
             await dbStorage.setItem(historyKey, chatHistory);
-            await loadAndRenderHistory(); // 重新加载以获得正确的消息索引
+            await loadAndRenderHistory();
         }
 
     } catch (error) {
         currentBubbleRow?.remove();
-        throw error;
+        throw error; // 将错误抛出
     }
 }
-// ▲▲▲ 替换结束 ▲▲▲
 
 
 export const CHAT_STYLES = {
