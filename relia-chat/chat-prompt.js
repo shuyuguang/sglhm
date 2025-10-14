@@ -61,7 +61,7 @@ async function defaultStreamHandler(context) {
 }
 
 /**
- * [V4 最终版] “对话体”专用的流式响应处理器
+ * [V4 最终版] “对话”专用的流式响应处理器
  * 支持解析并隐藏 (thought ...) 思维链
  */
 async function dialogueStreamHandler(context) {
@@ -152,7 +152,7 @@ async function dialogueStreamHandler(context) {
 
 export const CHAT_STYLES = {
     'dialogue': {
-        name: '对话体',
+        name: '对话',
         description: '此风格模仿日常对话，不包含动作或环境描述，该模式下角色允许扩展内的一切行为如语音、表情包、转账、礼物等。',
         example: '示例：\n"你好，今天天气真不错！"',
         getPromptAddition: () => (
@@ -164,7 +164,7 @@ export const CHAT_STYLES = {
         streamHandler: dialogueStreamHandler,
     },
     'short-chat': {
-        name: '短聊体',
+        name: '短聊',
         description: '此风格类似社交软件聊天，动作或环境描述会用括号标注，该模式下角色允许扩展内的一切行为如语音、表情包、转账、礼物等。',
         example: '示例：\n"嘿嘿，是呀~ 天气超棒的。"',
         getPromptAddition: () => (
@@ -173,7 +173,7 @@ export const CHAT_STYLES = {
         streamHandler: defaultStreamHandler, // 使用默认处理器
     },
     'novel': {
-        name: '小说体',
+        name: '小说',
         description: '此风格以小说或剧本形式输出，包含角色的语言、动作、神态和心理活动。该模式下禁用表情包。',
         example: '示例：\n他微微一笑，抬头望向湛蓝的天空，轻声说道：“你好，今天天气真不错！”',
         getPromptAddition: () => (
@@ -183,7 +183,7 @@ export const CHAT_STYLES = {
     },
     // ▼▼▼ 新增内容开始 ▼▼▼
     'text-adventure': {
-        name: '文游体',
+        name: '文游',
         description: '此风格以文字冒险游戏（MUD/TRPG）的形式进行，包含详细的环境与人物状态描写，并在末尾提供选项引导用户互动。该模式下禁用表情包。',
         example: '示例：\n你推开吱呀作响的酒馆木门，温暖的灯火与嘈杂的人声扑面而来。吧台后的老板娘，也就是我，抬头瞥了你一眼，用毛巾擦着杯子，淡淡地开口：“哟，新面孔。想喝点什么？”\n\n接下来你打算：\nA. 点一杯最便宜的麦酒\nB. 询问最近有什么传闻\nC. 找个角落默默坐下',
         getPromptAddition: () => (
