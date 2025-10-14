@@ -124,87 +124,110 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // ====================【UI 1: YDN App 初始化】====================
-    function initYdnApp() {
-        if (ydnAppInitialized) return;
-        console.log("Initializing YDN App...");
 
-        const sharedElements = getSharedDOMElements();
-        const ydnElements = {
-            ...sharedElements,
-            switcherPage: document.getElementById('switcher-page'),
-            profileViewPage: document.getElementById('profile-view-page'),
-            switcherGridList: document.getElementById('switcher-grid-list'),
-            switcherAddBtn: document.getElementById('switcher-add-btn'),
-            switcherSettingsBtn: document.getElementById('switcher-settings-btn-ydn'),
-            backToSwitcherBtn: document.getElementById('back-to-switcher-btn'),
-            tabButtons: ydnWrapper.querySelectorAll('.tab-button'),
-            tabPanes: ydnWrapper.querySelectorAll('.tab-pane'),
-            editFabButton: document.getElementById('edit-profile-btn-ydn'),
-            homeBioContent: document.getElementById('home-bio-content-ydn'),
-            modeToggleBtn: document.getElementById('mode-toggle-btn-ydn'),
-            characterBannerImg: document.getElementById('character-banner-img-ydn'),
-            profileAvatarImg: document.getElementById('profile-avatar-img-ydn'),
-            userNameEl: document.getElementById('user-name-ydn'),
-            genderSymbolEl: document.getElementById('gender-symbol-ydn'),
-            showSwitcherPage: () => { ydnElements.profileViewPage?.classList.add('hidden'); ydnElements.switcherPage?.classList.remove('hidden'); renderSwitcherGrid(); },
-            showProfilePage: () => { ydnElements.switcherPage?.classList.add('hidden'); ydnElements.profileViewPage?.classList.remove('hidden'); }
-        };
+// ====================【UI 1: YDN App 初始化】====================
+function initYdnApp() {
+    if (ydnAppInitialized) return;
+    console.log("Initializing YDN App...");
 
-        function renderSwitcherGrid() { /* ... */ }
+    const sharedElements = getSharedDOMElements();
+    const ydnElements = {
+        ...sharedElements,
+        switcherPage: document.getElementById('switcher-page'),
+        profileViewPage: document.getElementById('profile-view-page'),
+        switcherGridList: document.getElementById('switcher-grid-list'),
+        switcherAddBtn: document.getElementById('switcher-add-btn'),
+        switcherSettingsBtn: document.getElementById('switcher-settings-btn-ydn'),
+        backToSwitcherBtn: document.getElementById('back-to-switcher-btn'),
+        tabButtons: ydnWrapper.querySelectorAll('.tab-button'),
+        tabPanes: ydnWrapper.querySelectorAll('.tab-pane'),
+        editFabButton: document.getElementById('edit-profile-btn-ydn'),
+        homeBioContent: document.getElementById('home-bio-content-ydn'),
+        modeToggleBtn: document.getElementById('mode-toggle-btn-ydn'),
+        characterBannerImg: document.getElementById('character-banner-img-ydn'),
+        profileAvatarImg: document.getElementById('profile-avatar-img-ydn'),
+        userNameEl: document.getElementById('user-name-ydn'),
+        genderSymbolEl: document.getElementById('gender-symbol-ydn'),
+        showSwitcherPage: () => { ydnElements.profileViewPage?.classList.add('hidden'); ydnElements.switcherPage?.classList.remove('hidden'); renderSwitcherGrid(); },
+        showProfilePage: () => { ydnElements.switcherPage?.classList.add('hidden'); ydnElements.profileViewPage?.classList.remove('hidden'); }
+    };
 
-        const manager = createProfileManager({
-            elements: ydnElements,
-            uiStyle: 'YDN',
-            renderSwitcher: renderSwitcherGrid,
-            onProfileSave: () => {}
-        });
+    // ▼▼▼ 新增/修改开始 ▼▼▼
+
+    // 1. 定义一个用于YDN的回调函数
+    function onProfileSaveCallbackYdn(savedProfile) {
+        // 当保存成功后，用最新的数据更新主界面的元素
+        if (ydnElements.profileAvatarImg) {
+            ydnElements.profileAvatarImg.src = savedProfile.avatar;
+        }
+        if (ydnElements.userNameEl) {
+            ydnElements.userNameEl.textContent = savedProfile.name || '未命名';
+        }
+        if (ydnElements.genderSymbolEl) {
+            ydnElements.genderSymbolEl.textContent = savedProfile.gender.charAt(0);
+        }
         
-        // ... (The rest of the YDN and YDM init functions remain the same)
-        // The logic inside them for event binding and initialization is correct.
-        // I've omitted the rest for brevity as it's identical to your original file.
-
-        function renderSwitcherGrid() {
-            if (!ydnElements.switcherGridList) return;
-            ydnElements.switcherGridList.innerHTML = '';
-            const profileData = manager.getProfileData();
-            profileData.forEach(profile => {
-                const item = document.createElement('div');
-                item.className = 'switcher-profile-item';
-                item.dataset.profileId = profile.id;
-                item.innerHTML = `<img src="${profile.avatar}" alt="${profile.name}" class="avatar"><span class="name">${profile.name || '未命名'}</span>`;
-                item.addEventListener('click', async () => { await manager.loadProfileData(profile.id); ydnElements.showProfilePage(); });
-                ydnElements.switcherGridList.appendChild(item);
-            });
+        // 同时，更新 switcher 列表里的头像和名字，确保数据一致
+        const switcherItem = ydnElements.switcherGridList?.querySelector(`[data-profile-id="${savedProfile.id}"]`);
+        if (switcherItem) {
+            const avatar = switcherItem.querySelector('.avatar');
+            const name = switcherItem.querySelector('.name');
+            if (avatar) avatar.src = savedProfile.avatar;
+            if (name) name.textContent = savedProfile.name || '未命名';
         }
-
-        if (!sharedEventsBound) {
-            manager.bindSharedEvents();
-            sharedEventsBound = true;
-        }
-        manager.bindUiSpecificEvents();
-
-        ydnElements.backToSwitcherBtn?.addEventListener('click', ydnElements.showSwitcherPage);
-        ydnElements.switcherAddBtn?.addEventListener('click', () => manager.addNewProfile());
-        ydnElements.switcherSettingsBtn?.addEventListener('click', () => manager.openSwitcherSettingsModal());
-        if (ydnElements.switcherGridList) {
-            new Sortable(ydnElements.switcherGridList, {
-                animation: 150,
-                ghostClass: 'avatar-sortable-ghost',
-                delay: 200, delayOnTouchOnly: true,
-                onEnd: (evt) => {
-                    const newOrderedIds = Array.from(ydnElements.switcherGridList.children).map(item => item.dataset.profileId);
-                    let profileData = manager.getProfileData();
-                    const profileMap = new Map(profileData.map(p => [p.id, p]));
-                    const newProfileData = newOrderedIds.map(id => profileMap.get(id)).filter(Boolean);
-                    manager.setProfileData(newProfileData);
-                }
-            });
-        }
-
-        manager.initializeApp();
-        ydnAppInitialized = true;
     }
+
+    function renderSwitcherGrid() {
+        if (!ydnElements.switcherGridList) return;
+        ydnElements.switcherGridList.innerHTML = '';
+        const profileData = manager.getProfileData();
+        profileData.forEach(profile => {
+            const item = document.createElement('div');
+            item.className = 'switcher-profile-item';
+            item.dataset.profileId = profile.id;
+            item.innerHTML = `<img src="${profile.avatar}" alt="${profile.name}" class="avatar"><span class="name">${profile.name || '未命名'}</span>`;
+            item.addEventListener('click', async () => { await manager.loadProfileData(profile.id); ydnElements.showProfilePage(); });
+            ydnElements.switcherGridList.appendChild(item);
+        });
+    }
+
+    const manager = createProfileManager({
+        elements: ydnElements,
+        uiStyle: 'YDN',
+        renderSwitcher: renderSwitcherGrid,
+        // 2. 将定义好的回调函数传给管理器
+        onProfileSave: onProfileSaveCallbackYdn
+    });
+    
+    // ▲▲▲ 新增/修改结束 ▲▲▲
+
+    if (!sharedEventsBound) {
+        manager.bindSharedEvents();
+        sharedEventsBound = true;
+    }
+    manager.bindUiSpecificEvents();
+
+    ydnElements.backToSwitcherBtn?.addEventListener('click', ydnElements.showSwitcherPage);
+    ydnElements.switcherAddBtn?.addEventListener('click', () => manager.addNewProfile());
+    ydnElements.switcherSettingsBtn?.addEventListener('click', () => manager.openSwitcherSettingsModal());
+    if (ydnElements.switcherGridList) {
+        new Sortable(ydnElements.switcherGridList, {
+            animation: 150,
+            ghostClass: 'avatar-sortable-ghost',
+            delay: 200, delayOnTouchOnly: true,
+            onEnd: (evt) => {
+                const newOrderedIds = Array.from(ydnElements.switcherGridList.children).map(item => item.dataset.profileId);
+                let profileData = manager.getProfileData();
+                const profileMap = new Map(profileData.map(p => [p.id, p]));
+                const newProfileData = newOrderedIds.map(id => profileMap.get(id)).filter(Boolean);
+                manager.setProfileData(newProfileData);
+            }
+        });
+    }
+
+    manager.initializeApp();
+    ydnAppInitialized = true;
+}
 
     // ====================【UI 2: YDM App 初始化】====================
     function initYdmApp() {
