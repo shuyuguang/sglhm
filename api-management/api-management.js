@@ -50,7 +50,11 @@ const apiConfigPanelHtml = `
                 </div>
                 <form class="api-form-container" id="api-provider-form">
                     <div class="form-group"><label for="api-name">名称</label><input type="text" id="api-name" placeholder="例如：My Key"></div>
-                    <div class="form-group"><label for="api-key">API Key</label><input type="text" id="api-key" placeholder="sk-..."></div>
+                    
+                    <!-- ▼▼▼ 修改点 ▼▼▼ -->
+                    <div class="form-group"><label for="api-key">API Key</label><input type="password" id="api-key" placeholder="sk-..."></div>
+                    <!-- ▲▲▲ 修改结束 ▲▲▲ -->
+
                     <div class="form-group"><label for="api-base-url">API Base URL</label><input type="text" id="api-base-url" value="https://api.openai.com"></div>
                     <div class="form-group" id="api-path-group"><label for="api-path">API 路径</label><input type="text" id="api-path" value="/v1/chat/completions"></div>
                 </form>
@@ -342,6 +346,19 @@ async function initializePage() {
     if (ui.panelTabsContainer) { ui.panelTabsContainer.addEventListener('click', (event) => { if (event.target.classList.contains('modal-tab')) switchPanelTab(event.target.dataset.tab); }); }
     if (ui.panelContentContainer) { ui.panelContentContainer.addEventListener('click', (event) => { if (event.target.matches('.pill-option')) { const clickedPill = event.target; clickedPill.parentElement.querySelectorAll('.pill-option').forEach(pill => pill.classList.remove('active')); clickedPill.classList.add('active'); updateFormForProvider(clickedPill.dataset.provider); } }); }
     
+    // ▼▼▼ 新增点：为API Key输入框添加事件监听 ▼▼▼
+    if (ui.apiKeyInput) {
+        ui.apiKeyInput.addEventListener('focus', function() {
+            this.type = 'text';
+        });
+        ui.apiKeyInput.addEventListener('blur', function() {
+            if (this.value) {
+                this.type = 'password';
+            }
+        });
+    }
+    // ▲▲▲ 新增结束 ▲▲▲
+
     const textTabPane = document.getElementById('text');
     if (textTabPane) {
         textTabPane.addEventListener('click', (event) => {

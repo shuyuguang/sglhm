@@ -112,7 +112,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             <form class="api-form-container" id="edit-api-form">
                 ${hintCardHtml} 
                 <div class="form-group"><label for="api-name">名称</label><input type="text" id="api-name" value="${config.name}" readonly></div>
-                <div class="form-group"><label for="api-key">API Key</label><input type="text" id="api-key" placeholder="sk-..." value="${config.apiKey || ''}"></div>
+                
+                <!-- ▼▼▼ 修改点 ▼▼▼ -->
+                <div class="form-group"><label for="api-key">API Key</label><input type="password" id="api-key" placeholder="sk-..." value="${config.apiKey || ''}"></div>
+                <!-- ▲▲▲ 修改结束 ▲▲▲ -->
+
                 <div class="form-group"><label for="api-base-url">API Base URL</label><input type="text" id="api-base-url" value="${config.baseUrl}" readonly></div>
                 <div class="form-group" id="api-path-group"><label for="api-path">API 路径</label><input type="text" id="api-path" value="${config.path}" readonly></div>
                 <div class="form-group-action">
@@ -154,6 +158,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (ui.testApiOverlay) ui.testApiOverlay.addEventListener('click', (e) => { if (e.target === ui.testApiOverlay) closeTestPanel(); });
     if (ui.closeTestPanelBtn) ui.closeTestPanelBtn.addEventListener('click', closeTestPanel);
     if (ui.sendTestRequestBtn) ui.sendTestRequestBtn.addEventListener('click', () => handleApiTest(apiId));
+
+    // ▼▼▼ 新增点：为API Key输入框添加事件监听 ▼▼▼
+    const apiKeyInput = document.getElementById('api-key');
+    if (apiKeyInput) {
+        // 如果初始有值，立即设置为 password 类型
+        if (apiKeyInput.value) {
+            apiKeyInput.type = 'password';
+        }
+        apiKeyInput.addEventListener('focus', function() {
+            this.type = 'text';
+        });
+        apiKeyInput.addEventListener('blur', function() {
+            if (this.value) {
+                this.type = 'password';
+            }
+        });
+    }
+    // ▲▲▲ 新增结束 ▲▲▲
 
     renderSelectedModels();
 });
