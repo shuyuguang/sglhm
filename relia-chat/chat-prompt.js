@@ -56,7 +56,7 @@ async function defaultStreamHandler(context) {
 }
 
 /**
- * “对话体”专用的流式响应处理器（支持多条消息）
+ * [修正后] “对话体”专用的流式响应处理器（支持多条消息）
  * @param {object} context - 从 chat-room.js 传入的上下文对象
  */
 async function dialogueStreamHandler(context) {
@@ -64,8 +64,10 @@ async function dialogueStreamHandler(context) {
 
     let currentBubble = renderMessage({ text: '...', sender: 'character' }, -1);
     let currentBubbleRow = currentBubble.parentElement;
-    let messageBuffer = '';
-    let fullReplyForHistory = [];
+    
+    let sseBuffer = ''; // 用于缓冲原始的 SSE 数据
+    let currentMessageText = ''; // 用于缓冲当前正在构建的、解析后的纯文本消息
+    const fullReplyForHistory = []; // 存储所有已完成的消息文本
 
     try {
         currentBubble.textContent = '';
@@ -73,68 +75,66 @@ async function dialogueStreamHandler(context) {
             const { done, value } = await reader.read();
             if (done) break;
             
-            const chunk = decoder.decode(value, { stream: true });
-            messageBuffer += chunk;
+            sseBuffer += decoder.decode(value, { stream: true });
 
-            // 检查并处理分隔符 [split]
-            while (messageBuffer.includes('[split]')) {
-                const parts = messageBuffer.split('[split]');
-                const completeMessage = parts.shift().trim();
-
-                if (completeMessage) {
-                    currentBubble.textContent = completeMessage;
-                    fullReplyForHistory.push(completeMessage);
-                } else {
-                    currentBubble.parentElement.remove(); // 如果是空消息，移除气泡
-                }
-
-                messageBuffer = parts.join('[split]');
-
-                // 创建下一个新气泡
-                currentBubble = renderMessage({ text: '...', sender: 'character' }, -1);
-                currentBubble.textContent = '';
-                currentBubbleRow = currentBubble.parentElement;
-            }
-
-            // 实时渲染当前气泡的内容 (解析SSE数据)
-            let currentContent = currentBubble.textContent;
-            const lines = messageBuffer.split('\n\n');
-            messageBuffer = ''; // 清空buffer，因为它可能包含不完整的JSON
-
-            for (const line of lines) {
-                 if (line.startsWith('data: ')) {
-                    const dataStr = line.substring(6);
+            // 1. 从原始数据缓冲区中解析出纯文本内容
+            let boundary;
+            while ((boundary = sseBuffer.indexOf('\n\n')) !== -1) {
+                const message = sseBuffer.substring(0, boundary);
+                sseBuffer = sseBuffer.substring(boundary + 2);
+                
+                if (message.startsWith('data: ')) {
+                    const dataStr = message.substring(6);
                     if (dataStr === '[DONE]') continue;
                     try {
                         const data = JSON.parse(dataStr);
                         const content = data.choices[0]?.delta?.content;
                         if (content) {
-                            currentContent += content;
+                            currentMessageText += content; // 将解析出的文本添加到纯文本缓冲区
                         }
-                    } catch (e) { 
-                        // 如果解析失败，说明JSON不完整，把它放回buffer
-                        messageBuffer += line;
-                    }
-                } else {
-                    messageBuffer += line;
+                    } catch (e) { /* 忽略不完整的JSON */ }
                 }
             }
-            currentBubble.textContent = currentContent;
+
+            // 2. 在纯文本缓冲区中处理 [split] 分隔符
+            while (currentMessageText.includes('[split]')) {
+                const parts = currentMessageText.split('[split]');
+                const completeMessage = parts.shift().trim(); // 获取第一段完整消息
+
+                if (completeMessage) {
+                    currentBubble.textContent = completeMessage; // 更新当前气泡的最终内容
+                    fullReplyForHistory.push(completeMessage);
+                } else {
+                    currentBubble.parentElement.remove(); // 如果是空消息，则移除气泡
+                }
+
+                // 创建一个新的气泡用于下一条消息
+                currentBubble = renderMessage({ text: '...', sender: 'character' }, -1);
+                currentBubble.textContent = '';
+                currentBubbleRow = currentBubble.parentElement;
+                
+                currentMessageText = parts.join('[split]'); // 剩余部分是下一条消息的开头
+            }
+
+            // 3. 实时更新当前气泡的显示内容
+            currentBubble.textContent = currentMessageText;
             chatArea.scrollTop = chatArea.scrollHeight;
         }
         
-        const finalMessage = currentBubble.textContent.trim();
+        // 处理最后一条消息
+        const finalMessage = currentMessageText.trim();
         if (finalMessage) {
             fullReplyForHistory.push(finalMessage);
         } else {
-            currentBubbleRow.remove();
+            currentBubbleRow.remove(); // 如果最后没有内容，也移除气泡
         }
 
+        // 4. 将所有完成的消息保存到历史记录并重新渲染
         if (fullReplyForHistory.length > 0) {
             const newMessages = fullReplyForHistory.map(text => ({ text, sender: 'character' }));
             chatHistory.push(...newMessages);
             await dbStorage.setItem(historyKey, chatHistory);
-            await loadAndRenderHistory();
+            await loadAndRenderHistory(); // 使用 loadAndRenderHistory 刷新，确保 data-index 正确
         }
 
     } catch (error) {
