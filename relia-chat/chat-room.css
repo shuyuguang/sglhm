@@ -428,7 +428,7 @@ html, body {
 }
 
 
-/* ▼▼▼ 修改：消息操作菜单样式 ▼▼▼ */
+/* ▼▼▼ 修改：消息操作菜单样式 (缩小版) ▼▼▼ */
 .message-menu-overlay {
     position: fixed;
     top: 0;
@@ -447,26 +447,25 @@ html, body {
 .message-menu {
     position: absolute;
     background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-    padding: 12px;
-    width: 280px; /* 适应4列布局的宽度 */
-    display: grid; /* 使用 grid 布局 */
-    grid-template-columns: repeat(4, 1fr); /* 创建一个4列网格 */
-    gap: 12px 8px; /* 设置行间距和列间距 */
-    /* top 和 left 将由 JS 设置 */
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    padding: 8px; /* 减小内边距 */
+    width: 240px; /* 减小宽度 */
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px 4px; /* 减小行和列的间距 */
 }
 
 .message-menu-item {
     display: flex;
-    flex-direction: column; /* 垂直排列：图标在上，文字在下 */
-    align-items: center;   /* 水平居中 */
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
-    gap: 6px; /* 图标和文字之间的间距 */
-    padding: 8px 0;
-    border-radius: 8px;
+    gap: 4px; /* 减小图标和文字的间距 */
+    padding: 6px 0; /* 减小内边距 */
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 0.8rem; /* 调整文字大小以适应布局 */
+    font-size: 0.75rem; /* 减小文字大小 */
     color: #333;
     transition: background-color 0.2s ease;
 }
@@ -476,9 +475,8 @@ html, body {
 }
 
 .message-menu-item i {
-    font-size: 1.2rem; /* 增大图标尺寸 */
+    font-size: 1rem; /* 减小图标大小 */
     color: #333;
-    /* 不再需要固定宽度来对齐文字 */
 }
 /* ▲▲▲ 修改结束 ▲▲▲ */
 

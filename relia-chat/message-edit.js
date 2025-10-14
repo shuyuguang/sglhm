@@ -69,7 +69,6 @@ function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
 
     if (!message) return;
 
-    // ▼▼▼ 修改点 1：更新菜单项为指定的 8 个 ▼▼▼
     const menuItems = [
         { action: 'edit', icon: 'fa-regular fa-pen-to-square', text: '编辑' },
         { action: 'reply', icon: 'fa-solid fa-reply', text: '回复' },
@@ -80,7 +79,6 @@ function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
         { action: 'multiselect', icon: 'fa-solid fa-check-double', text: '多选' },
         { action: 'other', icon: 'fa-solid fa-ellipsis', text: '其它' }
     ];
-    // ▲▲▲ 修改结束 ▲▲▲
 
     menu.innerHTML = menuItems.map(item => `
         <div class="message-menu-item" data-action="${item.action}" ${item.isDestructive ? 'style="color: #e53e3e;"' : ''}>
@@ -119,9 +117,9 @@ function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
         hideMenu();
     };
 
-    // ▼▼▼ 修改点 2：根据新的 2x4 网格布局，调整菜单的估算宽高 ▼▼▼
-    const menuWidth = 280;  // 4个图标宽度 + 间距
-    const menuHeight = 140; // 2行图标高度 + 间距
+    // ▼▼▼ 修改点：减小估算的菜单宽高 ▼▼▼
+    const menuWidth = 240;  // 宽度从 280 减小到 240
+    const menuHeight = 120; // 高度从 140 减小到 120
     // ▲▲▲ 修改结束 ▲▲▲
 
     const screenWidth = window.innerWidth;
@@ -145,7 +143,6 @@ function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
 
 /**
  * 隐藏操作菜单。
- * (此函数无变化)
  */
 function hideMenu() {
     const menuOverlay = document.getElementById('message-menu-overlay');
@@ -154,7 +151,6 @@ function hideMenu() {
 
 /**
  * 将消息气泡变为可编辑状态。
- * (此函数无变化)
  */
 function startEditing(bubble, index, getChatHistory, updateChatHistory) {
     bubble.classList.add('editing');
