@@ -340,7 +340,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert("加载模型列表失败，请检查控制台获取更多信息。");
         }
     }
-    function renderModelList(models) { 
+    
+    // ▼▼▼ 修正点：在这里添加一行代码 ▼▼▼
+    function renderModelList(models) {
+        // 在函数开头，将完整的模型列表数据存储到 DOM 元素的 dataset 中
+        modelListContainer.dataset.models = JSON.stringify(models);
+
         if (models.length === 0) {
             modelListContainer.innerHTML = `<p class="no-models-message">没有可用的模型<br>请先到“牵引仪”页面启用并选择模型</p>`;
             return;
@@ -351,6 +356,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         `).join('');
     }
+    // ▲▲▲ 修正结束 ▲▲▲
+
     const expandInputLayout = () => { 
         if (!chatInputArea.classList.contains('input-focused')) {
             chatInputArea.classList.add('input-focused');
@@ -412,7 +419,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     currentChatApi = modelInfo;
                 }
                 await dbStorage.setItem(selectedApiKey, currentChatApi);
-                // 重新渲染列表以更新激活状态。需要先获取可用模型数据
+                // 重新渲染列表以更新激活状态。现在这行代码可以正常工作了。
                 const models = JSON.parse(item.closest('.model-list-container').dataset.models || '[]');
                 renderModelList(models);
                 updateModelButtonText();
