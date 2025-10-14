@@ -88,18 +88,30 @@
     <div class="cropper-overlay" id="cropper-overlay"><div class="cropper-container"><div class="cropper-image-container"><img id="cropper-image" src=""></div><div class="cropper-actions"><button id="cancel-crop-btn" class="prompt-btn">取消</button><button id="confirm-crop-btn" class="prompt-btn">确认</button></div></div></div>
     <!-- [新增结束] -->
     
-    <!-- JS 库 -->
+    <!-- [新增] 消息操作菜单 -->
+    <div class="message-menu-overlay" id="message-menu-overlay">
+        <div class="message-menu" id="message-menu">
+            <!-- 菜单项将由 JS 动态生成 -->
+        </div>
+    </div>
+    
+    <!-- JS 库 (保持不变) -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     
-    <!-- [修改] 引入 profile 模块作为依赖 -->
+    <!-- profile 模块 (保持不变) -->
     <script src="../config/profile.config.js" type="module"></script>
     <script src="../profile/profile.ui.js" type="module"></script>
     <script src="../profile/profile.events.js" type="module"></script>
     
     <!-- 引入本页面的专属 JS 逻辑 -->
     <script src="chat-editor-bridge.js" type="module"></script>
+    <!-- [新增] 引入消息菜单逻辑 -->
+    <script src="message-edit.js" type="module"></script>
+    <!-- ▼▼▼ 新增：引入聊天风格面板逻辑 ▼▼▼ -->
+    <script src="chat-prompt.js" type="module"></script>
+    <!-- ▲▲▲ 新增结束 ▲▲▲ -->
     <script src="chat-room.js" type="module"></script>
 </body>
 </html>

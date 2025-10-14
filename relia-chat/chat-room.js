@@ -4,11 +4,15 @@ import { dbStorage } from '../common/db.js';
 import { API_DB_KEYS, ALL_BUILT_IN_API_DEFINITIONS } from '../config/api.config.js';
 import { PROFILE_DB_KEYS } from '../config/profile.config.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
-// [修改] 引入新的 bridge 模块
 import { createChatEditor } from './chat-editor-bridge.js';
+import { initializeMessageMenu } from './message-edit.js';
+// ▼▼▼ 修改：导入 CHAT_STYLES 和 createChatPromptPanel ▼▼▼
+import { CHAT_STYLES, createChatPromptPanel } from './chat-prompt.js';
+// ▲▲▲ 修改结束 ▲▲▲
+
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // --- 1 & 2. 获取数据和生成HTML ---
+    // --- 1 & 2. 获取数据和生成HTML (无变化) ---
     const urlParams = new URLSearchParams(window.location.search);
     const charId = urlParams.get('id');
     if (!charId) {
@@ -88,7 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 `;
     document.body.insertAdjacentHTML('afterbegin', pageHtml);
 
-    // --- 3. 获取DOM元素和定义变量 ---
+    // --- 3. 获取DOM元素和定义变量 (无变化) ---
     const chatArea = document.getElementById('chat-messages-area');
     const input = document.getElementById('chat-input');
     const chatInputArea = document.getElementById('chat-input-area');
@@ -111,27 +115,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentChatApi = null;
     const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`;
     const selectedApiKey = `${CHAT_DB_KEYS.CHAT_SELECTED_API}_${charId}`;
+    // ▼▼▼ 新增：用于存储当前聊天风格的状态变量 ▼▼▼
+    let currentChatStyle = CHAT_STYLES['dialogue']; // 默认使用对话体
+    const styleDbKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_style_${charId}`;
+    // ▲▲▲ 新增结束 ▲▲▲
+
     let chatHistory = [];
     
-    // [修改] 初始化功能完整的编辑器
     let chatEditor = null;
     const onProfileUpdate = async (updatedProfile) => {
         console.log('角色设定已在聊天室中更新:', updatedProfile);
-        
         character = updatedProfile; 
-        
         const allCharacterProfiles = await dbStorage.getItem(PROFILE_DB_KEYS.CHAR_PROFILES) || [];
         const charIndex = allCharacterProfiles.findIndex(c => c.id === character.id);
         if (charIndex !== -1) {
             allCharacterProfiles[charIndex] = character;
             await dbStorage.setItem(PROFILE_DB_KEYS.CHAR_PROFILES, allCharacterProfiles);
-            console.log('角色数据已成功同步回数据库。');
         }
-        
         document.querySelector('.char-info-name').textContent = character.name || '未命名';
         document.querySelector('.char-info-avatar').src = character.avatar;
-        
-        // [新增] 通知编辑器内部数据已更新
         chatEditor?.updateProfile(character);
     };
 
@@ -139,8 +141,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatEditor = createChatEditor(character, onProfileUpdate);
     }
 
-    // --- 4. 核心功能函数 (无变化) ---
-    function constructSystemPrompt(charProfile, userProfile) { 
+    // --- 4. 核心功能函数 (有修改) ---
+    
+    // ▼▼▼ 修改：constructSystemPrompt 现在会根据当前风格动态添加指令 ▼▼▼
+    function constructSystemPrompt(charProfile, userProfile) {
         let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
         prompt += `### 角色设定\n`;
         prompt += `- 名字: ${charProfile.name || '未命名'}\n`;
@@ -165,31 +169,49 @@ document.addEventListener('DOMContentLoaded', async () => {
         prompt += `\n### 扮演要求\n`;
         prompt += `- 你必须完全沉浸在 **${charProfile.name}** 的角色中，用TA的身份、口吻、性格和知识进行回复。\n`;
         prompt += `- 不要暴露你是AI模型或程序，不要提及“扮演”或“角色设定”。\n`;
-        prompt += `- 你的回复应该是自然的、符合角色的，就像TA真的在和 **${userProfile.name}** 聊天一样。`;
+        prompt += `- 你的回复应该是自然的、符合角色的，就像TA真的在和 **${userProfile.name}** 聊天一样。\n`;
+        
+        // 动态添加风格指令
+        if (currentChatStyle && typeof currentChatStyle.getPromptAddition === 'function') {
+            const stylePrompt = currentChatStyle.getPromptAddition();
+            if (stylePrompt) {
+                prompt += stylePrompt;
+            }
+        }
         return prompt;
     }
-    function formatChatHistoryForApi(history) { 
+    function formatChatHistoryForApi(history) { /* (无变化) */ 
         return history.map(msg => ({
             role: msg.sender === 'user' ? 'user' : 'assistant',
             content: msg.text
         }));
     }
-    function renderMessage({ text, sender }) { 
+
+    // [修正] renderMessage 函数
+    function renderMessage({ text, sender }, index) { 
         const messageRow = document.createElement('div');
         messageRow.className = `message-row ${sender}`;
+        messageRow.dataset.index = index;
+
         const avatar = document.createElement('img');
         avatar.className = 'message-avatar';
         avatar.src = (sender === 'user') ? user.avatar : character.avatar;
+        
         const bubble = document.createElement('div');
         bubble.className = `chat-bubble ${sender}`;
         bubble.textContent = text;
+        
+        // [修正] 移除之前的 if/else 判断，统一添加顺序。
+        // CSS 中的 flex-direction: row-reverse 会自动处理用户消息的视觉顺序。
         messageRow.appendChild(avatar);
         messageRow.appendChild(bubble);
+
         chatArea.appendChild(messageRow);
         chatArea.scrollTop = chatArea.scrollHeight;
-        return bubble;
+        return bubble; // 返回 bubble 元素本身
     }
-    function renderSystemMessage(text, type = 'loading') { 
+
+    function renderSystemMessage(text, type = 'loading') { /* (无变化) */ 
         const messageRow = document.createElement('div');
         messageRow.className = `message-row system ${type}`;
         messageRow.innerHTML = `<div class="chat-bubble system">${text}</div>`;
@@ -197,24 +219,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatArea.scrollTop = chatArea.scrollHeight;
         return messageRow;
     }
-    async function loadAndRenderHistory() { 
+    async function loadAndRenderHistory() { /* (无变化) */ 
         const savedHistory = await dbStorage.getItem(historyKey);
         if (savedHistory && Array.isArray(savedHistory) && savedHistory.length > 0) {
             chatHistory = savedHistory;
-            chatHistory.forEach(message => renderMessage(message));
+            chatArea.innerHTML = '';
+            chatHistory.forEach((message, index) => renderMessage(message, index));
         }
     }
-    function updateButtonStates() { 
+    function updateButtonStates() { /* (无变化) */ 
         const hasText = input.value.trim() !== '';
         sendBtn.disabled = !hasText;
         respondBtn.disabled = false;
     }
-    async function handleSendMessage(shouldTriggerReply) { 
+
+    // [修正] handleSendMessage 函数
+    async function handleSendMessage(shouldTriggerReply) {
         const text = input.value.trim();
         if (text !== '') {
             const userMessage = { text, sender: 'user' };
-            renderMessage(userMessage);
             chatHistory.push(userMessage);
+            renderMessage(userMessage, chatHistory.length - 1);
             await dbStorage.setItem(historyKey, chatHistory);
             
             input.value = '';
@@ -225,24 +250,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         else if (!shouldTriggerReply) {
             return;
         }
+
         if (shouldTriggerReply) {
-            if (chatHistory.length === 0) {
-                alert('还没有聊天记录，请先说点什么吧！');
-                return;
-            }
-            if (!currentChatApi) {
-                alert('请先点击“选择模型”按钮选择一个牵引仪模型！');
+            if (chatHistory.length === 0 || !currentChatApi) {
+                alert(chatHistory.length === 0 ? '还没有聊天记录，请先说点什么吧！' : '请先点击“选择模型”按钮选择一个牵引仪模型！');
                 return;
             }
             sendBtn.disabled = true;
             respondBtn.disabled = true;
+            
             const systemPrompt = constructSystemPrompt(character, user);
             const historyForApi = formatChatHistoryForApi(chatHistory);
             const messages = [ { role: 'system', content: systemPrompt }, ...historyForApi ];
             const endpoint = (currentChatApi.baseUrl.replace(/\/$/, '')) + (currentChatApi.path || '/v1/chat/completions');
             const payload = { model: currentChatApi.model, messages: messages, stream: true };
-            const thinkingBubble = renderMessage({ text: '...', sender: 'character' });
-            let fullReply = '';
+            
             try {
                 const response = await fetch(endpoint, {
                     method: 'POST',
@@ -253,39 +275,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const errorData = await response.json();
                     throw new Error(errorData.error?.message || `API 请求失败，状态码: ${response.status}`);
                 }
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder('utf-8');
-                thinkingBubble.textContent = '';
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    const chunk = decoder.decode(value);
-                    const lines = chunk.split('\n\n');
-                    for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            const dataStr = line.substring(6);
-                            if (dataStr === '[DONE]') break;
-                            try {
-                                const data = JSON.parse(dataStr);
-                                const content = data.choices[0]?.delta?.content;
-                                if (content) {
-                                    fullReply += content;
-                                    thinkingBubble.textContent = fullReply;
-                                    chatArea.scrollTop = chatArea.scrollHeight;
-                                }
-                            } catch (e) { /* 忽略解析错误 */ }
-                        }
-                    }
-                }
-                if (fullReply) {
-                    const replyMessage = { text: fullReply, sender: 'character' };
-                    chatHistory.push(replyMessage);
-                    await dbStorage.setItem(historyKey, chatHistory);
-                }
+                
+                // 将响应处理委托给当前风格的处理器
+                const handlerContext = {
+                    reader: response.body.getReader(),
+                    decoder: new TextDecoder('utf-8'),
+                    renderMessage,
+                    chatHistory,
+                    historyKey,
+                    chatArea,
+                    loadAndRenderHistory // 传递这个函数，以便多消息处理器可以刷新列表
+                };
+                await currentChatStyle.streamHandler(handlerContext);
+
             } catch (error) {
                 console.error('AI 回复生成失败:', error);
                 renderSystemMessage(`错误: ${error.message}`, 'error');
-                thinkingBubble.remove();
             } finally {
                 updateButtonStates();
                 input.focus();
@@ -293,6 +298,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
     
+    // ... 从 updateModelButtonText 到 collapseInputLayout 的所有函数保持不变 ...
     function updateModelButtonText() {
         if (currentChatApi) {
             selectedModelName.textContent = currentChatApi.model;
@@ -302,11 +308,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             selectModelBtn.classList.remove('active');
         }
     }
-
-    const closeModelSelector = () => {
-        modelSelectorOverlay?.classList.remove('active');
-    };
-
+    const closeModelSelector = () => { modelSelectorOverlay?.classList.remove('active'); };
     async function openModelSelector() {
         try {
             const [userConfigs, builtInData, builtInStates] = await Promise.all([
@@ -314,47 +316,30 @@ document.addEventListener('DOMContentLoaded', async () => {
                 dbStorage.getItem(API_DB_KEYS.BUILT_IN_DATA).then(res => res || {}),
                 dbStorage.getItem(API_DB_KEYS.BUILT_IN_STATES).then(res => res || {})
             ]);
-
             let availableModels = [];
-
-            userConfigs
-                .filter(api => api.enabled && Array.isArray(api.model) && api.model.length > 0)
-                .forEach(api => {
-                    api.model.forEach(modelName => {
-                        availableModels.push({
-                            id: `${api.id}-${modelName}`, apiKey: api.apiKey,
-                            baseUrl: api.baseUrl, path: api.path,
-                            model: modelName, apiName: api.name,
+            userConfigs.filter(api => api.enabled && Array.isArray(api.model) && api.model.length > 0).forEach(api => {
+                api.model.forEach(modelName => {
+                    availableModels.push({ id: `${api.id}-${modelName}`, apiKey: api.apiKey, baseUrl: api.baseUrl, path: api.path, model: modelName, apiName: api.name });
+                });
+            });
+            Object.keys(builtInStates).forEach(apiId => {
+                const userData = builtInData[apiId];
+                if (builtInStates[apiId]?.enabled && userData && Array.isArray(userData.model) && userData.model.length > 0) {
+                    const staticData = ALL_BUILT_IN_API_DEFINITIONS[apiId];
+                    if (staticData) {
+                        userData.model.forEach(modelName => {
+                            availableModels.push({ id: `${apiId}-${modelName}`, apiKey: userData.apiKey, baseUrl: staticData.baseUrl, path: staticData.path, model: modelName, apiName: staticData.name });
                         });
-                    });
-                });
-
-            Object.keys(builtInStates)
-                .forEach(apiId => {
-                    const userData = builtInData[apiId];
-                    if (builtInStates[apiId]?.enabled && userData && Array.isArray(userData.model) && userData.model.length > 0) {
-                        const staticData = ALL_BUILT_IN_API_DEFINITIONS[apiId];
-                        if (staticData) {
-                            userData.model.forEach(modelName => {
-                                availableModels.push({
-                                    id: `${apiId}-${modelName}`, apiKey: userData.apiKey,
-                                    baseUrl: staticData.baseUrl, path: staticData.path,
-                                    model: modelName, apiName: staticData.name,
-                                });
-                            });
-                        }
                     }
-                });
-            
+                }
+            });
             renderModelList(availableModels);
             modelSelectorOverlay.classList.add('active');
-
         } catch (error) {
             console.error("打开模型选择器失败:", error);
             alert("加载模型列表失败，请检查控制台获取更多信息。");
         }
     }
-
     function renderModelList(models) { 
         if (models.length === 0) {
             modelListContainer.innerHTML = `<p class="no-models-message">没有可用的模型<br>请先到“牵引仪”页面启用并选择模型</p>`;
@@ -362,11 +347,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         modelListContainer.innerHTML = models.map(m => `
             <div class="model-item ${currentChatApi?.id === m.id ? 'active' : ''}" data-model-info='${JSON.stringify(m)}'>
-                <div class="model-info">
-                    <div class="model-item-name">${m.model}</div>
-                    <div class="model-item-api">${m.apiName}</div>
-                </div>
-                <i class="fa-solid fa-check"></i>
+                <div class="model-info"><div class="model-item-name">${m.model}</div><div class="model-item-api">${m.apiName}</div></div><i class="fa-solid fa-check"></i>
             </div>
         `).join('');
     }
@@ -385,14 +366,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatInputArea.classList.remove('actions-expanded', 'emoji-expanded');
     };
 
-    // --- 5. 绑定事件 ---
+    // --- 5. 绑定事件 (有修改) ---
     input.addEventListener('input', () => {
-        if (input.value.trim() === '') {
-            input.style.height = '';
-        } else {
-            input.style.height = 'auto';
-            input.style.height = (input.scrollHeight) + 'px';
-        }
+        input.style.height = 'auto';
+        input.style.height = (input.scrollHeight) + 'px';
         updateButtonStates();
     });
     if (sendBtn) sendBtn.addEventListener('click', () => handleSendMessage(false));
@@ -403,28 +380,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (promptBtn) { promptBtn.addEventListener('click', () => { alert('“快捷指令（闪电）”功能待开发'); }); }
     if (inspirationBtn) { inspirationBtn.addEventListener('click', () => { alert('“灵感（灯泡）”功能待开发'); }); }
     
-    if (optionsBtn) { optionsBtn.addEventListener('click', () => { alert('“聊天风格选择”功能待开发'); }); }
-    if (editSettingsBtn) { 
-        editSettingsBtn.addEventListener('click', () => {
-            if (chatEditor) {
-                chatEditor.open();
-            } else {
-                alert('编辑器初始化失败！');
+    // ▼▼▼ 修改：为三点按钮绑定新的面板打开功能 ▼▼▼
+    if (optionsBtn) {
+        createChatPromptPanel({
+            triggerElement: optionsBtn,
+            container: document.body,
+            charId: charId, // 传入角色ID以便保存默认风格
+            onSelect: (styleObject) => {
+                console.log('已应用风格:', styleObject.name);
+                currentChatStyle = styleObject;
+            },
+            onSave: (styleObject) => {
+                console.log('已保存默认风格:', styleObject.name);
+                currentChatStyle = styleObject;
             }
-        }); 
+        });
     }
-    if (searchHistoryBtn) { searchHistoryBtn.addEventListener('click', () => { alert('“聊天记录”功能待开发'); }); }
 
-    if (modelSelectorOverlay) { 
-        modelSelectorOverlay.addEventListener('click', (e) => { 
-            if (e.target === modelSelectorOverlay) { 
-                closeModelSelector(); 
-            } 
-        }); 
-    }
-    if (closeModelSelectorBtn) {
-        closeModelSelectorBtn.addEventListener('click', closeModelSelector);
-    }
+    if (editSettingsBtn) { editSettingsBtn.addEventListener('click', () => chatEditor ? chatEditor.open() : alert('编辑器初始化失败！')); }
+    if (searchHistoryBtn) { searchHistoryBtn.addEventListener('click', () => { alert('“聊天记录”功能待开发'); }); }
+    if (modelSelectorOverlay) { modelSelectorOverlay.addEventListener('click', (e) => { if (e.target === modelSelectorOverlay) closeModelSelector(); }); }
+    if (closeModelSelectorBtn) { closeModelSelectorBtn.addEventListener('click', closeModelSelector); }
     if (modelListContainer) {
         modelListContainer.addEventListener('click', async (e) => {
             const item = e.target.closest('.model-item');
@@ -432,38 +408,45 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const modelInfo = JSON.parse(item.dataset.modelInfo);
                 if (currentChatApi && currentChatApi.id === modelInfo.id) {
                     currentChatApi = null;
-                    item.classList.remove('active');
                 } else {
                     currentChatApi = modelInfo;
-                    const currentActive = modelListContainer.querySelector('.model-item.active');
-                    if (currentActive) currentActive.classList.remove('active');
-                    item.classList.add('active');
                 }
-                
                 await dbStorage.setItem(selectedApiKey, currentChatApi);
-                console.log('已保存API选择:', currentChatApi);
-
+                // 重新渲染列表以更新激活状态。需要先获取可用模型数据
+                const models = JSON.parse(item.closest('.model-list-container').dataset.models || '[]');
+                renderModelList(models);
                 updateModelButtonText();
-                setTimeout(() => modelSelectorOverlay.classList.remove('active'), 200);
+                setTimeout(closeModelSelector, 200);
             }
         });
     }
     input.addEventListener('focus', () => { expandInputLayout(); chatInputArea.classList.remove('actions-expanded', 'emoji-expanded'); });
     document.addEventListener('click', (event) => { if (!chatInputArea.contains(event.target)) { collapseInputLayout(); } });
 
-    // --- 6. 初始化页面 ---
+    // --- 6. 初始化页面 (有修改) ---
     async function initializeChatState() {
+        // ▼▼▼ 新增：初始化时加载保存的聊天风格 ▼▼▼
+        const savedStyleKey = await dbStorage.getItem(styleDbKey);
+        if (savedStyleKey && CHAT_STYLES[savedStyleKey]) {
+            currentChatStyle = CHAT_STYLES[savedStyleKey];
+            console.log(`已加载角色 ${character.name} 的默认风格: ${currentChatStyle.name}`);
+        }
+        // ▲▲▲ 新增结束 ▲▲▲
+
         const savedApi = await dbStorage.getItem(selectedApiKey);
         if (savedApi) {
             currentChatApi = savedApi;
-            console.log('已加载API选择:', currentChatApi);
         }
-        
         await loadAndRenderHistory();
         updateButtonStates();
         updateModelButtonText();
+        const getChatHistory = () => chatHistory;
+        const updateChatHistory = async (newHistory) => {
+            chatHistory = newHistory;
+            await dbStorage.setItem(historyKey, chatHistory);
+            await loadAndRenderHistory();
+        };
+        initializeMessageMenu(chatArea, getChatHistory, updateChatHistory);
     }
-
     await initializeChatState();
-
 });
