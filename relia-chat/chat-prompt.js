@@ -56,7 +56,9 @@ async function defaultStreamHandler(context) {
 }
 
 /**
- * [修正后] “对话体”专用的流式响应处理器（支持多条消息）
+ * [V3 修正版] “对话体”专用的流式响应处理器
+ * 1. 支持 [split] 多消息分割
+ * 2. 自动过滤并移除 (thought ...) 思维链内容
  * @param {object} context - 从 chat-room.js 传入的上下文对象
  */
 async function dialogueStreamHandler(context) {
@@ -65,9 +67,8 @@ async function dialogueStreamHandler(context) {
     let currentBubble = renderMessage({ text: '...', sender: 'character' }, -1);
     let currentBubbleRow = currentBubble.parentElement;
     
-    let sseBuffer = ''; // 用于缓冲原始的 SSE 数据
-    let currentMessageText = ''; // 用于缓冲当前正在构建的、解析后的纯文本消息
-    const fullReplyForHistory = []; // 存储所有已完成的消息文本
+    let rawStreamBuffer = ''; // 用于缓冲来自 API 的最原始的、未经处理的完整文本
+    const fullReplyForHistory = []; // 存储所有已确认完成的、干净的消息文本
 
     try {
         currentBubble.textContent = '';
@@ -75,66 +76,71 @@ async function dialogueStreamHandler(context) {
             const { done, value } = await reader.read();
             if (done) break;
             
-            sseBuffer += decoder.decode(value, { stream: true });
+            const chunk = decoder.decode(value, { stream: true });
 
-            // 1. 从原始数据缓冲区中解析出纯文本内容
-            let boundary;
-            while ((boundary = sseBuffer.indexOf('\n\n')) !== -1) {
-                const message = sseBuffer.substring(0, boundary);
-                sseBuffer = sseBuffer.substring(boundary + 2);
-                
-                if (message.startsWith('data: ')) {
-                    const dataStr = message.substring(6);
+            // 1. 解析 SSE 数据块，并将内容累加到原始缓冲区
+            const lines = chunk.split('\n\n');
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const dataStr = line.substring(6);
                     if (dataStr === '[DONE]') continue;
                     try {
                         const data = JSON.parse(dataStr);
                         const content = data.choices[0]?.delta?.content;
                         if (content) {
-                            currentMessageText += content; // 将解析出的文本添加到纯文本缓冲区
+                            rawStreamBuffer += content;
                         }
                     } catch (e) { /* 忽略不完整的JSON */ }
                 }
             }
 
-            // 2. 在纯文本缓冲区中处理 [split] 分隔符
-            while (currentMessageText.includes('[split]')) {
-                const parts = currentMessageText.split('[split]');
-                const completeMessage = parts.shift().trim(); // 获取第一段完整消息
+            // 2. 每次收到新数据后，都对整个原始缓冲区进行净化和重新分割
+            // 使用 [\s\S] 匹配包括换行在内的任意字符
+            const cleanFullStream = rawStreamBuffer.replace(/\(thought[\s\S]*?\)/g, '');
+            const messageParts = cleanFullStream.split('[split]');
 
-                if (completeMessage) {
-                    currentBubble.textContent = completeMessage; // 更新当前气泡的最终内容
-                    fullReplyForHistory.push(completeMessage);
-                } else {
-                    currentBubble.parentElement.remove(); // 如果是空消息，则移除气泡
-                }
-
-                // 创建一个新的气泡用于下一条消息
-                currentBubble = renderMessage({ text: '...', sender: 'character' }, -1);
-                currentBubble.textContent = '';
-                currentBubbleRow = currentBubble.parentElement;
+            // 3. 根据分割后的消息数量，更新已完成的气泡
+            // messageParts.length - 1 是已完成消息的数量
+            for (let i = fullReplyForHistory.length; i < messageParts.length - 1; i++) {
+                const completedMessage = messageParts[i].trim();
                 
-                currentMessageText = parts.join('[split]'); // 剩余部分是下一条消息的开头
+                if (completedMessage) {
+                    currentBubble.textContent = completedMessage; // 更新当前气泡的最终内容
+                    fullReplyForHistory.push(completedMessage);   // 存入历史记录数组
+                    
+                    // 创建一个新的气泡用于下一条（可能正在流式传输的）消息
+                    currentBubble = renderMessage({ text: '...', sender: 'character' }, -1);
+                    currentBubble.textContent = '';
+                    currentBubbleRow = currentBubble.parentElement;
+                }
             }
 
-            // 3. 实时更新当前气泡的显示内容
-            currentBubble.textContent = currentMessageText;
+            // 4. 将最后一部分（正在流式传输中）的内容更新到当前气泡
+            const currentlyStreamingMsg = messageParts[messageParts.length - 1].trimStart();
+            currentBubble.textContent = currentlyStreamingMsg;
             chatArea.scrollTop = chatArea.scrollHeight;
         }
         
-        // 处理最后一条消息
-        const finalMessage = currentMessageText.trim();
+        // 5. 流结束后，处理最后一条消息
+        const finalMessage = currentBubble.textContent.trim();
         if (finalMessage) {
             fullReplyForHistory.push(finalMessage);
         } else {
-            currentBubbleRow.remove(); // 如果最后没有内容，也移除气泡
+            currentBubbleRow?.remove(); // 如果最后一条消息是空的，则移除气泡
         }
 
-        // 4. 将所有完成的消息保存到历史记录并重新渲染
+        // 6. 将所有捕获到的干净消息保存到历史记录并重新渲染
         if (fullReplyForHistory.length > 0) {
+            // 从 chatHistory 中移除本次生成的临时气泡占位符（如果有的话）
+            const lastMsgIndex = chatHistory.length -1;
+            if(lastMsgIndex >= 0 && chatHistory[lastMsgIndex].text === '...' && chatHistory[lastMsgIndex].sender === 'character') {
+                 chatHistory.pop();
+            }
+
             const newMessages = fullReplyForHistory.map(text => ({ text, sender: 'character' }));
             chatHistory.push(...newMessages);
             await dbStorage.setItem(historyKey, chatHistory);
-            await loadAndRenderHistory(); // 使用 loadAndRenderHistory 刷新，确保 data-index 正确
+            await loadAndRenderHistory(); // 重新加载和渲染，确保所有消息的 data-index 正确
         }
 
     } catch (error) {
@@ -151,8 +157,9 @@ export const CHAT_STYLES = {
         example: '示例：\n"你好，今天天气真不错！"',
         getPromptAddition: () => (
             `- 【重要】为了模仿真人的打字和发送习惯，你可以将一个完整的回复拆分成多条短消息。在每条消息的末尾，使用特殊标记 **[split]** 来表示一次发送。最后一条消息末尾不需要加标记。\n`+
-            `- 示例：如果想一次性回复“你好啊！今天天气真不错，不是吗？”，你可以这样构造输出：你好啊！[split]今天天气真不错，不是吗？\n`+
-            `- 记住，只有在你觉得需要停顿或分段发送时才使用 [split] 标记。如果一句话就能说完，就不需要使用。`
+            `- 【重要】在开始回复前，你可以在心中进行思考和规划，将这部分内容放在 **(thought ...)** 结构中。这个结构里的所有内容都不会被用户看到。思考结束后，再输出实际的对话内容。\n`+
+            `- 示例：如果想回复“你好啊！”，可以这样构造输出：(thought The user said hi, I should reply friendly.)你好啊！\n`+
+            `- 示例：如果想分两条发送“你好啊！”和“今天天气真不错”，可以这样构造输出：(thought I will send two messages.)你好啊！[split]今天天气真不错`
         ),
         streamHandler: dialogueStreamHandler,
     },
@@ -231,6 +238,8 @@ export function createChatPromptPanel({ triggerElement, container, onSelect, onS
         const savedStyle = await dbStorage.getItem(dbKey);
         if (savedStyle && CHAT_STYLES[savedStyle]) {
             switchTab(savedStyle);
+        } else {
+            switchTab(styleKeys[0]); // 确保面板打开时总是有一个明确的激活状态
         }
         ui.overlay.classList.add('active');
     }
