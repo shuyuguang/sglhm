@@ -72,9 +72,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-camera"></i></button><span>拍照</span></div>
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-microphone"></i></button><span>音频</span></div>
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-palette"></i></button><span>主题</span></div>
-                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-save"></i></button><span>存档</span></div>
+                    <!-- ▼▼▼ 修改点 ▼▼▼ -->
+                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-briefcase"></i></button><span>工作台</span></div>
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-list-check"></i></button><span>DIY</span></div>                    <div class="action-item"><button class="action-btn" id="edit-settings-btn"><i class="fa-solid fa-pencil"></i></button><span>编辑</span></div>
-                    <div class="action-item"><button class="action-btn" id="search-history-btn"><i class="fa-solid fa-magnifying-glass"></i></button><span>记录</span></div>
+                    <div class="action-item"><button class="action-btn" id="search-history-btn"><i class="fa-solid fa-brain"></i></button><span>记忆库</span></div>
+                    <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-money-bill-transfer"></i></button><span>转账</span></div>
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-sack-dollar"></i></button><span>收款</span></div>
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-gift"></i></button><span>礼物</span></div>
@@ -405,7 +407,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (editSettingsBtn) { editSettingsBtn.addEventListener('click', () => chatEditor ? chatEditor.open() : alert('编辑器初始化失败！')); }
-    if (searchHistoryBtn) { searchHistoryBtn.addEventListener('click', () => { alert('“聊天记录”功能待开发'); }); }
+    if (searchHistoryBtn) { searchHistoryBtn.addEventListener('click', () => { alert('“记忆库”功能待开发'); }); }
     if (modelSelectorOverlay) { modelSelectorOverlay.addEventListener('click', (e) => { if (e.target === modelSelectorOverlay) closeModelSelector(); }); }
     if (closeModelSelectorBtn) { closeModelSelectorBtn.addEventListener('click', closeModelSelector); }
     if (modelListContainer) {
