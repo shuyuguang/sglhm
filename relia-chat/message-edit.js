@@ -1,172 +1,187 @@
 // relia-chat/message-edit.js
 
-const menuActions = [
-    { action: 'edit', icon: 'fa-solid fa-pencil', text: '编辑' },
-    { action: 'reply', icon: 'fa-solid fa-reply', text: '回复' },
-    { action: 'forward', icon: 'fa-solid fa-share', text: '转发' },
-    { action: 'favorite', icon: 'fa-regular fa-star', text: '收藏' },
-    { action: 'delete', icon: 'fa-regular fa-trash-can', text: '删除' },
-    { action: 'multiselect', icon: 'fa-solid fa-check-double', text: '多选' },
-];
+const LONG_PRESS_THRESHOLD = 400; // 长按阈值，单位：毫秒
 
-export function initializeMessageMenu(chatArea, getChatHistory, updateChatHistory) {
-    const overlay = document.getElementById('message-menu-overlay');
+let longPressTimer = null;
+let isLongPress = false;
+
+/**
+ * 初始化消息长按和单击事件处理。
+ * @param {HTMLElement} container - 消息列表的容器元素 (chatArea)。
+ * @param {function} getChatHistory - 一个返回当前聊天历史数组的函数。
+ * @param {function} updateChatHistory - 一个用新历史数组更新状态和UI的函数。
+ */
+export function initializeMessageMenu(container, getChatHistory, updateChatHistory) {
+    const menuOverlay = document.getElementById('message-menu-overlay');
     const menu = document.getElementById('message-menu');
 
-    if (!overlay || !menu) {
-        console.error('消息菜单的 HTML 元素未找到！');
+    if (!container || !menuOverlay || !menu) {
+        console.warn('消息菜单所需的一个或多个 DOM 元素未找到。');
         return;
     }
 
-    menu.innerHTML = menuActions.map(item => `
-        <div class="message-menu-item" data-action="${item.action}">
-            <i class="${item.icon}"></i>
-            <span>${item.text}</span>
-        </div>
-    `).join('');
+    // --- 核心逻辑：区分单击和长按 ---
+    container.addEventListener('mousedown', (e) => {
+        const bubble = e.target.closest('.chat-bubble');
+        if (!bubble) return;
 
-    let activeMessageElement = null;
-    let activeMessageIndex = -1;
-    let currentEditCleanup = null;
-
-    const showMenu = (event) => {
-        const messageRow = event.target.closest('.message-row');
-        if (!messageRow) return;
-
-        event.preventDefault();
-
-        activeMessageElement = messageRow;
-        activeMessageIndex = parseInt(messageRow.dataset.index, 10);
+        isLongPress = false; // 重置长按标志
         
-        const menuWidth = 120, menuHeight = 250, margin = 10;
-        let x = event.clientX, y = event.clientY;
+        longPressTimer = setTimeout(() => {
+            isLongPress = true;
+            // 长按触发时，我们什么都不做，浏览器会接管并开始文本选择
+            // 此时因为 isLongPress 已经是 true，mouseup 时就不会显示菜单了
+        }, LONG_PRESS_THRESHOLD);
+    });
 
-        if (x + menuWidth + margin > window.innerWidth) x = x - menuWidth - margin;
-        else x = x + margin;
-
-        if (y + menuHeight + margin > window.innerHeight) y = y - menuHeight;
-
-        menu.style.left = `${x}px`;
-        menu.style.top = `${y}px`;
-        overlay.classList.add('active');
-    };
-
-    const hideMenu = () => {
-        overlay.classList.remove('active');
-        activeMessageElement = null;
-        activeMessageIndex = -1;
-    };
-    
-    chatArea.addEventListener('contextmenu', showMenu);
-
-    chatArea.addEventListener('click', (e) => {
-        if (currentEditCleanup) {
-            if (e.target.closest('.message-edit-container')) {
-                return;
-            }
-            currentEditCleanup();
-            currentEditCleanup = null;
+    container.addEventListener('mouseup', (e) => {
+        clearTimeout(longPressTimer); // 无论如何，先清除定时器
+        
+        const bubble = e.target.closest('.chat-bubble');
+        if (!bubble || isLongPress) {
+            // 如果是长按，或者点击的不是消息气泡，则不执行任何操作
             return;
         }
 
-        if (e.target.closest('.chat-bubble')) {
-            showMenu(e);
-        }
+        // --- 如果不是长按，这就是一次单击 ---
+        e.preventDefault(); // 阻止可能的默认行为，如文本选择闪烁
+        const messageRow = bubble.closest('.message-row');
+        const index = parseInt(messageRow.dataset.index, 10);
+        
+        showMenu(e, index, bubble, getChatHistory, updateChatHistory);
     });
 
-
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
+    // 点击菜单外部区域隐藏菜单
+    menuOverlay.addEventListener('click', (e) => {
+        if (e.target === menuOverlay) {
             hideMenu();
         }
     });
+}
 
-    menu.addEventListener('click', async (e) => {
-        const menuItem = e.target.closest('.message-menu-item');
-        if (!menuItem) return;
 
-        const action = menuItem.dataset.action;
-        const targetMessageElement = activeMessageElement;
-        const targetMessageIndex = activeMessageIndex;
-        
-        if (targetMessageIndex === -1 || !targetMessageElement) return;
+/**
+ * 显示操作菜单。
+ * @param {MouseEvent} event - 触发的鼠标事件。
+ * @param {number} index - 消息在历史记录中的索引。
+ * @param {HTMLElement} bubble - 被点击的消息气泡元素。
+ * @param {function} getChatHistory - 获取聊天历史的函数。
+ * @param {function} updateChatHistory - 更新聊天历史的函数。
+ */
+function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
+    const menu = document.getElementById('message-menu');
+    const menuOverlay = document.getElementById('message-menu-overlay');
+    const chatHistory = getChatHistory();
+    const message = chatHistory[index];
 
-        hideMenu();
+    if (!message) return;
 
-        const currentHistory = getChatHistory();
-        const messageToModify = currentHistory[targetMessageIndex];
+    // 动态生成菜单项
+    menu.innerHTML = `
+        <div class="message-menu-item" data-action="copy"><i class="fa-regular fa-copy"></i><span>复制</span></div>
+        <div class="message-menu-item" data-action="edit"><i class="fa-regular fa-pen-to-square"></i><span>编辑</span></div>
+        <div class="message-menu-item" data-action="delete" style="color: #e53e3e;"><i class="fa-regular fa-trash-can"></i><span>删除</span></div>
+    `;
 
-        switch (action) {
-            case 'edit': {
-                // [MODIFIED] 移除了 sender === 'user' 的判断，现在所有消息都可以编辑
-                const bubble = targetMessageElement.querySelector('.chat-bubble');
-                if (!bubble) break;
+    // 绑定菜单项事件
+    menu.onclick = (e) => {
+        const item = e.target.closest('.message-menu-item');
+        if (!item) return;
 
-                bubble.style.display = 'none';
+        const action = item.dataset.action;
 
-                const editContainer = document.createElement('div');
-                // [MODIFIED] 动态添加 'user' 或 'character' 类，以便 CSS 应用正确样式
-                editContainer.className = `message-edit-container ${messageToModify.sender}`;
-                
-                const textarea = document.createElement('textarea');
-                textarea.className = 'message-edit-textarea';
-                textarea.value = messageToModify.text;
-                
-                const actions = document.createElement('div');
-                actions.className = 'message-edit-actions';
-
-                const saveBtn = document.createElement('button');
-                saveBtn.className = 'message-edit-btn save';
-                saveBtn.textContent = '保存';
-
-                const cancelBtn = document.createElement('button');
-                cancelBtn.className = 'message-edit-btn cancel';
-                cancelBtn.textContent = '取消';
-
-                actions.appendChild(cancelBtn);
-                actions.appendChild(saveBtn);
-                editContainer.appendChild(textarea);
-                editContainer.appendChild(actions);
-
-                targetMessageElement.appendChild(editContainer);
-                textarea.focus();
-                textarea.style.height = 'auto';
-                textarea.style.height = textarea.scrollHeight + 'px';
-
-                const cleanup = () => {
-                    editContainer.remove();
-                    bubble.style.display = '';
-                    currentEditCleanup = null;
-                };
-                currentEditCleanup = cleanup;
-
-                saveBtn.onclick = async () => {
-                    const newText = textarea.value.trim();
-                    if (newText) {
-                        currentHistory[targetMessageIndex].text = newText;
-                        cleanup();
-                        await updateChatHistory(currentHistory);
-                    } else {
-                        // 如果内容被清空，视为删除
-                        currentHistory.splice(targetMessageIndex, 1);
-                        cleanup();
-                        await updateChatHistory(currentHistory);
-                    }
-                };
-                cancelBtn.onclick = cleanup;
-
-                break;
+        if (action === 'copy') {
+            navigator.clipboard.writeText(message.text)
+                .then(() => console.log('消息已复制'))
+                .catch(err => console.error('复制失败:', err));
+        } else if (action === 'delete') {
+            if (confirm('确定要删除这条消息吗？')) {
+                const newHistory = [...chatHistory];
+                newHistory.splice(index, 1);
+                updateChatHistory(newHistory);
             }
-            case 'delete': {
-                if (confirm('确定要删除这条消息吗？')) {
-                    currentHistory.splice(targetMessageIndex, 1);
-                    await updateChatHistory(currentHistory);
-                }
-                break;
-            }
-            default:
-                alert(`“${menuItem.querySelector('span').textContent}”功能待开发...`);
-                break;
+        } else if (action === 'edit') {
+            startEditing(bubble, index, getChatHistory, updateChatHistory);
         }
+        hideMenu();
+    };
+
+    // 定位菜单
+    const menuWidth = 120;
+    const menuHeight = 130;
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+
+    let top = event.clientY;
+    let left = event.clientX;
+
+    if (left + menuWidth > screenWidth - 10) {
+        left = screenWidth - menuWidth - 10;
+    }
+    if (top + menuHeight > screenHeight - 10) {
+        top = screenHeight - menuHeight - 10;
+    }
+
+    menu.style.top = `${top}px`;
+    menu.style.left = `${left}px`;
+
+    menuOverlay.classList.add('active');
+}
+
+/**
+ * 隐藏操作菜单。
+ */
+function hideMenu() {
+    const menuOverlay = document.getElementById('message-menu-overlay');
+    menuOverlay.classList.remove('active');
+}
+
+/**
+ * 将消息气泡变为可编辑状态。
+ * @param {HTMLElement} bubble - 要编辑的消息气泡元素。
+ * @param {number} index - 消息索引。
+ * @param {function} getChatHistory - 获取聊天历史的函数。
+ * @param {function} updateChatHistory - 更新聊天历史的函数。
+ */
+function startEditing(bubble, index, getChatHistory, updateChatHistory) {
+    const originalText = getChatHistory()[index].text;
+    bubble.innerHTML = `
+        <div class="message-edit-container">
+            <textarea class="message-edit-textarea">${originalText}</textarea>
+            <div class="message-edit-actions">
+                <button class="message-edit-btn cancel">取消</button>
+                <button class="message-edit-btn save">保存</button>
+            </div>
+        </div>
+    `;
+
+    const textarea = bubble.querySelector('.message-edit-textarea');
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight}px`;
+    textarea.focus();
+    textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+
+    textarea.addEventListener('input', () => {
+        textarea.style.height = 'auto';
+        textarea.style.height = `${textarea.scrollHeight}px`;
     });
+
+    const stopEditing = (shouldSave) => {
+        if (shouldSave) {
+            const newText = textarea.value.trim();
+            if (newText && newText !== originalText) {
+                const newHistory = [...getChatHistory()];
+                newHistory[index].text = newText;
+                updateChatHistory(newHistory);
+            } else {
+                // 如果内容为空或未改变，则恢复原状
+                bubble.textContent = originalText;
+            }
+        } else {
+            bubble.textContent = originalText;
+        }
+    };
+    
+    bubble.querySelector('.save').onclick = () => stopEditing(true);
+    bubble.querySelector('.cancel').onclick = () => stopEditing(false);
 }

@@ -1,187 +1,171 @@
-// relia-chat/message-edit.js
+// relia-chat/chat-editor-bridge.js
 
-const LONG_PRESS_THRESHOLD = 400; // 长按阈值，单位：毫秒
-
-let longPressTimer = null;
-let isLongPress = false;
-
-/**
- * 初始化消息长按和单击事件处理。
- * @param {HTMLElement} container - 消息列表的容器元素 (chatArea)。
- * @param {function} getChatHistory - 一个返回当前聊天历史数组的函数。
- * @param {function} updateChatHistory - 一个用新历史数组更新状态和UI的函数。
- */
-export function initializeMessageMenu(container, getChatHistory, updateChatHistory) {
-    const menuOverlay = document.getElementById('message-menu-overlay');
-    const menu = document.getElementById('message-menu');
-
-    if (!container || !menuOverlay || !menu) {
-        console.warn('消息菜单所需的一个或多个 DOM 元素未找到。');
-        return;
-    }
-
-    // --- 核心逻辑：区分单击和长按 ---
-    container.addEventListener('mousedown', (e) => {
-        const bubble = e.target.closest('.chat-bubble');
-        if (!bubble) return;
-
-        isLongPress = false; // 重置长按标志
-        
-        longPressTimer = setTimeout(() => {
-            isLongPress = true;
-            // 长按触发时，我们什么都不做，浏览器会接管并开始文本选择
-            // 此时因为 isLongPress 已经是 true，mouseup 时就不会显示菜单了
-        }, LONG_PRESS_THRESHOLD);
-    });
-
-    container.addEventListener('mouseup', (e) => {
-        clearTimeout(longPressTimer); // 无论如何，先清除定时器
-        
-        const bubble = e.target.closest('.chat-bubble');
-        if (!bubble || isLongPress) {
-            // 如果是长按，或者点击的不是消息气泡，则不执行任何操作
-            return;
-        }
-
-        // --- 如果不是长按，这就是一次单击 ---
-        e.preventDefault(); // 阻止可能的默认行为，如文本选择闪烁
-        const messageRow = bubble.closest('.message-row');
-        const index = parseInt(messageRow.dataset.index, 10);
-        
-        showMenu(e, index, bubble, getChatHistory, updateChatHistory);
-    });
-
-    // 点击菜单外部区域隐藏菜单
-    menuOverlay.addEventListener('click', (e) => {
-        if (e.target === menuOverlay) {
-            hideMenu();
-        }
-    });
-}
-
+import { GENDER_OPTIONS, LONG_PRESS_DURATION } from '../config/profile.config.js';
+import { createUiManager } from '../profile/profile.ui.js';
+import { createEventManager } from '../profile/profile.events.js';
 
 /**
- * 显示操作菜单。
- * @param {MouseEvent} event - 触发的鼠标事件。
- * @param {number} index - 消息在历史记录中的索引。
- * @param {HTMLElement} bubble - 被点击的消息气泡元素。
- * @param {function} getChatHistory - 获取聊天历史的函数。
- * @param {function} updateChatHistory - 更新聊天历史的函数。
+ * 创建一个功能完整的角色档案编辑器实例，复用 Profile 页面的 UI 和 Event 模块。
+ * @param {object} initialProfile - 要编辑的初始角色对象。
+ * @param {function} onSaveCallback - 保存成功后执行的回调，传入更新后的 profile 对象。
+ * @returns {object} 包含 open 和 updateProfile 方法的对象。
  */
-function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
-    const menu = document.getElementById('message-menu');
-    const menuOverlay = document.getElementById('message-menu-overlay');
-    const chatHistory = getChatHistory();
-    const message = chatHistory[index];
-
-    if (!message) return;
-
-    // 动态生成菜单项
-    menu.innerHTML = `
-        <div class="message-menu-item" data-action="copy"><i class="fa-regular fa-copy"></i><span>复制</span></div>
-        <div class="message-menu-item" data-action="edit"><i class="fa-regular fa-pen-to-square"></i><span>编辑</span></div>
-        <div class="message-menu-item" data-action="delete" style="color: #e53e3e;"><i class="fa-regular fa-trash-can"></i><span>删除</span></div>
-    `;
-
-    // 绑定菜单项事件
-    menu.onclick = (e) => {
-        const item = e.target.closest('.message-menu-item');
-        if (!item) return;
-
-        const action = item.dataset.action;
-
-        if (action === 'copy') {
-            navigator.clipboard.writeText(message.text)
-                .then(() => console.log('消息已复制'))
-                .catch(err => console.error('复制失败:', err));
-        } else if (action === 'delete') {
-            if (confirm('确定要删除这条消息吗？')) {
-                const newHistory = [...chatHistory];
-                newHistory.splice(index, 1);
-                updateChatHistory(newHistory);
-            }
-        } else if (action === 'edit') {
-            startEditing(bubble, index, getChatHistory, updateChatHistory);
-        }
-        hideMenu();
+export function createChatEditor(initialProfile, onSaveCallback) {
+    // 1. --- 状态管理 (模拟 profile.manager.js 中的 state) ---
+    const state = {
+        profileData: [initialProfile],
+        currentProfileId: initialProfile.id,
+        currentMode: 'TA', // 在聊天室里编辑的永远是'TA'
+        uiStyle: 'MODAL',  // 自定义一个模式名，避免触发YDN/YDM特定逻辑
+        presetContentStore: {}, // 预设功能也需要这个
+        // 以下是事件模块需要的状态，提供默认值
+        activeCustomPane: null,
+        currentPromptAction: null,
+        elementBeingEdited: null,
+        longPressTimer: null,
+        isLongPress: false,
+        currentSaveCallback: null,
+        currentItemEditingContext: {},
+        croppingContext: {},
     };
 
-    // 定位菜单
-    const menuWidth = 120;
-    const menuHeight = 130;
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
-
-    let top = event.clientY;
-    let left = event.clientX;
-
-    if (left + menuWidth > screenWidth - 10) {
-        left = screenWidth - menuWidth - 10;
+    // 2. --- 获取所有需要的 DOM 元素 ---
+    // 这个函数从 profile.js 复制而来，确保获取到所有面板元素
+    function getEditorDOMElements() {
+        return {
+            modalOverlay: document.getElementById('edit-modal-overlay'),
+            closeModalButton: document.getElementById('close-modal-btn'),
+            saveButton: document.getElementById('save-btn'),
+            helpButton: document.getElementById('help-btn'),
+            helpTooltip: document.getElementById('help-tooltip'),
+            modalSidebar: document.querySelector('.modal-sidebar'),
+            modalMainContent: document.querySelector('.modal-main-content'),
+            addSectionBtn: document.getElementById('add-section-btn'),
+            namePromptOverlay: document.getElementById('name-prompt-overlay'),
+            namePromptTitle: document.querySelector('#name-prompt-overlay h4'),
+            newSectionNameInput: document.getElementById('new-section-name-input'),
+            confirmPromptBtn: document.getElementById('confirm-prompt-btn'),
+            cancelPromptBtn: document.getElementById('cancel-prompt-btn'),
+            sidebarNavList: document.querySelector('.sidebar-nav-list'),
+            avatarUrlInput: document.getElementById('edit-avatar-url'),
+            bannerUrlInput: document.getElementById('edit-banner-url'),
+            avatarPreviewImg: document.getElementById('avatar-preview-img'),
+            bannerPreviewImg: document.getElementById('banner-preview-img'),
+            avatarUploadInput: document.getElementById('avatar-upload-input'),
+            bannerUploadInput: document.getElementById('banner-upload-input'),
+            cropperOverlay: document.getElementById('cropper-overlay'),
+            cropperImage: document.getElementById('cropper-image'),
+            confirmCropBtn: document.getElementById('confirm-crop-btn'),
+            cancelCropBtn: document.getElementById('cancel-crop-btn'),
+            customSectionOptionsOverlay: document.getElementById('custom-section-options-overlay'),
+            customSectionOptionsSheet: document.getElementById('custom-section-options-sheet'),
+            cancelOptionsSheetBtn: document.getElementById('cancel-options-sheet-btn'),
+            addSectionSheetOverlay: document.getElementById('add-section-sheet-overlay'),
+            presetTagsContainer: document.getElementById('preset-tags-container'),
+            cancelAddSheetBtn: document.getElementById('cancel-add-sheet-btn'),
+            subEditorPanel: document.getElementById('sub-editor-panel'),
+            sepTitle: document.getElementById('sep-title'),
+            sepTextarea: document.getElementById('sep-textarea'),
+            sepBackBtn: document.getElementById('sep-back-btn'),
+            sepSaveBtn: document.getElementById('sep-save-btn'),
+            editAgeTrigger: document.getElementById('edit-age-trigger'),
+            editBioTrigger: document.getElementById('edit-bio-trigger'),
+            editRaceTrigger: document.getElementById('edit-race-trigger'),
+            editOccupationTrigger: document.getElementById('edit-occupation-trigger'),
+            itemEditorPanel: document.getElementById('item-editor-panel'),
+            itemEditorTitleHeader: document.getElementById('item-editor-title-header'),
+            itemEditorTitleInput: document.getElementById('item-editor-title-input'),
+            itemEditorValueTextarea: document.getElementById('item-editor-value-textarea'),
+            itemEditorBackBtn: document.getElementById('item-editor-back-btn'),
+            itemEditorSaveBtn: document.getElementById('item-editor-save-btn'),
+            editGenderTrigger: document.getElementById('edit-gender-trigger'),
+            // 关系部分在聊天室中不使用，但为了防止报错，可以传入 null
+            relationshipItemsContainer: document.getElementById('relationship-items-container'),
+            addRelationshipBtn: document.getElementById('add-relationship-btn'),
+        };
     }
-    if (top + menuHeight > screenHeight - 10) {
-        top = screenHeight - menuHeight - 10;
-    }
+    const elements = getEditorDOMElements();
 
-    menu.style.top = `${top}px`;
-    menu.style.left = `${left}px`;
-
-    menuOverlay.classList.add('active');
-}
-
-/**
- * 隐藏操作菜单。
- */
-function hideMenu() {
-    const menuOverlay = document.getElementById('message-menu-overlay');
-    menuOverlay.classList.remove('active');
-}
-
-/**
- * 将消息气泡变为可编辑状态。
- * @param {HTMLElement} bubble - 要编辑的消息气泡元素。
- * @param {number} index - 消息索引。
- * @param {function} getChatHistory - 获取聊天历史的函数。
- * @param {function} updateChatHistory - 更新聊天历史的函数。
- */
-function startEditing(bubble, index, getChatHistory, updateChatHistory) {
-    const originalText = getChatHistory()[index].text;
-    bubble.innerHTML = `
-        <div class="message-edit-container">
-            <textarea class="message-edit-textarea">${originalText}</textarea>
-            <div class="message-edit-actions">
-                <button class="message-edit-btn cancel">取消</button>
-                <button class="message-edit-btn save">保存</button>
-            </div>
-        </div>
-    `;
-
-    const textarea = bubble.querySelector('.message-edit-textarea');
-    textarea.style.height = 'auto';
-    textarea.style.height = `${textarea.scrollHeight}px`;
-    textarea.focus();
-    textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
-
-    textarea.addEventListener('input', () => {
-        textarea.style.height = 'auto';
-        textarea.style.height = `${textarea.scrollHeight}px`;
-    });
-
-    const stopEditing = (shouldSave) => {
-        if (shouldSave) {
-            const newText = textarea.value.trim();
-            if (newText && newText !== originalText) {
-                const newHistory = [...getChatHistory()];
-                newHistory[index].text = newText;
-                updateChatHistory(newHistory);
-            } else {
-                // 如果内容为空或未改变，则恢复原状
-                bubble.textContent = originalText;
+    // 3. --- 创建一个轻量级的 Data Manager ---
+    // 我们只需要它的 saveCurrentProfile 方法的逻辑
+    const dataManager = {
+        saveCurrentProfile: () => {
+            const getDisplayValue = (trigger) => {
+                if (!trigger) return '';
+                const display = trigger.querySelector('.value-display');
+                return (!display || display.classList.contains('placeholder')) ? '' : display.textContent.trim();
+            };
+            
+            const updatedProfile = { ...state.profileData[0] }; // 基于当前profile更新
+            updatedProfile.name = document.getElementById('edit-username')?.value || '';
+            updatedProfile.avatar = elements.avatarUrlInput.value;
+            updatedProfile.banner = elements.bannerUrlInput.value;
+            updatedProfile.gender = elements.editGenderTrigger.querySelector('.value-display').textContent;
+            updatedProfile.age = getDisplayValue(elements.editAgeTrigger);
+            updatedProfile.race = getDisplayValue(elements.editRaceTrigger);
+            updatedProfile.occupation = getDisplayValue(elements.editOccupationTrigger);
+            updatedProfile.bio = getDisplayValue(elements.editBioTrigger);
+            updatedProfile.customSections = Array.from(elements.modalMainContent.querySelectorAll('.modal-section-pane[id^="modal-section-custom-"]'))
+                .map(pane => ({
+                    title: pane.querySelector('.pane-title-capsule')?.textContent,
+                    items: Array.from(pane.querySelectorAll('.custom-item-group')).map(itemEl => ({
+                        title: itemEl.querySelector('label')?.textContent,
+                        value: itemEl.querySelector('.value-display:not(.placeholder)')?.textContent || ''
+                    }))
+                }));
+            
+            // 更新内部状态并调用外部回调
+            state.profileData = [updatedProfile];
+            if (typeof onSaveCallback === 'function') {
+                onSaveCallback(updatedProfile);
             }
-        } else {
-            bubble.textContent = originalText;
+            ui.closeModal();
+        },
+        // 提供一个空的 dbStorage 对象，以防事件模块中某些功能（如预设）尝试调用它
+        dbStorage: {
+            setItem: async (key, value) => { console.log(`[ChatEditor] Mock DB set: ${key}`, value); },
+            getItem: async (key) => { console.log(`[ChatEditor] Mock DB get: ${key}`); return null; }
         }
     };
+
+    // 4. --- 实例化并绑定 UI 和 Event 模块 ---
+    const ui = createUiManager(elements, state, { GENDER_OPTIONS });
+    const events = createEventManager(elements, state, ui, dataManager, { LONG_PRESS_DURATION, GENDER_OPTIONS });
     
-    bubble.querySelector('.save').onclick = () => stopEditing(true);
-    bubble.querySelector('.cancel').onclick = () => stopEditing(false);
+    // 手动绑定一次共享事件
+    events.bindSharedEvents();
+
+    // 5. --- 核心控制函数 ---
+    const open = () => {
+        const profile = state.profileData[0];
+        if (!profile) return;
+
+        // 禁用关系栏
+        const relSection = document.getElementById('modal-section-relationship');
+        const relNav = document.querySelector('[data-target="modal-section-relationship"]');
+        if(relSection) relSection.style.display = 'none';
+        if(relNav) relNav.style.display = 'none';
+        
+        // 加载数据到UI
+        ui.updateEditModalValues(profile);
+        elements.modalMainContent.querySelectorAll('.modal-section-pane[id^="modal-section-custom-"]').forEach(p => p.remove());
+        elements.sidebarNavList.querySelectorAll('.modal-nav-button:not(.fixed-nav-button)').forEach(b => b.remove());
+        profile.customSections?.forEach(sectionData => {
+            const newPane = ui.createNewSection(sectionData.title, false);
+            sectionData.items?.forEach(itemData => ui.createAndAppendCustomItem(newPane, itemData.title, itemData.value));
+        });
+        
+        // 默认选中第一个tab
+        elements.sidebarNavList.querySelector('.modal-nav-button')?.click();
+        
+        ui.openModal();
+    };
+
+    const updateProfile = (newProfile) => {
+        state.profileData = [JSON.parse(JSON.stringify(newProfile))];
+        state.currentProfileId = newProfile.id;
+    };
+
+    // 6. --- 暴露公共接口 ---
+    return { open, updateProfile };
 }
