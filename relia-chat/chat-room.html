@@ -18,9 +18,13 @@
     <link rel="stylesheet" href="../profile/modals.css">
 </head>
 <body>
-    <!-- 聊天室UI将由JS动态生成 -->
+    <!-- ▼▼▼ 新增：应用的主容器 ▼▼▼ -->
+    <div id="app-container">
+        <!-- 聊天室UI将由JS动态生成到这里 -->
+    </div>
+    <!-- ▲▲▲ 新增结束 ▲▲▲ -->
 
-    <!-- 模型选择模态框 -->
+    <!-- 模型选择模态框 (保持原位，在app-container之外) -->
     <div class="modal-overlay" id="model-selector-overlay">
         <div class="modal-panel model-selector-panel">
             <div class="modal-header">

@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const charId = urlParams.get('id');
     if (!charId) {
-        appContainer.innerHTML = '<p style="text-align: center; margin-top: 50px;">错误：未指定角色ID。<br>请从聊天列表页点击角色卡片进入。</p>';
+        appContainer.innerHTML = '<p style="text-align: center; margin-top: 50px;">错误：未指定角色ID。</p>';
         return;
     }
     const [allChars, allUsers, currentUserId] = await Promise.all([
@@ -29,18 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         dbStorage.getItem(PROFILE_DB_KEYS.USER_CURRENT_ID)
     ]);
     
-    // ▼▼▼ 新增：健壮性检查，防止因数据库无角色数据导致白屏 ▼▼▼
-    if (!allChars || allChars.length === 0) {
-        appContainer.innerHTML = `
-            <p style="text-align: center; margin-top: 50px;">
-                错误：在数据库中未找到任何角色信息。<br>
-                请先前往“TA的档案”页面创建角色。
-            </p>`;
-        return;
-    }
-    // ▲▲▲ 新增结束 ▲▲▲
-
-    let character = allChars.find(c => c.id === charId);
+    let character = allChars ? allChars.find(c => c.id === charId) : null;
 
     if (!character) {
         appContainer.innerHTML = `<p style="text-align: center; margin-top: 50px;">错误：找不到ID为 ${charId} 的角色。</p>`;
@@ -374,7 +363,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatInputArea.classList.remove('actions-expanded', 'emoji-expanded');
     };
 
-    // --- 5. 绑定事件 (修改 optionsBtn 部分) ---
+    // --- 5. 绑定事件 (无变化) ---
     input.addEventListener('input', () => {
         input.style.height = 'auto';
         input.style.height = (input.scrollHeight) + 'px';
@@ -393,8 +382,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             triggerElement: optionsBtn,
             container: document.body,
             charId: charId,
+            onSelect: (styleObject) => {
+                console.log('已应用风格:', styleObject.name);
+                currentChatStyle = styleObject;
+            },
             onSave: (styleObject) => {
-                console.log('已保存并应用新风格:', styleObject.name);
+                console.log('已保存默认风格:', styleObject.name);
                 currentChatStyle = styleObject;
             }
         });
