@@ -155,14 +155,12 @@ export const CHAT_STYLES = {
         name: '对话体',
         description: '此风格模仿日常对话，不包含动作或环境描述，该模式下角色允许扩展内的一切行为如语音、表情包、转账、礼物等。',
         example: '示例：\n"你好，今天天气真不错！"',
-        // ▼▼▼ 修改点3：更新 Prompt 指令 ▼▼▼
         getPromptAddition: () => (
             `- 【重要】在开始回复前，你可以在心中进行思考和规划，将这部分内容放在 **(thought ...)** 结构中。这个结构里的所有内容都不会被用户看到。思考结束后，再输出实际的对话内容。\n`+
             `- 【重要】为了模仿真人的打字和发送习惯，你可以将一个完整的回复拆分成多条短消息。在每条消息的末尾，使用特殊标记 **[split]** 来表示一次发送。最后一条消息末尾不需要加标记。\n`+
             `- 示例1 (单条消息): (thought The user said hi, I should reply friendly.)你好啊！\n`+
             `- 示例2 (多条消息): (thought User在叫我, 我应该积极回应, 表示我在. 用小洛的口吻, 可以亲切一点.)在的呀！[split]User, 有什么事嘛？😊`
         ),
-        // ▲▲▲ 修改结束 ▲▲▲
         streamHandler: dialogueStreamHandler,
     },
     'short-chat': {
@@ -182,7 +180,22 @@ export const CHAT_STYLES = {
             `- 【重要】在开始回复前，你可以在心中进行思考和规划，将这部分内容放在 **(thought ...)** 结构中。这个结构里的所有内容都不会被用户看到。思考结束后，再输出实际的对话内容。`
         ),
         streamHandler: defaultStreamHandler, // 使用默认处理器
+    },
+    // ▼▼▼ 新增内容开始 ▼▼▼
+    'text-adventure': {
+        name: '文游体',
+        description: '此风格以文字冒险游戏（MUD/TRPG）的形式进行，包含详细的环境与人物状态描写，并在末尾提供选项引导用户互动。该模式下禁用表情包。',
+        example: '示例：\n你推开吱呀作响的酒馆木门，温暖的灯火与嘈杂的人声扑面而来。吧台后的老板娘，也就是我，抬头瞥了你一眼，用毛巾擦着杯子，淡淡地开口：“哟，新面孔。想喝点什么？”\n\n接下来你打算：\nA. 点一杯最便宜的麦酒\nB. 询问最近有什么传闻\nC. 找个角落默默坐下',
+        getPromptAddition: () => (
+            `- 【重要】你现在是这场文字冒险游戏的GM（游戏主持人），同时也在扮演角色 **${character.name}**。\n` +
+            `- 【重要】在开始回复前，你可以在心中进行思考和规划，将这部分内容放在 **(thought ...)** 结构中。这个结构里的所有内容都不会被用户看到。\n`+
+            `- 你的回复必须严格遵循“场景/状态描述 + 角色行为/对话 + 提供给用户的选项”的结构。\n`+
+            `- 在每次回复的末尾，你必须以A、B、C等形式提供2-4个明确的行动选项，引导用户进行下一步。\n`+
+            `- 示例: (thought 用户刚进酒馆，我要营造氛围，自我介绍，并给出初始选项。)你推开吱呀作响的酒馆木门...接下来你打算：\\nA. ...\\nB. ...`
+        ),
+        streamHandler: defaultStreamHandler, // 使用默认处理器
     }
+    // ▲▲▲ 新增内容结束 ▲▲▲
 };
 
 
@@ -209,7 +222,7 @@ export function createChatPromptPanel({ triggerElement, container, onSave, charI
                         <textarea class="prompt-template-input" id="style-example" readonly></textarea>
                     </div>
                 </div>
-                <div class.sheet-footer">
+                <div class="sheet-footer">
                     <button class="sheet-btn sheet-btn-cancel" id="prompt-cancel-btn">取消</button>
                     <button class="sheet-btn sheet-btn-confirm" id="prompt-save-btn">保存</button>
                 </div>
