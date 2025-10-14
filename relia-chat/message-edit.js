@@ -25,26 +25,27 @@ export function initializeMessageMenu(container, getChatHistory, updateChatHisto
         const bubble = e.target.closest('.chat-bubble');
         if (!bubble) return;
 
-        isLongPress = false; // 重置长按标志
+        isLongPress = false; 
         
         longPressTimer = setTimeout(() => {
             isLongPress = true;
-            // 长按触发时，我们什么都不做，浏览器会接管并开始文本选择
-            // 此时因为 isLongPress 已经是 true，mouseup 时就不会显示菜单了
         }, LONG_PRESS_THRESHOLD);
     });
 
     container.addEventListener('mouseup', (e) => {
-        clearTimeout(longPressTimer); // 无论如何，先清除定时器
+        clearTimeout(longPressTimer);
         
         const bubble = e.target.closest('.chat-bubble');
-        if (!bubble || isLongPress) {
-            // 如果是长按，或者点击的不是消息气泡，则不执行任何操作
+        
+        // ▼▼▼ 修改点 1：增加一个判断条件 ▼▼▼
+        // 如果消息气泡是长按，或者它正处于编辑状态（有 'editing' 类），则直接返回，不显示菜单
+        if (!bubble || isLongPress || bubble.classList.contains('editing')) {
             return;
         }
+        // ▲▲▲ 修改结束 ▲▲▲
 
         // --- 如果不是长按，这就是一次单击 ---
-        e.preventDefault(); // 阻止可能的默认行为，如文本选择闪烁
+        e.preventDefault();
         const messageRow = bubble.closest('.message-row');
         const index = parseInt(messageRow.dataset.index, 10);
         
@@ -62,11 +63,7 @@ export function initializeMessageMenu(container, getChatHistory, updateChatHisto
 
 /**
  * 显示操作菜单。
- * @param {MouseEvent} event - 触发的鼠标事件。
- * @param {number} index - 消息在历史记录中的索引。
- * @param {HTMLElement} bubble - 被点击的消息气泡元素。
- * @param {function} getChatHistory - 获取聊天历史的函数。
- * @param {function} updateChatHistory - 更新聊天历史的函数。
+ * (此函数无变化)
  */
 function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
     const menu = document.getElementById('message-menu');
@@ -76,39 +73,55 @@ function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
 
     if (!message) return;
 
-    // 动态生成菜单项
-    menu.innerHTML = `
-        <div class="message-menu-item" data-action="copy"><i class="fa-regular fa-copy"></i><span>复制</span></div>
-        <div class="message-menu-item" data-action="edit"><i class="fa-regular fa-pen-to-square"></i><span>编辑</span></div>
-        <div class="message-menu-item" data-action="delete" style="color: #e53e3e;"><i class="fa-regular fa-trash-can"></i><span>删除</span></div>
-    `;
+    const menuItems = [
+        { action: 'edit', icon: 'fa-regular fa-pen-to-square', text: '编辑' },
+        { action: 'reply', icon: 'fa-solid fa-reply', text: '回复' },
+        { action: 'forward', icon: 'fa-solid fa-share', text: '转发' },
+        { action: 'copy', icon: 'fa-regular fa-copy', text: '复制' },
+        { action: 'favorite', icon: 'fa-regular fa-star', text: '收藏' },
+        { action: 'delete', icon: 'fa-regular fa-trash-can', text: '删除', isDestructive: true },
+        { action: 'multiselect', icon: 'fa-solid fa-check-double', text: '多选' }
+    ];
 
-    // 绑定菜单项事件
+    menu.innerHTML = menuItems.map(item => `
+        <div class="message-menu-item" data-action="${item.action}" ${item.isDestructive ? 'style="color: #e53e3e;"' : ''}>
+            <i class="${item.icon}"></i><span>${item.text}</span>
+        </div>
+    `).join('');
+
     menu.onclick = (e) => {
         const item = e.target.closest('.message-menu-item');
         if (!item) return;
 
         const action = item.dataset.action;
+        const actionText = item.querySelector('span')?.textContent || '该功能';
 
-        if (action === 'copy') {
-            navigator.clipboard.writeText(message.text)
-                .then(() => console.log('消息已复制'))
-                .catch(err => console.error('复制失败:', err));
-        } else if (action === 'delete') {
-            if (confirm('确定要删除这条消息吗？')) {
-                const newHistory = [...chatHistory];
-                newHistory.splice(index, 1);
-                updateChatHistory(newHistory);
-            }
-        } else if (action === 'edit') {
-            startEditing(bubble, index, getChatHistory, updateChatHistory);
+        switch (action) {
+            case 'copy':
+                navigator.clipboard.writeText(message.text)
+                    .then(() => console.log('消息已复制'))
+                    .catch(err => console.error('复制失败:', err));
+                break;
+            case 'delete':
+                if (confirm('确定要删除这条消息吗？')) {
+                    const newHistory = [...chatHistory];
+                    newHistory.splice(index, 1);
+                    updateChatHistory(newHistory);
+                }
+                break;
+            case 'edit':
+                startEditing(bubble, index, getChatHistory, updateChatHistory);
+                break;
+            default:
+                alert(`“${actionText}”功能待开发...`);
+                break;
         }
+
         hideMenu();
     };
 
-    // 定位菜单
     const menuWidth = 120;
-    const menuHeight = 130;
+    const menuHeight = 290;
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
 
@@ -130,6 +143,7 @@ function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
 
 /**
  * 隐藏操作菜单。
+ * (此函数无变化)
  */
 function hideMenu() {
     const menuOverlay = document.getElementById('message-menu-overlay');
@@ -144,6 +158,9 @@ function hideMenu() {
  * @param {function} updateChatHistory - 更新聊天历史的函数。
  */
 function startEditing(bubble, index, getChatHistory, updateChatHistory) {
+    // ▼▼▼ 修改点 2：在开始编辑时，给气泡添加 'editing' 标记 ▼▼▼
+    bubble.classList.add('editing');
+    
     const originalText = getChatHistory()[index].text;
     bubble.innerHTML = `
         <div class="message-edit-container">
@@ -167,6 +184,9 @@ function startEditing(bubble, index, getChatHistory, updateChatHistory) {
     });
 
     const stopEditing = (shouldSave) => {
+        // ▼▼▼ 修改点 3：无论保存还是取消，都移除 'editing' 标记 ▼▼▼
+        bubble.classList.remove('editing');
+
         if (shouldSave) {
             const newText = textarea.value.trim();
             if (newText && newText !== originalText) {
@@ -174,7 +194,6 @@ function startEditing(bubble, index, getChatHistory, updateChatHistory) {
                 newHistory[index].text = newText;
                 updateChatHistory(newHistory);
             } else {
-                // 如果内容为空或未改变，则恢复原状
                 bubble.textContent = originalText;
             }
         } else {
