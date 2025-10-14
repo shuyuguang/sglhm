@@ -355,7 +355,9 @@ body {
     transition: color 0.2s ease;
 }
 
-.form-group input[type="text"] {
+/* ▼▼▼ 修改点 1：在这里添加 input[type="password"] ▼▼▼ */
+.form-group input[type="text"],
+.form-group input[type="password"] {
     width: 100%;
     padding: 12px;
     border: 1px solid #ced4da;
@@ -365,11 +367,15 @@ body {
     background-color: var(--color-bg-light);
     transition: border-color 0.2s, box-shadow 0.2s;
 }
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
-.form-group input[type="text"]:focus {
+/* ▼▼▼ 修改点 2：为聚焦状态也添加 password 类型 ▼▼▼ */
+.form-group input[type="text"]:focus,
+.form-group input[type="password"]:focus {
     outline: none;
     border-color: var(--color-primary);
 }
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
 .form-group:focus-within label {
     color: var(--color-primary);
