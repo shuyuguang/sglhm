@@ -9,7 +9,7 @@ import { CHAT_DB_KEYS } from '../config/chat.config.js';
 
 /**
  * 默认的流式响应处理器（单条消息）
- * @param {object} context - 从 chat-room.js 传入的上下文对象
+ * (此函数无变化)
  */
 async function defaultStreamHandler(context) {
     const { reader, decoder, renderMessage, chatHistory, historyKey, chatArea } = context;
@@ -24,10 +24,7 @@ async function defaultStreamHandler(context) {
             const { done, value } = await reader.read();
             if (done) break;
             
-            // ▼▼▼ 核心修复：在这里也加上 { stream: true } 选项 ▼▼▼
-            // 这可以防止多字节字符（如中文）在数据块之间被截断而导致的乱码问题。
             const chunk = decoder.decode(value, { stream: true });
-            // ▲▲▲ 修复结束 ▲▲▲
 
             const lines = chunk.split('\n\n');
             for (const line of lines) {
@@ -47,9 +44,12 @@ async function defaultStreamHandler(context) {
             }
         }
         
+        // ▼▼▼ 修改点1：在最终显示前，同样过滤掉可能存在的 thought 内容 ▼▼▼
+        const cleanReply = fullReply.replace(/\(thought[\s\S]*?\)/g, '').trim();
+
         thinkingBubbleRow.remove();
-        if (fullReply) {
-            const replyMessage = { text: fullReply, sender: 'character' };
+        if (cleanReply) {
+            const replyMessage = { text: cleanReply, sender: 'character' };
             chatHistory.push(replyMessage);
             await dbStorage.setItem(historyKey, chatHistory);
             renderMessage(replyMessage, chatHistory.length - 1);
@@ -61,8 +61,8 @@ async function defaultStreamHandler(context) {
 }
 
 /**
- * [V3 修正版] “对话体”专用的流式响应处理器
- * (此函数无变化)
+ * [V4 最终版] “对话体”专用的流式响应处理器
+ * 支持解析并隐藏 (thought ...) 思维链
  */
 async function dialogueStreamHandler(context) {
     const { reader, decoder, renderMessage, chatHistory, historyKey, chatArea, loadAndRenderHistory } = context;
@@ -96,7 +96,11 @@ async function dialogueStreamHandler(context) {
                 }
             }
 
+            // ▼▼▼ 修改点2：核心逻辑 - 过滤掉 (thought ...) 内容 ▼▼▼
+            // 使用正则表达式将所有 (thought ...) 结构替换为空字符串
             const cleanFullStream = rawStreamBuffer.replace(/\(thought[\s\S]*?\)/g, '');
+            // ▲▲▲ 修改结束 ▲▲▲
+
             const messageParts = cleanFullStream.split('[split]');
 
             for (let i = fullReplyForHistory.length; i < messageParts.length - 1; i++) {
@@ -121,10 +125,12 @@ async function dialogueStreamHandler(context) {
         if (finalMessage) {
             fullReplyForHistory.push(finalMessage);
         } else {
+            // 如果最后一条消息是空的（比如只有 thought），则移除占位的气泡
             currentBubbleRow?.remove();
         }
 
         if (fullReplyForHistory.length > 0) {
+            // 从历史记录中移除初始的 "..." 占位符（如果存在）
             const lastMsgIndex = chatHistory.length -1;
             if(lastMsgIndex >= 0 && chatHistory[lastMsgIndex].text === '...' && chatHistory[lastMsgIndex].sender === 'character') {
                  chatHistory.pop();
@@ -133,6 +139,7 @@ async function dialogueStreamHandler(context) {
             const newMessages = fullReplyForHistory.map(text => ({ text, sender: 'character' }));
             chatHistory.push(...newMessages);
             await dbStorage.setItem(historyKey, chatHistory);
+            // 重新渲染整个历史，确保UI与数据同步
             await loadAndRenderHistory();
         }
 
@@ -148,26 +155,32 @@ export const CHAT_STYLES = {
         name: '对话体',
         description: '此风格模仿日常对话，不包含动作或环境描述，该模式下角色允许扩展内的一切行为如语音、表情包、转账、礼物等。',
         example: '示例：\n"你好，今天天气真不错！"',
+        // ▼▼▼ 修改点3：更新 Prompt 指令 ▼▼▼
         getPromptAddition: () => (
-            `- 【重要】为了模仿真人的打字和发送习惯，你可以将一个完整的回复拆分成多条短消息。在每条消息的末尾，使用特殊标记 **[split]** 来表示一次发送。最后一条消息末尾不需要加标记。\n`+
             `- 【重要】在开始回复前，你可以在心中进行思考和规划，将这部分内容放在 **(thought ...)** 结构中。这个结构里的所有内容都不会被用户看到。思考结束后，再输出实际的对话内容。\n`+
-            `- 示例：如果想回复“你好啊！”，可以这样构造输出：(thought The user said hi, I should reply friendly.)你好啊！\n`+
-            `- 示例：如果想分两条发送“你好啊！”和“今天天气真不错”，可以这样构造输出：(thought I will send two messages.)你好啊！[split]今天天气真不错`
+            `- 【重要】为了模仿真人的打字和发送习惯，你可以将一个完整的回复拆分成多条短消息。在每条消息的末尾，使用特殊标记 **[split]** 来表示一次发送。最后一条消息末尾不需要加标记。\n`+
+            `- 示例1 (单条消息): (thought The user said hi, I should reply friendly.)你好啊！\n`+
+            `- 示例2 (多条消息): (thought User在叫我, 我应该积极回应, 表示我在. 用小洛的口吻, 可以亲切一点.)在的呀！[split]User, 有什么事嘛？😊`
         ),
+        // ▲▲▲ 修改结束 ▲▲▲
         streamHandler: dialogueStreamHandler,
     },
     'short-chat': {
         name: '短聊体',
         description: '此风格类似社交软件聊天，动作或环境描述会用括号标注，该模式下角色允许扩展内的一切行为如语音、表情包、转账、礼物等。',
         example: '示例：\n"嘿嘿，是呀~ 天气超棒的。"',
-        getPromptAddition: () => ``,
+        getPromptAddition: () => (
+            `- 【重要】在开始回复前，你可以在心中进行思考和规划，将这部分内容放在 **(thought ...)** 结构中。这个结构里的所有内容都不会被用户看到。思考结束后，再输出实际的对话内容。`
+        ),
         streamHandler: defaultStreamHandler, // 使用默认处理器
     },
     'novel': {
         name: '小说体',
         description: '此风格以小说或剧本形式输出，包含角色的语言、动作、神态和心理活动。该模式下禁用表情包。',
         example: '示例：\n他微微一笑，抬头望向湛蓝的天空，轻声说道：“你好，今天天气真不错！”',
-        getPromptAddition: () => ``,
+        getPromptAddition: () => (
+            `- 【重要】在开始回复前，你可以在心中进行思考和规划，将这部分内容放在 **(thought ...)** 结构中。这个结构里的所有内容都不会被用户看到。思考结束后，再输出实际的对话内容。`
+        ),
         streamHandler: defaultStreamHandler, // 使用默认处理器
     }
 };
@@ -196,7 +209,7 @@ export function createChatPromptPanel({ triggerElement, container, onSave, charI
                         <textarea class="prompt-template-input" id="style-example" readonly></textarea>
                     </div>
                 </div>
-                <div class="sheet-footer">
+                <div class.sheet-footer">
                     <button class="sheet-btn sheet-btn-cancel" id="prompt-cancel-btn">取消</button>
                     <button class="sheet-btn sheet-btn-confirm" id="prompt-save-btn">保存</button>
                 </div>
