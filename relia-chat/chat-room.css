@@ -604,10 +604,7 @@ html, body {
     display: flex;
     flex-direction: column;
     width: 100%;
-    background-color: var(--bubble-user-bg);
-    border-radius: 18px;
-    border-top-right-radius: 4px;
-    padding: 10px 15px;
+    /* 移除背景、圆角和内边距样式，使其完全由父级 .chat-bubble 控制外观 */
     box-sizing: border-box;
 }
 
