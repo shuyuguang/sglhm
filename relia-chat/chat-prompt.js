@@ -176,44 +176,38 @@ export const CHAT_STYLES = {
         example: '示例：\n他微微一笑，抬头望向湛蓝的天空，轻声说道：“你好，今天天气真不错！”',
         getPromptAddition: () => ``,
         streamHandler: defaultStreamHandler,
-    },
-    'text-game': {
-        name: '文游体',
-        description: '此风格类似文字冒险游戏（TRPG），侧重于语言对话和环境描写的互动，该模式下禁用扩展和表情包。',
-        example: '示例：\n你看到一个熟悉的身影坐在不远处的长椅上，微风吹拂着他的发梢。他似乎注意到了你，转过头来对你微笑。\n"你好，今天天气真不错！"\n\n> 你会如何回应？\n1. 上前打招呼。\n2. 悄悄离开。',
-        getPromptAddition: () => ``,
-        streamHandler: defaultStreamHandler,
     }
 };
 
 
-// ======================= 2. UI 面板创建与管理 =======================
+// ======================= 2. UI 面板创建与管理 (已重构) =======================
 
-export function createChatPromptPanel({ triggerElement, container, onSelect, onSave, charId }) {
+export function createChatPromptPanel({ triggerElement, container, onSave, charId }) {
 
     const styleKeys = Object.keys(CHAT_STYLES);
     
-    // 动态生成 Tabs 和 Tab-Contents
-    const tabsHtml = styleKeys.map((key, index) => 
-        `<button class="modal-tab ${index === 0 ? 'active' : ''}" data-tab="${key}">${CHAT_STYLES[key].name}</button>`
+    // 动态生成胶囊按钮
+    const styleButtonsHtml = styleKeys.map(key => 
+        `<button class="style-button" data-style="${key}">${CHAT_STYLES[key].name}</button>`
     ).join('');
-
-    const tabContentsHtml = styleKeys.map((key, index) => `
-        <div class="modal-tab-content ${index === 0 ? 'active' : ''}" id="${key}-content">
-            <p class="prompt-description">${CHAT_STYLES[key].description}</p>
-            <textarea class="prompt-template-input" readonly>${CHAT_STYLES[key].example}</textarea>
-        </div>
-    `).join('');
 
     const panelHtml = `
         <div class="modal-overlay" id="chat-prompt-overlay">
             <div class="modal-panel" id="chat-prompt-panel">
-                <div class="modal-tabs">${tabsHtml}</div>
-                <div class="modal-content-container">${tabContentsHtml}</div>
+                <div class="modal-header">
+                    <i class="fa-solid fa-heart style-header-icon"></i>
+                    <h3 class="modal-title">聊天风格面板</h3>
+                </div>
+                <div class="modal-content-container">
+                    <div class="style-buttons-container">${styleButtonsHtml}</div>
+                    <div class="style-details-container">
+                        <p class="prompt-description" id="style-description"></p>
+                        <textarea class="prompt-template-input" id="style-example" readonly></textarea>
+                    </div>
+                </div>
                 <div class="sheet-footer">
                     <button class="sheet-btn sheet-btn-cancel" id="prompt-cancel-btn">取消</button>
-                    <button class="sheet-btn sheet-btn-secondary" id="prompt-save-btn">设为默认</button>
-                    <button class="sheet-btn sheet-btn-confirm" id="prompt-select-btn">应用该风格</button>
+                    <button class="sheet-btn sheet-btn-confirm" id="prompt-save-btn">保存</button>
                 </div>
             </div>
         </div>
@@ -224,23 +218,36 @@ export function createChatPromptPanel({ triggerElement, container, onSelect, onS
     const ui = {
         overlay: document.getElementById('chat-prompt-overlay'),
         panel: document.getElementById('chat-prompt-panel'),
-        tabs: document.querySelectorAll('#chat-prompt-panel .modal-tab'),
-        tabContents: document.querySelectorAll('#chat-prompt-panel .modal-tab-content'),
+        styleButtons: document.querySelectorAll('#chat-prompt-panel .style-button'),
+        styleDescription: document.getElementById('style-description'),
+        styleExample: document.getElementById('style-example'),
         cancelBtn: document.getElementById('prompt-cancel-btn'),
         saveBtn: document.getElementById('prompt-save-btn'),
-        selectBtn: document.getElementById('prompt-select-btn'),
     };
 
-    let activeTab = styleKeys[0];
+    let activeStyle = styleKeys[0];
     const dbKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_style_${charId}`; // 为每个角色单独保存风格
 
+    function updatePanelDetails(styleKey) {
+        const style = CHAT_STYLES[styleKey];
+        if (style) {
+            ui.styleDescription.textContent = style.description;
+            ui.styleExample.value = style.example;
+        }
+    }
+    
+    function setActiveStyle(targetStyleKey) {
+        activeStyle = targetStyleKey;
+        ui.styleButtons.forEach(button => {
+            button.classList.toggle('active', button.dataset.style === targetStyleKey);
+        });
+        updatePanelDetails(targetStyleKey);
+    }
+    
     async function openPanel() {
         const savedStyle = await dbStorage.getItem(dbKey);
-        if (savedStyle && CHAT_STYLES[savedStyle]) {
-            switchTab(savedStyle);
-        } else {
-            switchTab(styleKeys[0]); // 确保面板打开时总是有一个明确的激活状态
-        }
+        const styleToActivate = (savedStyle && CHAT_STYLES[savedStyle]) ? savedStyle : styleKeys[0];
+        setActiveStyle(styleToActivate);
         ui.overlay.classList.add('active');
     }
 
@@ -248,41 +255,24 @@ export function createChatPromptPanel({ triggerElement, container, onSelect, onS
         ui.overlay.classList.remove('active');
     }
 
-    function switchTab(targetTabId) {
-        activeTab = targetTabId;
-        ui.tabs.forEach(tab => {
-            tab.classList.toggle('active', tab.dataset.tab === targetTabId);
-        });
-        ui.tabContents.forEach(content => {
-            content.classList.toggle('active', content.id === `${targetTabId}-content`);
-        });
-    }
-
-    function handleSelect() {
-        if (typeof onSelect === 'function') {
-            onSelect(CHAT_STYLES[activeTab]); // 将整个风格对象传出去
-        }
-        closePanel();
-    }
-
     async function handleSave() {
-        await dbStorage.setItem(dbKey, activeTab);
+        await dbStorage.setItem(dbKey, activeStyle);
         if (typeof onSave === 'function') {
-            onSave(CHAT_STYLES[activeTab]);
+            onSave(CHAT_STYLES[activeStyle]);
         }
-        alert(`已将“${CHAT_STYLES[activeTab].name}”设为该角色的默认聊天风格。`);
+        // 可以加一个轻提示反馈，但 alert 有点打扰
+        // alert(`已将“${CHAT_STYLES[activeStyle].name}”设为默认聊天风格。`);
         closePanel();
     }
 
     if (triggerElement) triggerElement.addEventListener('click', openPanel);
     ui.cancelBtn.addEventListener('click', closePanel);
     ui.saveBtn.addEventListener('click', handleSave);
-    ui.selectBtn.addEventListener('click', handleSelect);
     ui.overlay.addEventListener('click', (event) => {
         if (event.target === ui.overlay) closePanel();
     });
-    ui.tabs.forEach(tab => {
-        tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+    ui.styleButtons.forEach(button => {
+        button.addEventListener('click', () => setActiveStyle(button.dataset.style));
     });
 
     return { open: openPanel, close: closePanel };
