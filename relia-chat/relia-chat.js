@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="chat-card-meta">
                     <div class="chat-card-time">10:30</div>
-                    <div class="unread-badge">3</div>
+                    <div class="unread-badge">1</div>
                 </div>
             </div>
         `).join('');
