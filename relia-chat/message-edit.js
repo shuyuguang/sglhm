@@ -71,11 +71,11 @@ function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
 
     const menuItems = [
         { action: 'edit', icon: 'fa-regular fa-pen-to-square', text: '编辑' },
-        { action: 'reply', icon: 'fa-solid fa-reply', text: '回复' },
-        { action: 'forward', icon: 'fa-solid fa-share', text: '转发' },
-        { action: 'copy', icon: 'fa-regular fa-copy', text: '复制' },
-        { action: 'delete', icon: 'fa-regular fa-trash-can', text: '删除', isDestructive: true },
+        { action: 'reply', icon: 'fa-solid fa-quote-left', text: '回复' },
         { action: 'favorite', icon: 'fa-regular fa-star', text: '收藏' },
+        { action: 'delete', icon: 'fa-regular fa-trash-can', text: '删除', isDestructive: true },
+        { action: 'copy', icon: 'fa-regular fa-copy', text: '复制' },
+        { action: 'forward', icon: 'fa-solid fa-share', text: '转发' },
         { action: 'multiselect', icon: 'fa-solid fa-check-double', text: '多选' },
         { action: 'other', icon: 'fa-solid fa-ellipsis', text: '其它' }
     ];
