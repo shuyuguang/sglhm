@@ -6,9 +6,7 @@
 }
 
 body {
-    /* ▼▼▼ 修改区域 ▼▼▼ */
     background-color: #F8F9FA; /* 将背景色更新为 F8F9FA */
-    /* ▲▲▲ 修改结束 ▲▲▲ */
     color: #333;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     margin: 0;
@@ -17,38 +15,29 @@ body {
 
 /* --- 页面头部样式 --- */
 .page-header {
-    /* 核心修改：将头部变为一个带外边距和圆角的卡片 */
-    margin: 18px 15px 0; /* 在顶部和左右添加外边距，使其成为一个独立的“框” */
-    border-radius: 99px; /* 设置圆角大小 */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* 添加一点阴影增加悬浮感 */
-    width: calc(100% - 30px); /* 宽度需要减去左右外边距的总和 */
-    
-    /* 粘性定位的顶部距离也需要和外边距匹配 */
+    margin: 18px 15px 0;
+    border-radius: 99px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    width: calc(100% - 30px);
     top: 10px;
-    
-    /* 微调内边距，让内容看起来更协调 */
     padding: 12px 15px;
-    
-    /* 新增：添加一个1像素的浅灰色边框 */
     border: 1px solid #C9D0D8;
-
     display: flex;
     justify-content: space-between;
     align-items: center;
     position: sticky;
     z-index: 100;
-    
-    /* ▼▼▼ 新增/修改：实现磨砂玻璃效果 ▼▼▼ */
-    background-color: rgba(255, 255, 255, 0.05); /* 设置一个透明的背景色 */
-    backdrop-filter: blur(10px);                 /* 对背景内容应用模糊效果，这是磨砂的核心 */
-    -webkit-backdrop-filter: blur(10px);         /* 兼容 Safari 等 Webkit 内核浏览器 */
-    /* ▲▲▲ 新增/修改结束 ▲▲▲ */
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .page-title {
     font-size: 1.2em;
     font-weight: 600;
-    color: #495057;
+    /* ▼▼▼ 修改处 ▼▼▼ */
+    color: #3C4A4F; /* 将标题颜色修改为 #3C4A4F */
+    /* ▲▲▲ 修改结束 ▲▲▲ */
     display: flex;
     align-items: center;
     margin: 0;
