@@ -390,11 +390,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (actionsToggleBtn) actionsToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); chatInputArea.classList.remove('emoji-expanded'); chatInputArea.classList.toggle('actions-expanded'); });
         if (emojiToggleBtn) emojiToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); chatInputArea.classList.remove('actions-expanded'); chatInputArea.classList.toggle('emoji-expanded'); });
         if (selectModelBtn) selectModelBtn.addEventListener('click', openModelSelector);
+        if (promptBtn) { promptBtn.addEventListener('click', () => { alert('“快捷指令（闪电）”功能待开发'); }); }
+        if (inspirationBtn) { inspirationBtn.addEventListener('click', () => { alert('“灵感（灯泡）”功能待开发'); }); }
         
-        // ▼▼▼ 修改点：将聊天风格面板绑定到闪电按钮(prompt-btn)，并将三点按钮(options-btn)作为预留 ▼▼▼
-        if (promptBtn) {
+        if (optionsBtn) {
             createChatPromptPanel({
-                triggerElement: promptBtn, // 触发元素是闪电按钮
+                triggerElement: optionsBtn,
                 container: document.body,
                 charId: charId,
                 onSave: (styleObject) => {
@@ -403,15 +404,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
-        if (inspirationBtn) { inspirationBtn.addEventListener('click', () => { alert('“灵感（灯泡）”功能待开发'); }); }
-        
-        if (optionsBtn) {
-            // 为右上角三点按钮预留功能，例如弹出一个包含“编辑角色”、“清空记录”的菜单
-            optionsBtn.addEventListener('click', () => { 
-                alert('“更多操作（三点菜单）”功能待开发'); 
-            });
-        }
-        // ▲▲▲ 修改结束 ▲▲▲
 
         if (editSettingsBtn) { editSettingsBtn.addEventListener('click', () => chatEditor ? chatEditor.open() : alert('编辑器初始化失败！')); }
         if (searchHistoryBtn) { searchHistoryBtn.addEventListener('click', () => { alert('“记忆库”功能待开发'); }); }
