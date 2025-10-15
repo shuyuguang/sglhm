@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="../common/template.css">
 
-    <!-- 内联本页专属CSS (这部分保持不变) -->
+    <!-- 内联本页专属CSS -->
     <style>
         .content-body {
             padding: 20px 15px;
@@ -19,13 +19,15 @@
             flex-direction: column;
             gap: 15px;
         }
+        /* ▼▼▼ 修改处 ▼▼▼ */
         .announcement-card {
             background-color: #ffffff;
-            border: 1px solid #e9ecef;
+            border: 1px solid #C9D0D8; /* 颜色已从 #e9ecef 更新 */
             border-radius: 8px;
             padding: 20px;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+        /* ▲▲▲ 修改结束 ▲▲▲ */
         .announcement-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
@@ -45,11 +47,7 @@
     </style>
 </head>
 <body>
-    <!-- 
-      已删除 <script src="../common/template.js"></script> 
-    -->
     
-    <!-- ▼▼▼ 核心修改点 ▼▼▼ -->
     <script type="module">
         // 1. 从模块中导入函数
         import { createPageLayout } from '../common/template.js';
@@ -65,7 +63,7 @@
                     </div>
                     <div class="announcement-card">
                         <span class="card-date">2025.8.2</span>
-                        <p class="card-content">Felotus初版小手机诞生，初版会在后续删减为聊天机内置在互动套壳机中，适合仅聊天的简约派~</p>
+                        <p class="card-content">Felotus初版小手机诞生，初版会在后续删减为聊天机内置在互动套壳机中，适合简约派懒人~</p>
                     </div>
                 </div>
             `;
