@@ -2,7 +2,8 @@
 
 /* --- 基础与重置样式 --- */
 * { box-sizing: border-box; }
-body { background-color: #f4f7f9; color: #333; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; line-height: 1.6; padding-bottom: 65px; }
+/* ▼▼▼ [修改] 将页面背景色统一 ▼▼▼ */
+body { background-color: #F8F9FA; color: #333; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; line-height: 1.6; padding-bottom: 65px; }
 
 /* ▼▼▼ [删除] 整个页面头部样式区域 ▼▼▼ */
 /* 
@@ -32,10 +33,17 @@ body { background-color: #f4f7f9; color: #333; font-family: -apple-system, Blink
     background-color: #ffffff;
     padding-bottom: 10px;
     position: sticky;
-    /* ▼▼▼ [修改] 调整 top 值以适应 template.js 生成的头部高度 ▼▼▼ */
     top: 55px; /* 假设 template.js 的头部高度是 55px，如果不是请调整 */
     z-index: 99;
 }
+
+/* ▼▼▼ [新增] 为指定的二级 Tab 导航设置特定背景色 ▼▼▼ */
+#home-content .sub-tab-nav,
+#notifications-content .sub-tab-nav {
+    background-color: #F8F9FA;
+}
+/* ▲▲▲ [新增] 完成 ▲▲▲ */
+
 
 .sub-tab-item {
     padding: 12px 15px;
@@ -62,7 +70,7 @@ body { background-color: #f4f7f9; color: #333; font-family: -apple-system, Blink
     content: '\f004';
     font-family: 'Font Awesome 6 Free';
     font-weight: 900;
-    color: #B9A2E9;
+    color: #7290B2; /* <--- 修改 */
     position: absolute;
     bottom: -7px;
     left: 50%;
@@ -162,7 +170,7 @@ body { background-color: #f4f7f9; color: #333; font-family: -apple-system, Blink
     margin-bottom: 0;
 }
 .tab-item.active {
-    color: #B9A2E9;
+    color: #7290B2; /* <--- 修改 */
 }
 
 /* --- 悬浮按钮及菜单样式 (无变化) --- */
@@ -180,7 +188,7 @@ body { background-color: #f4f7f9; color: #333; font-family: -apple-system, Blink
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    background-color: #B9A2E9;
+    background-color: #7290B2; /* <--- 修改 */
     color: #ffffff;
     display: flex;
     align-items: center;
@@ -199,7 +207,7 @@ body { background-color: #f4f7f9; color: #333; font-family: -apple-system, Blink
 }
 .create-post-fab .icon-pen { display: none; }
 .create-post-fab.active {
-    background-color: #a389d3;
+    background-color: #7290B2; /* <--- 修改 */
     transform: rotate(45deg);
 }
 .create-post-fab.active .icon-plus { display: none; }
@@ -239,7 +247,7 @@ body { background-color: #f4f7f9; color: #333; font-family: -apple-system, Blink
     height: 40px;
     border-radius: 50%;
     background-color: #ffffff;
-    color: #B9A2E9;
+    color: #7290B2; /* <--- 修改 */
     display: flex;
     align-items: center;
     justify-content: center;
