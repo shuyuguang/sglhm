@@ -10,7 +10,7 @@ import { CHAT_STYLES, createChatPromptPanel } from './chat-prompt.js';
 
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // --- 1 & 2. 获取数据和生成HTML (已修改) ---
+    // --- 1. 获取容器和ID ---
     const appContainer = document.getElementById('app-container');
     if (!appContainer) {
         document.body.innerText = '关键DOM元素 #app-container 未找到，页面无法加载。';
@@ -23,19 +23,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         appContainer.innerHTML = '<p style="text-align: center; margin-top: 50px;">错误：未指定角色ID。</p>';
         return;
     }
-    const [allChars, allUsers, currentUserId] = await Promise.all([
+    
+    // --- 2. 获取数据并查找角色 (已修改) ---
+    const [rawAllChars, rawAllUsers, currentUserId] = await Promise.all([
         dbStorage.getItem(PROFILE_DB_KEYS.CHAR_PROFILES),
         dbStorage.getItem(PROFILE_DB_KEYS.USER_PROFILES),
         dbStorage.getItem(PROFILE_DB_KEYS.USER_CURRENT_ID)
     ]);
     
-    let character = allChars ? allChars.find(c => c.id === charId) : null;
-
+    const allChars = rawAllChars || [];
+    const allUsers = rawAllUsers || [];
+    
+    // ▼▼▼ 修复点 1：使用非严格等于 (==) 来匹配ID，防止字符串和数字类型不匹配 ▼▼▼
+    let character = allChars.find(c => c.id == charId);
+    
+    // ▼▼▼ 修复点 2：立刻检查 character 是否找到，如果没找到就报错退出，避免后续代码出错 ▼▼▼
     if (!character) {
         appContainer.innerHTML = `<p style="text-align: center; margin-top: 50px;">错误：找不到ID为 ${charId} 的角色。</p>`;
         return;
     }
-    const currentUser = allUsers ? allUsers.find(u => u.id === currentUserId) : null;
+    // ▲▲▲ 修复结束 ▲▲▲
+
+    // --- 3. 生成HTML (现在可以安全地使用 character 变量了) ---
+    const currentUser = allUsers.find(u => u.id === currentUserId);
     const user = currentUser || { name: 'User', avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg' };
     
     const pageHtml = `
@@ -96,7 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 `;
     appContainer.innerHTML = pageHtml;
 
-    // --- 3. 获取DOM元素和定义变量 (无变化) ---
+    // --- 4. 获取DOM元素和定义变量 ---
     const chatArea = document.getElementById('chat-messages-area');
     const input = document.getElementById('chat-input');
     const chatInputArea = document.getElementById('chat-input-area');
@@ -119,9 +129,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentChatApi = null;
     const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`;
     const selectedApiKey = `${CHAT_DB_KEYS.CHAT_SELECTED_API}_${charId}`;
-    let currentChatStyle = CHAT_STYLES['dialogue']; // 默认使用对话体
+    let currentChatStyle = CHAT_STYLES['dialogue'];
     const styleDbKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_style_${charId}`;
-
     let chatHistory = [];
     
     let chatEditor = null;
@@ -138,12 +147,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelector('.char-info-avatar').src = character.avatar;
         chatEditor?.updateProfile(character);
     };
+    
+    // 编辑器现在可以安全地初始化了
+    chatEditor = createChatEditor(character, onProfileUpdate);
 
-    if(character) {
-        chatEditor = createChatEditor(character, onProfileUpdate);
-    }
-
-    // --- 4. 核心功能函数 (无变化) ---
+    // --- 5. 核心功能函数 (无变化) ---
     function constructSystemPrompt(charProfile, userProfile) {
         let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
         prompt += `### 角色设定\n`;
@@ -363,7 +371,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatInputArea.classList.remove('actions-expanded', 'emoji-expanded');
     };
 
-    // --- 5. 绑定事件 (无变化) ---
+    // --- 6. 绑定事件 ---
     input.addEventListener('input', () => {
         input.style.height = 'auto';
         input.style.height = (input.scrollHeight) + 'px';
@@ -382,10 +390,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             triggerElement: optionsBtn,
             container: document.body,
             charId: charId,
-            onSelect: (styleObject) => {
-                console.log('已应用风格:', styleObject.name);
-                currentChatStyle = styleObject;
-            },
             onSave: (styleObject) => {
                 console.log('已保存默认风格:', styleObject.name);
                 currentChatStyle = styleObject;
@@ -393,7 +397,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    if (editSettingsBtn) { editSettingsBtn.addEventListener('click', () => chatEditor ? chatEditor.open() : alert('编辑器初始化失败！')); }
+    if (editSettingsBtn) { editSettingsBtn.addEventListener('click', () => chatEditor.open() ); }
     if (searchHistoryBtn) { searchHistoryBtn.addEventListener('click', () => { alert('“记忆库”功能待开发'); }); }
     if (modelSelectorOverlay) { modelSelectorOverlay.addEventListener('click', (e) => { if (e.target === modelSelectorOverlay) closeModelSelector(); }); }
     if (closeModelSelectorBtn) { closeModelSelectorBtn.addEventListener('click', closeModelSelector); }
@@ -418,7 +422,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     input.addEventListener('focus', () => { expandInputLayout(); chatInputArea.classList.remove('actions-expanded', 'emoji-expanded'); });
     document.addEventListener('click', (event) => { if (!chatInputArea.contains(event.target)) { collapseInputLayout(); } });
 
-    // --- 6. 初始化页面 (无变化) ---
+    // --- 7. 初始化页面 ---
     async function initializeChatState() {
         const savedStyleKey = await dbStorage.getItem(styleDbKey);
         if (savedStyleKey && CHAT_STYLES[savedStyleKey]) {

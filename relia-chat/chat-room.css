@@ -428,7 +428,7 @@ html, body {
 }
 
 
-/* ▼▼▼ 修改：消息操作菜单样式 (缩小版) ▼▼▼ */
+/* --- 消息操作菜单样式 (缩小版) --- */
 .message-menu-overlay {
     position: fixed;
     top: 0;
@@ -449,11 +449,11 @@ html, body {
     background-color: #ffffff;
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-    padding: 8px; /* 减小内边距 */
-    width: 240px; /* 减小宽度 */
+    padding: 8px;
+    width: 240px;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 8px 4px; /* 减小行和列的间距 */
+    gap: 8px 4px;
 }
 
 .message-menu-item {
@@ -461,11 +461,11 @@ html, body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px; /* 减小图标和文字的间距 */
-    padding: 6px 0; /* 减小内边距 */
+    gap: 4px;
+    padding: 6px 0;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 0.75rem; /* 减小文字大小 */
+    font-size: 0.75rem;
     color: #333;
     transition: background-color 0.2s ease;
 }
@@ -475,37 +475,208 @@ html, body {
 }
 
 .message-menu-item i {
-    font-size: 1rem; /* 减小图标大小 */
+    font-size: 1rem;
     color: #333;
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
 
-/* --- 聊天风格选择面板 (chat-prompt.js) 的专属样式 (无变化) --- */
+/* --- 聊天风格选择面板 (chat-prompt.js) 的专属样式 (已修改) --- */
 
-#chat-prompt-panel .modal-header { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--border-color); }
+#chat-prompt-panel .modal-header { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid var(--border-color); }
 #chat-prompt-panel .modal-header .modal-title { font-size: 1.1em; font-weight: 600; margin: 0; }
 .style-header-icon { color: var(--send-btn-bg); margin-right: 10px; font-size: 1.1em; }
 #chat-prompt-panel { width: 90%; max-width: 340px; height: auto; }
-.style-buttons-container {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin: 10px 0 20px 0;
-    flex-wrap: wrap; /* <--- 新增此行，允许按钮自动换行 */
-}
-.style-button { padding: 7px 18px; border-radius: 20px; border: 1px solid #dee2e6; background-color: #f8f9fa; color: #495057; font-size: 0.9em; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+.style-buttons-container { display: flex; justify-content: center; gap: 12px; margin: 10px 0 10px 0; }
+.style-button { padding: 7px; border-radius: 20px; border: 1px solid #dee2e6; background-color: #f8f9fa; color: #495057; font-size: 0.9em; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
 .style-button:hover { background-color: #f1f3f5; }
 .style-button.active { background-color: #f0eefc; color: var(--send-btn-bg); border-color: var(--send-btn-bg); }
-#chat-prompt-panel .modal-content-container { padding: 16px; }
-#chat-prompt-panel .sheet-footer { padding: 16px; display: flex; gap: 10px; border-top: 1px solid var(--border-color); flex-shrink: 0; }
+#chat-prompt-panel .modal-content-container { padding: 10px; }
+#chat-prompt-panel .sheet-footer { padding: 10px; display: flex; gap: 10px; border-top: 1px solid var(--border-color); flex-shrink: 0; }
 #chat-prompt-panel .sheet-btn { flex-grow: 1; padding: 12px; border: none; border-radius: 8px; font-size: 1em; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
 #chat-prompt-panel .sheet-btn-cancel { background-color: #f1f3f5; color: #495057; }
 #chat-prompt-panel .sheet-btn-cancel:hover { background-color: #e9ecef; }
 #chat-prompt-panel .sheet-btn-confirm { background-color: var(--send-btn-bg); color: white; }
 #chat-prompt-panel .sheet-btn-confirm:hover { filter: brightness(1.1); }
-#chat-prompt-panel .prompt-description { font-size: 0.9em; color: #666; margin-top: 0; margin-bottom: 12px; line-height: 1.5; }
-#chat-prompt-panel .prompt-template-input { width: 100%; height: 120px; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; font-family: monospace; font-size: 0.85em; background-color: #f8f9fa; color: #495057; resize: none; box-sizing: border-box; }
 
+/* 可折叠卡片样式 */
+.style-details-container { padding: 0 5px; }
+.style-card {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    margin-top: 10px;
+    overflow: hidden;
+}
+.style-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    cursor: pointer;
+    user-select: none;
+}
+.style-card-title { font-weight: 500; color: #495057; }
+.style-card-header i { color: #adb5bd; transition: transform 0.3s ease; }
+.style-card-content {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease;
+    padding: 0 15px;
+}
+.style-card.expanded .style-card-header i { transform: rotate(180deg); }
+.style-card.expanded .style-card-content {
+    max-height: 300px;
+    opacity: 1;
+    padding: 0 15px 15px;
+    overflow-y: auto;
+}
+#chat-prompt-panel .prompt-description {
+    font-size: 0.9em;
+    color: #666;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* ▼▼▼ 新增：设置项样式 ▼▼▼ */
+.style-settings-container {
+    padding: 15px 5px 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.style-setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95em;
+    color: #343a40;
+}
+.style-setting-item label {
+    font-weight: 500;
+}
+.slider-value {
+    font-weight: 500;
+    color: var(--send-btn-bg);
+    min-width: 20px;
+    text-align: right;
+}
+
+/* 开关样式 */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+}
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+input:checked + .toggle-slider {
+    background-color: var(--send-btn-bg);
+}
+input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+/* 滑块样式 */
+.memory-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: #dee2e6;
+    outline: none;
+    opacity: 0.9;
+    transition: opacity .2s;
+    border-radius: 6px;
+    margin-top: 4px;
+}
+.memory-slider:hover {
+    opacity: 1;
+}
+.memory-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--send-btn-bg);
+    cursor: pointer;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.memory-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--send-btn-bg);
+    cursor: pointer;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */
+
+/* ▼▼▼ 新增：设置项样式 ▼▼▼ */
+.style-settings-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 15px;
+    padding: 0 5px;
+}
+.style-setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.style-setting-item label {
+    font-size: 0.9em;
+    color: #333;
+}
+.style-setting-item input[type="number"] {
+    width: 60px;
+    padding: 6px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    text-align: center;
+    font-size: 0.9em;
+    background-color: #ffffff;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+}
+/* 隐藏数字输入框旁边的上下箭头 */
+.style-setting-item input[type="number"]::-webkit-inner-spin-button,
+.style-setting-item input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.style-setting-item input[type="number"] {
+    -moz-appearance: textfield; /* Firefox */
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */
 
 /* --- 消息原地编辑样式 (无变化) --- */
 .message-edit-container {
