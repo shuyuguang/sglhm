@@ -113,10 +113,30 @@ async function dialogueStreamHandler(context) {
 }
 
 export const CHAT_STYLES = {
-    'dialogue': { name: '对话体', description: '此风格模仿日常对话，不包含动作或环境描述，该模式下角色允许扩展内的一切行为如语音、表情包、转账、礼物等。', getPromptAddition: () => (/* ... */), streamHandler: dialogueStreamHandler, },
-    'short-chat': { name: '短聊体', description: '此风格类似社交软件聊天，动作或环境描述会用括号标注，该模式下角色允许扩展内的一切行为如语音、表情包、转账、礼物等。', getPromptAddition: () => (/* ... */), streamHandler: defaultStreamHandler, },
-    'novel': { name: '小说体', description: '此风格以小说或剧本形式输出，包含角色的语言、动作、神态和心理活动。该模式下禁用表情包。', getPromptAddition: () => (/* ... */), streamHandler: defaultStreamHandler, },
-    'text-adventure': { name: '文游体', description: '此风格以文字冒险游戏（MUD/TRPG）的形式进行，包含详细的环境与人物状态描写，并在末尾提供选项引导用户互动。该模式UI特殊。', getPromptAddition: () => (/* ... */), streamHandler: defaultStreamHandler, }
+    'dialogue': {
+        name: '对话体',
+        description: '此风格模仿日常对话，不包含动作或环境描述，该模式下角色允许扩展内的一切行为如语音、表情包、转账、礼物等。',
+        getPromptAddition: () => { /* 此函数当前为空，返回 undefined */ },
+        streamHandler: dialogueStreamHandler,
+    },
+    'short-chat': {
+        name: '短聊体',
+        description: '此风格类似社交软件聊天，动作或环境描述会用括号标注，该模式下角色允许扩展内的一切行为如语音、表情包、转账、礼物等。',
+        getPromptAddition: () => { /* 此函数当前为空，返回 undefined */ },
+        streamHandler: defaultStreamHandler,
+    },
+    'novel': {
+        name: '小说体',
+        description: '此风格以小说或剧本形式输出，包含角色的语言、动作、神态和心理活动。该模式下禁用表情包。',
+        getPromptAddition: () => { /* 此函数当前为空，返回 undefined */ },
+        streamHandler: defaultStreamHandler,
+    },
+    'text-adventure': {
+        name: '文游体',
+        description: '此风格以文字冒险游戏（MUD/TRPG）的形式进行，包含详细的环境与人物状态描写，并在末尾提供选项引导用户互动。该模式UI特殊。',
+        getPromptAddition: () => { /* 此函数当前为空，返回 undefined */ },
+        streamHandler: defaultStreamHandler,
+    }
 };
 
 
