@@ -10,7 +10,7 @@ import { CHAT_STYLES, createChatPromptPanel } from './chat-prompt.js';
 
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // --- 1. 获取容器和ID ---
+    // --- 1 & 2. 获取数据和生成HTML (已修改) ---
     const appContainer = document.getElementById('app-container');
     if (!appContainer) {
         document.body.innerText = '关键DOM元素 #app-container 未找到，页面无法加载。';
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     
-    // --- 2. 获取数据并查找角色 (已修改) ---
+    // ▼▼▼ 修复点 1：为可能为空的数据库返回提供了默认空数组，防止 .find() 方法报错 ▼▼▼
     const [rawAllChars, rawAllUsers, currentUserId] = await Promise.all([
         dbStorage.getItem(PROFILE_DB_KEYS.CHAR_PROFILES),
         dbStorage.getItem(PROFILE_DB_KEYS.USER_PROFILES),
@@ -34,17 +34,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const allChars = rawAllChars || [];
     const allUsers = rawAllUsers || [];
     
-    // ▼▼▼ 修复点 1：使用非严格等于 (==) 来匹配ID，防止字符串和数字类型不匹配 ▼▼▼
-    let character = allChars.find(c => c.id == charId);
-    
-    // ▼▼▼ 修复点 2：立刻检查 character 是否找到，如果没找到就报错退出，避免后续代码出错 ▼▼▼
+    let character = allChars.find(c => c.id === charId);
+    // ▲▲▲ 修复结束 ▲▲▲
+
     if (!character) {
         appContainer.innerHTML = `<p style="text-align: center; margin-top: 50px;">错误：找不到ID为 ${charId} 的角色。</p>`;
         return;
     }
-    // ▲▲▲ 修复结束 ▲▲▲
-
-    // --- 3. 生成HTML (现在可以安全地使用 character 变量了) ---
     const currentUser = allUsers.find(u => u.id === currentUserId);
     const user = currentUser || { name: 'User', avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg' };
     
@@ -88,7 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-palette"></i></button><span>主题</span></div>
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-briefcase"></i></button><span>工作台</span></div>
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-list-check"></i></button><span>DIY</span></div>                    <div class="action-item"><button class="action-btn" id="edit-settings-btn"><i class="fa-solid fa-pencil"></i></button><span>编辑</span></div>
-                    <div class="action-item"><button class="action-btn" id="search-history-btn"><i class="fa-solid fa-brain"></i></button><span>记忆库</span></div>
+                    <div class="action-item"><button class="action-btn" id="search-history-btn"><i class="fa-solid fa-brain"></i></button><span>数据</span></div>
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-money-bill-transfer"></i></button><span>转账</span></div>
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-sack-dollar"></i></button><span>收款</span></div>
                     <div class="action-item"><button class="action-btn"><i class="fa-solid fa-gift"></i></button><span>礼物</span></div>
@@ -106,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 `;
     appContainer.innerHTML = pageHtml;
 
-    // --- 4. 获取DOM元素和定义变量 ---
+    // --- 3. 获取DOM元素和定义变量 (无变化) ---
     const chatArea = document.getElementById('chat-messages-area');
     const input = document.getElementById('chat-input');
     const chatInputArea = document.getElementById('chat-input-area');
@@ -129,8 +125,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentChatApi = null;
     const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`;
     const selectedApiKey = `${CHAT_DB_KEYS.CHAT_SELECTED_API}_${charId}`;
-    let currentChatStyle = CHAT_STYLES['dialogue'];
+    let currentChatStyle = CHAT_STYLES['dialogue']; // 默认使用对话体
     const styleDbKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_style_${charId}`;
+
     let chatHistory = [];
     
     let chatEditor = null;
@@ -147,11 +144,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelector('.char-info-avatar').src = character.avatar;
         chatEditor?.updateProfile(character);
     };
-    
-    // 编辑器现在可以安全地初始化了
-    chatEditor = createChatEditor(character, onProfileUpdate);
 
-    // --- 5. 核心功能函数 (无变化) ---
+    if(character) {
+        chatEditor = createChatEditor(character, onProfileUpdate);
+    }
+
+    // --- 4. 核心功能函数 (无变化) ---
     function constructSystemPrompt(charProfile, userProfile) {
         let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
         prompt += `### 角色设定\n`;
@@ -371,7 +369,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatInputArea.classList.remove('actions-expanded', 'emoji-expanded');
     };
 
-    // --- 6. 绑定事件 ---
+    // --- 5. 绑定事件 (已修改) ---
     input.addEventListener('input', () => {
         input.style.height = 'auto';
         input.style.height = (input.scrollHeight) + 'px';
@@ -385,6 +383,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (promptBtn) { promptBtn.addEventListener('click', () => { alert('“快捷指令（闪电）”功能待开发'); }); }
     if (inspirationBtn) { inspirationBtn.addEventListener('click', () => { alert('“灵感（灯泡）”功能待开发'); }); }
     
+    // ▼▼▼ 修复点 2：移除了无效的 onSelect 回调，只保留 onSave ▼▼▼
     if (optionsBtn) {
         createChatPromptPanel({
             triggerElement: optionsBtn,
@@ -396,8 +395,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     }
+    // ▲▲▲ 修复结束 ▲▲▲
 
-    if (editSettingsBtn) { editSettingsBtn.addEventListener('click', () => chatEditor.open() ); }
+    if (editSettingsBtn) { editSettingsBtn.addEventListener('click', () => chatEditor ? chatEditor.open() : alert('编辑器初始化失败！')); }
     if (searchHistoryBtn) { searchHistoryBtn.addEventListener('click', () => { alert('“记忆库”功能待开发'); }); }
     if (modelSelectorOverlay) { modelSelectorOverlay.addEventListener('click', (e) => { if (e.target === modelSelectorOverlay) closeModelSelector(); }); }
     if (closeModelSelectorBtn) { closeModelSelectorBtn.addEventListener('click', closeModelSelector); }
@@ -422,7 +422,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     input.addEventListener('focus', () => { expandInputLayout(); chatInputArea.classList.remove('actions-expanded', 'emoji-expanded'); });
     document.addEventListener('click', (event) => { if (!chatInputArea.contains(event.target)) { collapseInputLayout(); } });
 
-    // --- 7. 初始化页面 ---
+    // --- 6. 初始化页面 (无变化) ---
     async function initializeChatState() {
         const savedStyleKey = await dbStorage.getItem(styleDbKey);
         if (savedStyleKey && CHAT_STYLES[savedStyleKey]) {
