@@ -6,12 +6,12 @@
 
 :root {
   /* Colors */
-  --color-primary: #B9A2E9;
-  --color-primary-hover: #a68ed6;
-  --color-primary-text: #8c7ab8;
-  --color-primary-bg-light: #f1eefc;
-  --color-primary-border: #e2dcf5;
-  --color-primary-border-dashed: #c5b9e8;
+  --color-primary: #7290B2;
+  --color-primary-hover: #637da0;
+  --color-primary-text: #6a82a3;
+  --color-primary-bg-light: #eef2f7;
+  --color-primary-border: #dce3ed;
+  --color-primary-border-dashed: #b7c4d7;
   --color-accent: #FFA7C4;
   --color-accent-bg: #FCE4EC;
   --color-danger: #ff3b30;

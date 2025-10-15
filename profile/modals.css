@@ -212,7 +212,7 @@
     border-radius: var(--radius-pill); cursor: pointer; 
     transition: background-color 0.2s;
 }
-.pane-title-capsule:hover { background-color: #e9e4fa; }
+.pane-title-capsule:hover { background-color: #e4eaf1; }
 
 .add-item-btn {
     display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -328,7 +328,7 @@
 }
 .prompt-box input:focus { 
     outline: none; border-color: var(--color-primary); 
-    box-shadow: 0 0 0 2px rgba(185, 162, 233, 0.3); 
+    box-shadow: 0 0 0 2px rgba(114, 144, 178, 0.3); 
 }
 .prompt-actions { display: flex; justify-content: space-between; gap: 15px; }
 .prompt-btn { 
@@ -396,7 +396,7 @@
     color: var(--color-primary-text); 
     border-color: var(--color-primary-border);
 }
-.preset-tag:hover { background-color: #e9e4fa; border-color: var(--color-primary-border-dashed); }
+.preset-tag:hover { background-color: #e4eaf1; border-color: var(--color-primary-border-dashed); }
 .preset-tag-custom { 
     background-color: transparent; color: var(--color-primary-text); 
     border: 1px dashed var(--color-primary-border-dashed); 

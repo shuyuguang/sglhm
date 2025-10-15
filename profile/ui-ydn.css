@@ -120,7 +120,7 @@
     margin: 10px auto;
 }
 #ydn-ui-wrapper .switcher-add-btn:hover {
-    background-color: #e9e4fa;
+    background-color: #e4eaf1;
     border-style: solid;
     color: var(--color-primary);
     transform: scale(1.05);

@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let sharedEventsBound = false;
 
     const UI_PREFERENCE_KEY = 'profileUiPreference';
-    let preferredUi = localStorage.getItem(UI_PREFERENCE_KEY) || 'YDN'; // 默认 YDN
+    let preferredUi = localStorage.getItem(UI_PREFERENCE_KEY) || 'YDM'; // 默认 YDN
 
     window.isYdnActive = (preferredUi === 'YDN');
     let ydnAppInitialized = false;
