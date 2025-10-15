@@ -15,13 +15,25 @@ body {
 
 /* --- 页面头部样式 --- */
 .page-header {
-    padding: 15px 20px;
+    /* ▼▼▼ 修改开始 ▼▼▼ */
+    /* 核心修改：将头部变为一个带外边距和圆角的卡片 */
+    margin: 10px 15px 0; /* 在顶部和左右添加外边距，使其成为一个独立的“框” */
+    border-radius: 16px; /* 设置圆角大小 */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* 添加一点阴影增加悬浮感 */
+    width: calc(100% - 30px); /* 宽度需要减去左右外边距的总和 */
+    
+    /* 粘性定位的顶部距离也需要和外边距匹配 */
+    top: 10px;
+    
+    /* 微调内边距，让内容看起来更协调 */
+    padding: 12px 15px;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
+
     display: flex;
     justify-content: space-between;
     align-items: center;
     background-color: #ffffff;
     position: sticky;
-    top: 0;
     z-index: 100;
 }
 
@@ -84,7 +96,6 @@ body {
     padding: 20px 15px;
 }
 
-/* ▼▼▼ 新增开始 ▼▼▼ */
 /* --- 帮助提示框样式 --- */
 .help-tooltip {
     position: absolute;
@@ -127,4 +138,3 @@ body {
     border-right: 8px solid transparent;
     border-bottom: 8px solid #ffffff;
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */
