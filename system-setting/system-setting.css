@@ -66,14 +66,18 @@ body {
 /* --- Tabs Navigation --- */
 .tabs-nav {
   position: sticky;
-  /* ▼▼▼ 修改处 ▼▼▼ */
-  /* 移除与 header 的重叠，使其紧跟在 header 下方 */
   top: var(--header-height);
-  /* ▲▲▲ 修改结束 ▲▲▲ */
   z-index: 10;
   
   background-color: var(--color-bg-light);
-  border-bottom: 1px solid var(--color-border);
+  
+  /* ▼▼▼ 修改处 ▼▼▼ */
+  /* 移除旧的下边框，替换为完整的外框 */
+  /* border-bottom: 1px solid var(--color-border); */
+  border: 1px solid #E4E8EE; /* 设置外框颜色 */
+  border-radius: 8px;           /* 添加圆角使外框更柔和 */
+  margin: -5px 0px;            /* 添加外边距让外框效果更明显 */
+  /* ▲▲▲ 修改结束 ▲▲▲ */
   
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
