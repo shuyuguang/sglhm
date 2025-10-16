@@ -6,8 +6,9 @@
 
 :root {
   /* Colors */
-  --color-primary: #B9A2E9;
-  --color-primary-hover: #a68ed6;
+  /* 【修改】主色调由紫色改为 #7290B2 */
+  --color-primary: #7290B2;
+  --color-primary-hover: #627c9c; /* 自动生成的悬停加深色 */
   --color-accent: #FFA7C4;
   --color-accent-bg: #FCE4EC;
   
@@ -16,51 +17,30 @@
   --color-text-light: #6c757d;
   --color-text-white: #ffffff;
 
-  --color-bg-body: #f4f7f9;
+  /* 【修改】背景色与 template.css 保持一致 */
+  --color-bg-body: #F8F9FA;
   --color-bg-light: #ffffff;
   --color-bg-grey: #f1f3f5;
   --color-bg-grey-hover: #e9ecef;
 
-
-
   /* Layout */
-  --header-height: 62px;
+  /* 【修改】根据 template.css 中的 header 高度和定位 (10px top + 56px height) 重新计算 */
+  --header-height: 66px; 
   --tabs-nav-height: 41px; /* Approximate height for calculation */
 }
 
 
 /* ==========================================================================
-   2. GENERAL & RESET
+   2. GENERAL & RESET (已移除 body 样式，由 template.css 控制)
    ========================================================================== */
 
 * {
   box-sizing: border-box;
 }
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  line-height: 1.6;
-  color: var(--color-text-dark);
-  background-color: var(--color-bg-body);
-}
-
-
 /* ==========================================================================
-   3. PAGE LAYOUT
+   3. PAGE LAYOUT (已移除 .page-header 样式，由 template.css 控制)
    ========================================================================== */
-
-.page-header {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  height: var(--header-height);
-  background-color: var(--color-bg-light);
-}
 
 .main-container {
   width: 100%;
@@ -74,39 +54,18 @@ body {
 
 
 /* ==========================================================================
-   4. COMPONENTS
+   4. COMPONENTS (已移除 Header 相关组件样式)
    ========================================================================== */
-
-/* --- Page Title --- */
-.page-title { display: flex; align-items: center; margin: 0; font-size: 1.2em; font-weight: 600; color: var(--color-text-medium); }
-.page-title::before { 
-  content: '\f004'; 
-  font-family: 'Font Awesome 6 Free'; 
-  font-weight: 900; 
-  font-size: 0.9em; 
-  text-align: center; 
-  width: 1.2em; 
-  margin-right: 10px; 
-  color: var(--color-primary); 
-}
-/* --- Header Action Buttons (省略) --- */
-.header-actions { display: flex; align-items: center; gap: 10px; }
-.header-actions button, .header-actions a { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: none; border-radius: 50%; cursor: pointer; text-decoration: none; transition: all 0.2s ease; }
-.btn-help { font-size: 16px; color: var(--color-accent); background-color: var(--color-accent-bg); }
-.btn-help:hover { color: var(--color-text-white); background-color: var(--color-accent); transform: scale(1.1); }
-.btn-back { font-size: 20px; color: var(--color-text-light); background-color: var(--color-bg-grey); }
-.btn-back:hover { color: var(--color-text-medium); background-color: var(--color-bg-grey-hover); }
-.btn-save { font-size: 16px; color: var(--color-text-white); background-color: var(--color-primary); }
-.btn-save:hover { background-color: var(--color-primary-hover); transform: scale(1.1); }
 
 /* --- Tabs Navigation --- */
 .tabs-nav {
   position: sticky;
-  top: calc(var(--header-height) - 15px);
+  /* 【修改】移除旧的重叠计算，使其紧贴在 header下方 */
+  top: var(--header-height);
   z-index: 10;
   
   background-color: var(--color-bg-light);
-  border-bottom: 1px solid var(--color-border);
+  
   
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -147,7 +106,8 @@ body {
 /* --- Active Tab Indicator (The Heart) --- */
 .active-tab-indicator {
   position: sticky;
-  top: calc(var(--header-height) - 10px + var(--tabs-nav-height) - 7px - 4px);
+  /* 【修改】根据新的 tabs-nav 位置重新计算，确保 JS 未加载时位置正确 */
+  top: calc(var(--header-height) + var(--tabs-nav-height) - 11px);
   z-index: 30;
   
   width: 20px;
@@ -177,25 +137,22 @@ body {
 }
 
 
-/* --- [新增] Capsule Navigation (Sub-tabs) --- */
+/* --- Capsule Navigation (Sub-tabs) --- */
 .capsule-nav {
   display: flex;
-  flex-wrap: wrap; /* 允许换行 */
+  flex-wrap: wrap; 
   gap: 10px;
   margin-bottom: 20px;
-  padding-bottom: 5px; /* 防止滚动条遮挡 */
+  padding-bottom: 5px; 
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 
-  /* 用负 margin 抵消父容器的 15px padding */
   margin-left: -8px;
   margin-right: -8px;
-  /* 把 15px 的间距加回来，作为内部边距，这样第一个胶囊就不会贴着屏幕边缘 */
   padding-left: 5px;
   padding-right: 5px;
 }
 
-/* 隐藏滚动条 */
 .capsule-nav::-webkit-scrollbar {
   display: none;
 }
@@ -203,13 +160,13 @@ body {
 .capsule-button {
   padding: 6px 12px;
   border: 1px solid var(--color-bg-grey-hover);
-  border-radius: 999px; /* 胶囊形状 */
+  border-radius: 999px;
   background-color: var(--color-bg-light);
   color: var(--color-text-medium);
   font-size: 0.9em;
   font-weight: 500;
   cursor: pointer;
-  white-space: nowrap; /* 防止文字换行 */
+  white-space: nowrap; 
   transition: all 0.2s ease-in-out;
 }
 
@@ -412,8 +369,8 @@ body {
     color: var(--color-text-dark);
     background-color: var(--color-bg-light);
     transition: border-color 0.2s, box-shadow 0.2s;
-    font-family: inherit; /* 继承字体 */
-    resize: vertical; /* 允许垂直调整大小 */
+    font-family: inherit;
+    resize: vertical;
 }
 .form-group input[type="text"]:focus,
 .form-group textarea:focus {
@@ -470,7 +427,7 @@ body {
 }
 
 /* ==========================================================================
-   ▼▼▼ 修改：规则卡片样式 ▼▼▼
+   RULE CARD STYLES
    ========================================================================== */
 
 /* --- 8. RULE CARDS --- */
@@ -513,14 +470,12 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    /* 防止标题过长时挤压右侧按钮 */
     min-width: 0;
 }
 
 .rule-card-title-text {
     font-weight: 500;
     color: var(--color-text-dark);
-    /* 防止长标题不换行 */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -533,14 +488,12 @@ body {
 .arrow-before { color: #3498db; }
 .arrow-after { color: #4CAF50; }
 
-/* ▼▼▼ 新增：卡片头部右侧操作区样式 ▼▼▼ */
 .rule-card-header-actions {
     display: flex;
     align-items: center;
-    gap: 8px; /* 编辑按钮和V形图标的间距 */
-    flex-shrink: 0; /* 防止被标题挤压 */
+    gap: 8px;
+    flex-shrink: 0;
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */
 
 .rule-card-toggle {
     background: none;
@@ -590,13 +543,12 @@ body {
     white-space: pre-wrap;
 }
 
-/* ▼▼▼ 修改：card-action-btn 的样式现在用于头部 ▼▼▼ */
 .card-action-btn {
     background: none;
     border: none;
     cursor: pointer;
     color: var(--color-text-light);
-    font-size: 14px; /* 调整大小以适应头部 */
+    font-size: 14px;
     padding: 5px;
     width: 30px;
     height: 30px;
@@ -610,9 +562,6 @@ body {
     background-color: var(--color-bg-grey);
     color: var(--color-text-dark);
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
-
-/* 旧的 .rule-card-actions 样式已被移除 */
 
 
 /* --- 模态框删除按钮 --- */
@@ -627,28 +576,24 @@ body {
     color: #b91c1c;
 }
 
-/* ▼▼▼ 新增：拖拽手柄样式 ▼▼▼ */
+/* --- 拖拽样式 --- */
 .drag-handle {
-    cursor: grab; /* 表明可以拖动 */
+    cursor: grab;
 }
 .drag-handle:active {
-    cursor: grabbing; /* 拖动时的光标样式 */
+    cursor: grabbing;
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */
 
-
-/* ▼▼▼ 新增：SortableJS 拖拽过程中的样式 ▼▼▼ */
-/* 这是拖拽时，卡片原来位置的占位符样式 */
+/* SortableJS 拖拽过程中的样式 */
 .sortable-ghost {
     opacity: 0.4;
-    background-color: #eef2ff; /* 一个淡淡的紫色背景 */
+    /* 【修改】背景色改为与新主色调匹配的淡蓝色 */
+    background-color: #eaf0f6;
     border: 2px dashed var(--color-primary);
 }
 
-/* 这是正在被拖拽的卡片本身的样式 */
 .sortable-drag {
-    opacity: 0.9 !important; /* !important 确保覆盖原有样式 */
+    opacity: 0.9 !important;
     box-shadow: 0 8px 20px rgba(0,0,0,0.2) !important;
-    transform: rotate(2deg); /* 轻微旋转，增加“拿起”的感觉 */
+    transform: rotate(2deg);
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */
