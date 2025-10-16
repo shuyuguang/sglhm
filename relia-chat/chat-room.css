@@ -26,13 +26,34 @@ html, body {
     height: 100dvh;
 }
 
-/* --- 聊天室头部 --- */
-.chat-header { display: flex; align-items: center; padding: 12px 22px 7px 20px; background-color: var(--header-bg); flex-shrink: 0; gap: 10px; }
-.chat-header-btn { background: none; border: none; font-size: 1.2rem; color: var(--text-dark); cursor: pointer; padding: 5px; text-decoration: none; flex-shrink: 0; }
-.char-info { flex-grow: 1; display: flex; align-items: center; gap: 12px; min-width: 0; padding-left: 13px; }
+/* ▼▼▼ 修改1：让聊天室头部绝对定位，浮动起来 ▼▼▼ */
+.chat-header {
+    position: absolute; /* 将 sticky 改为 absolute */
+    top: 15px;
+    left: 15px; /* 使用 left 和 right 控制位置和宽度 */
+    right: 15px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    padding: 4px 10px;
+    gap: 10px;
+    box-sizing: border-box;
+
+    /* --- 核心外观样式 (无变化) --- */
+    background-color: rgba(255, 255, 255, 0.05); /* 半透明背景 */
+    -webkit-backdrop-filter: saturate(180%) blur(10px); /* 磨砂玻璃效果 (for Safari) */
+    backdrop-filter: saturate(180%) blur(10px); /* 磨砂玻璃效果 */
+    border-radius: 99px; /* 圆角 */
+    border: 1px solid #C9D0D8;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* 阴影 */
+}
+/* ▲▲▲ 修改结束 ▲▲▲ */
+
+.chat-header-btn { background: none; border: none; font-size: 1rem; color: var(--text-dark); cursor: pointer; padding: 8px; text-decoration: none; flex-shrink: 0; }
+.char-info { flex-grow: 1; display: flex; align-items: center; gap: 15px; min-width: 0; }
 .char-info-avatar {
-    width: 46px;
-    height: 46px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     object-fit: cover;
     flex-shrink: 0;
@@ -42,7 +63,17 @@ html, body {
 .char-info-status { font-size: 0.8em; color: var(--text-meta); line-height: 1.2; }
 
 /* --- 聊天消息区域 --- */
-.chat-messages { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 15px; background-color: #ffffff; }
+/* ▼▼▼ 修改2：为消息区域增加顶部内边距，防止被头部遮挡 ▼▼▼ */
+.chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 85px 15px 15px 15px; /* 增加了顶部的 padding */
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background-color: #ffffff;
+}
+/* ▲▲▲ 修改结束 ▲▲▲ */
 .message-row { display: flex; align-items: flex-start; gap: 10px; max-width: 80%; }
 .message-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
 .chat-bubble { padding: 10px 15px; border-radius: 18px; line-height: 1.5; word-wrap: break-word; }
@@ -621,7 +652,7 @@ html, body {
 .message-edit-btn {
     border: none;
     border-radius: 6px;
-    padding: 4px 12px;
+    padding: 6px;
     font-size: 0.85rem;
     cursor: pointer;
     background-color: #ffffff;
@@ -637,3 +668,71 @@ html, body {
 .message-edit-btn:hover {
     filter: brightness(0.95);
 }
+
+/* ▼▼▼ 修改：顶部菜单样式 (移除图标相关样式) ▼▼▼ */
+.header-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    display: none;
+}
+.header-menu-overlay.active {
+    display: block;
+}
+
+.header-menu {
+    position: absolute;
+    top: 70px;
+    right: 15px;
+    width: 60px;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    padding: 6px;
+    z-index: 101;
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+    transform-origin: top right;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.header-menu.active {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    pointer-events: auto;
+}
+.header-menu-arrow {
+    position: absolute;
+    top: -6px;
+    right: 20px;
+    width: 12px;
+    height: 12px;
+    background-color: #fff;
+    transform: rotate(45deg);
+}
+
+.header-menu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.header-menu-item a {
+    display: flex;
+    align-items: center;
+    padding: 6px; /* 调整内边距适应无图标布局 */
+    text-decoration: none;
+    color: var(--text-dark);
+    font-size: 1rem;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+.header-menu-item a:hover {
+    background-color: #f1f3f5;
+}
+/* ▲▲▲ 修改结束 ▲▲▲ */

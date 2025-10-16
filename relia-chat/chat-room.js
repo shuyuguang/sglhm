@@ -64,6 +64,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <span class="char-info-status">在线</span>
                         </div>
                     </div>
+                    <!-- ▼▼▼ 新增的三横杠菜单按钮 ▼▼▼ -->
+                    <button class="chat-header-btn" id="menu-btn"><i class="fa-solid fa-bars"></i></button>
+                    <!-- ▲▲▲ 新增结束 ▲▲▲ -->
                 </header>
                 <main class="chat-messages" id="chat-messages-area"></main>
                 <footer class="chat-input-area" id="chat-input-area">
@@ -130,6 +133,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const editSettingsBtn = document.getElementById('edit-settings-btn');
         const searchHistoryBtn = document.getElementById('search-history-btn');
         const workbenchBtn = document.getElementById('workbench-btn');
+        // ▼▼▼ 新增：获取顶部菜单相关元素 ▼▼▼
+        const menuBtn = document.getElementById('menu-btn');
+        const headerMenu = document.getElementById('header-menu');
+        const headerMenuOverlay = document.getElementById('header-menu-overlay');
+        // ▲▲▲ 新增结束 ▲▲▲
         
         let currentChatApi = null;
 
@@ -410,6 +418,45 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
+        // ▼▼▼ 修改：为顶部菜单绑定事件 ▼▼▼
+        if (menuBtn && headerMenu && headerMenuOverlay) {
+            const menuMemoryBtn = document.getElementById('menu-memory-btn');
+            const menuStyleBtn = document.getElementById('menu-style-btn');
+            const menuEditBtn = document.getElementById('menu-edit-btn');
+            const menuModelBtn = document.getElementById('menu-model-btn');
+            const menuThemeBtn = document.getElementById('menu-theme-btn');
+        
+            const toggleMenu = () => {
+                headerMenu.classList.toggle('active');
+                headerMenuOverlay.classList.toggle('active');
+            };
+        
+            menuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMenu();
+            });
+        
+            headerMenuOverlay.addEventListener('click', toggleMenu);
+        
+            const handleMenuClick = (targetButton, isNotImplemented = false) => {
+                toggleMenu();
+                // 使用短暂延迟确保菜单关闭动画不影响点击事件
+                setTimeout(() => {
+                    if (isNotImplemented) {
+                        alert('该功能待开发');
+                    } else if (targetButton) {
+                        targetButton.click();
+                    }
+                }, 50);
+            };
+        
+            if (menuMemoryBtn) menuMemoryBtn.addEventListener('click', (e) => { e.preventDefault(); handleMenuClick(searchHistoryBtn); });
+            if (menuStyleBtn) menuStyleBtn.addEventListener('click', (e) => { e.preventDefault(); handleMenuClick(workbenchBtn); });
+            if (menuEditBtn) menuEditBtn.addEventListener('click', (e) => { e.preventDefault(); handleMenuClick(editSettingsBtn); });
+            if (menuModelBtn) menuModelBtn.addEventListener('click', (e) => { e.preventDefault(); handleMenuClick(selectModelBtn); });
+            if (menuThemeBtn) menuThemeBtn.addEventListener('click', (e) => { e.preventDefault(); handleMenuClick(null, true); });
+        }
+        // ▲▲▲ 修改结束 ▲▲▲
 
         if (editSettingsBtn) { editSettingsBtn.addEventListener('click', () => chatEditor ? chatEditor.open() : alert('编辑器初始化失败！')); }
         if (searchHistoryBtn) { searchHistoryBtn.addEventListener('click', () => { alert('“记忆库”功能待开发'); }); }

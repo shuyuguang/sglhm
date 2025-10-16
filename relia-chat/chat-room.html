@@ -1,5 +1,4 @@
 <!-- chat-room.html -->
-<!-- (无需修改，此文件内容已是最终版) -->
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -24,6 +23,20 @@
     <div id="app-container">
         <!-- 聊天室UI将由JS动态生成到这里 -->
     </div>
+
+    <!-- ▼▼▼ 修改：顶部三横杠菜单内容 ▼▼▼ -->
+    <div class="header-menu-overlay" id="header-menu-overlay"></div>
+    <div class="header-menu" id="header-menu">
+        <div class="header-menu-arrow"></div>
+        <ul class="header-menu-list">
+            <li class="header-menu-item"><a href="#" id="menu-memory-btn"><span>记忆</span></a></li>
+            <li class="header-menu-item"><a href="#" id="menu-style-btn"><span>风格</span></a></li>
+            <li class="header-menu-item"><a href="#" id="menu-edit-btn"><span>设定</span></a></li>
+            <li class="header-menu-item"><a href="#" id="menu-model-btn"><span>模式</span></a></li>
+            <li class="header-menu-item"><a href="#" id="menu-theme-btn"><span>主题</span></a></li>
+        </ul>
+    </div>
+    <!-- ▲▲▲ 修改结束 ▲▲▲ -->
 
     <!-- 模型选择模态框 -->
     <div class="modal-overlay" id="model-selector-overlay">
