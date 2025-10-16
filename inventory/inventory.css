@@ -21,10 +21,8 @@
   --color-bg-grey: #f1f3f5;
   --color-bg-grey-hover: #e9ecef;
 
-
-
   /* Layout */
-  --header-height: 62px;
+  --header-height: 62px; /* 注意：此值需要与 template.css 中的 header 实际高度匹配 */
   --tabs-nav-height: 41px; /* Approximate height for calculation */
 }
 
@@ -47,20 +45,8 @@ body {
 
 
 /* ==========================================================================
-   3. PAGE LAYOUT
+   3. PAGE LAYOUT (已移除 .page-header)
    ========================================================================== */
-
-.page-header {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  height: var(--header-height);
-  background-color: var(--color-bg-light);
-}
 
 .main-container {
   width: 100%;
@@ -74,35 +60,16 @@ body {
 
 
 /* ==========================================================================
-   4. COMPONENTS
+   4. COMPONENTS (已移除 Header 相关组件)
    ========================================================================== */
-
-/* --- Page Title --- */
-.page-title { display: flex; align-items: center; margin: 0; font-size: 1.2em; font-weight: 600; color: var(--color-text-medium); }
-.page-title::before { 
-  content: '\f004'; 
-  font-family: 'Font Awesome 6 Free'; 
-  font-weight: 900; 
-  font-size: 0.9em; 
-  text-align: center; 
-  width: 1.2em; 
-  margin-right: 10px; 
-  color: var(--color-primary); 
-}
-/* --- Header Action Buttons (省略) --- */
-.header-actions { display: flex; align-items: center; gap: 10px; }
-.header-actions button, .header-actions a { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: none; border-radius: 50%; cursor: pointer; text-decoration: none; transition: all 0.2s ease; }
-.btn-help { font-size: 16px; color: var(--color-accent); background-color: var(--color-accent-bg); }
-.btn-help:hover { color: var(--color-text-white); background-color: var(--color-accent); transform: scale(1.1); }
-.btn-back { font-size: 20px; color: var(--color-text-light); background-color: var(--color-bg-grey); }
-.btn-back:hover { color: var(--color-text-medium); background-color: var(--color-bg-grey-hover); }
-.btn-save { font-size: 16px; color: var(--color-text-white); background-color: var(--color-primary); }
-.btn-save:hover { background-color: var(--color-primary-hover); transform: scale(1.1); }
 
 /* --- Tabs Navigation --- */
 .tabs-nav {
   position: sticky;
-  top: calc(var(--header-height) - 15px);
+  /* ▼▼▼ 修改处 ▼▼▼ */
+  /* 移除与 header 的重叠，使其紧跟在 header 下方 */
+  top: var(--header-height);
+  /* ▲▲▲ 修改结束 ▲▲▲ */
   z-index: 10;
   
   background-color: var(--color-bg-light);
@@ -119,7 +86,7 @@ body {
   display: flex;
   padding: 0 10px;
   white-space: nowrap;
-  /* 【新增】让容器宽度撑满 */
+  /* 【保留】让容器宽度撑满 */
   width: 100%;
 }
 
@@ -134,7 +101,7 @@ body {
   cursor: pointer;
   transition: color 0.3s ease;
   
-  /* 【新增】让每个按钮等分宽度 */
+  /* 【保留】让每个按钮等分宽度 */
   flex: 1;
   text-align: center;
 }
@@ -149,7 +116,10 @@ body {
 /* --- Active Tab Indicator (The Heart) --- */
 .active-tab-indicator {
   position: sticky;
-  top: calc(var(--header-height) - 10px + var(--tabs-nav-height) - 7px - 4px);
+  /* ▼▼▼ 修改处 ▼▼▼ */
+  /* 同步调整 top 值，保持与 tabs-nav 的相对位置 */
+  top: calc(var(--header-height) + var(--tabs-nav-height) - 11px);
+  /* ▲▲▲ 修改结束 ▲▲▲ */
   z-index: 30;
   
   width: 20px;
@@ -157,7 +127,10 @@ body {
   
   font-size: 14px;
   text-align: center;
-  color: var(--color-primary);
+  /* ▼▼▼ 修改处 ▼▼▼ */
+  /* 将小爱心颜色修改为指定颜色 */
+  color: #7290B2;
+  /* ▲▲▲ 修改结束 ▲▲▲ */
   
   pointer-events: none;
   opacity: 0;
