@@ -16,7 +16,7 @@
   --color-text-light: #6c757d;
   --color-text-white: #ffffff;
 
-  --color-bg-body: #f4f7f9;
+  --color-bg-body: #F8F9FA; /* <<< 修改后的背景色 */
   --color-bg-light: #ffffff;
   --color-bg-grey: #f1f3f5;
   --color-bg-grey-hover: #e9ecef;
