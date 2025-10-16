@@ -64,7 +64,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <span class="char-info-status">在线</span>
                         </div>
                     </div>
-                    <a id="options-btn" class="chat-header-btn options-btn"><i class="fa-solid fa-ellipsis-vertical"></i></a>
                 </header>
                 <main class="chat-messages" id="chat-messages-area"></main>
                 <footer class="chat-input-area" id="chat-input-area">
@@ -91,7 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <div class="action-item"><button class="action-btn"><i class="fa-solid fa-camera"></i></button><span>拍照</span></div>
                         <div class="action-item"><button class="action-btn"><i class="fa-solid fa-microphone"></i></button><span>音频</span></div>
                         <div class="action-item"><button class="action-btn"><i class="fa-solid fa-palette"></i></button><span>主题</span></div>
-                        <div class="action-item"><button class="action-btn"><i class="fa-solid fa-briefcase"></i></button><span>工作台</span></div>
+                        <div class="action-item"><button class="action-btn" id="workbench-btn"><i class="fa-solid fa-briefcase"></i></button><span>工作台</span></div>
                         <div class="action-item"><button class="action-btn"><i class="fa-solid fa-list-check"></i></button><span>DIY</span></div>                    <div class="action-item"><button class="action-btn" id="edit-settings-btn"><i class="fa-solid fa-pencil"></i></button><span>编辑</span></div>
                         <div class="action-item"><button class="action-btn" id="search-history-btn"><i class="fa-solid fa-brain"></i></button><span>数据</span></div>
                         <div class="action-item"><button class="action-btn"><i class="fa-solid fa-money-bill-transfer"></i></button><span>转账</span></div>
@@ -128,17 +127,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         const closeModelSelectorBtn = document.getElementById('close-model-selector-btn');
         const promptBtn = document.getElementById('prompt-btn');
         const inspirationBtn = document.getElementById('inspiration-btn');
-        const optionsBtn = document.getElementById('options-btn');
         const editSettingsBtn = document.getElementById('edit-settings-btn');
         const searchHistoryBtn = document.getElementById('search-history-btn');
+        const workbenchBtn = document.getElementById('workbench-btn');
         
         let currentChatApi = null;
+
+        // ▼▼▼ 修复点：在这里重新添加被误删的变量定义 ▼▼▼
         const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`;
         const selectedApiKey = `${CHAT_DB_KEYS.CHAT_SELECTED_API}_${charId}`;
         let currentChatStyle = CHAT_STYLES['dialogue']; // 默认使用对话体
         const styleDbKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_style_${charId}`;
 
         let chatHistory = [];
+        // ▲▲▲ 修复结束 ▲▲▲
         
         let chatEditor = null;
         const onProfileUpdate = async (updatedProfile) => {
@@ -237,6 +239,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 chatHistory = savedHistory;
                 chatArea.innerHTML = '';
                 chatHistory.forEach((message, index) => renderMessage(message, index));
+            } else {
+                // 如果没有历史记录，确保聊天区域是空的
+                chatArea.innerHTML = '';
+                chatHistory = [];
             }
         }
         function updateButtonStates() { 
@@ -393,9 +399,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (promptBtn) { promptBtn.addEventListener('click', () => { alert('“快捷指令（闪电）”功能待开发'); }); }
         if (inspirationBtn) { inspirationBtn.addEventListener('click', () => { alert('“灵感（灯泡）”功能待开发'); }); }
         
-        if (optionsBtn) {
+        if (workbenchBtn) {
             createChatPromptPanel({
-                triggerElement: optionsBtn,
+                triggerElement: workbenchBtn,
                 container: document.body,
                 charId: charId,
                 onSave: (styleObject) => {

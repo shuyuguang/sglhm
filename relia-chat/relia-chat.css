@@ -58,14 +58,14 @@
 }
 
 .modal-tab.active {
-    color: #B9A2E9;
+    color: #7290B2;
 }
 
 .modal-tab::after {
     content: '\f004';
     font-family: "Font Awesome 6 Free";
     font-weight: 900;
-    color: #B9A2E9;
+    color: #7290B2;
     font-size: 12px;
     position: absolute;
     left: 50%;
@@ -129,7 +129,7 @@
 .char-item input[type="checkbox"] {
     width: 20px;
     height: 20px;
-    accent-color: #B9A2E9;
+    accent-color: #7290B2;
     flex-shrink: 0;
     pointer-events: none;
 }
@@ -162,11 +162,11 @@
 }
 
 .sheet-btn-confirm {
-    background-color: #B9A2E9;
+    background-color: #7290B2;
     color: white;
 }
 .sheet-btn-confirm:hover {
-    background-color: #a78fe1;
+    background-color: #627ca0;
 }
 
 .no-char-message {
@@ -247,7 +247,7 @@
 
 .unread-badge {
     margin-top: 10px;
-    background-color: #B9A2E9;
+    background-color: #7290B2;
     color: white;
     font-size: 0.75em;
     font-weight: bold;

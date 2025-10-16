@@ -9,7 +9,7 @@
     --text-light: #fff;
     --text-meta: #adb5bd;
     --border-color: #e9ecef;
-    --send-btn-bg: #B9A2E9; 
+    --send-btn-bg: #7290B2; 
 }
 
 html, body {
@@ -418,7 +418,7 @@ html, body {
 }
 
 .model-item.active {
-    background-color: #f0eefc;
+    background-color: #f0f3f6;
     box-shadow: 0 0 0 2px var(--send-btn-bg) inset;
 }
 
@@ -488,7 +488,7 @@ html, body {
 .style-buttons-container { display: flex; justify-content: center; gap: 12px; margin: 10px 0 10px 0; }
 .style-button { padding: 7px; border-radius: 20px; border: 1px solid #dee2e6; background-color: #f8f9fa; color: #495057; font-size: 0.9em; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
 .style-button:hover { background-color: #f1f3f5; }
-.style-button.active { background-color: #f0eefc; color: var(--send-btn-bg); border-color: var(--send-btn-bg); }
+.style-button.active { background-color: #f0f3f6; color: var(--send-btn-bg); border-color: var(--send-btn-bg); }
 #chat-prompt-panel .modal-content-container { padding: 10px; }
 #chat-prompt-panel .sheet-footer { padding: 10px; display: flex; gap: 10px; border-top: 1px solid var(--border-color); flex-shrink: 0; }
 #chat-prompt-panel .sheet-btn { flex-grow: 1; padding: 12px; border: none; border-radius: 8px; font-size: 1em; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
@@ -539,109 +539,6 @@ html, body {
 
 /* ▼▼▼ 新增：设置项样式 ▼▼▼ */
 .style-settings-container {
-    padding: 15px 5px 5px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-.style-setting-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.95em;
-    color: #343a40;
-}
-.style-setting-item label {
-    font-weight: 500;
-}
-.slider-value {
-    font-weight: 500;
-    color: var(--send-btn-bg);
-    min-width: 20px;
-    text-align: right;
-}
-
-/* 开关样式 */
-.toggle-switch {
-    position: relative;
-    display: inline-block;
-    width: 44px;
-    height: 24px;
-}
-.toggle-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-.toggle-slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: .4s;
-    border-radius: 24px;
-}
-.toggle-slider:before {
-    position: absolute;
-    content: "";
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: .4s;
-    border-radius: 50%;
-}
-input:checked + .toggle-slider {
-    background-color: var(--send-btn-bg);
-}
-input:checked + .toggle-slider:before {
-    transform: translateX(20px);
-}
-
-/* 滑块样式 */
-.memory-slider {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 6px;
-    background: #dee2e6;
-    outline: none;
-    opacity: 0.9;
-    transition: opacity .2s;
-    border-radius: 6px;
-    margin-top: 4px;
-}
-.memory-slider:hover {
-    opacity: 1;
-}
-.memory-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    background: var(--send-btn-bg);
-    cursor: pointer;
-    border-radius: 50%;
-    border: 3px solid #fff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-.memory-slider::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    background: var(--send-btn-bg);
-    cursor: pointer;
-    border-radius: 50%;
-    border: 3px solid #fff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-/* ▲▲▲ 新增结束 ▲▲▲ */
-
-/* ▼▼▼ 新增：设置项样式 ▼▼▼ */
-.style-settings-container {
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -675,6 +572,21 @@ input:checked + .toggle-slider:before {
 }
 .style-setting-item input[type="number"] {
     -moz-appearance: textfield; /* Firefox */
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */
+
+/* ▼▼▼ 新增：最小/最大输入框容器样式 ▼▼▼ */
+.min-max-input-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.min-max-input-container input[type="number"] {
+    width: 50px; /* 调整为更窄的宽度 */
+}
+.min-max-input-container span {
+    color: #868e96;
+    font-weight: 500;
 }
 /* ▲▲▲ 新增结束 ▲▲▲ */
 

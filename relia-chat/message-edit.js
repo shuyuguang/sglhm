@@ -77,7 +77,7 @@ function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
         { action: 'forward', icon: 'fa-solid fa-share', text: '转发' },
         { action: 'copy', icon: 'fa-regular fa-copy', text: '复制' },
         { action: 'multiselect', icon: 'fa-solid fa-check-double', text: '多选' },
-        { action: 'other', icon: 'fa-solid fa-ellipsis', text: '其它' }
+        { action: 'branch', icon: 'fa-solid fa-code-branch', text: '分支' }
     ];
 
     menu.innerHTML = menuItems.map(item => `

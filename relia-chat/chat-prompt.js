@@ -4,7 +4,6 @@ import { dbStorage } from '../common/db.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
 
 // ======================= 1. 风格定义与逻辑中心 =======================
-// (此部分无变化)
 
 async function defaultStreamHandler(context) {
     const { reader, decoder, renderMessage, chatHistory, historyKey, chatArea } = context;
@@ -139,6 +138,34 @@ export const CHAT_STYLES = {
     }
 };
 
+// ▼▼▼ 新增：为每种风格定义不同的默认设置 ▼▼▼
+const STYLE_DEFAULT_SETTINGS = {
+    'dialogue': {
+        outputMin: '2',
+        outputMax: '20',
+        visualLimit: '50',
+        memoryLimit: '20'
+    },
+    'short-chat': {
+        outputMin: '2',
+        outputMax: '10',
+        visualLimit: '30',
+        memoryLimit: '15'
+    },
+    'novel': {
+        outputMin: '2',
+        outputMax: '10',
+        visualLimit: '30',
+        memoryLimit: '15'
+    },
+    'text-adventure': {
+        outputMin: '3',
+        outputMax: '15',
+        visualLimit: '30',
+        memoryLimit: '10'
+    }
+};
+// ▲▲▲ 新增结束 ▲▲▲
 
 // ======================= 2. UI 面板创建与管理 (已修改) =======================
 
@@ -150,7 +177,6 @@ export function createChatPromptPanel({ triggerElement, container, onSave, charI
         `<button class="style-button" data-style="${key}">${CHAT_STYLES[key].name}</button>`
     ).join('');
 
-    // ▼▼▼ 修改：更新HTML，移除示例框，增加新设置项 ▼▼▼
     const panelHtml = `
         <div class="modal-overlay" id="chat-prompt-overlay">
             <div class="modal-panel" id="chat-prompt-panel">
@@ -172,16 +198,20 @@ export function createChatPromptPanel({ triggerElement, container, onSave, charI
                     </div>
                     <div class="style-settings-container">
                         <div class="style-setting-item">
-                            <label for="output-limit-input">输出条数限制</label>
-                            <input type="number" id="output-limit-input" min="1" max="99" placeholder="1">
+                            <label>输出条数限制</label>
+                            <div class="min-max-input-container">
+                                <input type="number" id="output-limit-min-input" min="1" max="99">
+                                <span>-</span>
+                                <input type="number" id="output-limit-max-input" min="1" max="99">
+                            </div>
                         </div>
                         <div class="style-setting-item">
                             <label for="visual-limit-input">视觉上下文限制</label>
-                            <input type="number" id="visual-limit-input" min="1" max="99" placeholder="1">
+                            <input type="number" id="visual-limit-input" min="30" max="99">
                         </div>
                         <div class="style-setting-item">
                             <label for="memory-limit-input">记忆轮数限制</label>
-                            <input type="number" id="memory-limit-input" min="1" max="99" placeholder="10">
+                            <input type="number" id="memory-limit-input" min="10" max="99">
                         </div>
                     </div>
                 </div>
@@ -192,11 +222,9 @@ export function createChatPromptPanel({ triggerElement, container, onSave, charI
             </div>
         </div>
     `;
-    // ▲▲▲ 修改结束 ▲▲▲
 
     container.insertAdjacentHTML('beforeend', panelHtml);
 
-    // ▼▼▼ 修改：更新UI元素引用 ▼▼▼
     const ui = {
         overlay: document.getElementById('chat-prompt-overlay'),
         panel: document.getElementById('chat-prompt-panel'),
@@ -206,17 +234,14 @@ export function createChatPromptPanel({ triggerElement, container, onSave, charI
         styleDescription: document.getElementById('style-description'),
         cancelBtn: document.getElementById('prompt-cancel-btn'),
         saveBtn: document.getElementById('prompt-save-btn'),
-        outputLimitInput: document.getElementById('output-limit-input'),
+        outputLimitMinInput: document.getElementById('output-limit-min-input'),
+        outputLimitMaxInput: document.getElementById('output-limit-max-input'),
         visualLimitInput: document.getElementById('visual-limit-input'),
         memoryLimitInput: document.getElementById('memory-limit-input'),
     };
-    // ▲▲▲ 修改结束 ▲▲▲
 
     let activeStyle = styleKeys[0];
     const styleDbKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_style_${charId}`;
-    // ▼▼▼ 新增：为新设置项定义数据库键 ▼▼▼
-    const settingsDbKey = `${CHAT_DB_KEYS.CHAT_SETTINGS}_${charId}`;
-    // ▲▲▲ 新增结束 ▲▲▲
 
     function updatePanelDetails(styleKey) {
         const style = CHAT_STYLES[styleKey];
@@ -225,58 +250,66 @@ export function createChatPromptPanel({ triggerElement, container, onSave, charI
         }
     }
     
-    function setActiveStyle(targetStyleKey) {
+    // ▼▼▼ 修改：此函数现在会根据风格加载对应的默认值 ▼▼▼
+    async function loadAndDisplaySettings(styleKey) {
+        // 1. 获取该风格的专属默认值，如果找不到则用对话体作为后备
+        const defaults = STYLE_DEFAULT_SETTINGS[styleKey] || STYLE_DEFAULT_SETTINGS['dialogue'];
+        
+        // 2. 从数据库加载用户保存的设置
+        const settingsDbKey = `${CHAT_DB_KEYS.CHAT_SETTINGS}_${charId}_${styleKey}`;
+        const savedSettings = await dbStorage.getItem(settingsDbKey);
+        
+        const settings = savedSettings || {};
+        const outputLimit = settings.outputLimit || {};
+
+        // 3. 更新UI：优先使用保存值，否则使用该风格的默认值
+        ui.outputLimitMinInput.value = outputLimit.min || defaults.outputMin;
+        ui.outputLimitMaxInput.value = outputLimit.max || defaults.outputMax;
+        ui.visualLimitInput.value = settings.visualLimit || defaults.visualLimit;
+        ui.memoryLimitInput.value = settings.memoryLimit || defaults.memoryLimit;
+    }
+    // ▲▲▲ 修改结束 ▲▲▲
+
+    async function setActiveStyle(targetStyleKey) {
         activeStyle = targetStyleKey;
         ui.styleButtons.forEach(button => {
             button.classList.toggle('active', button.dataset.style === targetStyleKey);
         });
         updatePanelDetails(targetStyleKey);
+        await loadAndDisplaySettings(targetStyleKey);
         ui.styleCard.classList.remove('expanded');
     }
     
-    // ▼▼▼ 修改：打开面板时加载风格和设置 ▼▼▼
     async function openPanel() {
-        const [savedStyle, savedSettings] = await Promise.all([
-            dbStorage.getItem(styleDbKey),
-            dbStorage.getItem(settingsDbKey)
-        ]);
-
+        const savedStyle = await dbStorage.getItem(styleDbKey);
         const styleToActivate = (savedStyle && CHAT_STYLES[savedStyle]) ? savedStyle : styleKeys[0];
-        setActiveStyle(styleToActivate);
-
-        if (savedSettings) {
-            ui.outputLimitInput.value = savedSettings.outputLimit || '';
-            ui.visualLimitInput.value = savedSettings.visualLimit || '';
-            ui.memoryLimitInput.value = savedSettings.memoryLimit || '';
-        }
-
+        await setActiveStyle(styleToActivate);
         ui.overlay.classList.add('active');
     }
-    // ▲▲▲ 修改结束 ▲▲▲
 
     function closePanel() {
         ui.overlay.classList.remove('active');
     }
 
-    // ▼▼▼ 修改：保存时同时保存风格和设置 ▼▼▼
     async function handleSave() {
+        const settingsDbKey = `${CHAT_DB_KEYS.CHAT_SETTINGS}_${charId}_${activeStyle}`;
         const settingsToSave = {
-            outputLimit: ui.outputLimitInput.value,
+            outputLimit: {
+                min: ui.outputLimitMinInput.value,
+                max: ui.outputLimitMaxInput.value,
+            },
             visualLimit: ui.visualLimitInput.value,
             memoryLimit: ui.memoryLimitInput.value,
         };
-
         await Promise.all([
             dbStorage.setItem(styleDbKey, activeStyle),
             dbStorage.setItem(settingsDbKey, settingsToSave)
         ]);
-        
         if (typeof onSave === 'function') {
             onSave(CHAT_STYLES[activeStyle]);
         }
         closePanel();
     }
-    // ▲▲▲ 修改结束 ▲▲▲
 
     if (triggerElement) triggerElement.addEventListener('click', openPanel);
     ui.cancelBtn.addEventListener('click', closePanel);
@@ -292,22 +325,20 @@ export function createChatPromptPanel({ triggerElement, container, onSave, charI
         ui.styleCard.classList.toggle('expanded');
     });
 
-    // ▼▼▼ 新增：为数字输入框添加简单的值范围校验 ▼▼▼
-    [ui.outputLimitInput, ui.visualLimitInput, ui.memoryLimitInput].forEach(input => {
+    [ui.outputLimitMinInput, ui.outputLimitMaxInput, ui.visualLimitInput, ui.memoryLimitInput].forEach(input => {
         input.addEventListener('input', () => {
-            // 确保值不超过最大值
-            if (parseInt(input.value, 10) > 99) {
-                input.value = 99;
+            const max = parseInt(input.max, 10);
+            if (parseInt(input.value, 10) > max) {
+                input.value = max;
             }
         });
         input.addEventListener('blur', () => {
-            // 确保离开时值不小于最小值（如果已填写）
-            if (input.value !== '' && parseInt(input.value, 10) < 1) {
-                input.value = 1;
+            const min = parseInt(input.min, 10);
+            if (input.value !== '' && parseInt(input.value, 10) < min) {
+                input.value = min;
             }
         });
     });
-    // ▲▲▲ 新增结束 ▲▲▲
 
     return { open: openPanel, close: closePanel };
 }
