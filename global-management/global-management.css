@@ -6,8 +6,8 @@
 
 :root {
   /* Colors */
-  --color-primary: #B9A2E9;
-  --color-primary-hover: #a68ed6;
+  --color-primary: #7290B2; /* 【修改】将主色更新为 #7290B2 */
+  --color-primary-hover: #627ca1; /* 【修改】同步更新悬停颜色 */
   --color-accent: #FFA7C4;
   --color-accent-bg: #FCE4EC;
   
@@ -16,16 +16,14 @@
   --color-text-light: #6c757d;
   --color-text-white: #ffffff;
 
-  --color-bg-body: #f4f7f9;
+  --color-bg-body: #F8F9FA; /* 【修改】将背景色更新为 #F8F9FA */
   --color-bg-light: #ffffff;
   --color-bg-grey: #f1f3f5;
   --color-bg-grey-hover: #e9ecef;
 
-
-
   /* Layout */
-  --header-height: 62px;
-  --tabs-nav-height: 41px; /* Approximate height for calculation */
+  --header-height: 78px; /* 注意：此值应与 template.css 中 header 的实际高度保持一致 */
+  --tabs-nav-height: 41px; 
 }
 
 
@@ -42,25 +40,13 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   line-height: 1.6;
   color: var(--color-text-dark);
-  background-color: var(--color-bg-body);
+  background-color: var(--color-bg-body); /* 使用更新后的背景色变量 */
 }
 
 
 /* ==========================================================================
-   3. PAGE LAYOUT
+   3. PAGE LAYOUT (已移除 .page-header)
    ========================================================================== */
-
-.page-header {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  height: var(--header-height);
-  background-color: var(--color-bg-light);
-}
 
 .main-container {
   width: 100%;
@@ -74,39 +60,17 @@ body {
 
 
 /* ==========================================================================
-   4. COMPONENTS
+   4. COMPONENTS (已移除 Header 相关组件)
    ========================================================================== */
-
-/* --- Page Title --- */
-.page-title { display: flex; align-items: center; margin: 0; font-size: 1.2em; font-weight: 600; color: var(--color-text-medium); }
-.page-title::before { 
-  content: '\f004'; 
-  font-family: 'Font Awesome 6 Free'; 
-  font-weight: 900; 
-  font-size: 0.9em; 
-  text-align: center; 
-  width: 1.2em; 
-  margin-right: 10px; 
-  color: var(--color-primary); 
-}
-/* --- Header Action Buttons (省略) --- */
-.header-actions { display: flex; align-items: center; gap: 10px; }
-.header-actions button, .header-actions a { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: none; border-radius: 50%; cursor: pointer; text-decoration: none; transition: all 0.2s ease; }
-.btn-help { font-size: 16px; color: var(--color-accent); background-color: var(--color-accent-bg); }
-.btn-help:hover { color: var(--color-text-white); background-color: var(--color-accent); transform: scale(1.1); }
-.btn-back { font-size: 20px; color: var(--color-text-light); background-color: var(--color-bg-grey); }
-.btn-back:hover { color: var(--color-text-medium); background-color: var(--color-bg-grey-hover); }
-.btn-save { font-size: 16px; color: var(--color-text-white); background-color: var(--color-primary); }
-.btn-save:hover { background-color: var(--color-primary-hover); transform: scale(1.1); }
 
 /* --- Tabs Navigation --- */
 .tabs-nav {
   position: sticky;
-  top: calc(var(--header-height) - 15px);
+  top: var(--header-height); /* 【修改】移除上边距，使其紧贴 header */
   z-index: 10;
   
   background-color: var(--color-bg-light);
-  border-bottom: 1px solid var(--color-border);
+  
   
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -143,7 +107,7 @@ body {
 /* --- Active Tab Indicator (The Heart) --- */
 .active-tab-indicator {
   position: sticky;
-  top: calc(var(--header-height) - 10px + var(--tabs-nav-height) - 7px - 4px);
+  top: calc(var(--header-height) + var(--tabs-nav-height) - 11px); /* 【修改】同步调整位置计算 */
   z-index: 30;
   
   width: 20px;
@@ -151,7 +115,7 @@ body {
   
   font-size: 14px;
   text-align: center;
-  color: var(--color-primary);
+  color: var(--color-primary); /* 【修改】使用更新后的主色变量 */
   
   pointer-events: none;
   opacity: 0;
