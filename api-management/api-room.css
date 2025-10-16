@@ -1,8 +1,10 @@
 /* api-room.css */
 
 :root {
-  --color-primary: #B9A2E9;
-  --color-primary-hover: #a68ed6;
+  /* ▼▼▼ 修改点 ▼▼▼ */
+  --color-primary: #7290B2;
+  --color-primary-hover: #5e7a9e;
+  /* ▲▲▲ 修改结束 ▲▲▲ */
   --color-success: #28a745;
   --color-danger: #dc3545;
   --color-delete: #f03e3e;
@@ -274,7 +276,9 @@ body {
 #model-search-input:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(185, 162, 233, 0.25);
+    /* ▼▼▼ 修改点 ▼▼▼ */
+    box-shadow: 0 0 0 3px rgba(114, 144, 178, 0.25);
+    /* ▲▲▲ 修改结束 ▲▲▲ */
 }
 
 #model-search-input::-webkit-search-cancel-button {
