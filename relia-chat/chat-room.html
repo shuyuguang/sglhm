@@ -24,17 +24,34 @@
         <!-- 聊天室UI将由JS动态生成到这里 -->
     </div>
 
-    <!-- ▼▼▼ 修改：顶部三横杠菜单内容 ▼▼▼ -->
+    <!-- ▼▼▼ [修改] 调整顶部菜单布局，标签栏居右 ▼▼▼ -->
     <div class="header-menu-overlay" id="header-menu-overlay"></div>
     <div class="header-menu" id="header-menu">
         <div class="header-menu-arrow"></div>
-        <ul class="header-menu-list">
-            <li class="header-menu-item"><a href="#" id="menu-memory-btn"><span>记忆</span></a></li>
-            <li class="header-menu-item"><a href="#" id="menu-style-btn"><span>风格</span></a></li>
-            <li class="header-menu-item"><a href="#" id="menu-edit-btn"><span>设定</span></a></li>
-            <li class="header-menu-item"><a href="#" id="menu-model-btn"><span>模式</span></a></li>
-            <li class="header-menu-item"><a href="#" id="menu-theme-btn"><span>主题</span></a></li>
-        </ul>
+        <div class="header-menu-content">
+            <!-- 二级内容区 (左侧) -->
+            <div class="header-menu-secondary-content" id="header-menu-secondary-content">
+                <div id="menu-content-memory" class="secondary-content-pane active">这里是记忆内容区</div>
+                <div id="menu-content-style" class="secondary-content-pane">这里是风格内容区</div>
+                <div id="menu-content-edit" class="secondary-content-pane">这里是设定内容区</div>
+                <div id="menu-content-model" class="secondary-content-pane">这里是模式内容区</div>
+                <div id="menu-content-emoji" class="secondary-content-pane">这里是表情内容区</div>
+                <div id="menu-content-inspiration" class="secondary-content-pane">这里是灵感内容区</div>
+                <div id="menu-content-prompt" class="secondary-content-pane">这里是指令内容区</div>
+                <div id="menu-content-theme" class="secondary-content-pane">这里是主题内容区</div>
+            </div>
+            <!-- 一级标签列表 (右侧) -->
+            <ul class="header-menu-list">
+                <li class="header-menu-item"><a href="#" class="active" data-target="menu-content-memory"><span>记忆</span></a></li>
+                <li class="header-menu-item"><a href="#" data-target="menu-content-style"><span>风格</span></a></li>
+                <li class="header-menu-item"><a href="#" data-target="menu-content-edit"><span>设定</span></a></li>
+                <li class="header-menu-item"><a href="#" data-target="menu-content-model"><span>模式</span></a></li>
+                <li class="header-menu-item"><a href="#" data-target="menu-content-emoji"><span>表情</span></a></li>
+                <li class="header-menu-item"><a href="#" data-target="menu-content-inspiration"><span>灵感</span></a></li>
+                <li class="header-menu-item"><a href="#" data-target="menu-content-prompt"><span>指令</span></a></li>
+                <li class="header-menu-item"><a href="#" data-target="menu-content-theme"><span>主题</span></a></li>
+            </ul>
+        </div>
     </div>
     <!-- ▲▲▲ 修改结束 ▲▲▲ -->
 

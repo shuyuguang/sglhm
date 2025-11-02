@@ -49,7 +49,9 @@ html, body {
 }
 /* ▲▲▲ 修改结束 ▲▲▲ */
 
-.chat-header-btn { background: none; border: none; font-size: 1rem; color: var(--text-dark); cursor: pointer; padding: 8px; text-decoration: none; flex-shrink: 0; }
+/* ▼▼▼ [修改] 调整顶部图标颜色 ▼▼▼ */
+.chat-header-btn { background: none; border: none; font-size: 1rem; color: #657881; cursor: pointer; padding: 8px; text-decoration: none; flex-shrink: 0; }
+/* ▲▲▲ 修改结束 ▲▲▲ */
 .char-info { flex-grow: 1; display: flex; align-items: center; gap: 15px; min-width: 0; }
 .char-info-avatar {
     width: 42px;
@@ -59,7 +61,7 @@ html, body {
     flex-shrink: 0;
 }
 .char-info-text { display: flex; flex-direction: column; justify-content: space-between; height: 43px; padding: 1px 0; min-width: 0; }
-.char-info-name { font-size: 1.2em; font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.char-info-name { font-size: 1.2em; font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #394950; }
 .char-info-status { font-size: 0.8em; color: var(--text-meta); line-height: 1.2; }
 
 /* --- 聊天消息区域 --- */
@@ -669,7 +671,7 @@ html, body {
     filter: brightness(0.95);
 }
 
-/* ▼▼▼ 修改：顶部菜单样式 (移除图标相关样式) ▼▼▼ */
+/* ▼▼▼ [修改] 顶部菜单样式，适配二级面板（标签栏居右） ▼▼▼ */
 .header-menu-overlay {
     position: fixed;
     top: 0;
@@ -687,11 +689,11 @@ html, body {
     position: absolute;
     top: 70px;
     right: 15px;
-    width: 60px;
+    width: 90%; 
+    height: 80%; 
     background-color: #fff;
     border-radius: 12px;
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-    padding: 6px;
     z-index: 101;
     opacity: 0;
     transform: scale(0.95) translateY(-10px);
@@ -714,25 +716,57 @@ html, body {
     transform: rotate(45deg);
 }
 
-.header-menu-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+.header-menu-content {
+    display: flex;
     position: relative;
     z-index: 1;
+    height: 100%; /* ★★★ BUG修复：添加此行 ★★★ */
+}
+
+.header-menu-list {
+    flex: 0 0 70px; /* 右侧标签列表固定宽度 */
+    list-style: none;
+    margin: 0;
+    padding: 6px;
+    border-left: 1px solid var(--border-color); /* [修改] 将分割线改到左边 */
 }
 
 .header-menu-item a {
     display: flex;
+    justify-content: center; /* 文本居中 */
     align-items: center;
-    padding: 6px; /* 调整内边距适应无图标布局 */
+    padding: 8px 6px;
     text-decoration: none;
     color: var(--text-dark);
     font-size: 1rem;
     border-radius: 6px;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 .header-menu-item a:hover {
     background-color: #f1f3f5;
+}
+
+/* ▼▼▼ [修改] 调整选中标签的背景色和文字颜色 ▼▼▼ */
+.header-menu-item a.active {
+    background-color: #6A91B5;
+    color: var(--text-light); /* 将文字改为白色以保证对比度 */
+    font-weight: 500;
+}
+/* ▲▲▲ 修改结束 ▲▲▲ */
+
+
+.header-menu-secondary-content {
+    flex-grow: 1;
+    padding: 12px;
+}
+
+.secondary-content-pane {
+    display: none; /* 默认隐藏所有内容面板 */
+    font-size: 0.9em;
+    color: #495057;
+}
+
+.secondary-content-pane.active {
+    display: block; /* 只显示激活的面板 */
 }
 /* ▲▲▲ 修改结束 ▲▲▲ */

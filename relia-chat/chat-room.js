@@ -418,13 +418,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
-        // ▼▼▼ 修改：为顶部菜单绑定事件 ▼▼▼
+        
+        // ▼▼▼ [修改] 重写顶部菜单事件处理逻辑 ▼▼▼
         if (menuBtn && headerMenu && headerMenuOverlay) {
-            const menuMemoryBtn = document.getElementById('menu-memory-btn');
-            const menuStyleBtn = document.getElementById('menu-style-btn');
-            const menuEditBtn = document.getElementById('menu-edit-btn');
-            const menuModelBtn = document.getElementById('menu-model-btn');
-            const menuThemeBtn = document.getElementById('menu-theme-btn');
+            const menuList = headerMenu.querySelector('.header-menu-list');
+            const secondaryContentContainer = document.getElementById('header-menu-secondary-content');
         
             const toggleMenu = () => {
                 headerMenu.classList.toggle('active');
@@ -437,24 +435,36 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         
             headerMenuOverlay.addEventListener('click', toggleMenu);
-        
-            const handleMenuClick = (targetButton, isNotImplemented = false) => {
-                toggleMenu();
-                // 使用短暂延迟确保菜单关闭动画不影响点击事件
-                setTimeout(() => {
-                    if (isNotImplemented) {
-                        alert('该功能待开发');
-                    } else if (targetButton) {
-                        targetButton.click();
+            
+            // 使用事件委托处理菜单项点击
+            if (menuList && secondaryContentContainer) {
+                menuList.addEventListener('click', (e) => {
+                    const link = e.target.closest('a');
+                    if (!link) return;
+
+                    e.preventDefault();
+
+                    const targetId = link.dataset.target;
+                    if (!targetId) return;
+
+                    // 移除所有标签的 active 状态
+                    menuList.querySelectorAll('a.active').forEach(activeLink => {
+                        activeLink.classList.remove('active');
+                    });
+                    // 为当前点击的标签添加 active 状态
+                    link.classList.add('active');
+
+                    // 隐藏所有内容面板
+                    secondaryContentContainer.querySelectorAll('.secondary-content-pane.active').forEach(activePane => {
+                        activePane.classList.remove('active');
+                    });
+                    // 显示目标内容面板
+                    const newActivePane = document.getElementById(targetId);
+                    if (newActivePane) {
+                        newActivePane.classList.add('active');
                     }
-                }, 50);
-            };
-        
-            if (menuMemoryBtn) menuMemoryBtn.addEventListener('click', (e) => { e.preventDefault(); handleMenuClick(searchHistoryBtn); });
-            if (menuStyleBtn) menuStyleBtn.addEventListener('click', (e) => { e.preventDefault(); handleMenuClick(workbenchBtn); });
-            if (menuEditBtn) menuEditBtn.addEventListener('click', (e) => { e.preventDefault(); handleMenuClick(editSettingsBtn); });
-            if (menuModelBtn) menuModelBtn.addEventListener('click', (e) => { e.preventDefault(); handleMenuClick(selectModelBtn); });
-            if (menuThemeBtn) menuThemeBtn.addEventListener('click', (e) => { e.preventDefault(); handleMenuClick(null, true); });
+                });
+            }
         }
         // ▲▲▲ 修改结束 ▲▲▲
 
