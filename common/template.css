@@ -32,12 +32,32 @@ body {
     -webkit-backdrop-filter: blur(10px);
 }
 
+.page-title-container {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* 左侧返回按钮和标题的间距 */
+}
+
+/* ▼▼▼ 修改处 ▼▼▼ */
+.btn-back-left {
+    color: #697780; /* 与右侧按钮颜色统一 */
+    font-size: 1.1em;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    padding-left: 3px;
+    padding-right: 2px;
+}
+
+.btn-back-left:hover {
+    color: #343a40; /* 与右侧按钮悬停颜色统一 */
+}
+/* ▲▲▲ 修改结束 ▲▲▲ */
+
+
 .page-title {
     font-size: 1.2em;
     font-weight: 600;
-    /* ▼▼▼ 修改处 ▼▼▼ */
-    color: #3C4A4F; /* 将标题颜色修改为 #3C4A4F */
-    /* ▲▲▲ 修改结束 ▲▲▲ */
+    color: #3C4A4F;
     display: flex;
     align-items: center;
     margin: 0;
@@ -80,7 +100,11 @@ body {
 
 .btn-back { background-color: #E7E9ED; color: #697780; font-size: 18px; }
 .btn-back:hover { background-color: #c8ced5; color: #343a40; }
-
+/* ▼▼▼ 新增开始 ▼▼▼ */
+.btn-back i.fa-xmark {
+    font-weight: 600; 
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */
 
 /* --- 主体内容容器 --- */
 .main-container {

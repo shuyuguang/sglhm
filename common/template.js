@@ -13,11 +13,14 @@ export function createPageLayout({ title, contentHtml, modalsHtml = '', onFeathe
     
     const pageHtml = `
         <header class="page-header">
-            <h1 class="page-title">${title}</h1>
+            <div class="page-title-container">
+                <a href="../app.html" class="btn-back-left" title="返回"><i class="fa-solid fa-chevron-left"></i></a>
+                <h1 class="page-title">${title}</h1>
+            </div>
             <div class="header-actions">
                 <button class="btn-help" id="help-btn" title="帮助"><i class="fa-solid fa-question"></i></button>
                 <button class="btn-add" id="add-btn" title="新增"><i class="fa-solid fa-feather-pointed"></i></button>
-                <a href="../app.html" class="btn-back" title="返回"><i class="fa-solid fa-chevron-right"></i></a>
+                <a href="../app.html" class="btn-back" title="关闭"><i class="fa-solid fa-xmark"></i></a>
             </div>
         </header>
 
@@ -38,7 +41,6 @@ export function createPageLayout({ title, contentHtml, modalsHtml = '', onFeathe
         featherButton.addEventListener('click', onFeatherClick);
     }
 
-    // ▼▼▼ 新增开始 ▼▼▼
     // 为帮助按钮和提示框绑定事件
     const helpButton = document.getElementById('help-btn');
     const helpTooltip = document.getElementById('help-tooltip');
@@ -57,7 +59,6 @@ export function createPageLayout({ title, contentHtml, modalsHtml = '', onFeathe
             }
         });
     }
-    // ▲▲▲ 新增结束 ▲▲▲
 
     // 如果有页面加载后的回调函数，则执行它
     if (typeof onPageLoad === 'function') {
