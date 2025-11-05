@@ -1,12 +1,17 @@
-// relia-chat/chat-room.js
+// 文件名: relia-chat/chat-room.js (重构后)
 
 import { dbStorage } from '../common/db.js';
-import { API_DB_KEYS, ALL_BUILT_IN_API_DEFINITIONS } from '../config/api.config.js';
 import { PROFILE_DB_KEYS } from '../config/profile.config.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
 import { createChatEditor } from './chat-editor-bridge.js';
 import { initializeMessageMenu } from './message-edit.js';
 import { CHAT_STYLES, createChatPromptPanel } from './chat-prompt.js';
+
+// 导入新模块
+import { renderChatRoomUI, renderMessage, renderSystemMessage } from './chat-ui.js';
+import { initializeMemorySystem } from './chat-memory.js';
+import { initializeModelSelector, updateModelButtonText } from './chat-model-selector.js';
+import { createApiHandler } from './chat-api.js';
 
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -21,737 +26,290 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const urlParams = new URLSearchParams(window.location.search);
     const charId = urlParams.get('id');
-    console.log("Character ID from URL:", charId);
-    
     if (!charId) {
         appContainer.innerHTML = '<p style="text-align: center; margin-top: 50px;">错误：未指定角色ID。</p>';
         return;
     }
-    
+
     try {
+        // --- 1. 数据加载 ---
         const [rawAllChars, rawAllUsers, currentUserId] = await Promise.all([
             dbStorage.getItem(PROFILE_DB_KEYS.CHAR_PROFILES),
             dbStorage.getItem(PROFILE_DB_KEYS.USER_PROFILES),
             dbStorage.getItem(PROFILE_DB_KEYS.USER_CURRENT_ID)
         ]);
-        
-        console.log("Data from DB:", { rawAllChars, rawAllUsers, currentUserId });
 
         const allChars = rawAllChars || [];
         const allUsers = rawAllUsers || [];
-        
-        let character = allChars.find(c => c.id === charId);
-        console.log("Found character:", character);
 
+        let character = allChars.find(c => c.id === charId);
         if (!character) {
             appContainer.innerHTML = `<p style="text-align: center; margin-top: 50px;">错误：找不到ID为 ${charId} 的角色。</p>`;
             return;
         }
-
-        console.log("Character found, preparing to render UI...");
-
-        // ▼▼▼ 修改：将 user 变量提升，以便后续使用 ▼▼▼
         let user = allUsers.find(u => u.id === currentUserId) || { id: 'default-user-1', name: 'User', avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg' };
-        // ▲▲▲ 修改结束 ▲▲▲
 
-        const pageHtml = `
-            <div class="chat-container">
-                <header class="chat-header">
-                    <a href="./relia-chat.html" class="chat-header-btn back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-                    <div class="char-info">
-                        <img src="${character.avatar}" alt="${character.name}" class="char-info-avatar">
-                        <div class="char-info-text">
-                            <span class="char-info-name">${character.name || '未命名'}</span>
-                            <span class="char-info-status">在线</span>
-                        </div>
-                    </div>
-                    <button class="chat-header-btn" id="menu-btn"><i class="fa-solid fa-bars"></i></button>
-                </header>
-                <main class="chat-messages" id="chat-messages-area"></main>
-                <footer class="chat-input-area" id="chat-input-area">
-                    <div class="actions-menu" id="actions-menu">
-                        <div class="actions-menu-content" id="actions-menu-content">
-                            <div id="menu-content-actions" class="actions-menu-pane active">
-                                <div class="actions-grid-container">
-                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-image"></i></button><span>图片</span></div>
-                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-camera"></i></button><span>拍照</span></div>
-                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-microphone"></i></button><span>音频</span></div>
-                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-palette"></i></button><span>主题</span></div>
-                                    <div class="action-item"><button class="action-btn" id="workbench-btn"><i class="fa-solid fa-briefcase"></i></button><span>工作台</span></div>
-                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-list-check"></i></button><span>DIY</span></div>
-                                    <div class="action-item"><button class="action-btn" id="edit-settings-btn"><i class="fa-solid fa-pencil"></i></button><span>编辑</span></div>
-                                    <div class="action-item"><button class="action-btn" id="search-history-btn"><i class="fa-solid fa-brain"></i></button><span>数据</span></div>
-                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-money-bill-transfer"></i></button><span>转账</span></div>
-                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-sack-dollar"></i></button><span>收款</span></div>
-                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-gift"></i></button><span>礼物</span></div>
-                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-phone"></i></button><span>通话</span></div>
-                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-location-dot"></i></button><span>位置</span></div>
-                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-music"></i></button><span>听歌</span></div>
-                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-calendar-check"></i></button><span>打卡</span></div>
-                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-link"></i></button><span>接龙</span></div>
-                                </div>
-                            </div>
-                            <div id="menu-content-inspiration-actions" class="actions-menu-pane"><div class="placeholder-pane">灵感功能待开发...</div></div>
-                            <div id="menu-content-prompt-actions" class="actions-menu-pane"><div class="placeholder-pane">指令功能待开发...</div></div>
-                        </div>
-                        <ul class="actions-menu-tabs">
-                            <li><a href="#" class="active" data-target="menu-content-actions">选项</a></li>
-                            <li><a href="#" data-target="menu-content-inspiration-actions">灵感</a></li>
-                            <li><a href="#" data-target="menu-content-prompt-actions">指令</a></li>
-                        </ul>
-                    </div>
-                    <div class="chat-input-main" id="chat-input-main">
-                        <div class="chat-input-wrapper" id="chat-input-wrapper">
-                            <textarea id="chat-input" placeholder="点击输入消息..." rows="1"></textarea>
-                            <div class="send-buttons-container" id="send-buttons-container">
-                                <button id="select-model-btn" class="send-action-btn model-select-btn">
-                                    <span id="selected-model-name">选择模型</span>
-                                </button>
-                                <button id="respond-btn" class="send-action-btn">响应</button>
-                                <button id="send-btn" class="send-action-btn primary">发送</button>
-                            </div>
-                        </div>
-                        <div class="chat-input-controls">
-                            <button id="actions-toggle-btn"><i class="fa-solid fa-plus"></i></button>
-                            <button id="prompt-btn"><i class="fa-solid fa-bolt"></i></button>
-                            <button id="inspiration-btn"><i class="fa-regular fa-lightbulb"></i></button>
-                            <button id="emoji-toggle-btn"><i class="fa-regular fa-face-smile"></i></button>
-                        </div>
-                    </div>
-                    <div class="emoji-picker-bar">
-                        <div class="emoji-placeholder">表情面板功能待开发...</div>
-                    </div>
-                </footer>
-            </div>
-    `;
-        appContainer.innerHTML = pageHtml;
-        console.log("UI rendered successfully.");
-
-        // --- 3. 获取DOM元素和定义变量 ---
-        const chatArea = document.getElementById('chat-messages-area');
-        const input = document.getElementById('chat-input');
-        const chatInputArea = document.getElementById('chat-input-area');
-        const actionsToggleBtn = document.getElementById('actions-toggle-btn');
-        const emojiToggleBtn = document.getElementById('emoji-toggle-btn');
-        const sendButtonsContainer = document.getElementById('send-buttons-container');
-        const sendBtn = document.getElementById('send-btn');
-        const respondBtn = document.getElementById('respond-btn');
-        const selectModelBtn = document.getElementById('select-model-btn');
-        const selectedModelName = document.getElementById('selected-model-name');
-        const modelSelectorOverlay = document.getElementById('model-selector-overlay');
-        const modelListContainer = document.getElementById('model-list-container');
-        const closeModelSelectorBtn = document.getElementById('close-model-selector-btn');
-        const promptBtn = document.getElementById('prompt-btn');
-        const inspirationBtn = document.getElementById('inspiration-btn');
-        const editSettingsBtn = document.getElementById('edit-settings-btn');
-        const searchHistoryBtn = document.getElementById('search-history-btn');
-        const workbenchBtn = document.getElementById('workbench-btn');
-        const menuBtn = document.getElementById('menu-btn');
-        const headerContentPanel = document.getElementById('header-content-panel');
-        const headerTabsPanel = document.getElementById('header-tabs-panel');
-        const headerMenuOverlay = document.getElementById('header-menu-overlay');
-        const actionsMenu = document.getElementById('actions-menu');
+        // --- 2. 渲染UI并获取元素 ---
+        appContainer.innerHTML = renderChatRoomUI(character);
         
-        const addMemoryBtn = document.getElementById('add-memory-btn');
-        const memoryCardsContainer = document.getElementById('memory-cards-container');
+        // 集中获取所有需要的DOM元素
+        const elements = {
+            chatArea: document.getElementById('chat-messages-area'),
+            input: document.getElementById('chat-input'),
+            chatInputArea: document.getElementById('chat-input-area'),
+            actionsToggleBtn: document.getElementById('actions-toggle-btn'),
+            emojiToggleBtn: document.getElementById('emoji-toggle-btn'),
+            sendButtonsContainer: document.getElementById('send-buttons-container'),
+            sendBtn: document.getElementById('send-btn'),
+            respondBtn: document.getElementById('respond-btn'),
+            selectModelBtn: document.getElementById('select-model-btn'),
+            selectedModelName: document.getElementById('selected-model-name'),
+            modelSelectorOverlay: document.getElementById('model-selector-overlay'),
+            modelListContainer: document.getElementById('model-list-container'),
+            closeModelSelectorBtn: document.getElementById('close-model-selector-btn'),
+            promptBtn: document.getElementById('prompt-btn'),
+            inspirationBtn: document.getElementById('inspiration-btn'),
+            editSettingsBtn: document.getElementById('edit-settings-btn'),
+            searchHistoryBtn: document.getElementById('search-history-btn'),
+            workbenchBtn: document.getElementById('workbench-btn'),
+            menuBtn: document.getElementById('menu-btn'),
+            headerContentPanel: document.getElementById('header-content-panel'),
+            headerTabsPanel: document.getElementById('header-tabs-panel'),
+            headerMenuOverlay: document.getElementById('header-menu-overlay'),
+            actionsMenu: document.getElementById('actions-menu'),
+            addMemoryBtn: document.getElementById('add-memory-btn'),
+            memoryCardsContainer: document.getElementById('memory-cards-container'),
+            memoryEditorOverlay: document.getElementById('memory-editor-overlay'),
+            memoryEditorTitle: document.getElementById('memory-editor-title'),
+            memoryEditorTextarea: document.getElementById('memory-editor-textarea'),
+            memoryEditorConfirmBtn: document.getElementById('memory-editor-confirm-btn'),
+            memoryEditorCancelBtn: document.getElementById('memory-editor-cancel-btn'),
+            memoryEditorDeleteBtn: document.getElementById('memory-editor-delete-btn'),
+            memoryEditorCloseBtn: document.getElementById('memory-editor-close-btn'),
+            editUserProfileTrigger: document.getElementById('edit-user-profile-trigger'),
+            editCharProfileTrigger: document.getElementById('edit-char-profile-trigger'),
+            userProfileEditAvatar: document.getElementById('user-profile-edit-avatar'),
+            userProfileEditName: document.getElementById('user-profile-edit-name'),
+            charProfileEditAvatar: document.getElementById('char-profile-edit-avatar'),
+            charProfileEditName: document.getElementById('char-profile-edit-name'),
+        };
 
-        // ▼▼▼ 新增：获取记忆编辑器模态框元素 ▼▼▼
-        const memoryEditorOverlay = document.getElementById('memory-editor-overlay');
-        const memoryEditorTitle = document.getElementById('memory-editor-title');
-        const memoryEditorTextarea = document.getElementById('memory-editor-textarea');
-        const memoryEditorConfirmBtn = document.getElementById('memory-editor-confirm-btn');
-        const memoryEditorCancelBtn = document.getElementById('memory-editor-cancel-btn');
-        const memoryEditorDeleteBtn = document.getElementById('memory-editor-delete-btn');
-        const memoryEditorCloseBtn = document.getElementById('memory-editor-close-btn');
-        // ▲▲▲ 新增结束 ▲▲▲
-
-// ▼▼▼ 新增：获取设定面板中的元素 ▼▼▼
-const editUserProfileTrigger = document.getElementById('edit-user-profile-trigger');
-const editCharProfileTrigger = document.getElementById('edit-char-profile-trigger');
-const userProfileEditAvatar = document.getElementById('user-profile-edit-avatar');
-const userProfileEditName = document.getElementById('user-profile-edit-name');
-const charProfileEditAvatar = document.getElementById('char-profile-edit-avatar');
-const charProfileEditName = document.getElementById('char-profile-edit-name');
-// ▲▲▲ 新增结束 ▲▲▲
-
-let currentChatApi = null;
-
+        // --- 3. 状态管理 ---
+        const state = {
+            chatHistory: [],
+            memories: [],
+            currentChatApi: null,
+            currentChatStyle: CHAT_STYLES['dialogue'],
+        };
+        
         const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`;
         const selectedApiKey = `${CHAT_DB_KEYS.CHAT_SELECTED_API}_${charId}`;
-        let currentChatStyle = CHAT_STYLES['dialogue'];
         const styleDbKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_style_${charId}`;
-
-        let chatHistory = [];
-        
         const memoryDbKey = `relia-chat-memory_${charId}`;
-        let memories = [];
 
-        // ▼▼▼ 修改：初始化两个编辑器实例 ▼▼▼
-        let chatEditor = null; // 角色编辑器
-let userEditor = null; // 用户编辑器
+        // --- 4. 模块初始化 ---
+        let chatEditor = null;
+        let userEditor = null;
 
-// 角色保存回调
-const onProfileUpdate = async (updatedProfile) => {
-    console.log('角色设定已在聊天室中更新:', updatedProfile);
-    character = updatedProfile; 
-    const allCharacterProfiles = await dbStorage.getItem(PROFILE_DB_KEYS.CHAR_PROFILES) || [];
-    const charIndex = allCharacterProfiles.findIndex(c => c.id === character.id);
-    if (charIndex !== -1) {
-        allCharacterProfiles[charIndex] = character;
-        await dbStorage.setItem(PROFILE_DB_KEYS.CHAR_PROFILES, allCharacterProfiles);
-    }
-    // 更新主界面
-    document.querySelector('.char-info-name').textContent = character.name || '未命名';
-    document.querySelector('.char-info-avatar').src = character.avatar;
-    // 更新顶部菜单设定面板
-    if (charProfileEditAvatar) charProfileEditAvatar.src = character.avatar;
-    if (charProfileEditName) charProfileEditName.textContent = character.name;
-    chatEditor?.updateProfile(character);
-};
-
-// 用户保存回调
-const onUserUpdate = async (updatedUser) => {
-    console.log('用户设定已在聊天室中更新:', updatedUser);
-    user = updatedUser;
-    const userIndex = allUsers.findIndex(u => u.id === user.id);
-    if (userIndex !== -1) {
-        allUsers[userIndex] = user;
-    } else {
-        allUsers.push(user); // 如果是默认用户，可能不在列表里
-    }
-    await dbStorage.setItem(PROFILE_DB_KEYS.USER_PROFILES, allUsers);
-    // 更新顶部菜单设定面板
-    if (userProfileEditAvatar) userProfileEditAvatar.src = user.avatar;
-    if (userProfileEditName) userProfileEditName.textContent = user.name;
-    userEditor?.updateProfile(user);
-};
-
-if(character) {
-    // 初始化角色编辑器 (无前缀)
-    chatEditor = createChatEditor(character, onProfileUpdate);
-    // 初始化角色设定面板显示
-    if (charProfileEditAvatar) charProfileEditAvatar.src = character.avatar;
-    if (charProfileEditName) charProfileEditName.textContent = character.name;
-}
-if(user) {
-    // 初始化用户编辑器 (使用 'user-' 前缀)
-    userEditor = createChatEditor(user, onUserUpdate, 'user-');
-    // 初始化用户设定面板显示
-    if (userProfileEditAvatar) userProfileEditAvatar.src = user.avatar;
-    if (userProfileEditName) userProfileEditName.textContent = user.name;
-}
-// ▲▲▲ 修改结束 ▲▲▲
-
-// --- 4. 核心功能函数 ---
-
-        // ▼▼▼ 修改：重写记忆卡片渲染逻辑 ▼▼▼
-        async function renderMemoryCards() {
-            memories = await dbStorage.getItem(memoryDbKey) || [];
-            memoryCardsContainer.innerHTML = '';
-            if (memories.length === 0) {
-                memoryCardsContainer.innerHTML = '<p style="text-align: center; color: var(--text-meta); font-size: 0.85em;">暂无记忆</p>';
-                return;
+        const onProfileUpdate = async (updatedProfile) => {
+            character = updatedProfile;
+            const allCharacterProfiles = await dbStorage.getItem(PROFILE_DB_KEYS.CHAR_PROFILES) || [];
+            const charIndex = allCharacterProfiles.findIndex(c => c.id === character.id);
+            if (charIndex !== -1) {
+                allCharacterProfiles[charIndex] = character;
+                await dbStorage.setItem(PROFILE_DB_KEYS.CHAR_PROFILES, allCharacterProfiles);
             }
-            memories.forEach((mem, index) => {
-                const card = document.createElement('div');
-                card.className = 'memory-card';
-                card.dataset.index = index;
-                card.innerHTML = `<span class="memory-card-text">${mem}</span>`;
-                memoryCardsContainer.appendChild(card);
-            });
+            document.querySelector('.char-info-name').textContent = character.name || '未命名';
+            document.querySelector('.char-info-avatar').src = character.avatar;
+            if (elements.charProfileEditAvatar) elements.charProfileEditAvatar.src = character.avatar;
+            if (elements.charProfileEditName) elements.charProfileEditName.textContent = character.name;
+            chatEditor?.updateProfile(character);
+        };
+
+        const onUserUpdate = async (updatedUser) => {
+            user = updatedUser;
+            const userIndex = allUsers.findIndex(u => u.id === user.id);
+            if (userIndex !== -1) allUsers[userIndex] = user;
+            else allUsers.push(user);
+            await dbStorage.setItem(PROFILE_DB_KEYS.USER_PROFILES, allUsers);
+            if (elements.userProfileEditAvatar) elements.userProfileEditAvatar.src = user.avatar;
+            if (elements.userProfileEditName) elements.userProfileEditName.textContent = user.name;
+            userEditor?.updateProfile(user);
+        };
+
+        if (character) {
+            chatEditor = createChatEditor(character, onProfileUpdate);
+            if (elements.charProfileEditAvatar) elements.charProfileEditAvatar.src = character.avatar;
+            if (elements.charProfileEditName) elements.charProfileEditName.textContent = character.name;
         }
-        // ▲▲▲ 修改结束 ▲▲▲
-
-        // ▼▼▼ 新增：记忆编辑器模态框控制函数 ▼▼▼
-        function openMemoryEditor(mode, index = -1, text = '') {
-            memoryEditorOverlay.dataset.mode = mode;
-            memoryEditorOverlay.dataset.index = index;
-            memoryEditorTextarea.value = text;
-
-            if (mode === 'add') {
-                memoryEditorTitle.textContent = '添加记忆';
-                memoryEditorDeleteBtn.style.display = 'none';
-            } else {
-                memoryEditorTitle.textContent = '编辑记忆';
-                memoryEditorDeleteBtn.style.display = 'block';
-            }
-            
-            memoryEditorOverlay.classList.add('active');
-            memoryEditorTextarea.focus();
-        }
-
-        function closeMemoryEditor() {
-            memoryEditorOverlay.classList.remove('active');
-        }
-        // ▲▲▲ 新增结束 ▲▲▲
-
-
-        function constructSystemPrompt(charProfile, userProfile) {
-            let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
-            prompt += `### 角色设定\n`;
-            prompt += `- 名字: ${charProfile.name || '未命名'}\n`;
-            if (charProfile.gender) prompt += `- 性别: ${charProfile.gender}\n`;
-            if (charProfile.age) prompt += `- 年龄: ${charProfile.age}\n`;
-            if (charProfile.race) prompt += `- 种族: ${charProfile.race}\n`;
-            if (charProfile.occupation) prompt += `- 职业: ${charProfile.occupation}\n`;
-            if (charProfile.bio) prompt += `- 简介: ${charProfile.bio}\n`;
-            if (charProfile.customSections && charProfile.customSections.length > 0) {
-                charProfile.customSections.forEach(section => {
-                    const itemsWithContent = section.items.filter(item => item.value?.trim());
-                    if (itemsWithContent.length > 0) {
-                        prompt += `\n#### ${section.title}\n`;
-                        itemsWithContent.forEach(item => {
-                            prompt += `- ${item.title}: ${item.value}\n`;
-                        });
-                    }
-                });
-            }
-            prompt += `\n### 对话者信息\n`;
-            prompt += `- 对方名字: ${userProfile.name || 'User'}\n`;
-            prompt += `\n### 扮演要求\n`;
-            prompt += `- 你必须完全沉浸在 **${charProfile.name}** 的角色中，用TA的身份、口吻、性格和知识进行回复。\n`;
-            prompt += `- 不要暴露你是AI模型或程序，不要提及“扮演”或“角色设定”。\n`;
-            prompt += `- 你的回复应该是自然的、符合角色的，就像TA真的在和 **${userProfile.name}** 聊天一样。\n`;
-            
-            if (currentChatStyle && typeof currentChatStyle.getPromptAddition === 'function') {
-                const stylePrompt = currentChatStyle.getPromptAddition();
-                if (stylePrompt) {
-                    prompt += stylePrompt;
-                }
-            }
-            return prompt;
-        }
-        function formatChatHistoryForApi(history) { 
-            return history.map(msg => ({
-                role: msg.sender === 'user' ? 'user' : 'assistant',
-                content: msg.text
-            }));
+        if (user) {
+            userEditor = createChatEditor(user, onUserUpdate, 'user-');
+            if (elements.userProfileEditAvatar) elements.userProfileEditAvatar.src = user.avatar;
+            if (elements.userProfileEditName) elements.userProfileEditName.textContent = user.name;
         }
 
-        function renderMessage({ text, sender }, index) { 
-            const messageRow = document.createElement('div');
-            messageRow.className = `message-row ${sender}`;
-            messageRow.dataset.index = index;
-
-            const avatar = document.createElement('img');
-            avatar.className = 'message-avatar';
-            avatar.src = (sender === 'user') ? user.avatar : character.avatar;
-            
-            const bubble = document.createElement('div');
-            bubble.className = `chat-bubble ${sender}`;
-            bubble.textContent = text;
-            
-            messageRow.appendChild(avatar);
-            messageRow.appendChild(bubble);
-
-            chatArea.appendChild(messageRow);
-            chatArea.scrollTop = chatArea.scrollHeight;
-            return bubble;
-        }
-
-        function renderSystemMessage(text, type = 'loading') { 
-            const messageRow = document.createElement('div');
-            messageRow.className = `message-row system ${type}`;
-            messageRow.innerHTML = `<div class="chat-bubble system">${text}</div>`;
-            chatArea.appendChild(messageRow);
-            chatArea.scrollTop = chatArea.scrollHeight;
-            return messageRow;
-        }
-        async function loadAndRenderHistory() { 
+        // 初始化各个子系统
+        const { renderMemoryCards } = initializeMemorySystem(elements, state, memoryDbKey);
+        initializeModelSelector(elements, state, selectedApiKey);
+        
+        // --- 5. 核心功能函数 ---
+        async function loadAndRenderHistory() {
             const savedHistory = await dbStorage.getItem(historyKey);
-            if (savedHistory && Array.isArray(savedHistory) && savedHistory.length > 0) {
-                chatHistory = savedHistory;
-                chatArea.innerHTML = '';
-                chatHistory.forEach((message, index) => renderMessage(message, index));
-            } else {
-                chatArea.innerHTML = '';
-                chatHistory = [];
-            }
-        }
-        function updateButtonStates() { 
-            const hasText = input.value.trim() !== '';
-            sendBtn.disabled = !hasText;
-            respondBtn.disabled = false;
+            state.chatHistory = (savedHistory && Array.isArray(savedHistory)) ? savedHistory : [];
+            elements.chatArea.innerHTML = '';
+            state.chatHistory.forEach((message, index) => renderMessage(message, index, user, character, elements.chatArea));
         }
 
-        async function handleSendMessage(shouldTriggerReply) {
-            const text = input.value.trim();
-            if (text !== '') {
-                const userMessage = { text, sender: 'user' };
-                chatHistory.push(userMessage);
-                renderMessage(userMessage, chatHistory.length - 1);
-                await dbStorage.setItem(historyKey, chatHistory);
-                
-                input.value = '';
-                input.style.height = '';
-                updateButtonStates();
-                input.focus();
-            } 
-            else if (!shouldTriggerReply) {
-                return;
-            }
-
-            if (shouldTriggerReply) {
-                if (chatHistory.length === 0 || !currentChatApi) {
-                    alert(chatHistory.length === 0 ? '还没有聊天记录，请先说点什么吧！' : '请先点击“选择模型”按钮选择一个牵引仪模型！');
-                    return;
-                }
-                sendBtn.disabled = true;
-                respondBtn.disabled = true;
-                
-                const systemPrompt = constructSystemPrompt(character, user);
-                const historyForApi = formatChatHistoryForApi(chatHistory);
-                const messages = [ { role: 'system', content: systemPrompt }, ...historyForApi ];
-                const endpoint = (currentChatApi.baseUrl.replace(/\/$/, '')) + (currentChatApi.path || '/v1/chat/completions');
-                const payload = { model: currentChatApi.model, messages: messages, stream: true };
-                
-                try {
-                    const response = await fetch(endpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentChatApi.apiKey}` },
-                        body: JSON.stringify(payload)
-                    });
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error?.message || `API 请求失败，状态码: ${response.status}`);
-                    }
-                    
-                    const handlerContext = {
-                        reader: response.body.getReader(),
-                        decoder: new TextDecoder('utf-8'),
-                        renderMessage,
-                        chatHistory,
-                        historyKey,
-                        chatArea,
-                        loadAndRenderHistory
-                    };
-                    await currentChatStyle.streamHandler(handlerContext);
-
-                } catch (error) {
-                    console.error('AI 回复生成失败:', error);
-                    renderSystemMessage(`错误: ${error.message}`, 'error');
-                } finally {
-                    updateButtonStates();
-                    input.focus();
-                }
-            }
-        }
-        
-        function updateModelButtonText() {
-            if (currentChatApi) {
-                selectedModelName.textContent = currentChatApi.model;
-                selectModelBtn.classList.add('active');
-            } else {
-                selectedModelName.textContent = '选择模型';
-                selectModelBtn.classList.remove('active');
-            }
-        }
-        const closeModelSelector = () => { modelSelectorOverlay?.classList.remove('active'); };
-        async function openModelSelector() {
-            try {
-                const [userConfigs, builtInData, builtInStates] = await Promise.all([
-                    dbStorage.getItem(API_DB_KEYS.CONFIGS).then(res => res || []),
-                    dbStorage.getItem(API_DB_KEYS.BUILT_IN_DATA).then(res => res || {}),
-                    dbStorage.getItem(API_DB_KEYS.BUILT_IN_STATES).then(res => res || {})
-                ]);
-                let availableModels = [];
-                userConfigs.filter(api => api.enabled && Array.isArray(api.model) && api.model.length > 0).forEach(api => {
-                    api.model.forEach(modelName => {
-                        availableModels.push({ id: `${api.id}-${modelName}`, apiKey: api.apiKey, baseUrl: api.baseUrl, path: api.path, model: modelName, apiName: api.name });
-                    });
-                });
-                Object.keys(builtInStates).forEach(apiId => {
-                    const userData = builtInData[apiId];
-                    if (builtInStates[apiId]?.enabled && userData && Array.isArray(userData.model) && userData.model.length > 0) {
-                        const staticData = ALL_BUILT_IN_API_DEFINITIONS[apiId];
-                        if (staticData) {
-                            userData.model.forEach(modelName => {
-                                availableModels.push({ id: `${apiId}-${modelName}`, apiKey: userData.apiKey, baseUrl: staticData.baseUrl, path: staticData.path, model: modelName, apiName: staticData.name });
-                            });
-                        }
-                    }
-                });
-                renderModelList(availableModels);
-                modelSelectorOverlay.classList.add('active');
-            } catch (error) {
-                console.error("打开模型选择器失败:", error);
-                alert("加载模型列表失败，请检查控制台获取更多信息。");
-            }
-        }
-        
-        function renderModelList(models) {
-            modelListContainer.dataset.models = JSON.stringify(models);
-
-            if (models.length === 0) {
-                modelListContainer.innerHTML = `<p class="no-models-message">没有可用的模型<br>请先到“牵引仪”页面启用并选择模型</p>`;
-                return;
-            }
-            modelListContainer.innerHTML = models.map(m => `
-                <div class="model-item ${currentChatApi?.id === m.id ? 'active' : ''}" data-model-info='${JSON.stringify(m)}'>
-                    <div class="model-info"><div class="model-item-name">${m.model}</div><div class="model-item-api">${m.apiName}</div></div><i class="fa-solid fa-check"></i>
-                </div>
-            `).join('');
+        function updateButtonStates() {
+            const hasText = elements.input.value.trim() !== '';
+            elements.sendBtn.disabled = !hasText;
+            elements.respondBtn.disabled = false;
         }
 
-        const expandInputLayout = () => { 
-            if (!chatInputArea.classList.contains('input-focused')) {
-                chatInputArea.classList.add('input-focused');
-                sendButtonsContainer.classList.add('visible');
+        const handleSendMessage = createApiHandler({
+            state, elements, character, user, historyKey, dbStorage,
+            renderMessage, renderSystemMessage, loadAndRenderHistory, updateButtonStates
+        });
+
+        const expandInputLayout = () => {
+            if (!elements.chatInputArea.classList.contains('input-focused')) {
+                elements.chatInputArea.classList.add('input-focused');
+                elements.sendButtonsContainer.classList.add('visible');
                 updateButtonStates();
             }
         };
-        
-        const collapseInputLayout = () => { 
-            if (chatInputArea.classList.contains('input-focused')) {
-                chatInputArea.classList.remove('input-focused');
-                sendButtonsContainer.classList.remove('visible');
+
+        const collapseInputLayout = () => {
+            if (elements.chatInputArea.classList.contains('input-focused')) {
+                elements.chatInputArea.classList.remove('input-focused');
+                elements.sendButtonsContainer.classList.remove('visible');
             }
-            chatInputArea.classList.remove('emoji-expanded', 'actions-expanded');
+            elements.chatInputArea.classList.remove('emoji-expanded', 'actions-expanded');
         };
 
-        // --- 5. 绑定事件 ---
-        input.addEventListener('input', () => {
-            input.style.height = 'auto';
-            input.style.height = (input.scrollHeight) + 'px';
+        // --- 6. 绑定事件 ---
+        elements.input.addEventListener('input', () => {
+            elements.input.style.height = 'auto';
+            elements.input.style.height = (elements.input.scrollHeight) + 'px';
             updateButtonStates();
         });
-        if (sendBtn) sendBtn.addEventListener('click', () => handleSendMessage(false));
-        if (respondBtn) respondBtn.addEventListener('click', () => handleSendMessage(true));
+        if (elements.sendBtn) elements.sendBtn.addEventListener('click', () => handleSendMessage(false));
+        if (elements.respondBtn) elements.respondBtn.addEventListener('click', () => handleSendMessage(true));
 
-        if (actionsToggleBtn && actionsMenu) {
-            const tabs = actionsMenu.querySelector('.actions-menu-tabs');
-            const contentContainer = actionsMenu.querySelector('#actions-menu-content');
-
-            actionsToggleBtn.addEventListener('click', (e) => {
+        if (elements.actionsToggleBtn && elements.actionsMenu) {
+            const tabs = elements.actionsMenu.querySelector('.actions-menu-tabs');
+            const contentContainer = elements.actionsMenu.querySelector('#actions-menu-content');
+            elements.actionsToggleBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                chatInputArea.classList.remove('emoji-expanded');
-                chatInputArea.classList.toggle('actions-expanded');
+                elements.chatInputArea.classList.remove('emoji-expanded');
+                elements.chatInputArea.classList.toggle('actions-expanded');
             });
-
             if (tabs && contentContainer) {
                 tabs.addEventListener('click', (e) => {
                     const link = e.target.closest('a');
                     if (!link) return;
                     e.preventDefault();
                     const targetId = link.dataset.target;
-                    if (!targetId) return;
-
                     tabs.querySelectorAll('a.active').forEach(l => l.classList.remove('active'));
                     link.classList.add('active');
-
                     contentContainer.querySelectorAll('.actions-menu-pane.active').forEach(p => p.classList.remove('active'));
-                    const newPane = document.getElementById(targetId);
-                    if (newPane) newPane.classList.add('active');
+                    document.getElementById(targetId)?.classList.add('active');
                 });
             }
         }
-
-        if (emojiToggleBtn) {
-            emojiToggleBtn.addEventListener('click', (e) => {
+        
+        if (elements.emojiToggleBtn) {
+            elements.emojiToggleBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                chatInputArea.classList.remove('actions-expanded');
-                chatInputArea.classList.toggle('emoji-expanded');
+                elements.chatInputArea.classList.remove('actions-expanded');
+                elements.chatInputArea.classList.toggle('emoji-expanded');
             });
         }
 
-        if (selectModelBtn) selectModelBtn.addEventListener('click', openModelSelector);
-        if (promptBtn) { promptBtn.addEventListener('click', () => { alert('“快捷指令（闪电）”功能待开发'); }); }
-        if (inspirationBtn) { inspirationBtn.addEventListener('click', () => { alert('“灵感（灯泡）”功能待开发'); }); }
-        
-        if (workbenchBtn) {
+        if (elements.promptBtn) elements.promptBtn.addEventListener('click', () => alert('“快捷指令（闪电）”功能待开发'));
+        if (elements.inspirationBtn) elements.inspirationBtn.addEventListener('click', () => alert('“灵感（灯泡）”功能待开发'));
+
+        if (elements.workbenchBtn) {
             createChatPromptPanel({
-                triggerElement: workbenchBtn,
+                triggerElement: elements.workbenchBtn,
                 container: document.body,
                 charId: charId,
                 onSave: (styleObject) => {
                     console.log('已保存默认风格:', styleObject.name);
-                    currentChatStyle = styleObject;
+                    state.currentChatStyle = styleObject;
                 }
             });
         }
-        
-        if (menuBtn && headerContentPanel && headerTabsPanel && headerMenuOverlay) {
-            const menuList = headerTabsPanel.querySelector('.header-menu-list');
-            const secondaryContentContainer = headerContentPanel;
-        
+
+        if (elements.menuBtn && elements.headerContentPanel && elements.headerTabsPanel && elements.headerMenuOverlay) {
+            const menuList = elements.headerTabsPanel.querySelector('.header-menu-list');
+            const secondaryContentContainer = elements.headerContentPanel;
             const toggleMenu = () => {
-                headerContentPanel.classList.toggle('active');
-                headerTabsPanel.classList.toggle('active');
-                headerMenuOverlay.classList.toggle('active');
+                elements.headerContentPanel.classList.toggle('active');
+                elements.headerTabsPanel.classList.toggle('active');
+                elements.headerMenuOverlay.classList.toggle('active');
             };
-        
-            menuBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                toggleMenu();
-            });
-        
-            headerMenuOverlay.addEventListener('click', toggleMenu);
-            
+            elements.menuBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(); });
+            elements.headerMenuOverlay.addEventListener('click', toggleMenu);
             if (menuList && secondaryContentContainer) {
-        menuList.addEventListener('click', (e) => {
-            const link = e.target.closest('a');
-            if (!link) return;
-            e.preventDefault();
-            const targetId = link.dataset.target;
-            if (!targetId) return;
+                menuList.addEventListener('click', (e) => {
+                    const link = e.target.closest('a');
+                    if (!link) return;
+                    e.preventDefault();
+                    const targetId = link.dataset.target;
+                    menuList.querySelectorAll('a.active').forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    secondaryContentContainer.querySelectorAll('.secondary-content-pane.active').forEach(p => p.classList.remove('active'));
+                    document.getElementById(targetId)?.classList.add('active');
+                });
+            }
 
-            // ▼▼▼ 修改：移除拦截“设定”按钮的旧逻辑 ▼▼▼
-            // 旧的拦截代码已被删除
-            // ▲▲▲ 修改结束 ▲▲▲
-
-            menuList.querySelectorAll('a.active').forEach(activeLink => activeLink.classList.remove('active'));
-            link.classList.add('active');
-            secondaryContentContainer.querySelectorAll('.secondary-content-pane.active').forEach(activePane => activePane.classList.remove('active'));
-            const newActivePane = document.getElementById(targetId);
-            if (newActivePane) newActivePane.classList.add('active');
-        });
-    }
-}
-
-// ▼▼▼ 新增：为设定面板中的两个入口绑定点击事件 ▼▼▼
-if (editUserProfileTrigger) {
-    editUserProfileTrigger.addEventListener('click', () => {
-        if (userEditor) {
-            userEditor.open();
-            // ▼▼▼ 修改：去掉注释，让菜单自动关闭 ▼▼▼
-            toggleMenu(); 
-            // ▲▲▲ 修改结束 ▲▲▲
-        } else {
-            alert('用户编辑器初始化失败！');
-        }
-    });
-}
-
-if (editCharProfileTrigger) {
-    editCharProfileTrigger.addEventListener('click', () => {
-        if (chatEditor) {
-            chatEditor.open();
-            // ▼▼▼ 修改：去掉注释，让菜单自动关闭 ▼▼▼
-            toggleMenu();
-            // ▲▲▲ 修改结束 ▲▲▲
-        } else {
-            alert('角色编辑器初始化失败！');
-        }
-    });
-}
-// ▲▲▲ 新增结束 ▲▲▲
-
-
-        if (editSettingsBtn) { editSettingsBtn.addEventListener('click', () => chatEditor ? chatEditor.open() : alert('编辑器初始化失败！')); }
-        if (searchHistoryBtn) { searchHistoryBtn.addEventListener('click', () => { alert('“记忆库”功能待开发'); }); }
-        if (modelSelectorOverlay) { modelSelectorOverlay.addEventListener('click', (e) => { if (e.target === modelSelectorOverlay) closeModelSelector(); }); }
-        if (closeModelSelectorBtn) { closeModelSelectorBtn.addEventListener('click', closeModelSelector); }
-        if (modelListContainer) {
-            modelListContainer.addEventListener('click', async (e) => {
-                const item = e.target.closest('.model-item');
-                if (item) {
-                    const modelInfo = JSON.parse(item.dataset.modelInfo);
-                    if (currentChatApi && currentChatApi.id === modelInfo.id) {
-                        currentChatApi = null;
-                    } else {
-                        currentChatApi = modelInfo;
-                    }
-                    await dbStorage.setItem(selectedApiKey, currentChatApi);
-                    const models = JSON.parse(item.closest('.model-list-container').dataset.models || '[]');
-                    renderModelList(models);
-                    updateModelButtonText();
-                    setTimeout(closeModelSelector, 200);
-                }
-            });
-        }
-        
-        // ▼▼▼ 修改：重构记忆相关事件监听 ▼▼▼
-        if (addMemoryBtn) {
-            addMemoryBtn.addEventListener('click', () => {
-                openMemoryEditor('add');
-            });
-        }
-        if (memoryCardsContainer) {
-            memoryCardsContainer.addEventListener('click', (e) => {
-                const card = e.target.closest('.memory-card');
-                if (card) {
-                    const index = parseInt(card.dataset.index, 10);
-                    const currentText = memories[index];
-                    openMemoryEditor('edit', index, currentText);
-                }
-            });
+            if (elements.editUserProfileTrigger) {
+                elements.editUserProfileTrigger.addEventListener('click', () => {
+                    if (userEditor) { userEditor.open(); toggleMenu(); } 
+                    else { alert('用户编辑器初始化失败！'); }
+                });
+            }
+            if (elements.editCharProfileTrigger) {
+                elements.editCharProfileTrigger.addEventListener('click', () => {
+                    if (chatEditor) { chatEditor.open(); toggleMenu(); } 
+                    else { alert('角色编辑器初始化失败！'); }
+                });
+            }
         }
 
-        // 新增：为记忆编辑器模态框绑定事件
-        if (memoryEditorOverlay) {
-            memoryEditorOverlay.addEventListener('click', (e) => {
-                if (e.target === memoryEditorOverlay) {
-                    closeMemoryEditor();
-                }
-            });
-            memoryEditorCloseBtn.addEventListener('click', closeMemoryEditor);
-            memoryEditorCancelBtn.addEventListener('click', closeMemoryEditor);
+        if (elements.editSettingsBtn) elements.editSettingsBtn.addEventListener('click', () => chatEditor ? chatEditor.open() : alert('编辑器初始化失败！'));
+        if (elements.searchHistoryBtn) elements.searchHistoryBtn.addEventListener('click', () => alert('“数据”功能待开发'));
 
-            memoryEditorConfirmBtn.addEventListener('click', async () => {
-                const mode = memoryEditorOverlay.dataset.mode;
-                const index = parseInt(memoryEditorOverlay.dataset.index, 10);
-                const newText = memoryEditorTextarea.value.trim();
-
-                if (newText === '') return;
-
-                if (mode === 'add') {
-                    memories.push(newText);
-                } else if (mode === 'edit' && index >= 0) {
-                    memories[index] = newText;
-                }
-
-                await dbStorage.setItem(memoryDbKey, memories);
-                await renderMemoryCards();
-                closeMemoryEditor();
-            });
-
-            memoryEditorDeleteBtn.addEventListener('click', async () => {
-                if (confirm('确定要删除这条记忆吗？')) {
-                    const index = parseInt(memoryEditorOverlay.dataset.index, 10);
-                    if (index >= 0) {
-                        memories.splice(index, 1);
-                        await dbStorage.setItem(memoryDbKey, memories);
-                        await renderMemoryCards();
-                        closeMemoryEditor();
-                    }
-                }
-            });
-        }
-        // ▲▲▲ 修改结束 ▲▲▲
-        
-        input.addEventListener('focus', () => {
+        elements.input.addEventListener('focus', () => {
             expandInputLayout();
-            chatInputArea.classList.remove('actions-expanded', 'emoji-expanded');
+            elements.chatInputArea.classList.remove('actions-expanded', 'emoji-expanded');
         });
         document.addEventListener('click', (event) => {
-            if (!chatInputArea.contains(event.target)) {
-                collapseInputLayout();
-            }
+            if (!elements.chatInputArea.contains(event.target)) collapseInputLayout();
         });
 
-        // --- 6. 初始化页面 ---
+        // --- 7. 初始化页面 ---
         async function initializeChatState() {
             const savedStyleKey = await dbStorage.getItem(styleDbKey);
             if (savedStyleKey && CHAT_STYLES[savedStyleKey]) {
-                currentChatStyle = CHAT_STYLES[savedStyleKey];
-                console.log(`已加载角色 ${character.name} 的默认风格: ${currentChatStyle.name}`);
+                state.currentChatStyle = CHAT_STYLES[savedStyleKey];
             }
-
             const savedApi = await dbStorage.getItem(selectedApiKey);
-            if (savedApi) {
-                currentChatApi = savedApi;
-            }
+            if (savedApi) state.currentChatApi = savedApi;
+            
             await loadAndRenderHistory();
             await renderMemoryCards();
             updateButtonStates();
             updateModelButtonText();
-            const getChatHistory = () => chatHistory;
+
+            const getChatHistory = () => state.chatHistory;
             const updateChatHistory = async (newHistory) => {
-                chatHistory = newHistory;
-                await dbStorage.setItem(historyKey, chatHistory);
+                state.chatHistory = newHistory;
+                await dbStorage.setItem(historyKey, state.chatHistory);
                 await loadAndRenderHistory();
             };
-            initializeMessageMenu(chatArea, getChatHistory, updateChatHistory);
+            initializeMessageMenu(elements.chatArea, getChatHistory, updateChatHistory);
         }
         await initializeChatState();
 
