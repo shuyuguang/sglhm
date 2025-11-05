@@ -163,9 +163,7 @@ html, body {
     flex-grow: 1;
     border: none;
     background-color: transparent;
-    /* ▼▼▼ 修改：增加右侧内边距以容纳新图标 ▼▼▼ */
-    padding: 10px 100px 10px 15px;
-    /* ▲▲▲ 修改结束 ▲▲▲ */
+    padding: 10px 52px 10px 15px;
     font-size: 1.1em;
     resize: none;
     outline: none;
@@ -192,11 +190,9 @@ html, body {
     transition: all 0.3s ease; 
 }
 
-/* ▼▼▼ 删除：不再需要默认隐藏灯泡图标 ▼▼▼ */
-/* #inspiration-btn {
+#inspiration-btn {
     display: none;
-} */
-/* ▲▲▲ 删除结束 ▲▲▲ */
+}
 
 
 #emoji-toggle-btn {
@@ -205,15 +201,6 @@ html, body {
     bottom: 12px;
     z-index: 2;
 }
-
-/* ▼▼▼ 新增：为灯泡图标添加绝对定位 ▼▼▼ */
-#inspiration-btn {
-    position: absolute;
-    right: 60px; /* 放在表情图标左侧 */
-    bottom: 12px;
-    z-index: 2;
-}
-/* ▲▲▲ 新增结束 ▲▲▲ */
 
 #actions-toggle-btn .fa-plus {
     font-weight: 300;
@@ -316,12 +303,6 @@ html, body {
 .chat-input-area.input-focused #inspiration-btn {
     display: flex;
     margin-left: auto; /* 将灵感按钮推到右侧 */
-    /* ▼▼▼ 新增：重置展开状态下的定位 ▼▼▼ */
-    position: relative;
-    right: auto;
-    bottom: auto;
-    z-index: auto;
-    /* ▲▲▲ 新增结束 ▲▲▲ */
 }
 
 .chat-input-area.input-focused #emoji-toggle-btn {
