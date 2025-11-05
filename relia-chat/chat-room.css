@@ -10,6 +10,7 @@
     --text-meta: #adb5bd;
     --border-color: #e9ecef;
     --send-btn-bg: #7290B2; 
+    --danger-color: #e53e3e; /* 新增危险操作颜色 */
 }
 
 html, body {
@@ -26,32 +27,27 @@ html, body {
     height: 100dvh;
 }
 
-/* ▼▼▼ 修改1：让聊天室头部绝对定位，浮动起来 ▼▼▼ */
+/* 聊天室头部 */
 .chat-header {
-    position: absolute; /* 将 sticky 改为 absolute */
+    position: absolute;
     top: 15px;
-    left: 15px; /* 使用 left 和 right 控制位置和宽度 */
+    left: 15px;
     right: 15px;
-    z-index: 10;
+    z-index: 10; /* 基准层级 */
     display: flex;
     align-items: center;
     padding: 4px 10px;
     gap: 10px;
     box-sizing: border-box;
-
-    /* --- 核心外观样式 (无变化) --- */
-    background-color: rgba(255, 255, 255, 0.05); /* 半透明背景 */
-    -webkit-backdrop-filter: saturate(180%) blur(10px); /* 磨砂玻璃效果 (for Safari) */
-    backdrop-filter: saturate(180%) blur(10px); /* 磨砂玻璃效果 */
-    border-radius: 99px; /* 圆角 */
+    background-color: rgba(255, 255, 255, 0.05);
+    -webkit-backdrop-filter: saturate(180%) blur(10px);
+    backdrop-filter: saturate(180%) blur(10px);
+    border-radius: 99px;
     border: 1px solid #C9D0D8;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* 阴影 */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
 
-/* ▼▼▼ [修改] 调整顶部图标颜色 ▼▼▼ */
 .chat-header-btn { background: none; border: none; font-size: 1rem; color: #657881; cursor: pointer; padding: 8px; text-decoration: none; flex-shrink: 0; }
-/* ▲▲▲ 修改结束 ▲▲▲ */
 .char-info { flex-grow: 1; display: flex; align-items: center; gap: 15px; min-width: 0; }
 .char-info-avatar {
     width: 42px;
@@ -65,17 +61,15 @@ html, body {
 .char-info-status { font-size: 0.8em; color: var(--text-meta); line-height: 1.2; }
 
 /* --- 聊天消息区域 --- */
-/* ▼▼▼ 修改2：为消息区域增加顶部内边距，防止被头部遮挡 ▼▼▼ */
 .chat-messages {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 85px 15px 15px 15px; /* 增加了顶部的 padding */
+    padding: 85px 15px 15px 15px;
     display: flex;
     flex-direction: column;
     gap: 15px;
     background-color: #ffffff;
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
 .message-row { display: flex; align-items: flex-start; gap: 10px; max-width: 80%; }
 .message-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
 .chat-bubble { padding: 10px 15px; border-radius: 18px; line-height: 1.5; word-wrap: break-word; }
@@ -94,29 +88,15 @@ html, body {
     transition: all 0.2s ease-out;
 }
 
-/* 面板样式和动画 */
-.chat-actions-bar,
 .emoji-picker-bar {
     display: grid; 
-    grid-template-columns: repeat(4, 1fr); 
-    row-gap: 20px; 
     max-height: 0;
     opacity: 0;
     overflow: hidden;
     transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
     padding: 0 15px;
     box-sizing: border-box;
-}
-
-.chat-actions-bar {
     background-color: var(--page-bg);
-}
-
-.chat-input-area.actions-expanded .chat-actions-bar {
-    max-height: 230px;
-    opacity: 1;
-    padding: 30px 15px;
-    overflow-y: auto;
 }
 
 .chat-input-area.emoji-expanded .emoji-picker-bar {
@@ -156,6 +136,8 @@ html, body {
     gap: 10px;
     transition: all 0.2s ease-in-out;
     position: relative;
+    z-index: 1;
+    background-color: var(--header-bg);
 }
 
 .chat-input-controls {
@@ -207,7 +189,7 @@ html, body {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: background-color 0.3s ease, color 0.3s ease; 
+    transition: all 0.3s ease; 
 }
 
 #prompt-btn,
@@ -320,7 +302,6 @@ html, body {
 .chat-input-area.input-focused #inspiration-btn {
     background-color: transparent;
     color: var(--text-dark);
-    transition: transform 0.2s ease-out;
 }
 
 .chat-input-area.input-focused #prompt-btn,
@@ -358,7 +339,9 @@ html, body {
     display: flex;
     justify-content: center;
     align-items: center; 
-    z-index: 1000;
+    /* ▼▼▼ 修改：z-index 从 1000 降至 200 ▼▼▼ */
+    z-index: 200;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
@@ -469,7 +452,9 @@ html, body {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.2);
-    z-index: 999;
+    /* ▼▼▼ 修改：z-index 从 999 改为 50 ▼▼▼ */
+    z-index: 50;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
     display: none;
 }
 
@@ -512,7 +497,7 @@ html, body {
     color: #333;
 }
 
-/* --- 聊天风格选择面板 (chat-prompt.js) 的专属样式 (已修改) --- */
+/* --- 聊天风格选择面板 (chat-prompt.js) 的专属样式 --- */
 
 #chat-prompt-panel .modal-header { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid var(--border-color); }
 #chat-prompt-panel .modal-header .modal-title { font-size: 1.1em; font-weight: 600; margin: 0; }
@@ -529,244 +514,551 @@ html, body {
 #chat-prompt-panel .sheet-btn-cancel:hover { background-color: #e9ecef; }
 #chat-prompt-panel .sheet-btn-confirm { background-color: var(--send-btn-bg); color: white; }
 #chat-prompt-panel .sheet-btn-confirm:hover { filter: brightness(1.1); }
-
-/* 可折叠卡片样式 */
 .style-details-container { padding: 0 5px; }
-.style-card {
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background-color: #f8f9fa;
-    margin-top: 10px;
-    overflow: hidden;
-}
-.style-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 15px;
-    cursor: pointer;
-    user-select: none;
-}
+.style-card { border: 1px solid var(--border-color); border-radius: 8px; background-color: #f8f9fa; margin-top: 10px; overflow: hidden; }
+.style-card-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; cursor: pointer; user-select: none; }
 .style-card-title { font-weight: 500; color: #495057; }
 .style-card-header i { color: #adb5bd; transition: transform 0.3s ease; }
-.style-card-content {
-    max-height: 0;
-    opacity: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease;
-    padding: 0 15px;
-}
+.style-card-content { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease; padding: 0 15px; }
 .style-card.expanded .style-card-header i { transform: rotate(180deg); }
-.style-card.expanded .style-card-content {
-    max-height: 300px;
-    opacity: 1;
-    padding: 0 15px 15px;
-    overflow-y: auto;
-}
-#chat-prompt-panel .prompt-description {
-    font-size: 0.9em;
-    color: #666;
-    line-height: 1.5;
-    margin: 0;
-}
+.style-card.expanded .style-card-content { max-height: 300px; opacity: 1; padding: 0 15px 15px; overflow-y: auto; }
+#chat-prompt-panel .prompt-description { font-size: 0.9em; color: #666; line-height: 1.5; margin: 0; }
+.style-settings-container { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; padding: 0 5px; }
+.style-setting-item { display: flex; justify-content: space-between; align-items: center; }
+.style-setting-item label { font-size: 0.9em; color: #333; }
+.style-setting-item input[type="number"] { width: 60px; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 6px; text-align: center; font-size: 0.9em; background-color: #ffffff; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); }
+.style-setting-item input[type="number"]::-webkit-inner-spin-button, .style-setting-item input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.style-setting-item input[type="number"] { -moz-appearance: textfield; }
+.min-max-input-container { display: flex; align-items: center; gap: 5px; }
+.min-max-input-container input[type="number"] { width: 50px; }
+.min-max-input-container span { color: #868e96; font-weight: 500; }
 
-/* ▼▼▼ 新增：设置项样式 ▼▼▼ */
-.style-settings-container {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 15px;
-    padding: 0 5px;
-}
-.style-setting-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.style-setting-item label {
-    font-size: 0.9em;
-    color: #333;
-}
-.style-setting-item input[type="number"] {
-    width: 60px;
-    padding: 6px 8px;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    text-align: center;
-    font-size: 0.9em;
-    background-color: #ffffff;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
-}
-/* 隐藏数字输入框旁边的上下箭头 */
-.style-setting-item input[type="number"]::-webkit-inner-spin-button,
-.style-setting-item input[type="number"]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-.style-setting-item input[type="number"] {
-    -moz-appearance: textfield; /* Firefox */
-}
-/* ▲▲▲ 新增结束 ▲▲▲ */
+/* --- 消息原地编辑样式 --- */
+.message-edit-container { display: flex; flex-direction: column; width: 100%; box-sizing: border-box; }
+.message-edit-textarea { width: 100%; border: none; background-color: transparent; resize: none; outline: none; font-family: inherit; font-size: inherit; line-height: 1.5; padding: 0; margin-bottom: 8px; color: var(--text-dark); }
+.message-edit-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.message-edit-btn { border: none; border-radius: 6px; padding: 6px; font-size: 0.85rem; cursor: pointer; background-color: #ffffff; color: var(--text-dark); transition: background-color 0.2s; }
+.message-edit-btn.save { background-color: var(--send-btn-bg); color: var(--text-light); }
+.message-edit-btn:hover { filter: brightness(0.95); }
 
-/* ▼▼▼ 新增：最小/最大输入框容器样式 ▼▼▼ */
-.min-max-input-container {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-.min-max-input-container input[type="number"] {
-    width: 50px; /* 调整为更窄的宽度 */
-}
-.min-max-input-container span {
-    color: #868e96;
-    font-weight: 500;
-}
-/* ▲▲▲ 新增结束 ▲▲▲ */
-
-/* --- 消息原地编辑样式 (无变化) --- */
-.message-edit-container {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.message-edit-textarea {
-    width: 100%;
-    border: none;
-    background-color: transparent;
-    resize: none;
-    outline: none;
-    font-family: inherit;
-    font-size: inherit;
-    line-height: 1.5;
-    padding: 0;
-    margin-bottom: 8px;
-    color: var(--text-dark);
-}
-
-.message-edit-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-}
-
-.message-edit-btn {
-    border: none;
-    border-radius: 6px;
-    padding: 6px;
-    font-size: 0.85rem;
-    cursor: pointer;
-    background-color: #ffffff;
-    color: var(--text-dark);
-    transition: background-color 0.2s;
-}
-
-.message-edit-btn.save {
-    background-color: var(--send-btn-bg);
-    color: var(--text-light);
-}
-
-.message-edit-btn:hover {
-    filter: brightness(0.95);
-}
-
-/* ▼▼▼ [修改] 顶部菜单样式，适配二级面板（标签栏居右） ▼▼▼ */
+/* --- 顶部菜单样式 --- */
+/* ▼▼▼ 修改：重写顶部菜单样式，适配左右分离面板 ▼▼▼ */
 .header-menu-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+    /* z-index 保持 100，作为顶部菜单的遮罩层 */
     z-index: 100;
     display: none;
+    /* background-color: rgba(0,0,0,0.1); */ /* 可选：给遮罩一个淡淡的颜色 */
 }
 .header-menu-overlay.active {
     display: block;
 }
 
-.header-menu {
+.header-panel {
     position: absolute;
     top: 70px;
-    right: 15px;
-    width: 90%; 
-    height: 80%; 
+    height: 89vh; /* 给予一个默认高度 */
+    max-height: 700px;
     background-color: #fff;
     border-radius: 12px;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    border: 1px solid var(--border-color);
+    /* z-index 设为 101，确保在遮罩之上 */
     z-index: 101;
     opacity: 0;
-    transform: scale(0.95) translateY(-10px);
-    transform-origin: top right;
+    transform: translateY(-10px);
     pointer-events: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
+    display: flex; /* 用于内部对齐 */
+    flex-direction: column;
 }
-.header-menu.active {
+.header-panel.active {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: translateY(0);
     pointer-events: auto;
 }
-.header-menu-arrow {
-    position: absolute;
-    top: -6px;
-    right: 20px;
-    width: 12px;
-    height: 12px;
-    background-color: #fff;
-    transform: rotate(45deg);
+
+#header-content-panel {
+    left: 5px;
+    right: 59px; /* 留出右侧面板和间距的位置 */
+    padding: 12px;
+    overflow-y: auto;
 }
 
-.header-menu-content {
-    display: flex;
-    position: relative;
-    z-index: 1;
-    height: 100%; /* ★★★ BUG修复：添加此行 ★★★ */
+#header-tabs-panel {
+    right: 5px;
+    width: 55px;
+    padding: 3px;
+    
 }
 
 .header-menu-list {
-    flex: 0 0 70px; /* 右侧标签列表固定宽度 */
     list-style: none;
     margin: 0;
-    padding: 6px;
-    border-left: 1px solid var(--border-color); /* [修改] 将分割线改到左边 */
+    padding: 0;
+    height: 68vh; 
 }
-
 .header-menu-item a {
     display: flex;
-    justify-content: center; /* 文本居中 */
+    justify-content: center;
     align-items: center;
-    padding: 8px 6px;
+    padding: 8px 4px;
     text-decoration: none;
     color: var(--text-dark);
     font-size: 1rem;
-    border-radius: 6px;
+    border-radius: 12px;
     transition: background-color 0.2s ease, color 0.2s ease;
 }
 .header-menu-item a:hover {
     background-color: #f1f3f5;
 }
-
-/* ▼▼▼ [修改] 调整选中标签的背景色和文字颜色 ▼▼▼ */
 .header-menu-item a.active {
     background-color: #6A91B5;
-    color: var(--text-light); /* 将文字改为白色以保证对比度 */
+    color: var(--text-light);
     font-weight: 500;
-}
-/* ▲▲▲ 修改结束 ▲▲▲ */
-
-
-.header-menu-secondary-content {
-    flex-grow: 1;
-    padding: 12px;
 }
 
 .secondary-content-pane {
-    display: none; /* 默认隐藏所有内容面板 */
+    display: none;
     font-size: 0.9em;
     color: #495057;
 }
-
 .secondary-content-pane.active {
-    display: block; /* 只显示激活的面板 */
+    display: block;
 }
 /* ▲▲▲ 修改结束 ▲▲▲ */
+
+/* ▼▼▼ 新增：顶部菜单 - 记忆面板样式 ▼▼▼ */
+.memory-switches-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+.memory-switch-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+/* --- 新代码 --- */
+.switch-text-content {
+    display: flex;
+    align-items: baseline; /* 让不同大小的文字基线对齐 */
+    gap: 8px;              /* 在标题和副标题之间增加间距 */
+}
+.switch-title {
+    font-size: 1em;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+.switch-subtitle {
+    font-size: 0.8em;
+    color: var(--text-meta);
+}
+.switch-control {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+.switch-control input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+}
+input:checked + .slider {
+    background-color: var(--send-btn-bg);
+}
+input:focus + .slider {
+    box-shadow: 0 0 1px var(--send-btn-bg);
+}
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+.slider.round {
+    border-radius: 34px;
+}
+.slider.round:before {
+    border-radius: 50%;
+}
+.memory-management-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.memory-title {
+    margin: 0;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #495057;
+}
+.add-memory-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #868e96;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+.add-memory-btn:hover {
+    background-color: #f1f3f5;
+    color: var(--text-dark);
+}
+.memory-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+/* ▼▼▼ 修改：调整记忆卡片样式 ▼▼▼ */
+.memory-card {
+    background-color: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    cursor: pointer; /* 添加手型光标 */
+    transition: background-color 0.2s ease;
+}
+.memory-card:hover {
+    background-color: #f1f3f5; /* 添加悬停效果 */
+}
+.memory-card-text {
+    font-size: 0.9em;
+    color: #333;
+    line-height: 1.4;
+    word-break: break-all;
+    /* 确保文本不会溢出 */
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* 最多显示3行 */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* ▲▲▲ 修改结束 ▲▲▲ */
+
+/* ▼▼▼ 新增：记忆编辑器模态框样式 ▼▼▼ */
+#memory-editor-overlay {
+    z-index: 250; /* 确保层级高于顶部菜单(101) */
+}
+.memory-editor-panel {
+    width: 90%;
+    max-width: 380px;
+    background-color: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.memory-editor-panel .modal-body {
+    padding: 16px;
+    flex-grow: 1;
+}
+#memory-editor-textarea {
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 1em;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+    box-sizing: border-box;
+    background-color: #f8f9fa;
+}
+#memory-editor-textarea:focus {
+    border-color: var(--send-btn-bg);
+    background-color: #fff;
+    box-shadow: 0 0 0 2px rgba(114, 144, 178, 0.2);
+}
+.memory-editor-panel .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-color);
+    background-color: #f8f9fa;
+}
+.modal-btn-cancel, .modal-btn-confirm, .modal-btn-delete {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease, filter 0.2s ease;
+}
+.modal-btn-cancel {
+    background-color: #e9ecef;
+    color: #495057;
+}
+.modal-btn-cancel:hover {
+    background-color: #dee2e6;
+}
+.modal-btn-confirm {
+    background-color: var(--send-btn-bg);
+    color: var(--text-light);
+}
+.modal-btn-confirm:hover {
+    filter: brightness(1.1);
+}
+.modal-btn-delete {
+    background-color: transparent;
+    color: var(--danger-color);
+    margin-right: auto; /* 将删除按钮推到最左边 */
+}
+.modal-btn-delete:hover {
+    background-color: rgba(229, 62, 62, 0.1);
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */
+
+
+/* ▼▼▼ 修改：全新的集成式底部动作菜单样式 ▼▼▼ */
+.actions-menu {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--page-bg);
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+.chat-input-area.actions-expanded .actions-menu {
+    max-height: 280px; /* 控制面板展开的最大高度 */
+    opacity: 1;
+}
+
+/* 展开时，旋转加号按钮并给个背景色 */
+.chat-input-area.actions-expanded #actions-toggle-btn {
+    transform: rotate(45deg);
+    background-color: #e9ecef;
+}
+
+.actions-menu-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px 15px 10px;
+}
+
+.actions-menu-pane {
+    display: none;
+}
+.actions-menu-pane.active {
+    display: block;
+}
+
+.actions-grid-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    row-gap: 20px;
+}
+
+.placeholder-pane {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+    color: var(--text-meta);
+}
+
+.actions-menu-tabs {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+.actions-menu-tabs li {
+    flex-grow: 1;
+    text-align: center;
+}
+.actions-menu-tabs a {
+    display: block;
+    padding: 14px 0;
+    text-decoration: none;
+    color: #868e96;
+    font-weight: 500;
+    font-size: 0.9em;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+.actions-menu-tabs a.active {
+    color: var(--send-btn-bg);
+}
+/* ▲▲▲ 修改结束 ▲▲▲ */
+/* chat-room.css */
+
+/* ▼▼▼ 新增：顶部菜单 - 设定面板样式 ▼▼▼ */
+.edit-profiles-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px;
+}
+
+.profile-edit-trigger {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border: 1px solid var(--border-color);
+    background-color: #f8f9fa;
+}
+
+.profile-edit-trigger:hover {
+    background-color: #f1f3f5;
+}
+
+.profile-edit-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.profile-edit-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0; /* 防止长名字撑开容器 */
+}
+
+.profile-edit-label {
+    font-size: 0.8em;
+    color: var(--text-meta);
+}
+
+.profile-edit-name {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: var(--text-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */
+
+
+#edit-modal-overlay,
+#user-edit-modal-overlay {
+    z-index: 300; /* !important 已移除 */
+}
+/* ▲▲▲ 修改结束 ▲▲▲ */
+
+/* ▼▼▼ 新增：确保编辑器内的子组件（如裁剪、确认框）在编辑器之上 ▼▼▼ */
+#cropper-overlay,
+#user-cropper-overlay,
+.prompt-overlay, /* 适用于 #name-prompt-overlay 和 #user-name-prompt-overlay */
+.bottom-sheet-overlay { /* 适用于所有底部操作表 */
+    z-index: 400;
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */
+/* chat-room.css */
+
+/* ▼▼▼ 新增/修改：顶部菜单 - 新版设定面板样式 ▼▼▼ */
+
+/* 移除旧的 .profile-edit-trigger 卡片样式 */
+.profile-edit-trigger {
+    border: none;
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+}
+
+/* 移除旧的 .profile-edit-label 样式（该元素已删除） */
+.profile-edit-label {
+    display: none;
+}
+
+/* 设定面板主容器 */
+.profile-group-container {
+    padding: 8px;
+}
+
+/* 每个设定分组（用户/角色） */
+.profile-group {
+    margin-bottom: 16px; /* 分组之间的间距 */
+}
+.profile-group:last-child {
+    margin-bottom: 0;
+}
+
+/* 分组标题样式 (例如 "用户设定") */
+.profile-group-title {
+    font-size: 1em;
+    font-weight: 500;
+    color: var(--text-meta);
+    margin: 0 0 8px 10px;
+    text-transform: uppercase; /* 可选：让标题字母大写，更有设计感 */
+}
+
+/* 分组内容区（头像+名字），也是可点击区域 */
+.profile-group-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+/* 鼠标悬停时给一个反馈 */
+.profile-group-content:hover {
+    background-color: #f1f3f5;
+}
+
+/* 微调头像和名字的样式 */
+.profile-edit-avatar {
+    width: 50px;  
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.profile-edit-name {
+    font-size: 1.05em; /* 稍微调整字号 */
+    font-weight: 600;
+    color: var(--text-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* ▲▲▲ 新增/修改结束 ▲▲▲ */

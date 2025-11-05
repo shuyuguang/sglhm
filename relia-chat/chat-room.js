@@ -10,49 +10,50 @@ import { CHAT_STYLES, createChatPromptPanel } from './chat-prompt.js';
 
 
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log("Chat Room script started."); // 1. 脚本是否开始执行？
+    console.log("Chat Room script started.");
 
     const appContainer = document.getElementById('app-container');
     if (!appContainer) {
-        console.error("#app-container not found!"); // 2. 容器元素是否存在？
+        console.error("#app-container not found!");
         document.body.innerText = '关键DOM元素 #app-container 未找到，页面无法加载。';
         return;
     }
 
     const urlParams = new URLSearchParams(window.location.search);
     const charId = urlParams.get('id');
-    console.log("Character ID from URL:", charId); // 3. 是否成功获取到 charId？
+    console.log("Character ID from URL:", charId);
     
     if (!charId) {
         appContainer.innerHTML = '<p style="text-align: center; margin-top: 50px;">错误：未指定角色ID。</p>';
         return;
     }
     
-    try { // 使用 try...catch 包裹数据获取，捕获任何可能的错误
+    try {
         const [rawAllChars, rawAllUsers, currentUserId] = await Promise.all([
             dbStorage.getItem(PROFILE_DB_KEYS.CHAR_PROFILES),
             dbStorage.getItem(PROFILE_DB_KEYS.USER_PROFILES),
             dbStorage.getItem(PROFILE_DB_KEYS.USER_CURRENT_ID)
         ]);
         
-        console.log("Data from DB:", { rawAllChars, rawAllUsers, currentUserId }); // 4. 从数据库获取的数据是什么？
+        console.log("Data from DB:", { rawAllChars, rawAllUsers, currentUserId });
 
         const allChars = rawAllChars || [];
         const allUsers = rawAllUsers || [];
         
         let character = allChars.find(c => c.id === charId);
-        console.log("Found character:", character); // 5. 是否找到了对应的角色？
+        console.log("Found character:", character);
 
         if (!character) {
             appContainer.innerHTML = `<p style="text-align: center; margin-top: 50px;">错误：找不到ID为 ${charId} 的角色。</p>`;
             return;
         }
 
-        console.log("Character found, preparing to render UI..."); // 6. 准备渲染UI
+        console.log("Character found, preparing to render UI...");
 
-        const currentUser = allUsers.find(u => u.id === currentUserId);
-        const user = currentUser || { name: 'User', avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg' };
-        
+        // ▼▼▼ 修改：将 user 变量提升，以便后续使用 ▼▼▼
+        let user = allUsers.find(u => u.id === currentUserId) || { id: 'default-user-1', name: 'User', avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg' };
+        // ▲▲▲ 修改结束 ▲▲▲
+
         const pageHtml = `
             <div class="chat-container">
                 <header class="chat-header">
@@ -64,12 +65,41 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <span class="char-info-status">在线</span>
                         </div>
                     </div>
-                    <!-- ▼▼▼ 新增的三横杠菜单按钮 ▼▼▼ -->
                     <button class="chat-header-btn" id="menu-btn"><i class="fa-solid fa-bars"></i></button>
-                    <!-- ▲▲▲ 新增结束 ▲▲▲ -->
                 </header>
                 <main class="chat-messages" id="chat-messages-area"></main>
                 <footer class="chat-input-area" id="chat-input-area">
+                    <div class="actions-menu" id="actions-menu">
+                        <div class="actions-menu-content" id="actions-menu-content">
+                            <div id="menu-content-actions" class="actions-menu-pane active">
+                                <div class="actions-grid-container">
+                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-image"></i></button><span>图片</span></div>
+                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-camera"></i></button><span>拍照</span></div>
+                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-microphone"></i></button><span>音频</span></div>
+                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-palette"></i></button><span>主题</span></div>
+                                    <div class="action-item"><button class="action-btn" id="workbench-btn"><i class="fa-solid fa-briefcase"></i></button><span>工作台</span></div>
+                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-list-check"></i></button><span>DIY</span></div>
+                                    <div class="action-item"><button class="action-btn" id="edit-settings-btn"><i class="fa-solid fa-pencil"></i></button><span>编辑</span></div>
+                                    <div class="action-item"><button class="action-btn" id="search-history-btn"><i class="fa-solid fa-brain"></i></button><span>数据</span></div>
+                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-money-bill-transfer"></i></button><span>转账</span></div>
+                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-sack-dollar"></i></button><span>收款</span></div>
+                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-gift"></i></button><span>礼物</span></div>
+                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-phone"></i></button><span>通话</span></div>
+                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-location-dot"></i></button><span>位置</span></div>
+                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-music"></i></button><span>听歌</span></div>
+                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-calendar-check"></i></button><span>打卡</span></div>
+                                    <div class="action-item"><button class="action-btn"><i class="fa-solid fa-link"></i></button><span>接龙</span></div>
+                                </div>
+                            </div>
+                            <div id="menu-content-inspiration-actions" class="actions-menu-pane"><div class="placeholder-pane">灵感功能待开发...</div></div>
+                            <div id="menu-content-prompt-actions" class="actions-menu-pane"><div class="placeholder-pane">指令功能待开发...</div></div>
+                        </div>
+                        <ul class="actions-menu-tabs">
+                            <li><a href="#" class="active" data-target="menu-content-actions">选项</a></li>
+                            <li><a href="#" data-target="menu-content-inspiration-actions">灵感</a></li>
+                            <li><a href="#" data-target="menu-content-prompt-actions">指令</a></li>
+                        </ul>
+                    </div>
                     <div class="chat-input-main" id="chat-input-main">
                         <div class="chat-input-wrapper" id="chat-input-wrapper">
                             <textarea id="chat-input" placeholder="点击输入消息..." rows="1"></textarea>
@@ -88,23 +118,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <button id="emoji-toggle-btn"><i class="fa-regular fa-face-smile"></i></button>
                         </div>
                     </div>
-                    <div class="chat-actions-bar">
-                        <div class="action-item"><button class="action-btn"><i class="fa-solid fa-image"></i></button><span>图片</span></div>
-                        <div class="action-item"><button class="action-btn"><i class="fa-solid fa-camera"></i></button><span>拍照</span></div>
-                        <div class="action-item"><button class="action-btn"><i class="fa-solid fa-microphone"></i></button><span>音频</span></div>
-                        <div class="action-item"><button class="action-btn"><i class="fa-solid fa-palette"></i></button><span>主题</span></div>
-                        <div class="action-item"><button class="action-btn" id="workbench-btn"><i class="fa-solid fa-briefcase"></i></button><span>工作台</span></div>
-                        <div class="action-item"><button class="action-btn"><i class="fa-solid fa-list-check"></i></button><span>DIY</span></div>                    <div class="action-item"><button class="action-btn" id="edit-settings-btn"><i class="fa-solid fa-pencil"></i></button><span>编辑</span></div>
-                        <div class="action-item"><button class="action-btn" id="search-history-btn"><i class="fa-solid fa-brain"></i></button><span>数据</span></div>
-                        <div class="action-item"><button class="action-btn"><i class="fa-solid fa-money-bill-transfer"></i></button><span>转账</span></div>
-                        <div class="action-item"><button class="action-btn"><i class="fa-solid fa-sack-dollar"></i></button><span>收款</span></div>
-                        <div class="action-item"><button class="action-btn"><i class="fa-solid fa-gift"></i></button><span>礼物</span></div>
-                        <div class="action-item"><button class="action-btn"><i class="fa-solid fa-phone"></i></button><span>通话</span></div>
-                        <div class="action-item"><button class="action-btn"><i class="fa-solid fa-location-dot"></i></button><span>位置</span></div>
-                        <div class="action-item"><button class="action-btn"><i class="fa-solid fa-music"></i></button><span>听歌</span></div>
-                        <div class="action-item"><button class="action-btn"><i class="fa-solid fa-calendar-check"></i></button><span>打卡</span></div>
-                        <div class="action-item"><button class="action-btn"><i class="fa-solid fa-link"></i></button><span>接龙</span></div>
-                    </div>
                     <div class="emoji-picker-bar">
                         <div class="emoji-placeholder">表情面板功能待开发...</div>
                     </div>
@@ -112,7 +125,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
     `;
         appContainer.innerHTML = pageHtml;
-        console.log("UI rendered successfully."); // 7. UI是否成功渲染？
+        console.log("UI rendered successfully.");
 
         // --- 3. 获取DOM元素和定义变量 ---
         const chatArea = document.getElementById('chat-messages-area');
@@ -133,43 +146,146 @@ document.addEventListener('DOMContentLoaded', async () => {
         const editSettingsBtn = document.getElementById('edit-settings-btn');
         const searchHistoryBtn = document.getElementById('search-history-btn');
         const workbenchBtn = document.getElementById('workbench-btn');
-        // ▼▼▼ 新增：获取顶部菜单相关元素 ▼▼▼
         const menuBtn = document.getElementById('menu-btn');
-        const headerMenu = document.getElementById('header-menu');
+        const headerContentPanel = document.getElementById('header-content-panel');
+        const headerTabsPanel = document.getElementById('header-tabs-panel');
         const headerMenuOverlay = document.getElementById('header-menu-overlay');
-        // ▲▲▲ 新增结束 ▲▲▲
+        const actionsMenu = document.getElementById('actions-menu');
         
-        let currentChatApi = null;
+        const addMemoryBtn = document.getElementById('add-memory-btn');
+        const memoryCardsContainer = document.getElementById('memory-cards-container');
 
-        // ▼▼▼ 修复点：在这里重新添加被误删的变量定义 ▼▼▼
+        // ▼▼▼ 新增：获取记忆编辑器模态框元素 ▼▼▼
+        const memoryEditorOverlay = document.getElementById('memory-editor-overlay');
+        const memoryEditorTitle = document.getElementById('memory-editor-title');
+        const memoryEditorTextarea = document.getElementById('memory-editor-textarea');
+        const memoryEditorConfirmBtn = document.getElementById('memory-editor-confirm-btn');
+        const memoryEditorCancelBtn = document.getElementById('memory-editor-cancel-btn');
+        const memoryEditorDeleteBtn = document.getElementById('memory-editor-delete-btn');
+        const memoryEditorCloseBtn = document.getElementById('memory-editor-close-btn');
+        // ▲▲▲ 新增结束 ▲▲▲
+
+// ▼▼▼ 新增：获取设定面板中的元素 ▼▼▼
+const editUserProfileTrigger = document.getElementById('edit-user-profile-trigger');
+const editCharProfileTrigger = document.getElementById('edit-char-profile-trigger');
+const userProfileEditAvatar = document.getElementById('user-profile-edit-avatar');
+const userProfileEditName = document.getElementById('user-profile-edit-name');
+const charProfileEditAvatar = document.getElementById('char-profile-edit-avatar');
+const charProfileEditName = document.getElementById('char-profile-edit-name');
+// ▲▲▲ 新增结束 ▲▲▲
+
+let currentChatApi = null;
+
         const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`;
         const selectedApiKey = `${CHAT_DB_KEYS.CHAT_SELECTED_API}_${charId}`;
-        let currentChatStyle = CHAT_STYLES['dialogue']; // 默认使用对话体
+        let currentChatStyle = CHAT_STYLES['dialogue'];
         const styleDbKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_style_${charId}`;
 
         let chatHistory = [];
-        // ▲▲▲ 修复结束 ▲▲▲
         
-        let chatEditor = null;
-        const onProfileUpdate = async (updatedProfile) => {
-            console.log('角色设定已在聊天室中更新:', updatedProfile);
-            character = updatedProfile; 
-            const allCharacterProfiles = await dbStorage.getItem(PROFILE_DB_KEYS.CHAR_PROFILES) || [];
-            const charIndex = allCharacterProfiles.findIndex(c => c.id === character.id);
-            if (charIndex !== -1) {
-                allCharacterProfiles[charIndex] = character;
-                await dbStorage.setItem(PROFILE_DB_KEYS.CHAR_PROFILES, allCharacterProfiles);
-            }
-            document.querySelector('.char-info-name').textContent = character.name || '未命名';
-            document.querySelector('.char-info-avatar').src = character.avatar;
-            chatEditor?.updateProfile(character);
-        };
+        const memoryDbKey = `relia-chat-memory_${charId}`;
+        let memories = [];
 
-        if(character) {
-            chatEditor = createChatEditor(character, onProfileUpdate);
+        // ▼▼▼ 修改：初始化两个编辑器实例 ▼▼▼
+        let chatEditor = null; // 角色编辑器
+let userEditor = null; // 用户编辑器
+
+// 角色保存回调
+const onProfileUpdate = async (updatedProfile) => {
+    console.log('角色设定已在聊天室中更新:', updatedProfile);
+    character = updatedProfile; 
+    const allCharacterProfiles = await dbStorage.getItem(PROFILE_DB_KEYS.CHAR_PROFILES) || [];
+    const charIndex = allCharacterProfiles.findIndex(c => c.id === character.id);
+    if (charIndex !== -1) {
+        allCharacterProfiles[charIndex] = character;
+        await dbStorage.setItem(PROFILE_DB_KEYS.CHAR_PROFILES, allCharacterProfiles);
+    }
+    // 更新主界面
+    document.querySelector('.char-info-name').textContent = character.name || '未命名';
+    document.querySelector('.char-info-avatar').src = character.avatar;
+    // 更新顶部菜单设定面板
+    if (charProfileEditAvatar) charProfileEditAvatar.src = character.avatar;
+    if (charProfileEditName) charProfileEditName.textContent = character.name;
+    chatEditor?.updateProfile(character);
+};
+
+// 用户保存回调
+const onUserUpdate = async (updatedUser) => {
+    console.log('用户设定已在聊天室中更新:', updatedUser);
+    user = updatedUser;
+    const userIndex = allUsers.findIndex(u => u.id === user.id);
+    if (userIndex !== -1) {
+        allUsers[userIndex] = user;
+    } else {
+        allUsers.push(user); // 如果是默认用户，可能不在列表里
+    }
+    await dbStorage.setItem(PROFILE_DB_KEYS.USER_PROFILES, allUsers);
+    // 更新顶部菜单设定面板
+    if (userProfileEditAvatar) userProfileEditAvatar.src = user.avatar;
+    if (userProfileEditName) userProfileEditName.textContent = user.name;
+    userEditor?.updateProfile(user);
+};
+
+if(character) {
+    // 初始化角色编辑器 (无前缀)
+    chatEditor = createChatEditor(character, onProfileUpdate);
+    // 初始化角色设定面板显示
+    if (charProfileEditAvatar) charProfileEditAvatar.src = character.avatar;
+    if (charProfileEditName) charProfileEditName.textContent = character.name;
+}
+if(user) {
+    // 初始化用户编辑器 (使用 'user-' 前缀)
+    userEditor = createChatEditor(user, onUserUpdate, 'user-');
+    // 初始化用户设定面板显示
+    if (userProfileEditAvatar) userProfileEditAvatar.src = user.avatar;
+    if (userProfileEditName) userProfileEditName.textContent = user.name;
+}
+// ▲▲▲ 修改结束 ▲▲▲
+
+// --- 4. 核心功能函数 ---
+
+        // ▼▼▼ 修改：重写记忆卡片渲染逻辑 ▼▼▼
+        async function renderMemoryCards() {
+            memories = await dbStorage.getItem(memoryDbKey) || [];
+            memoryCardsContainer.innerHTML = '';
+            if (memories.length === 0) {
+                memoryCardsContainer.innerHTML = '<p style="text-align: center; color: var(--text-meta); font-size: 0.85em;">暂无记忆</p>';
+                return;
+            }
+            memories.forEach((mem, index) => {
+                const card = document.createElement('div');
+                card.className = 'memory-card';
+                card.dataset.index = index;
+                card.innerHTML = `<span class="memory-card-text">${mem}</span>`;
+                memoryCardsContainer.appendChild(card);
+            });
+        }
+        // ▲▲▲ 修改结束 ▲▲▲
+
+        // ▼▼▼ 新增：记忆编辑器模态框控制函数 ▼▼▼
+        function openMemoryEditor(mode, index = -1, text = '') {
+            memoryEditorOverlay.dataset.mode = mode;
+            memoryEditorOverlay.dataset.index = index;
+            memoryEditorTextarea.value = text;
+
+            if (mode === 'add') {
+                memoryEditorTitle.textContent = '添加记忆';
+                memoryEditorDeleteBtn.style.display = 'none';
+            } else {
+                memoryEditorTitle.textContent = '编辑记忆';
+                memoryEditorDeleteBtn.style.display = 'block';
+            }
+            
+            memoryEditorOverlay.classList.add('active');
+            memoryEditorTextarea.focus();
         }
 
-        // --- 4. 核心功能函数 ---
+        function closeMemoryEditor() {
+            memoryEditorOverlay.classList.remove('active');
+        }
+        // ▲▲▲ 新增结束 ▲▲▲
+
+
         function constructSystemPrompt(charProfile, userProfile) {
             let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
             prompt += `### 角色设定\n`;
@@ -248,7 +364,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 chatArea.innerHTML = '';
                 chatHistory.forEach((message, index) => renderMessage(message, index));
             } else {
-                // 如果没有历史记录，确保聊天区域是空的
                 chatArea.innerHTML = '';
                 chatHistory = [];
             }
@@ -385,12 +500,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 updateButtonStates();
             }
         };
+        
         const collapseInputLayout = () => { 
             if (chatInputArea.classList.contains('input-focused')) {
                 chatInputArea.classList.remove('input-focused');
                 sendButtonsContainer.classList.remove('visible');
             }
-            chatInputArea.classList.remove('actions-expanded', 'emoji-expanded');
+            chatInputArea.classList.remove('emoji-expanded', 'actions-expanded');
         };
 
         // --- 5. 绑定事件 ---
@@ -401,8 +517,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         if (sendBtn) sendBtn.addEventListener('click', () => handleSendMessage(false));
         if (respondBtn) respondBtn.addEventListener('click', () => handleSendMessage(true));
-        if (actionsToggleBtn) actionsToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); chatInputArea.classList.remove('emoji-expanded'); chatInputArea.classList.toggle('actions-expanded'); });
-        if (emojiToggleBtn) emojiToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); chatInputArea.classList.remove('actions-expanded'); chatInputArea.classList.toggle('emoji-expanded'); });
+
+        if (actionsToggleBtn && actionsMenu) {
+            const tabs = actionsMenu.querySelector('.actions-menu-tabs');
+            const contentContainer = actionsMenu.querySelector('#actions-menu-content');
+
+            actionsToggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                chatInputArea.classList.remove('emoji-expanded');
+                chatInputArea.classList.toggle('actions-expanded');
+            });
+
+            if (tabs && contentContainer) {
+                tabs.addEventListener('click', (e) => {
+                    const link = e.target.closest('a');
+                    if (!link) return;
+                    e.preventDefault();
+                    const targetId = link.dataset.target;
+                    if (!targetId) return;
+
+                    tabs.querySelectorAll('a.active').forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+
+                    contentContainer.querySelectorAll('.actions-menu-pane.active').forEach(p => p.classList.remove('active'));
+                    const newPane = document.getElementById(targetId);
+                    if (newPane) newPane.classList.add('active');
+                });
+            }
+        }
+
+        if (emojiToggleBtn) {
+            emojiToggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                chatInputArea.classList.remove('actions-expanded');
+                chatInputArea.classList.toggle('emoji-expanded');
+            });
+        }
+
         if (selectModelBtn) selectModelBtn.addEventListener('click', openModelSelector);
         if (promptBtn) { promptBtn.addEventListener('click', () => { alert('“快捷指令（闪电）”功能待开发'); }); }
         if (inspirationBtn) { inspirationBtn.addEventListener('click', () => { alert('“灵感（灯泡）”功能待开发'); }); }
@@ -419,13 +570,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
         
-        // ▼▼▼ [修改] 重写顶部菜单事件处理逻辑 ▼▼▼
-        if (menuBtn && headerMenu && headerMenuOverlay) {
-            const menuList = headerMenu.querySelector('.header-menu-list');
-            const secondaryContentContainer = document.getElementById('header-menu-secondary-content');
+        if (menuBtn && headerContentPanel && headerTabsPanel && headerMenuOverlay) {
+            const menuList = headerTabsPanel.querySelector('.header-menu-list');
+            const secondaryContentContainer = headerContentPanel;
         
             const toggleMenu = () => {
-                headerMenu.classList.toggle('active');
+                headerContentPanel.classList.toggle('active');
+                headerTabsPanel.classList.toggle('active');
                 headerMenuOverlay.classList.toggle('active');
             };
         
@@ -436,37 +587,55 @@ document.addEventListener('DOMContentLoaded', async () => {
         
             headerMenuOverlay.addEventListener('click', toggleMenu);
             
-            // 使用事件委托处理菜单项点击
             if (menuList && secondaryContentContainer) {
-                menuList.addEventListener('click', (e) => {
-                    const link = e.target.closest('a');
-                    if (!link) return;
+        menuList.addEventListener('click', (e) => {
+            const link = e.target.closest('a');
+            if (!link) return;
+            e.preventDefault();
+            const targetId = link.dataset.target;
+            if (!targetId) return;
 
-                    e.preventDefault();
+            // ▼▼▼ 修改：移除拦截“设定”按钮的旧逻辑 ▼▼▼
+            // 旧的拦截代码已被删除
+            // ▲▲▲ 修改结束 ▲▲▲
 
-                    const targetId = link.dataset.target;
-                    if (!targetId) return;
+            menuList.querySelectorAll('a.active').forEach(activeLink => activeLink.classList.remove('active'));
+            link.classList.add('active');
+            secondaryContentContainer.querySelectorAll('.secondary-content-pane.active').forEach(activePane => activePane.classList.remove('active'));
+            const newActivePane = document.getElementById(targetId);
+            if (newActivePane) newActivePane.classList.add('active');
+        });
+    }
+}
 
-                    // 移除所有标签的 active 状态
-                    menuList.querySelectorAll('a.active').forEach(activeLink => {
-                        activeLink.classList.remove('active');
-                    });
-                    // 为当前点击的标签添加 active 状态
-                    link.classList.add('active');
-
-                    // 隐藏所有内容面板
-                    secondaryContentContainer.querySelectorAll('.secondary-content-pane.active').forEach(activePane => {
-                        activePane.classList.remove('active');
-                    });
-                    // 显示目标内容面板
-                    const newActivePane = document.getElementById(targetId);
-                    if (newActivePane) {
-                        newActivePane.classList.add('active');
-                    }
-                });
-            }
+// ▼▼▼ 新增：为设定面板中的两个入口绑定点击事件 ▼▼▼
+if (editUserProfileTrigger) {
+    editUserProfileTrigger.addEventListener('click', () => {
+        if (userEditor) {
+            userEditor.open();
+            // ▼▼▼ 修改：去掉注释，让菜单自动关闭 ▼▼▼
+            toggleMenu(); 
+            // ▲▲▲ 修改结束 ▲▲▲
+        } else {
+            alert('用户编辑器初始化失败！');
         }
-        // ▲▲▲ 修改结束 ▲▲▲
+    });
+}
+
+if (editCharProfileTrigger) {
+    editCharProfileTrigger.addEventListener('click', () => {
+        if (chatEditor) {
+            chatEditor.open();
+            // ▼▼▼ 修改：去掉注释，让菜单自动关闭 ▼▼▼
+            toggleMenu();
+            // ▲▲▲ 修改结束 ▲▲▲
+        } else {
+            alert('角色编辑器初始化失败！');
+        }
+    });
+}
+// ▲▲▲ 新增结束 ▲▲▲
+
 
         if (editSettingsBtn) { editSettingsBtn.addEventListener('click', () => chatEditor ? chatEditor.open() : alert('编辑器初始化失败！')); }
         if (searchHistoryBtn) { searchHistoryBtn.addEventListener('click', () => { alert('“记忆库”功能待开发'); }); }
@@ -490,8 +659,75 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
-        input.addEventListener('focus', () => { expandInputLayout(); chatInputArea.classList.remove('actions-expanded', 'emoji-expanded'); });
-        document.addEventListener('click', (event) => { if (!chatInputArea.contains(event.target)) { collapseInputLayout(); } });
+        
+        // ▼▼▼ 修改：重构记忆相关事件监听 ▼▼▼
+        if (addMemoryBtn) {
+            addMemoryBtn.addEventListener('click', () => {
+                openMemoryEditor('add');
+            });
+        }
+        if (memoryCardsContainer) {
+            memoryCardsContainer.addEventListener('click', (e) => {
+                const card = e.target.closest('.memory-card');
+                if (card) {
+                    const index = parseInt(card.dataset.index, 10);
+                    const currentText = memories[index];
+                    openMemoryEditor('edit', index, currentText);
+                }
+            });
+        }
+
+        // 新增：为记忆编辑器模态框绑定事件
+        if (memoryEditorOverlay) {
+            memoryEditorOverlay.addEventListener('click', (e) => {
+                if (e.target === memoryEditorOverlay) {
+                    closeMemoryEditor();
+                }
+            });
+            memoryEditorCloseBtn.addEventListener('click', closeMemoryEditor);
+            memoryEditorCancelBtn.addEventListener('click', closeMemoryEditor);
+
+            memoryEditorConfirmBtn.addEventListener('click', async () => {
+                const mode = memoryEditorOverlay.dataset.mode;
+                const index = parseInt(memoryEditorOverlay.dataset.index, 10);
+                const newText = memoryEditorTextarea.value.trim();
+
+                if (newText === '') return;
+
+                if (mode === 'add') {
+                    memories.push(newText);
+                } else if (mode === 'edit' && index >= 0) {
+                    memories[index] = newText;
+                }
+
+                await dbStorage.setItem(memoryDbKey, memories);
+                await renderMemoryCards();
+                closeMemoryEditor();
+            });
+
+            memoryEditorDeleteBtn.addEventListener('click', async () => {
+                if (confirm('确定要删除这条记忆吗？')) {
+                    const index = parseInt(memoryEditorOverlay.dataset.index, 10);
+                    if (index >= 0) {
+                        memories.splice(index, 1);
+                        await dbStorage.setItem(memoryDbKey, memories);
+                        await renderMemoryCards();
+                        closeMemoryEditor();
+                    }
+                }
+            });
+        }
+        // ▲▲▲ 修改结束 ▲▲▲
+        
+        input.addEventListener('focus', () => {
+            expandInputLayout();
+            chatInputArea.classList.remove('actions-expanded', 'emoji-expanded');
+        });
+        document.addEventListener('click', (event) => {
+            if (!chatInputArea.contains(event.target)) {
+                collapseInputLayout();
+            }
+        });
 
         // --- 6. 初始化页面 ---
         async function initializeChatState() {
@@ -506,6 +742,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 currentChatApi = savedApi;
             }
             await loadAndRenderHistory();
+            await renderMemoryCards();
             updateButtonStates();
             updateModelButtonText();
             const getChatHistory = () => chatHistory;
@@ -519,7 +756,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await initializeChatState();
 
     } catch (error) {
-        console.error("An error occurred during page initialization:", error); // 捕获并打印未知错误
+        console.error("An error occurred during page initialization:", error);
         appContainer.innerHTML = `<p style="text-align: center; margin-top: 50px;">页面加载时发生严重错误，请查看控制台。</p>`;
     }
 });
