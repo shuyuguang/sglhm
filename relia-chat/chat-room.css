@@ -163,7 +163,9 @@ html, body {
     flex-grow: 1;
     border: none;
     background-color: transparent;
-    padding: 10px 95px 10px 15px;
+    /* ▼▼▼ 修改点1：增大右内边距，为两个图标留出足够空间 ▼▼▼ */
+    padding: 10px 100px 10px 15px;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
     font-size: 1.1em;
     resize: none;
     outline: none;
@@ -192,7 +194,9 @@ html, body {
 
 #inspiration-btn {
     position: absolute;
-    right: 60px;
+    /* ▼▼▼ 修改点2：减小right值，使其向右移动，更靠近表情图标 ▼▼▼ */
+    right: 58px; 
+    /* ▲▲▲ 修改结束 ▲▲▲ */
     bottom: 12px;
     z-index: 2;
 }
@@ -317,7 +321,9 @@ html, body {
     right: auto;
     bottom: auto;
     z-index: auto;
-    margin-left: 0;
+    /* ▼▼▼ 修改点3：添加负边距，减小与左侧图标的间距 ▼▼▼ */
+    margin-left: -2px;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
 }
 
 .chat-input-area.input-focused #chat-input {
