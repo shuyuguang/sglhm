@@ -163,7 +163,7 @@ html, body {
     flex-grow: 1;
     border: none;
     background-color: transparent;
-    padding: 10px 52px 10px 15px;
+    padding: 10px 95px 10px 15px;
     font-size: 1.1em;
     resize: none;
     outline: none;
@@ -191,7 +191,10 @@ html, body {
 }
 
 #inspiration-btn {
-    display: none;
+    position: absolute;
+    right: 60px;
+    bottom: 12px;
+    z-index: 2;
 }
 
 
@@ -301,6 +304,10 @@ html, body {
 }
 
 .chat-input-area.input-focused #inspiration-btn {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    z-index: auto;
     display: flex;
     margin-left: auto; /* 将灵感按钮推到右侧 */
 }
