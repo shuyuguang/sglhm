@@ -1,0 +1,133 @@
+/* relia-chat/chat-components.css */
+
+/* --- 消息操作菜单样式 --- */
+.message-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.2);
+    z-index: 50;
+    display: none;
+}
+
+.message-menu-overlay.active {
+    display: block;
+}
+
+.message-menu {
+    position: absolute;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    padding: 8px;
+    width: 240px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px 4px;
+}
+
+.message-menu-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    color: #333;
+    transition: background-color 0.2s ease;
+}
+
+.message-menu-item:hover {
+    background-color: #f1f3f5;
+}
+
+.message-menu-item i {
+    font-size: 1rem;
+    color: #333;
+}
+
+/* --- 消息原地编辑样式 --- */
+.message-edit-container { display: flex; flex-direction: column; width: 100%; box-sizing: border-box; }
+.message-edit-textarea { width: 100%; border: none; background-color: transparent; resize: none; outline: none; font-family: inherit; font-size: inherit; line-height: 1.5; padding: 0; margin-bottom: 8px; color: var(--text-dark); }
+.message-edit-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.message-edit-btn { border: none; border-radius: 6px; padding: 6px; font-size: 0.85rem; cursor: pointer; background-color: #ffffff; color: var(--text-dark); transition: background-color 0.2s; }
+.message-edit-btn.save { background-color: var(--send-btn-bg); color: var(--text-light); }
+.message-edit-btn:hover { filter: brightness(0.95); }
+
+/* --- 底部动作菜单样式 --- */
+.actions-menu {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--page-bg);
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+.chat-input-area.actions-expanded .actions-menu {
+    max-height: 280px;
+    opacity: 1;
+}
+
+.chat-input-area.actions-expanded #actions-toggle-btn {
+    transform: rotate(45deg);
+    background-color: #e9ecef;
+}
+
+.actions-menu-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px 15px 10px;
+}
+
+.actions-menu-pane {
+    display: none;
+}
+.actions-menu-pane.active {
+    display: block;
+}
+
+.actions-grid-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    row-gap: 20px;
+}
+
+.placeholder-pane {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+    color: var(--text-meta);
+}
+
+.actions-menu-tabs {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+.actions-menu-tabs li {
+    flex-grow: 1;
+    text-align: center;
+}
+.actions-menu-tabs a {
+    display: block;
+    padding: 14px 0;
+    text-decoration: none;
+    color: #868e96;
+    font-weight: 500;
+    font-size: 0.9em;
+    transition: color 0.2s ease, background-color 0.2s ease;
+}
+.actions-menu-tabs a.active {
+    color: var(--send-btn-bg);
+}

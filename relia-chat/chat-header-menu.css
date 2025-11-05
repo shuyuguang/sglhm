@@ -1,0 +1,263 @@
+/* relia-chat/chat-header-menu.css */
+
+/* --- 顶部菜单样式 --- */
+.header-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    display: none;
+}
+.header-menu-overlay.active {
+    display: block;
+}
+
+.header-panel {
+    position: absolute;
+    top: 70px;
+    height: 89vh; 
+    max-height: 700px;
+    background-color: #fff;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    z-index: 101;
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+.header-panel.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+#header-content-panel {
+    left: 5px;
+    right: 59px;
+    padding: 12px;
+    overflow-y: auto;
+}
+
+#header-tabs-panel {
+    right: 5px;
+    width: 55px;
+    padding: 3px;
+}
+
+.header-menu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    height: 68vh; 
+}
+.header-menu-item a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 4px;
+    text-decoration: none;
+    color: var(--text-dark);
+    font-size: 1rem;
+    border-radius: 12px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+.header-menu-item a:hover {
+    background-color: #f1f3f5;
+}
+.header-menu-item a.active {
+    background-color: #6A91B5;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.secondary-content-pane {
+    display: none;
+    font-size: 0.9em;
+    color: #495057;
+}
+.secondary-content-pane.active {
+    display: block;
+}
+
+/* --- 顶部菜单 - 记忆面板样式 --- */
+.memory-switches-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+.memory-switch-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.switch-text-content {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+.switch-title {
+    font-size: 1em;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+.switch-subtitle {
+    font-size: 0.8em;
+    color: var(--text-meta);
+}
+.switch-control {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+.switch-control input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+}
+input:checked + .slider {
+    background-color: var(--send-btn-bg);
+}
+input:focus + .slider {
+    box-shadow: 0 0 1px var(--send-btn-bg);
+}
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+.slider.round {
+    border-radius: 34px;
+}
+.slider.round:before {
+    border-radius: 50%;
+}
+.memory-management-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.memory-title {
+    margin: 0;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #495057;
+}
+.add-memory-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #868e96;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+.add-memory-btn:hover {
+    background-color: #f1f3f5;
+    color: var(--text-dark);
+}
+.memory-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.memory-card {
+    background-color: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.memory-card:hover {
+    background-color: #f1f3f5;
+}
+.memory-card-text {
+    font-size: 0.9em;
+    color: #333;
+    line-height: 1.4;
+    word-break: break-all;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --- 顶部菜单 - 新版设定面板样式 --- */
+.profile-group-container {
+    padding: 8px;
+}
+.profile-group {
+    margin-bottom: 16px;
+}
+.profile-group:last-child {
+    margin-bottom: 0;
+}
+.profile-group-title {
+    font-size: 1em;
+    font-weight: 500;
+    color: var(--text-meta);
+    margin: 0 0 8px 10px;
+    text-transform: uppercase;
+}
+.profile-group-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.profile-group-content:hover {
+    background-color: #f1f3f5;
+}
+.profile-edit-avatar {
+    width: 50px;  
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.profile-edit-name {
+    font-size: 1.05em;
+    font-weight: 600;
+    color: var(--text-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

@@ -67,7 +67,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             modelSelectorOverlay: document.getElementById('model-selector-overlay'),
             modelListContainer: document.getElementById('model-list-container'),
             closeModelSelectorBtn: document.getElementById('close-model-selector-btn'),
-            promptBtn: document.getElementById('prompt-btn'),
             inspirationBtn: document.getElementById('inspiration-btn'),
             editSettingsBtn: document.getElementById('edit-settings-btn'),
             searchHistoryBtn: document.getElementById('search-history-btn'),
@@ -226,7 +225,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
-        if (elements.promptBtn) elements.promptBtn.addEventListener('click', () => alert('“快捷指令（闪电）”功能待开发'));
         if (elements.inspirationBtn) elements.inspirationBtn.addEventListener('click', () => alert('“灵感（灯泡）”功能待开发'));
 
         if (elements.workbenchBtn) {
