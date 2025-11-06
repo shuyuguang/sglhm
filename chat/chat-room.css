@@ -141,16 +141,12 @@ html, body {
 }
 
 .chat-input-controls {
-    /* ▼▼▼ 修改点 1: 移除 display: contents，让它成为一个真正的容器 ▼▼▼ */
-    display: flex;
-    gap: 10px;
-    /* ▲▲▲ 修改结束 ▲▲▲ */
+    display: contents;
 }
 
-/* ▼▼▼ 修改点 2: 调整 order，让 controls 容器整体参与排序 ▼▼▼ */
-.chat-input-wrapper { order: 1; } 
-.chat-input-controls { order: 2; }
-/* ▲▲▲ 修改结束 ▲▲▲ */
+#actions-toggle-btn { order: 1; }
+.chat-input-wrapper { order: 2; } 
+#emoji-toggle-btn { order: 3; } 
 
 
 .chat-input-wrapper {
@@ -166,9 +162,7 @@ html, body {
     flex-grow: 1;
     border: none;
     background-color: transparent;
-    /* ▼▼▼ 修改点 3: 调整内边距，为左右两个绝对定位的图标留出空间 ▼▼▼ */
-    padding: 10px 52px;
-    /* ▲▲▲ 修改结束 ▲▲▲ */
+    padding: 10px 52px 10px 15px;
     font-size: 1.1em;
     resize: none;
     outline: none;
@@ -194,21 +188,12 @@ html, body {
     transition: all 0.3s ease; 
 }
 
-/* ▼▼▼ 修改点 4: 让两个图标都使用绝对定位，并移除它们的 flex order ▼▼▼ */
 #emoji-toggle-btn {
     position: absolute;
     right: 15px;
     bottom: 12px;
     z-index: 2;
 }
-
-#actions-toggle-btn {
-    position: absolute;
-    left: 15px;
-    bottom: 12px;
-    z-index: 2;
-}
-/* ▲▲▲ 修改结束 ▲▲▲ */
 
 #actions-toggle-btn .fa-plus {
     font-weight: 300;
@@ -301,27 +286,23 @@ html, body {
     display: flex;
 }
 
-/* ▼▼▼ 修改点 5: 在展开状态下，重置两个图标的定位属性，让它们变回 flex item ▼▼▼ */
 .chat-input-area.input-focused #actions-toggle-btn,
 .chat-input-area.input-focused #emoji-toggle-btn {
     background-color: transparent;
     color: var(--text-dark);
+}
+
+.chat-input-area.input-focused #emoji-toggle-btn {
     position: relative;
-    left: auto;
     right: auto;
     bottom: auto;
     z-index: auto;
-}
-/* ▲▲▲ 修改结束 ▲▲▲ */
-
-.chat-input-area.input-focused #emoji-toggle-btn {
     margin-left: auto; /* 将表情按钮推到右侧 */
 }
 
 .chat-input-area.input-focused #chat-input {
-    /* ▼▼▼ 修改点 6: 恢复输入框的左右内边距 ▼▼▼ */
-    padding: 0 15px 0 15px;
-    /* ▲▲▲ 修改结束 ▲▲▲ */
+    padding-bottom: 0px; 
+    padding-right: 15px;
     max-height: 120px; 
     overflow-y: auto;  
 }
