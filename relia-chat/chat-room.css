@@ -190,23 +190,29 @@ html, body {
     transition: all 0.3s ease; 
 }
 
-/* ▼▼▼ 修改点 ▼▼▼ */
+/* ▼▼▼ 修改点：移除图标按钮背景并调整定位 ▼▼▼ */
+#emoji-toggle-btn,
 #inspiration-btn {
-    /* display: none;  <-- 移除此行 */
+    background-color: transparent; /* 1. 背景变透明 */
+    width: auto;                   /* 2. 宽度自适应 */
+    height: auto;                  /* 3. 高度自适应 */
+    padding: 8px;                  /* 4. 增加点击区域 */
+}
+
+#inspiration-btn {
     position: absolute;
-    right: 60px; /* 放在 emoji 按钮 (15px) 的左边 */
+    right: 50px; /* 5. 调整右边距以适应新尺寸 */
+    bottom: 12px;
+    z-index: 2;
+}
+
+#emoji-toggle-btn {
+    position: absolute;
+    right: 10px; /* 5. 调整右边距以适应新尺寸 */
     bottom: 12px;
     z-index: 2;
 }
 /* ▲▲▲ 修改结束 ▲▲▲ */
-
-
-#emoji-toggle-btn {
-    position: absolute;
-    right: 15px;
-    bottom: 12px;
-    z-index: 2;
-}
 
 #actions-toggle-btn .fa-plus {
     font-weight: 300;
