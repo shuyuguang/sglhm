@@ -42,7 +42,7 @@ html, body {
 .chat-header-center {
     display: flex;
     align-items: center; /* 垂直居中内部元素 */
-    padding: 2px 4px 2px 8px; /* 修改：缩小垂直内边距，调整水平内边距 */
+    padding: 3px 6px 3px 3px; /* 修改：缩小垂直内边距，调整水平内边距 */
     background-color: rgba(255, 255, 255, 0.4);
     border-radius: 99px;
     border: 1px solid #C9D0D8;
@@ -57,8 +57,8 @@ html, body {
 .char-info { flex-grow: 1; display: flex; align-items: center; gap: 10px; min-width: 0; } /* 修改：减小gap */
 .char-info-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; } /* 修改：缩小头像 */
 .char-info-text { display: flex; flex-direction: column; justify-content: space-between; height: 36px; padding: 1px 0; min-width: 0; } /* 修改：匹配头像高度 */
-.char-info-name { font-size: 1.1em; font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #394950; } /* 修改：微调字号 */
-.char-info-status { font-size: 0.8em; color: var(--text-meta); line-height: 1.2; }
+.char-info-name { font-size: 0.9em; font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #394950; } /* 修改：微调字号 */
+.char-info-status { font-size: 0.75em; color: var(--text-meta); line-height: 1.2; }
 /* ▼▼▼ 新增：为胶囊内的加号按钮添加样式 ▼▼▼ */
 .chat-header-center .add-btn {
     padding: 0 5px;
