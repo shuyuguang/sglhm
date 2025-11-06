@@ -65,8 +65,6 @@ export function renderChatRoomUI(character) {
                     </div>
                     <div class="chat-input-controls">
                         <button id="actions-toggle-btn"><i class="fa-solid fa-plus"></i></button>
-                        {/* ▼▼▼ 修改点：下面这行已被删除 ▼▼▼ */}
-                        {/* <button id="inspiration-btn"><i class="fa-regular fa-lightbulb"></i></button> */}
                         <button id="emoji-toggle-btn"><i class="fa-regular fa-face-smile"></i></button>
                     </div>
                 </div>

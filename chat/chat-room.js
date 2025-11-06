@@ -67,7 +67,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             modelSelectorOverlay: document.getElementById('model-selector-overlay'),
             modelListContainer: document.getElementById('model-list-container'),
             closeModelSelectorBtn: document.getElementById('close-model-selector-btn'),
-            // inspirationBtn: document.getElementById('inspiration-btn'), // <-- 已删除
             editSettingsBtn: document.getElementById('edit-settings-btn'),
             searchHistoryBtn: document.getElementById('search-history-btn'),
             workbenchBtn: document.getElementById('workbench-btn'),
@@ -224,8 +223,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 elements.chatInputArea.classList.toggle('emoji-expanded');
             });
         }
-
-        // if (elements.inspirationBtn) elements.inspirationBtn.addEventListener('click', () => alert('“灵感（灯泡）”功能待开发')); // <-- 已删除
 
         if (elements.workbenchBtn) {
             createChatPromptPanel({
