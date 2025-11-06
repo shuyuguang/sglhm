@@ -144,10 +144,12 @@ html, body {
     display: contents;
 }
 
+/* ▼▼▼ 修改点 ▼▼▼ */
 #actions-toggle-btn { order: 1; }
-#inspiration-btn { order: 2; } 
-.chat-input-wrapper { order: 3; } 
+.chat-input-wrapper { order: 2; } 
+#inspiration-btn { order: 3; } 
 #emoji-toggle-btn { order: 4; } 
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
 
 .chat-input-wrapper {
@@ -190,9 +192,9 @@ html, body {
     transition: all 0.3s ease; 
 }
 
-#inspiration-btn {
-    display: none;
-}
+/* ▼▼▼ 修改点：移除了 #inspiration-btn 的 display: none; 规则 ▼▼▼ */
+/* (原有的 #inspiration-btn { display: none; } 已被删除) */
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
 
 #emoji-toggle-btn {
