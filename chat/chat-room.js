@@ -52,7 +52,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // --- 2. 渲染UI并获取元素 ---
         appContainer.innerHTML = renderChatRoomUI(character);
         
-        // 集中获取所有需要的DOM元素
         const elements = {
             chatArea: document.getElementById('chat-messages-area'),
             input: document.getElementById('chat-input'),
@@ -96,12 +95,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             interactionModeSheetOverlay: document.getElementById('interaction-mode-sheet-overlay'),
             interactionModeList: document.getElementById('interaction-mode-list'),
             interactionModeCancelBtn: document.getElementById('interaction-mode-cancel-btn'),
+            // ▼▼▼ 新增：主题背景相关元素 ▼▼▼
+            addBgFromLocalBtn: document.getElementById('add-bg-from-local-btn'),
+            addBgFromUrlBtn: document.getElementById('add-bg-from-url-btn'),
+            bgUploadInput: document.getElementById('bg-upload-input'),
+            bgThumbnailsContainer: document.getElementById('bg-thumbnails-container'),
+            bgUrlPromptOverlay: document.getElementById('bg-url-prompt-overlay'),
+            bgUrlInput: document.getElementById('bg-url-input'),
+            cancelBgUrlBtn: document.getElementById('cancel-bg-url-btn'),
+            confirmBgUrlBtn: document.getElementById('confirm-bg-url-btn'),
+            // ▲▲▲ 新增结束 ▲▲▲
         };
 
         // --- 3. 状态管理 ---
         const state = {
             chatHistory: [],
             memories: [],
+            backgrounds: [], // 背景图片URL列表
+            activeBackground: null, // 当前激活的背景URL
             currentChatApi: null,
             currentChatStyle: CHAT_STYLES['dialogue'],
             isDiyEnabled: false,
@@ -112,6 +123,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const styleDbKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_style_${charId}`;
         const memoryDbKey = `relia-chat-memory_${charId}`;
         const diyDbKey = `relia-chat-diy-enabled_${charId}`;
+        const bgDbKey = `relia-chat-backgrounds_${charId}`;
+        const activeBgDbKey = `relia-chat-active-background_${charId}`;
+
 
         // --- 4. 模块初始化 ---
         let chatEditor = null;
@@ -154,7 +168,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (elements.userProfileEditName) elements.userProfileEditName.textContent = user.name;
         }
 
-        // 初始化各个子系统
         const { renderMemoryCards } = initializeMemorySystem(elements, state, memoryDbKey);
         initializeModelSelector(elements, state, selectedApiKey);
         
@@ -166,7 +179,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             state.chatHistory.forEach((message, index) => renderMessage(message, index, user, character, elements.chatArea));
         }
         
-        // ▼▼▼ 修改：重写按钮状态更新逻辑，切换按钮显隐 ▼▼▼
         function updateButtonStates() {
             const hasText = elements.input.value.trim() !== '';
             if (hasText) {
@@ -176,18 +188,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
             }
-            elements.respondBtn.disabled = false; // 响应按钮永不禁用
+            elements.respondBtn.disabled = false;
         }
-        // ▲▲▲ 修改结束 ▲▲▲
 
         const handleSendMessage = createApiHandler({
             state, elements, character, user, historyKey, dbStorage,
             renderMessage, renderSystemMessage, loadAndRenderHistory, updateButtonStates
         });
-
-        // ▼▼▼ 修改：移除双层布局相关的函数 expandInputLayout 和 collapseInputLayout ▼▼▼
-        // (相关函数已删除)
-        // ▲▲▲ 修改结束 ▲▲▲
 
         function updateInteractionModeUI() {
             const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle);
@@ -200,6 +207,41 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         }
+        
+        // ▼▼▼ 新增：背景主题相关函数 ▼▼▼
+        function renderBackgrounds() {
+            elements.bgThumbnailsContainer.innerHTML = '';
+            if (state.backgrounds.length === 0) {
+                elements.bgThumbnailsContainer.innerHTML = '<p style="text-align: center; color: var(--text-meta); font-size: 0.85em; grid-column: 1 / -1;">暂无背景</p>';
+                return;
+            }
+            state.backgrounds.forEach((bgUrl, index) => {
+                const item = document.createElement('div');
+                item.className = 'bg-thumbnail-item';
+                item.dataset.index = index;
+                if (bgUrl === state.activeBackground) {
+                    item.classList.add('active');
+                }
+                const img = document.createElement('img');
+                img.src = bgUrl;
+                img.alt = `背景 ${index + 1}`;
+                item.appendChild(img);
+                elements.bgThumbnailsContainer.appendChild(item);
+            });
+        }
+
+        async function setActiveBackground(bgUrl) {
+            state.activeBackground = bgUrl;
+            if (elements.chatArea) {
+                elements.chatArea.style.backgroundImage = bgUrl ? `url('${bgUrl}')` : '';
+                elements.chatArea.style.backgroundSize = 'cover';
+                elements.chatArea.style.backgroundPosition = 'center';
+                document.querySelector('.chat-container').classList.toggle('has-background', !!bgUrl);
+            }
+            await dbStorage.setItem(activeBgDbKey, bgUrl);
+            renderBackgrounds();
+        }
+        // ▲▲▲ 新增结束 ▲▲▲
 
         // --- 6. 绑定事件 ---
         elements.input.addEventListener('input', () => {
@@ -339,24 +381,92 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elements.editSettingsBtn) elements.editSettingsBtn.addEventListener('click', () => chatEditor ? chatEditor.open() : alert('编辑器初始化失败！'));
         if (elements.searchHistoryBtn) elements.searchHistoryBtn.addEventListener('click', () => alert('“数据”功能待开发'));
         
-        // ▼▼▼ 修改：简化输入框聚焦和失焦逻辑 ▼▼▼
         elements.input.addEventListener('focus', () => {
             elements.chatInputArea.classList.remove('actions-expanded', 'emoji-expanded');
         });
         document.addEventListener('click', (event) => {
-            // 当点击输入区域外部时，关闭可能打开的附加面板
             if (!elements.chatInputArea.contains(event.target)) {
                  elements.chatInputArea.classList.remove('actions-expanded', 'emoji-expanded');
             }
         });
-        // ▲▲▲ 修改结束 ▲▲▲
+
+        // ▼▼▼ 新增：背景主题事件绑定 ▼▼▼
+        if (elements.addBgFromLocalBtn && elements.bgUploadInput) {
+            elements.addBgFromLocalBtn.addEventListener('click', () => {
+                elements.bgUploadInput.click();
+            });
+
+            elements.bgUploadInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = async (event) => {
+                        const newBgUrl = event.target.result;
+                        state.backgrounds.push(newBgUrl);
+                        await dbStorage.setItem(bgDbKey, state.backgrounds);
+                        renderBackgrounds();
+                    };
+                    reader.readAsDataURL(file);
+                }
+                e.target.value = '';
+            });
+        }
+
+        if (elements.addBgFromUrlBtn && elements.bgUrlPromptOverlay) {
+            elements.addBgFromUrlBtn.addEventListener('click', () => {
+                elements.bgUrlInput.value = '';
+                elements.bgUrlPromptOverlay.classList.add('active');
+                elements.bgUrlInput.focus();
+            });
+
+            elements.cancelBgUrlBtn.addEventListener('click', () => {
+                elements.bgUrlPromptOverlay.classList.remove('active');
+            });
+            
+            elements.bgUrlPromptOverlay.addEventListener('click', (e) => {
+                 if (e.target === elements.bgUrlPromptOverlay) {
+                     elements.bgUrlPromptOverlay.classList.remove('active');
+                 }
+            });
+
+            elements.confirmBgUrlBtn.addEventListener('click', async () => {
+                const newBgUrl = elements.bgUrlInput.value.trim();
+                if (newBgUrl) {
+                    state.backgrounds.push(newBgUrl);
+                    await dbStorage.setItem(bgDbKey, state.backgrounds);
+                    renderBackgrounds();
+                    elements.bgUrlPromptOverlay.classList.remove('active');
+                } else {
+                    alert('请输入有效的URL');
+                }
+            });
+        }
+        
+        if (elements.bgThumbnailsContainer) {
+            elements.bgThumbnailsContainer.addEventListener('click', (e) => {
+                const item = e.target.closest('.bg-thumbnail-item');
+                if (item) {
+                    const index = parseInt(item.dataset.index, 10);
+                    const clickedBgUrl = state.backgrounds[index];
+
+                    if (clickedBgUrl === state.activeBackground) {
+                        setActiveBackground(null);
+                    } else {
+                        setActiveBackground(clickedBgUrl);
+                    }
+                }
+            });
+        }
+        // ▲▲▲ 新增结束 ▲▲▲
 
         // --- 7. 初始化页面 ---
         async function initializeChatState() {
-            const [savedStyleKey, savedApi, savedDiyEnabled] = await Promise.all([
+            const [savedStyleKey, savedApi, savedDiyEnabled, savedBackgrounds, savedActiveBg] = await Promise.all([
                 dbStorage.getItem(styleDbKey),
                 dbStorage.getItem(selectedApiKey),
-                dbStorage.getItem(diyDbKey)
+                dbStorage.getItem(diyDbKey),
+                dbStorage.getItem(bgDbKey),
+                dbStorage.getItem(activeBgDbKey)
             ]);
 
             if (savedStyleKey && CHAT_STYLES[savedStyleKey]) {
@@ -370,9 +480,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (elements.diySwitch) {
                 elements.diySwitch.checked = state.isDiyEnabled;
             }
+
+            state.backgrounds = savedBackgrounds || [];
+            if (savedActiveBg) {
+                state.activeBackground = savedActiveBg;
+                if (elements.chatArea) {
+                    elements.chatArea.style.backgroundImage = `url('${savedActiveBg}')`;
+                    elements.chatArea.style.backgroundSize = 'cover';
+                    elements.chatArea.style.backgroundPosition = 'center';
+                    document.querySelector('.chat-container').classList.add('has-background');
+                }
+            }
             
             await loadAndRenderHistory();
             await renderMemoryCards();
+            renderBackgrounds();
             updateButtonStates();
             updateModelButtonText();
             updateInteractionModeUI();
