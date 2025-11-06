@@ -84,7 +84,6 @@
             </div>
         </div>
         <div id="menu-content-style" class="secondary-content-pane">这里是风格内容区</div>
-        <!-- ▼▼▼ 修改点：将模型选择器移入此面板 ▼▼▼ -->
         <div id="menu-content-model" class="secondary-content-pane">
             <div class="model-selection-group">
                 <h4 class="model-selection-title">当前模型</h4>
@@ -92,8 +91,25 @@
                     <span id="selected-model-name">选择模型</span>
                 </button>
             </div>
+            <!-- ▼▼▼ 新增：DIY开关和互动模式选项 ▼▼▼ -->
+            <div class="mode-panel-item">
+                <span class="mode-panel-item-title">是否开启DIY</span>
+                <label class="switch-control">
+                    <input type="checkbox" id="enable-diy-switch">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="interaction-mode-group">
+                <h4 class="interaction-mode-title">当前互动模式</h4>
+                <div class="mode-options-container" id="mode-options-container">
+                    <button class="mode-option-btn" data-style="short-chat">短聊体</button>
+                    <button class="mode-option-btn" data-style="dialogue">对话体</button>
+                    <button class="mode-option-btn" data-style="novel">小说体</button>
+                    <button class="mode-option-btn" data-style="text-adventure">文游体</button>
+                </div>
+            </div>
+            <!-- ▲▲▲ 新增结束 ▲▲▲ -->
         </div>
-        <!-- ▲▲▲ 修改结束 ▲▲▲ -->
         <div id="menu-content-emoji" class="secondary-content-pane">这里是表情内容区</div>
         <div id="menu-content-inspiration" class="secondary-content-pane">这里是灵感内容区</div>
         <div id="menu-content-prompt" class="secondary-content-pane">这里是指令内容区</div>
