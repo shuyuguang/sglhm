@@ -91,11 +91,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             charProfileEditAvatar: document.getElementById('char-profile-edit-avatar'),
             charProfileEditName: document.getElementById('char-profile-edit-name'),
             diySwitch: document.getElementById('enable-diy-switch'),
-            // ▼▼▼ 修改：更新互动模式相关元素 ▼▼▼
+            // ▼▼▼ 修改：更新为底部操作表相关元素 ▼▼▼
             interactionModeCapsule: document.getElementById('interaction-mode-capsule'),
             selectedInteractionModeName: document.getElementById('selected-interaction-mode-name'),
-            interactionModeConfirmBtn: document.getElementById('interaction-mode-confirm-btn'),
-            modeOptionsContainer: document.getElementById('mode-options-container'),
+            interactionModeSheetOverlay: document.getElementById('interaction-mode-sheet-overlay'),
+            interactionModeList: document.getElementById('interaction-mode-list'),
+            interactionModeCancelBtn: document.getElementById('interaction-mode-cancel-btn'),
             // ▲▲▲ 修改结束 ▲▲▲
         };
 
@@ -106,7 +107,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             currentChatApi: null,
             currentChatStyle: CHAT_STYLES['dialogue'],
             isDiyEnabled: false,
-            tempSelectedStyleKey: null, // 新增：用于暂存用户选择的模式
         };
         
         const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`;
@@ -195,16 +195,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             elements.chatInputArea.classList.remove('emoji-expanded', 'actions-expanded');
         };
 
-        // ▼▼▼ 修改：更新互动模式UI的函数，现在包括胶囊和按钮 ▼▼▼
+        // ▼▼▼ 修改：UI更新函数现在作用于胶囊和底部操作表 ▼▼▼
         function updateInteractionModeUI() {
             const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle);
             if (currentStyleKey) {
                 // 更新胶囊文本
                 elements.selectedInteractionModeName.textContent = CHAT_STYLES[currentStyleKey].name;
-                // 更新按钮的最终激活状态
-                elements.modeOptionsContainer.querySelectorAll('.mode-option-btn').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.style === currentStyleKey);
-                });
+                // 更新底部操作表中的激活状态
+                if (elements.interactionModeList) {
+                    elements.interactionModeList.querySelectorAll('.action-button').forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.style === currentStyleKey);
+                    });
+                }
             }
         }
         // ▲▲▲ 修改结束 ▲▲▲
@@ -269,46 +271,42 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
         
-        // ▼▼▼ 修改：重构互动模式的事件绑定逻辑 ▼▼▼
+        // ▼▼▼ 修改：重构为底部操作表的事件逻辑 ▼▼▼
+        const closeInteractionModeSheet = () => {
+            elements.interactionModeSheetOverlay.classList.remove('active');
+        };
+        
         if (elements.interactionModeCapsule) {
             elements.interactionModeCapsule.addEventListener('click', () => {
-                elements.modeOptionsContainer.classList.toggle('active');
-                elements.interactionModeCapsule.classList.toggle('open');
+                elements.interactionModeSheetOverlay.classList.add('active');
             });
         }
-        if (elements.modeOptionsContainer) {
-            elements.modeOptionsContainer.addEventListener('click', (e) => {
-                const button = e.target.closest('.mode-option-btn');
+
+        if (elements.interactionModeSheetOverlay) {
+            elements.interactionModeSheetOverlay.addEventListener('click', (e) => {
+                if (e.target === elements.interactionModeSheetOverlay) {
+                    closeInteractionModeSheet();
+                }
+            });
+        }
+
+        if (elements.interactionModeCancelBtn) {
+            elements.interactionModeCancelBtn.addEventListener('click', closeInteractionModeSheet);
+        }
+
+        if (elements.interactionModeList) {
+            elements.interactionModeList.addEventListener('click', async (e) => {
+                const button = e.target.closest('.action-button');
                 if (!button) return;
 
-                state.tempSelectedStyleKey = button.dataset.style;
-                
-                // 更新临时选中样式
-                elements.modeOptionsContainer.querySelectorAll('.mode-option-btn').forEach(btn => {
-                    btn.classList.remove('temp-selected');
-                });
-                button.classList.add('temp-selected');
-            });
-        }
-        if (elements.interactionModeConfirmBtn) {
-            elements.interactionModeConfirmBtn.addEventListener('click', async () => {
-                if (state.tempSelectedStyleKey && CHAT_STYLES[state.tempSelectedStyleKey]) {
-                    const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle);
-                    // 只有在选择的模式与当前不同时才更新
-                    if (state.tempSelectedStyleKey !== currentStyleKey) {
-                        state.currentChatStyle = CHAT_STYLES[state.tempSelectedStyleKey];
-                        await dbStorage.setItem(styleDbKey, state.tempSelectedStyleKey);
-                        updateInteractionModeUI();
-                        console.log(`Interaction mode changed to: ${state.currentChatStyle.name}`);
-                    }
+                const selectedStyleKey = button.dataset.style;
+                if (CHAT_STYLES[selectedStyleKey]) {
+                    state.currentChatStyle = CHAT_STYLES[selectedStyleKey];
+                    await dbStorage.setItem(styleDbKey, selectedStyleKey);
+                    updateInteractionModeUI();
+                    console.log(`Interaction mode changed to: ${state.currentChatStyle.name}`);
+                    setTimeout(closeInteractionModeSheet, 200); // 延迟关闭以显示选中效果
                 }
-                // 关闭选项并重置临时状态
-                elements.modeOptionsContainer.classList.remove('active');
-                elements.interactionModeCapsule.classList.remove('open');
-                elements.modeOptionsContainer.querySelectorAll('.mode-option-btn').forEach(btn => {
-                    btn.classList.remove('temp-selected');
-                });
-                state.tempSelectedStyleKey = null;
             });
         }
         // ▲▲▲ 修改结束 ▲▲▲
@@ -372,7 +370,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (savedStyleKey && CHAT_STYLES[savedStyleKey]) {
                 state.currentChatStyle = CHAT_STYLES[savedStyleKey];
             } else {
-                // 如果没有保存的风格，默认使用短聊体
                 state.currentChatStyle = CHAT_STYLES['short-chat'];
             }
             if (savedApi) state.currentChatApi = savedApi;

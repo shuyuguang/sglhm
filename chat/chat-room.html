@@ -86,7 +86,7 @@
         <div id="menu-content-style" class="secondary-content-pane">这里是风格内容区</div>
         <div id="menu-content-model" class="secondary-content-pane">
             <div class="model-selection-group">
-                <h4 class="model-selection-title">当前模型</h4>
+                <h4 class="panel-section-title">当前模型</h4>
                 <button id="select-model-btn" class="send-action-btn model-select-btn">
                     <span id="selected-model-name">选择模型</span>
                 </button>
@@ -98,22 +98,13 @@
                     <span class="slider round"></span>
                 </label>
             </div>
-            <!-- ▼▼▼ 修改：重构互动模式为胶囊选择器 ▼▼▼ -->
+            <!-- ▼▼▼ 修改：重构为胶囊触发底部菜单 ▼▼▼ -->
             <div class="interaction-mode-group">
-                <h4 class="interaction-mode-title">当前互动模式</h4>
-                <div class="interaction-mode-selector">
-                    <button id="interaction-mode-capsule" class="interaction-mode-capsule">
-                        <span id="selected-interaction-mode-name"></span>
-                        <i class="fa-solid fa-chevron-down capsule-arrow"></i>
-                    </button>
-                    <button id="interaction-mode-confirm-btn" class="mode-confirm-btn">确认</button>
-                </div>
-                <div id="mode-options-container" class="mode-options-container">
-                    <button class="mode-option-btn" data-style="short-chat">短聊体</button>
-                    <button class="mode-option-btn" data-style="dialogue">对话体</button>
-                    <button class="mode-option-btn" data-style="novel">小说体</button>
-                    <button class="mode-option-btn" data-style="text-adventure">文游体</button>
-                </div>
+                <h4 class="panel-section-title">当前互动模式</h4>
+                <button id="interaction-mode-capsule" class="interaction-mode-capsule">
+                    <span id="selected-interaction-mode-name"></span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
             </div>
             <!-- ▲▲▲ 修改结束 ▲▲▲ -->
         </div>
@@ -167,6 +158,20 @@
             </div>
         </div>
     </div>
+    
+    <!-- ▼▼▼ 新增：互动模式选择的底部操作表 ▼▼▼ -->
+    <div class="bottom-sheet-overlay" id="interaction-mode-sheet-overlay">
+        <div class="bottom-sheet">
+            <ul class="bottom-sheet-actions" id="interaction-mode-list">
+                <li><button class="action-button" data-style="short-chat">短聊体</button></li>
+                <li><button class="action-button" data-style="dialogue">对话体</button></li>
+                <li><button class="action-button" data-style="novel">小说体</button></li>
+                <li><button class="action-button" data-style="text-adventure">文游体</button></li>
+            </ul>
+            <button class="bottom-sheet-cancel" id="interaction-mode-cancel-btn">取消</button>
+        </div>
+    </div>
+    <!-- ▲▲▲ 新增结束 ▲▲▲ -->
 
     <!-- ==================== 角色编辑面板 (Character Editor) ==================== -->
     <div class="modal-overlay" id="edit-modal-overlay">
