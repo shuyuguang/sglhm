@@ -261,3 +261,36 @@ input:checked + .slider:before {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+/* ▼▼▼ 新增：顶部菜单 - 模式面板样式 ▼▼▼ */
+.model-selection-group {
+    padding: 8px;
+}
+.model-selection-title {
+    font-size: 1em;
+    font-weight: 500;
+    color: var(--text-meta);
+    margin: 0 0 8px 10px;
+    text-transform: uppercase;
+}
+#menu-content-model .model-select-btn {
+    width: 100%;
+    max-width: none;
+    padding: 12px 16px;
+    font-size: 1em;
+    font-weight: 600;
+    border-radius: 10px;
+    text-align: center;
+    box-sizing: border-box;
+    background-color: #f8f9fa;
+    border: 1px solid var(--border-color);
+}
+#menu-content-model .model-select-btn:hover {
+    background-color: #f1f3f5;
+}
+#menu-content-model .model-select-btn.active {
+    background-color: #e0e9f2;
+    color: var(--send-btn-bg);
+    border-color: transparent;
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */
