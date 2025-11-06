@@ -101,7 +101,6 @@ html, body {
 .action-btn { background-color: var(--header-bg); border: none; font-size: 1.5rem; color: #595959; cursor: pointer; width: 55px; height: 55px; border-radius: 15px; display: flex; justify-content: center; align-items: center; }
 .emoji-picker-bar { display: flex; justify-content: center; align-items: center; color: var(--text-meta); padding: 0 15px; }
 
-/* ▼▼▼ 修改点：重写输入区域布局 ▼▼▼ */
 .chat-input-main {
     display: flex;
     align-items: flex-end;
@@ -135,9 +134,8 @@ html, body {
     overflow-y: auto;
 }
 
-/* 默认单行布局时，控制按钮的容器 */
 .chat-input-controls {
-    display: contents; /* 核心技巧：让此容器消失，其子元素成为 .chat-input-main 的直接子元素 */
+    display: contents; 
 }
 
 #actions-toggle-btn { order: 1; }
@@ -162,7 +160,6 @@ html, body {
 #actions-toggle-btn .fa-plus { font-weight: 300; }
 #emoji-toggle-btn { background-color: transparent; }
 
-/* 默认隐藏发送按钮组 */
 .send-buttons-container {
     display: none;
     gap: 6px;
@@ -190,25 +187,26 @@ html, body {
 }
 
 .chat-input-area.input-focused .chat-input-wrapper {
-    order: 1; /* 输入框在上方 */
+    order: 1; 
 }
 
 .chat-input-area.input-focused .chat-input-controls {
-    order: 2; /* 控制行在下方 */
-    display: flex; /* 恢复为 flex 容器 */
+    order: 2; 
+    display: flex; 
     justify-content: space-between;
     align-items: center;
 }
 
-/* 在聚焦模式下，重置子元素的 order */
+/* ▼▼▼ 修改点：为聚焦时的指定按钮统一设置背景色 ▼▼▼ */
 .chat-input-area.input-focused #actions-toggle-btn,
-.chat-input-area.input-focused #emoji-toggle-btn {
-    order: initial;
-    background-color: transparent;
+.chat-input-area.input-focused #emoji-toggle-btn,
+.chat-input-area.input-focused #respond-btn {
+    order: initial; /* order 对 respond-btn 无影响，但放在这里无妨 */
+    background-color: var(--page-bg);
 }
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
 .chat-input-area.input-focused #chat-input {
     max-height: 120px; 
     overflow-y: auto;  
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
