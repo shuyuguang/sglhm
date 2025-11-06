@@ -8,9 +8,9 @@
 export function renderChatRoomUI(character) {
     return `
         <div class="chat-container">
-            <!-- ▼▼▼ 修改点：重构了 header 的 HTML 结构 ▼▼▼ -->
             <header class="chat-header">
                 <a href="./relia-chat.html" class="chat-header-btn back-btn"><i class="fa-solid fa-chevron-left"></i></a>
+                <!-- ▼▼▼ 修改点：在胶囊内部右侧添加了加号按钮 ▼▼▼ -->
                 <div class="chat-header-center">
                     <div class="char-info">
                         <img src="${character.avatar}" alt="${character.name}" class="char-info-avatar">
@@ -19,10 +19,11 @@ export function renderChatRoomUI(character) {
                             <span class="char-info-status">在线</span>
                         </div>
                     </div>
+                    <button class="chat-header-btn add-btn"><i class="fa-solid fa-plus"></i></button>
                 </div>
+                <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                 <button class="chat-header-btn" id="menu-btn"><i class="fa-solid fa-bars"></i></button>
             </header>
-            <!-- ▲▲▲ 修改结束 ▲▲▲ -->
             <main class="chat-messages" id="chat-messages-area"></main>
             <footer class="chat-input-area" id="chat-input-area">
                 <div class="actions-menu" id="actions-menu">
