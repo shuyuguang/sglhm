@@ -93,7 +93,7 @@ html, body {
 .action-btn { background-color: var(--header-bg); border: none; font-size: 1.5rem; color: #595959; cursor: pointer; width: 55px; height: 55px; border-radius: 15px; display: flex; justify-content: center; align-items: center; }
 .emoji-picker-bar { display: flex; justify-content: center; align-items: center; color: var(--text-meta); padding: 0 15px; }
 
-/* ▼▼▼ 修改点：重写输入区布局，移除双层布局逻辑 ▼▼▼ */
+/* ▼▼▼ 修改点：调整样式以适应新的内部按钮布局 ▼▼▼ */
 .chat-input-main {
     padding: 12px 15px;
     background-color: var(--header-bg);
@@ -109,9 +109,12 @@ html, body {
 .chat-input-wrapper {
     flex-grow: 1;
     display: flex;
+    align-items: flex-end; /* 关键：使内部元素底部对齐 */
+    gap: 4px; /* 文本框和按钮之间的间隙 */
     background-color: var(--page-bg);
     border-radius: 25px;
     min-height: 42px;
+    padding: 0 4px 0 0; /* 在右侧留出一点空间 */
 }
 
 #chat-input {
@@ -127,8 +130,7 @@ html, body {
     overflow-y: auto;
 }
 
-#actions-toggle-btn,
-#emoji-toggle-btn {
+#actions-toggle-btn {
     background-color: var(--page-bg);
     border: none;
     font-size: 1.2rem;
@@ -145,19 +147,49 @@ html, body {
 }
 #actions-toggle-btn .fa-plus { font-weight: 300; }
 
+/* 调整位于 wrapper 内部的按钮 */
+#emoji-toggle-btn {
+    background: none; /* 移除背景，因为它已在容器内 */
+    border: none;
+    font-size: 1.2rem;
+    color: var(--text-dark);
+    cursor: pointer;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
 .send-buttons-container {
     display: flex;
-    gap: 6px;
     align-items: center;
+    /* 确保按钮容器在 flex 布局中高度正确 */
+    padding-bottom: 2px;
 }
 
 .send-action-btn { background-color: #e9ecef; color: #495057; border: none; border-radius: 20px; cursor: pointer; transition: background-color 0.2s ease; white-space: nowrap; }
 .send-action-btn:hover { background-color: #dee2e6; }
-#respond-btn, #send-btn { width: 42px; height: 42px; border-radius: 50%; font-size: 1.1rem; padding: 0; display: flex; align-items: center; justify-content: center; }
-#send-btn.primary { background-color: var(--send-btn-bg); color: var(--text-light); }
+
+#respond-btn, #send-btn { 
+    width: 42px; 
+    height: 42px; 
+    border-radius: 50%; 
+    font-size: 1.1rem; 
+    padding: 0; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    /* 移除背景使其透明，除非是 primary */
+    background: none;
+}
+#send-btn.primary { 
+    background-color: var(--send-btn-bg); 
+    color: var(--text-light); 
+}
 #send-btn.primary:hover { filter: brightness(1.1); }
-.send-action-btn.model-select-btn { background-color: #f1f3f5; color: #495057; max-width: 120px; padding: 5px 14px; font-size: 0.85rem; font-weight: 500; }
-#selected-model-name { display: inline-block; overflow: hidden; text-overflow: clip; white-space: nowrap; vertical-align: middle; }
 
 /* 初始状态下隐藏发送按钮 */
 #send-btn {

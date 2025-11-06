@@ -52,21 +52,21 @@ export function renderChatRoomUI(character) {
                         <li><a href="#" data-target="menu-content-prompt-actions">指令</a></li>
                     </ul>
                 </div>
-                <!-- ▼▼▼ 修改点：调整了控件顺序，以实现新的单行布局 ▼▼▼ -->
                 <div class="chat-input-main" id="chat-input-main">
+                    <!-- ▼▼▼ 修改点：将表情和发送按钮组移入 chat-input-wrapper 内部 ▼▼▼ -->
                     <div class="chat-input-controls">
                         <button id="actions-toggle-btn"><i class="fa-solid fa-plus"></i></button>
                         <div class="chat-input-wrapper" id="chat-input-wrapper">
                             <textarea id="chat-input" placeholder="点击输入消息..." rows="1"></textarea>
-                        </div>
-                        <button id="emoji-toggle-btn"><i class="fa-regular fa-face-smile"></i></button>
-                        <div class="send-buttons-container" id="send-buttons-container">
-                            <button id="respond-btn" class="send-action-btn"><i class="fa-regular fa-clock"></i></button>
-                            <button id="send-btn" class="send-action-btn primary"><i class="fa-regular fa-paper-plane"></i></button>
+                            <button id="emoji-toggle-btn"><i class="fa-regular fa-face-smile"></i></button>
+                            <div class="send-buttons-container" id="send-buttons-container">
+                                <button id="respond-btn" class="send-action-btn"><i class="fa-regular fa-clock"></i></button>
+                                <button id="send-btn" class="send-action-btn primary"><i class="fa-regular fa-paper-plane"></i></button>
+                            </div>
                         </div>
                     </div>
+                    <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                 </div>
-                <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                 <div class="emoji-picker-bar">
                     <div class="emoji-placeholder">表情面板功能待开发...</div>
                 </div>
