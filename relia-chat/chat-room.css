@@ -1,4 +1,4 @@
-/* relia-chat/chat-room.css */
+/* 文件名: relia-chat/chat-room.css */
 
 :root {
     --page-bg: #f4f7f9;
@@ -144,12 +144,10 @@ html, body {
     display: contents;
 }
 
-/* ▼▼▼ 修改点 ▼▼▼ */
 #actions-toggle-btn { order: 1; }
-.chat-input-wrapper { order: 2; } 
-#inspiration-btn { order: 3; } 
+#inspiration-btn { order: 2; } 
+.chat-input-wrapper { order: 3; } 
 #emoji-toggle-btn { order: 4; } 
-/* ▲▲▲ 修改结束 ▲▲▲ */
 
 
 .chat-input-wrapper {
@@ -192,8 +190,14 @@ html, body {
     transition: all 0.3s ease; 
 }
 
-/* ▼▼▼ 修改点：移除了 #inspiration-btn 的 display: none; 规则 ▼▼▼ */
-/* (原有的 #inspiration-btn { display: none; } 已被删除) */
+/* ▼▼▼ 修改点 ▼▼▼ */
+#inspiration-btn {
+    /* display: none;  <-- 移除此行 */
+    position: absolute;
+    right: 60px; /* 放在 emoji 按钮 (15px) 的左边 */
+    bottom: 12px;
+    z-index: 2;
+}
 /* ▲▲▲ 修改结束 ▲▲▲ */
 
 
@@ -302,10 +306,16 @@ html, body {
     color: var(--text-dark);
 }
 
+/* ▼▼▼ 修改点 ▼▼▼ */
 .chat-input-area.input-focused #inspiration-btn {
     display: flex;
     margin-left: auto; /* 将灵感按钮推到右侧 */
+    position: relative; /* 恢复其正常定位 */
+    right: auto;
+    bottom: auto;
+    z-index: auto;
 }
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
 .chat-input-area.input-focused #emoji-toggle-btn {
     position: relative;
