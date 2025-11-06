@@ -52,13 +52,13 @@ export function renderChatRoomUI(character) {
                         <li><a href="#" data-target="menu-content-prompt-actions">指令</a></li>
                     </ul>
                 </div>
-                <!-- ▼▼▼ 修改点：重构 chat-input-main 内部结构 ▼▼▼ -->
+                <!-- ▼▼▼ 修改点：重构 chat-input-main 内部，使用一个统一的 controls 容器 ▼▼▼ -->
                 <div class="chat-input-main" id="chat-input-main">
-                    <div class="chat-input-wrapper" id="chat-input-wrapper">
-                        <textarea id="chat-input" placeholder="点击输入消息..." rows="1"></textarea>
-                    </div>
                     <div class="chat-input-controls">
                         <button id="actions-toggle-btn"><i class="fa-solid fa-plus"></i></button>
+                        <div class="chat-input-wrapper" id="chat-input-wrapper">
+                            <textarea id="chat-input" placeholder="点击输入消息..." rows="1"></textarea>
+                        </div>
                         <div class="send-buttons-container" id="send-buttons-container">
                             <button id="select-model-btn" class="send-action-btn model-select-btn">
                                 <span id="selected-model-name">选择模型</span>
