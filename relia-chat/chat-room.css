@@ -1,4 +1,4 @@
-/* 文件名: relia-chat/chat-room.css */
+/* 文件名: relia-chat/chat-room.css (修改后) */
 
 :root {
     --page-bg: #f4f7f9;
@@ -190,29 +190,31 @@ html, body {
     transition: all 0.3s ease; 
 }
 
-/* ▼▼▼ 修改点：移除图标按钮背景并调整定位 ▼▼▼ */
+/* ▼▼▼ 修改点 1：为特定按钮去除背景 ▼▼▼ */
 #emoji-toggle-btn,
 #inspiration-btn {
-    background-color: transparent; /* 1. 背景变透明 */
-    width: auto;                   /* 2. 宽度自适应 */
-    height: auto;                  /* 3. 高度自适应 */
-    padding: 8px;                  /* 4. 增加点击区域 */
+    background-color: transparent;
+    width: auto;
+    height: 42px; /* 保持垂直对齐 */
+    padding: 0 5px;
 }
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
+/* ▼▼▼ 修改点 2：调整灯泡位置 ▼▼▼ */
 #inspiration-btn {
     position: absolute;
-    right: 50px; /* 5. 调整右边距以适应新尺寸 */
-    bottom: 12px;
-    z-index: 2;
-}
-
-#emoji-toggle-btn {
-    position: absolute;
-    right: 10px; /* 5. 调整右边距以适应新尺寸 */
+    right: 50px; /* 调整位置以适应新尺寸 */
     bottom: 12px;
     z-index: 2;
 }
 /* ▲▲▲ 修改结束 ▲▲▲ */
+
+#emoji-toggle-btn {
+    position: absolute;
+    right: 15px;
+    bottom: 12px;
+    z-index: 2;
+}
 
 #actions-toggle-btn .fa-plus {
     font-weight: 300;
@@ -271,7 +273,6 @@ html, body {
     padding-right: 172px;
 }
 
-
 #selected-model-name {
     display: inline-block;
     overflow: hidden;
@@ -279,7 +280,6 @@ html, body {
     white-space: nowrap;
     vertical-align: middle;
 }
-
 
 /* --- 聚焦（展开）时的样式 --- */
 .chat-input-area.input-focused .chat-input-main {
@@ -312,7 +312,6 @@ html, body {
     color: var(--text-dark);
 }
 
-/* ▼▼▼ 修改点 ▼▼▼ */
 .chat-input-area.input-focused #inspiration-btn {
     display: flex;
     margin-left: auto; /* 将灵感按钮推到右侧 */
@@ -321,7 +320,6 @@ html, body {
     bottom: auto;
     z-index: auto;
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
 
 .chat-input-area.input-focused #emoji-toggle-btn {
     position: relative;
