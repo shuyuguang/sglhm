@@ -1,0 +1,236 @@
+/* relia-chat/chat-modals.css */
+
+/* --- 通用模态框样式 --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-overlay .modal-panel {
+    transform: scale(0.95);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease;
+}
+
+.modal-overlay.active .modal-panel {
+    transform: scale(1);
+    opacity: 1;
+}
+
+/* --- 模型选择面板 --- */
+.model-selector-panel {
+    width: 90%;
+    max-width: 400px;
+    height: 70vh;
+    max-height: 600px;
+    display: flex;
+    flex-direction: column;
+    background-color: #f8f9fa; 
+    border-radius: 16px; 
+    overflow: hidden; 
+}
+
+.model-selector-panel .modal-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 8px 16px 16px; 
+    -webkit-overflow-scrolling: touch; 
+}
+
+.model-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; 
+}
+
+.no-models-message {
+    text-align: center;
+    color: #888;
+    padding: 40px 20px;
+    line-height: 1.6;
+}
+
+.model-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    border-radius: 8px;
+    background-color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.model-item:hover {
+    background-color: #e9ecef;
+}
+
+.model-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.model-item-name {
+    font-weight: 600;
+    color: #333;
+}
+
+.model-item-api {
+    font-size: 0.8em;
+    color: #666;
+}
+
+.model-item .fa-check {
+    color: var(--send-btn-bg);
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.model-item.active {
+    background-color: #f0f3f6;
+    box-shadow: 0 0 0 2px var(--send-btn-bg) inset;
+}
+
+.model-item.active .fa-check {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* --- 聊天风格选择面板 --- */
+#chat-prompt-panel .modal-header { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid var(--border-color); }
+#chat-prompt-panel .modal-header .modal-title { font-size: 1.1em; font-weight: 600; margin: 0; }
+.style-header-icon { color: var(--send-btn-bg); margin-right: 10px; font-size: 1.1em; }
+#chat-prompt-panel { width: 90%; max-width: 340px; height: auto; }
+.style-buttons-container { display: flex; justify-content: center; gap: 12px; margin: 10px 0 10px 0; }
+.style-button { padding: 7px; border-radius: 20px; border: 1px solid #dee2e6; background-color: #f8f9fa; color: #495057; font-size: 0.9em; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+.style-button:hover { background-color: #f1f3f5; }
+.style-button.active { background-color: #f0f3f6; color: var(--send-btn-bg); border-color: var(--send-btn-bg); }
+#chat-prompt-panel .modal-content-container { padding: 10px; }
+#chat-prompt-panel .sheet-footer { padding: 10px; display: flex; gap: 10px; border-top: 1px solid var(--border-color); flex-shrink: 0; }
+#chat-prompt-panel .sheet-btn { flex-grow: 1; padding: 12px; border: none; border-radius: 8px; font-size: 1em; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
+#chat-prompt-panel .sheet-btn-cancel { background-color: #f1f3f5; color: #495057; }
+#chat-prompt-panel .sheet-btn-cancel:hover { background-color: #e9ecef; }
+#chat-prompt-panel .sheet-btn-confirm { background-color: var(--send-btn-bg); color: white; }
+#chat-prompt-panel .sheet-btn-confirm:hover { filter: brightness(1.1); }
+.style-details-container { padding: 0 5px; }
+.style-card { border: 1px solid var(--border-color); border-radius: 8px; background-color: #f8f9fa; margin-top: 10px; overflow: hidden; }
+.style-card-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; cursor: pointer; user-select: none; }
+.style-card-title { font-weight: 500; color: #495057; }
+.style-card-header i { color: #adb5bd; transition: transform 0.3s ease; }
+.style-card-content { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease; padding: 0 15px; }
+.style-card.expanded .style-card-header i { transform: rotate(180deg); }
+.style-card.expanded .style-card-content { max-height: 300px; opacity: 1; padding: 0 15px 15px; overflow-y: auto; }
+#chat-prompt-panel .prompt-description { font-size: 0.9em; color: #666; line-height: 1.5; margin: 0; }
+.style-settings-container { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; padding: 0 5px; }
+.style-setting-item { display: flex; justify-content: space-between; align-items: center; }
+.style-setting-item label { font-size: 0.9em; color: #333; }
+.style-setting-item input[type="number"] { width: 60px; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 6px; text-align: center; font-size: 0.9em; background-color: #ffffff; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); }
+.style-setting-item input[type="number"]::-webkit-inner-spin-button, .style-setting-item input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.style-setting-item input[type="number"] { -moz-appearance: textfield; }
+.min-max-input-container { display: flex; align-items: center; gap: 5px; }
+.min-max-input-container input[type="number"] { width: 50px; }
+.min-max-input-container span { color: #868e96; font-weight: 500; }
+
+/* --- 记忆编辑器模态框 --- */
+#memory-editor-overlay {
+    z-index: 250;
+}
+.memory-editor-panel {
+    width: 90%;
+    max-width: 380px;
+    background-color: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.memory-editor-panel .modal-body {
+    padding: 16px;
+    flex-grow: 1;
+}
+#memory-editor-textarea {
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 1em;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+    box-sizing: border-box;
+    background-color: #f8f9fa;
+}
+#memory-editor-textarea:focus {
+    border-color: var(--send-btn-bg);
+    background-color: #fff;
+    box-shadow: 0 0 0 2px rgba(114, 144, 178, 0.2);
+}
+.memory-editor-panel .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-color);
+    background-color: #f8f9fa;
+}
+.modal-btn-cancel, .modal-btn-confirm, .modal-btn-delete {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease, filter 0.2s ease;
+}
+.modal-btn-cancel {
+    background-color: #e9ecef;
+    color: #495057;
+}
+.modal-btn-cancel:hover {
+    background-color: #dee2e6;
+}
+.modal-btn-confirm {
+    background-color: var(--send-btn-bg);
+    color: var(--text-light);
+}
+.modal-btn-confirm:hover {
+    filter: brightness(1.1);
+}
+.modal-btn-delete {
+    background-color: transparent;
+    color: var(--danger-color);
+    margin-right: auto;
+}
+.modal-btn-delete:hover {
+    background-color: rgba(229, 62, 62, 0.1);
+}
+
+/* --- 编辑器 Z-Index 修正 --- */
+#edit-modal-overlay,
+#user-edit-modal-overlay {
+    z-index: 300;
+}
+#cropper-overlay,
+#user-cropper-overlay,
+.prompt-overlay,
+.bottom-sheet-overlay {
+    z-index: 400;
+}
