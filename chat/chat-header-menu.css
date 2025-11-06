@@ -262,7 +262,7 @@ input:checked + .slider:before {
     text-overflow: ellipsis;
 }
 
-/* ▼▼▼ 新增：顶部菜单 - 模式面板样式 ▼▼▼ */
+/* --- 顶部菜单 - 模式面板样式 --- */
 .model-selection-group {
     padding: 8px;
 }
@@ -284,6 +284,9 @@ input:checked + .slider:before {
     box-sizing: border-box;
     background-color: #f8f9fa;
     border: 1px solid var(--border-color);
+    /* ▼▼▼ 修改点：加深默认文字颜色 ▼▼▼ */
+    color: var(--text-dark);
+    /* ▲▲▲ 修改结束 ▲▲▲ */
 }
 #menu-content-model .model-select-btn:hover {
     background-color: #f1f3f5;
@@ -293,4 +296,3 @@ input:checked + .slider:before {
     color: var(--send-btn-bg);
     border-color: transparent;
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */

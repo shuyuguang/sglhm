@@ -34,6 +34,12 @@
 }
 
 /* --- 模型选择面板 --- */
+/* ▼▼▼ 新增：提升模型选择器层级 ▼▼▼ */
+#model-selector-overlay {
+    z-index: 210;
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */
+
 .model-selector-panel {
     width: 90%;
     max-width: 400px;
