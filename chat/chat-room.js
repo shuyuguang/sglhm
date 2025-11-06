@@ -91,13 +91,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             charProfileEditAvatar: document.getElementById('char-profile-edit-avatar'),
             charProfileEditName: document.getElementById('char-profile-edit-name'),
             diySwitch: document.getElementById('enable-diy-switch'),
-            // ▼▼▼ 修改：更新为底部操作表相关元素 ▼▼▼
             interactionModeCapsule: document.getElementById('interaction-mode-capsule'),
             selectedInteractionModeName: document.getElementById('selected-interaction-mode-name'),
             interactionModeSheetOverlay: document.getElementById('interaction-mode-sheet-overlay'),
             interactionModeList: document.getElementById('interaction-mode-list'),
             interactionModeCancelBtn: document.getElementById('interaction-mode-cancel-btn'),
-            // ▲▲▲ 修改结束 ▲▲▲
         };
 
         // --- 3. 状态管理 ---
@@ -167,41 +165,34 @@ document.addEventListener('DOMContentLoaded', async () => {
             elements.chatArea.innerHTML = '';
             state.chatHistory.forEach((message, index) => renderMessage(message, index, user, character, elements.chatArea));
         }
-
+        
+        // ▼▼▼ 修改：重写按钮状态更新逻辑，切换按钮显隐 ▼▼▼
         function updateButtonStates() {
             const hasText = elements.input.value.trim() !== '';
-            elements.sendBtn.disabled = !hasText;
-            elements.respondBtn.disabled = false;
+            if (hasText) {
+                elements.respondBtn.style.display = 'none';
+                elements.sendBtn.style.display = 'flex';
+            } else {
+                elements.respondBtn.style.display = 'flex';
+                elements.sendBtn.style.display = 'none';
+            }
+            elements.respondBtn.disabled = false; // 响应按钮永不禁用
         }
+        // ▲▲▲ 修改结束 ▲▲▲
 
         const handleSendMessage = createApiHandler({
             state, elements, character, user, historyKey, dbStorage,
             renderMessage, renderSystemMessage, loadAndRenderHistory, updateButtonStates
         });
 
-        const expandInputLayout = () => {
-            if (!elements.chatInputArea.classList.contains('input-focused')) {
-                elements.chatInputArea.classList.add('input-focused');
-                elements.sendButtonsContainer.classList.add('visible');
-                updateButtonStates();
-            }
-        };
+        // ▼▼▼ 修改：移除双层布局相关的函数 expandInputLayout 和 collapseInputLayout ▼▼▼
+        // (相关函数已删除)
+        // ▲▲▲ 修改结束 ▲▲▲
 
-        const collapseInputLayout = () => {
-            if (elements.chatInputArea.classList.contains('input-focused')) {
-                elements.chatInputArea.classList.remove('input-focused');
-                elements.sendButtonsContainer.classList.remove('visible');
-            }
-            elements.chatInputArea.classList.remove('emoji-expanded', 'actions-expanded');
-        };
-
-        // ▼▼▼ 修改：UI更新函数现在作用于胶囊和底部操作表 ▼▼▼
         function updateInteractionModeUI() {
             const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle);
             if (currentStyleKey) {
-                // 更新胶囊文本
                 elements.selectedInteractionModeName.textContent = CHAT_STYLES[currentStyleKey].name;
-                // 更新底部操作表中的激活状态
                 if (elements.interactionModeList) {
                     elements.interactionModeList.querySelectorAll('.action-button').forEach(btn => {
                         btn.classList.toggle('active', btn.dataset.style === currentStyleKey);
@@ -209,7 +200,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         }
-        // ▲▲▲ 修改结束 ▲▲▲
 
         // --- 6. 绑定事件 ---
         elements.input.addEventListener('input', () => {
@@ -258,7 +248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 onSave: (styleObject) => {
                     console.log('已保存默认风格:', styleObject.name);
                     state.currentChatStyle = styleObject;
-                    updateInteractionModeUI(); // 保存后同步更新模式UI
+                    updateInteractionModeUI();
                 }
             });
         }
@@ -271,7 +261,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
         
-        // ▼▼▼ 修改：重构为底部操作表的事件逻辑 ▼▼▼
         const closeInteractionModeSheet = () => {
             elements.interactionModeSheetOverlay.classList.remove('active');
         };
@@ -305,11 +294,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     await dbStorage.setItem(styleDbKey, selectedStyleKey);
                     updateInteractionModeUI();
                     console.log(`Interaction mode changed to: ${state.currentChatStyle.name}`);
-                    setTimeout(closeInteractionModeSheet, 200); // 延迟关闭以显示选中效果
+                    setTimeout(closeInteractionModeSheet, 200);
                 }
             });
         }
-        // ▲▲▲ 修改结束 ▲▲▲
 
         if (elements.menuBtn && elements.headerContentPanel && elements.headerTabsPanel && elements.headerMenuOverlay) {
             const menuList = elements.headerTabsPanel.querySelector('.header-menu-list');
@@ -350,14 +338,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (elements.editSettingsBtn) elements.editSettingsBtn.addEventListener('click', () => chatEditor ? chatEditor.open() : alert('编辑器初始化失败！'));
         if (elements.searchHistoryBtn) elements.searchHistoryBtn.addEventListener('click', () => alert('“数据”功能待开发'));
-
+        
+        // ▼▼▼ 修改：简化输入框聚焦和失焦逻辑 ▼▼▼
         elements.input.addEventListener('focus', () => {
-            expandInputLayout();
             elements.chatInputArea.classList.remove('actions-expanded', 'emoji-expanded');
         });
         document.addEventListener('click', (event) => {
-            if (!elements.chatInputArea.contains(event.target)) collapseInputLayout();
+            // 当点击输入区域外部时，关闭可能打开的附加面板
+            if (!elements.chatInputArea.contains(event.target)) {
+                 elements.chatInputArea.classList.remove('actions-expanded', 'emoji-expanded');
+            }
         });
+        // ▲▲▲ 修改结束 ▲▲▲
 
         // --- 7. 初始化页面 ---
         async function initializeChatState() {
@@ -383,7 +375,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             await renderMemoryCards();
             updateButtonStates();
             updateModelButtonText();
-            updateInteractionModeUI(); // 初始化时更新互动模式的UI状态
+            updateInteractionModeUI();
 
             const getChatHistory = () => state.chatHistory;
             const updateChatHistory = async (newHistory) => {
