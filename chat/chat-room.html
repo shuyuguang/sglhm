@@ -111,10 +111,17 @@
         <div id="menu-content-prompt" class="secondary-content-pane">这里是指令内容区</div>
         <!-- ▼▼▼ 修改：更新主题内容区 ▼▼▼ -->
         <div id="menu-content-theme" class="secondary-content-pane">
+            <div class="theme-section placeholder-section">
+                <h4 class="panel-section-title">TA的聊天气泡</h4>
+            </div>
+            <div class="theme-section placeholder-section">
+                <h4 class="panel-section-title">TA的头像挂件</h4>
+            </div>
             <div class="theme-section">
                 <div class="theme-section-header">
                     <h4 class="panel-section-title">聊天背景</h4>
                     <div class="theme-actions">
+                        <button class="theme-action-btn" id="multi-select-bg-btn" title="多选"><i class="fa-solid fa-check-double"></i></button>
                         <button class="theme-action-btn" id="add-bg-from-url-btn" title="添加网络图片"><i class="fa-solid fa-link"></i></button>
                         <button class="theme-action-btn" id="add-bg-from-local-btn" title="上传本地图片"><i class="fa-solid fa-plus"></i></button>
                         <input type="file" id="bg-upload-input" accept="image/*" style="display: none;">
@@ -124,6 +131,12 @@
                     <!-- 背景缩略图将由 JS 动态生成到这里 -->
                 </div>
             </div>
+            <!-- ▼▼▼ 新增：多选操作栏 ▼▼▼ -->
+            <div class="theme-multi-select-actions" id="bg-multi-select-actions">
+                <button class="multi-select-action-btn" id="cancel-multi-select-bg-btn">取消</button>
+                <button class="multi-select-action-btn delete" id="delete-multi-select-bg-btn">删除</button>
+            </div>
+            <!-- ▲▲▲ 新增结束 ▲▲▲ -->
         </div>
         <!-- ▲▲▲ 修改结束 ▲▲▲ -->
     </div>

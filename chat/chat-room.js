@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             interactionModeSheetOverlay: document.getElementById('interaction-mode-sheet-overlay'),
             interactionModeList: document.getElementById('interaction-mode-list'),
             interactionModeCancelBtn: document.getElementById('interaction-mode-cancel-btn'),
-            // ▼▼▼ 新增：主题背景相关元素 ▼▼▼
+            // ▼▼▼ 修改：主题相关元素 ▼▼▼
             addBgFromLocalBtn: document.getElementById('add-bg-from-local-btn'),
             addBgFromUrlBtn: document.getElementById('add-bg-from-url-btn'),
             bgUploadInput: document.getElementById('bg-upload-input'),
@@ -104,7 +104,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             bgUrlInput: document.getElementById('bg-url-input'),
             cancelBgUrlBtn: document.getElementById('cancel-bg-url-btn'),
             confirmBgUrlBtn: document.getElementById('confirm-bg-url-btn'),
-            // ▲▲▲ 新增结束 ▲▲▲
+            themeContentPane: document.getElementById('menu-content-theme'),
+            multiSelectBgBtn: document.getElementById('multi-select-bg-btn'),
+            bgMultiSelectActions: document.getElementById('bg-multi-select-actions'),
+            cancelMultiSelectBgBtn: document.getElementById('cancel-multi-select-bg-btn'),
+            deleteMultiSelectBgBtn: document.getElementById('delete-multi-select-bg-btn'),
+            // ▲▲▲ 修改结束 ▲▲▲
         };
 
         // --- 3. 状态管理 ---
@@ -113,6 +118,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             memories: [],
             backgrounds: [], // 背景图片URL列表
             activeBackground: null, // 当前激活的背景URL
+            // ▼▼▼ 新增：主题多选状态 ▼▼▼
+            isBgMultiSelectMode: false,
+            selectedBgIndices: new Set(),
+            // ▲▲▲ 新增结束 ▲▲▲
             currentChatApi: null,
             currentChatStyle: CHAT_STYLES['dialogue'],
             isDiyEnabled: false,
@@ -208,7 +217,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         
-        // ▼▼▼ 新增：背景主题相关函数 ▼▼▼
+        // ▼▼▼ 修改：背景主题相关函数（以支持多选） ▼▼▼
         function renderBackgrounds() {
             elements.bgThumbnailsContainer.innerHTML = '';
             if (state.backgrounds.length === 0) {
@@ -222,10 +231,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (bgUrl === state.activeBackground) {
                     item.classList.add('active');
                 }
+                if (state.isBgMultiSelectMode && state.selectedBgIndices.has(index)) {
+                    item.classList.add('selected');
+                }
+                
                 const img = document.createElement('img');
                 img.src = bgUrl;
                 img.alt = `背景 ${index + 1}`;
+                
+                const overlay = document.createElement('div');
+                overlay.className = 'selection-overlay';
+                overlay.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+
                 item.appendChild(img);
+                item.appendChild(overlay);
                 elements.bgThumbnailsContainer.appendChild(item);
             });
         }
@@ -241,7 +260,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             await dbStorage.setItem(activeBgDbKey, bgUrl);
             renderBackgrounds();
         }
-        // ▲▲▲ 新增结束 ▲▲▲
+
+        function enterBgMultiSelectMode() {
+            state.isBgMultiSelectMode = true;
+            state.selectedBgIndices.clear();
+            elements.themeContentPane.classList.add('multi-select-mode');
+            renderBackgrounds();
+        }
+
+        function exitBgMultiSelectMode() {
+            state.isBgMultiSelectMode = false;
+            state.selectedBgIndices.clear();
+            elements.themeContentPane.classList.remove('multi-select-mode');
+            renderBackgrounds();
+        }
+        // ▲▲▲ 修改结束 ▲▲▲
 
         // --- 6. 绑定事件 ---
         elements.input.addEventListener('input', () => {
@@ -390,7 +423,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // ▼▼▼ 新增：背景主题事件绑定 ▼▼▼
+        // ▼▼▼ 修改：背景主题事件绑定（以支持多选） ▼▼▼
         if (elements.addBgFromLocalBtn && elements.bgUploadInput) {
             elements.addBgFromLocalBtn.addEventListener('click', () => {
                 elements.bgUploadInput.click();
@@ -445,10 +478,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elements.bgThumbnailsContainer) {
             elements.bgThumbnailsContainer.addEventListener('click', (e) => {
                 const item = e.target.closest('.bg-thumbnail-item');
-                if (item) {
-                    const index = parseInt(item.dataset.index, 10);
-                    const clickedBgUrl = state.backgrounds[index];
+                if (!item) return;
 
+                const index = parseInt(item.dataset.index, 10);
+                
+                if (state.isBgMultiSelectMode) {
+                    if (state.selectedBgIndices.has(index)) {
+                        state.selectedBgIndices.delete(index);
+                        item.classList.remove('selected');
+                    } else {
+                        state.selectedBgIndices.add(index);
+                        item.classList.add('selected');
+                    }
+                } else {
+                    const clickedBgUrl = state.backgrounds[index];
                     if (clickedBgUrl === state.activeBackground) {
                         setActiveBackground(null);
                     } else {
@@ -457,7 +500,45 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
-        // ▲▲▲ 新增结束 ▲▲▲
+
+        if (elements.multiSelectBgBtn) {
+            elements.multiSelectBgBtn.addEventListener('click', () => {
+                if (state.isBgMultiSelectMode) {
+                    exitBgMultiSelectMode();
+                } else {
+                    enterBgMultiSelectMode();
+                }
+            });
+        }
+        
+        if (elements.cancelMultiSelectBgBtn) {
+            elements.cancelMultiSelectBgBtn.addEventListener('click', exitBgMultiSelectMode);
+        }
+
+        if (elements.deleteMultiSelectBgBtn) {
+            elements.deleteMultiSelectBgBtn.addEventListener('click', async () => {
+                if (state.selectedBgIndices.size === 0) {
+                    alert('请先选择要删除的背景。');
+                    return;
+                }
+
+                if (confirm(`确定要删除选中的 ${state.selectedBgIndices.size} 个背景吗？`)) {
+                    const newBackgrounds = state.backgrounds.filter((_, index) => !state.selectedBgIndices.has(index));
+                    
+                    const activeBgWasDeleted = state.activeBackground && Array.from(state.selectedBgIndices).some(selectedIndex => state.backgrounds[selectedIndex] === state.activeBackground);
+
+                    state.backgrounds = newBackgrounds;
+                    await dbStorage.setItem(bgDbKey, state.backgrounds);
+
+                    if (activeBgWasDeleted) {
+                        await setActiveBackground(null);
+                    }
+                    
+                    exitBgMultiSelectMode();
+                }
+            });
+        }
+        // ▲▲▲ 修改结束 ▲▲▲
 
         // --- 7. 初始化页面 ---
         async function initializeChatState() {

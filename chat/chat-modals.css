@@ -234,9 +234,14 @@
 #user-edit-modal-overlay {
     z-index: 300;
 }
+/* ▼▼▼ 修改：明确背景URL输入框层级 ▼▼▼ */
 #cropper-overlay,
 #user-cropper-overlay,
 .prompt-overlay,
 .bottom-sheet-overlay {
     z-index: 400;
 }
+#bg-url-prompt-overlay {
+    z-index: 401; /* 确保在所有其他遮罩之上 */
+}
+/* ▲▲▲ 修改结束 ▲▲▲ */
