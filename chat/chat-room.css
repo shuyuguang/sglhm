@@ -29,7 +29,7 @@ html, body {
 
 /* ▼▼▼ 修改点：调整了聊天室头部的布局方式和尺寸 ▼▼▼ */
 .chat-header {
-    margin: 5px 15px 0; /* 修改：将上外边距从 15px 减小到 5px */
+    margin: 10px 15px 10px; 
     flex-shrink: 0;
     display: flex;
     align-items: center;
