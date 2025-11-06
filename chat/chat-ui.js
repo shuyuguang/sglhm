@@ -8,17 +8,21 @@
 export function renderChatRoomUI(character) {
     return `
         <div class="chat-container">
+            <!-- ▼▼▼ 修改点：重构了 header 的 HTML 结构 ▼▼▼ -->
             <header class="chat-header">
                 <a href="./relia-chat.html" class="chat-header-btn back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-                <div class="char-info">
-                    <img src="${character.avatar}" alt="${character.name}" class="char-info-avatar">
-                    <div class="char-info-text">
-                        <span class="char-info-name">${character.name || '未命名'}</span>
-                        <span class="char-info-status">在线</span>
+                <div class="chat-header-center">
+                    <div class="char-info">
+                        <img src="${character.avatar}" alt="${character.name}" class="char-info-avatar">
+                        <div class="char-info-text">
+                            <span class="char-info-name">${character.name || '未命名'}</span>
+                            <span class="char-info-status">在线</span>
+                        </div>
                     </div>
                 </div>
                 <button class="chat-header-btn" id="menu-btn"><i class="fa-solid fa-bars"></i></button>
             </header>
+            <!-- ▲▲▲ 修改结束 ▲▲▲ -->
             <main class="chat-messages" id="chat-messages-area"></main>
             <footer class="chat-input-area" id="chat-input-area">
                 <div class="actions-menu" id="actions-menu">
@@ -53,19 +57,17 @@ export function renderChatRoomUI(character) {
                     </ul>
                 </div>
                 <div class="chat-input-main" id="chat-input-main">
-                    <!-- ▼▼▼ 修改点：将表情和发送按钮组移入 chat-input-wrapper 内部 ▼▼▼ -->
                     <div class="chat-input-controls">
                         <button id="actions-toggle-btn"><i class="fa-solid fa-plus"></i></button>
                         <div class="chat-input-wrapper" id="chat-input-wrapper">
                             <textarea id="chat-input" placeholder="点击输入消息..." rows="1"></textarea>
-                            <button id="emoji-toggle-btn"><i class="fa-regular fa-face-smile"></i></button>
-                            <div class="send-buttons-container" id="send-buttons-container">
-                                <button id="respond-btn" class="send-action-btn"><i class="fa-regular fa-clock"></i></button>
-                                <button id="send-btn" class="send-action-btn primary"><i class="fa-regular fa-paper-plane"></i></button>
-                            </div>
+                        </div>
+                        <button id="emoji-toggle-btn"><i class="fa-regular fa-face-smile"></i></button>
+                        <div class="send-buttons-container" id="send-buttons-container">
+                            <button id="respond-btn" class="send-action-btn"><i class="fa-regular fa-clock"></i></button>
+                            <button id="send-btn" class="send-action-btn primary"><i class="fa-regular fa-paper-plane"></i></button>
                         </div>
                     </div>
-                    <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                 </div>
                 <div class="emoji-picker-bar">
                     <div class="emoji-placeholder">表情面板功能待开发...</div>
