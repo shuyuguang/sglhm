@@ -93,29 +93,25 @@ html, body {
 .action-btn { background-color: var(--header-bg); border: none; font-size: 1.5rem; color: #595959; cursor: pointer; width: 55px; height: 55px; border-radius: 15px; display: flex; justify-content: center; align-items: center; }
 .emoji-picker-bar { display: flex; justify-content: center; align-items: center; color: var(--text-meta); padding: 0 15px; }
 
+/* ▼▼▼ 修改点：重写整个输入区域布局逻辑 ▼▼▼ */
 .chat-input-main {
     padding: 12px 15px;
     background-color: var(--header-bg);
     transition: padding 0.2s ease-in-out;
 }
 
-/* ▼▼▼ 修改点 1：默认状态下，由父容器提供背景和圆角 ▼▼▼ */
 .chat-input-controls {
     display: flex;
     align-items: flex-end;
     gap: 10px;
-    transition: gap 0.2s ease-in-out, background-color 0.2s ease-in-out;
-    background-color: var(--page-bg);
-    border-radius: 25px;
-    padding: 0 4px; /* 微调内边距给图标留出空间 */
+    transition: gap 0.2s ease-in-out;
 }
 
-/* ▼▼▼ 修改点 2：默认状态下，输入框本身背景透明 ▼▼▼ */
 .chat-input-wrapper {
     flex-grow: 1;
     display: flex;
-    background-color: transparent;
-    border-radius: 0; /* 移除自己的圆角 */
+    background-color: var(--page-bg);
+    border-radius: 25px;
     min-height: 42px;
 }
 
@@ -123,7 +119,7 @@ html, body {
     flex-grow: 1;
     border: none;
     background-color: transparent;
-    padding: 10px 0; /* 调整内边距 */
+    padding: 10px 15px;
     font-size: 1.1em;
     resize: none;
     outline: none;
@@ -132,10 +128,9 @@ html, body {
     overflow-y: auto;
 }
 
-/* ▼▼▼ 修改点 3：默认状态下，按钮背景透明 ▼▼▼ */
 #actions-toggle-btn,
 #emoji-toggle-btn {
-    background-color: transparent;
+    background-color: var(--page-bg);
     border: none;
     font-size: 1.2rem;
     color: var(--text-dark);
@@ -151,8 +146,15 @@ html, body {
 }
 #actions-toggle-btn .fa-plus { font-weight: 300; }
 
-.send-buttons-container { display: none; gap: 6px; align-items: center; }
-.send-buttons-container.visible { display: flex; }
+.send-buttons-container {
+    display: none;
+    gap: 6px;
+    align-items: center;
+}
+.send-buttons-container.visible {
+    display: flex;
+}
+
 .send-action-btn { background-color: #e9ecef; color: #495057; border: none; border-radius: 20px; cursor: pointer; transition: background-color 0.2s ease; white-space: nowrap; }
 .send-action-btn:hover { background-color: #dee2e6; }
 #respond-btn, #send-btn { width: 42px; height: 42px; border-radius: 50%; font-size: 1.1rem; padding: 0; display: flex; align-items: center; justify-content: center; }
@@ -166,33 +168,21 @@ html, body {
     padding-bottom: 12px;
 }
 
-/* ▼▼▼ 修改点 4：聚焦时，父容器背景透明，恢复布局 ▼▼▼ */
 .chat-input-area.input-focused .chat-input-controls {
-    flex-wrap: wrap; 
+    flex-wrap: wrap; /* 允许换行，核心！ */
     gap: 10px;
-    background-color: transparent; /* 父容器背景消失 */
-    padding: 0;
 }
 
-/* ▼▼▼ 修改点 5：聚焦时，输入框恢复自己的背景和圆角 ▼▼▼ */
 .chat-input-area.input-focused .chat-input-wrapper {
-    flex-basis: 100%; 
-    order: -1; 
-    background-color: var(--page-bg); /* 输入框恢复背景 */
-    border-radius: 25px; /* 输入框恢复圆角 */
-}
-
-/* ▼▼▼ 修改点 6：聚焦时，输入框恢复左右内边距 ▼▼▼ */
-.chat-input-area.input-focused #chat-input {
-    padding: 10px 15px;
+    flex-basis: 100%; /* 输入框自己占满第一行 */
+    order: -1; /* 确保它在最前面 */
 }
 
 .chat-input-area.input-focused .send-buttons-container {
-    flex-grow: 1; 
-    justify-content: center; 
+    flex-grow: 1; /* 让发送按钮组占据中间的剩余空间 */
+    justify-content: center; /* 内部居中 */
 }
 
-/* ▼▼▼ 修改点 7：聚焦时，按钮们恢复自己的圆形背景 ▼▼▼ */
 .chat-input-area.input-focused #actions-toggle-btn,
 .chat-input-area.input-focused #emoji-toggle-btn,
 .chat-input-area.input-focused #respond-btn {
@@ -203,3 +193,4 @@ html, body {
     max-height: 120px; 
     overflow-y: auto;  
 }
+/* ▲▲▲ 修改结束 ▲▲▲ */
