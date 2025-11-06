@@ -265,6 +265,53 @@ input:checked + .slider:before {
     text-overflow: ellipsis;
 }
 
+/* ▼▼▼ 新增：顶部菜单 - 风格面板样式 ▼▼▼ */
+.style-settings-wrapper {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.style-setting-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.style-setting-group label {
+    font-size: 1em;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+.style-setting-group input[type="number"] {
+    width: 60px;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    text-align: center;
+    font-size: 1em;
+    background-color: #f8f9fa;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+    -moz-appearance: textfield;
+}
+.style-setting-group input[type="number"]::-webkit-inner-spin-button,
+.style-setting-group input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.min-max-input-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.min-max-input-container input[type="number"] {
+    width: 50px;
+}
+.min-max-input-container span {
+    color: #868e96;
+    font-weight: 500;
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */
+
 /* --- 顶部菜单 - 模式面板样式 --- */
 .model-selection-group {
     padding: 8px;
@@ -347,7 +394,7 @@ input:checked + .slider:before {
     font-weight: 600;
 }
 
-/* ▼▼▼ 修改：顶部菜单 - 主题面板样式 ▼▼▼ */
+/* --- 顶部菜单 - 主题面板样式 --- */
 .theme-section {
     padding: 8px;
 }
@@ -468,4 +515,3 @@ input:checked + .slider:before {
     color: var(--danger-color);
     pointer-events: auto;
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */

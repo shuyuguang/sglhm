@@ -10,7 +10,6 @@ export function renderChatRoomUI(character) {
         <div class="chat-container">
             <header class="chat-header">
                 <a href="./relia-chat.html" class="chat-header-btn back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-                <!-- ▼▼▼ 修改点：在胶囊内部右侧添加了加号按钮 ▼▼▼ -->
                 <div class="chat-header-center">
                     <div class="char-info">
                         <img src="${character.avatar}" alt="${character.name}" class="char-info-avatar">
@@ -21,7 +20,6 @@ export function renderChatRoomUI(character) {
                     </div>
                     <button class="chat-header-btn add-btn"><i class="fa-solid fa-plus"></i></button>
                 </div>
-                <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                 <button class="chat-header-btn" id="menu-btn"><i class="fa-solid fa-bars"></i></button>
             </header>
             <main class="chat-messages" id="chat-messages-area"></main>
@@ -34,7 +32,9 @@ export function renderChatRoomUI(character) {
                                 <div class="action-item"><button class="action-btn"><i class="fa-solid fa-camera"></i></button><span>拍照</span></div>
                                 <div class="action-item"><button class="action-btn"><i class="fa-solid fa-microphone"></i></button><span>音频</span></div>
                                 <div class="action-item"><button class="action-btn"><i class="fa-solid fa-palette"></i></button><span>主题</span></div>
-                                <div class="action-item"><button class="action-btn" id="workbench-btn"><i class="fa-solid fa-briefcase"></i></button><span>工作台</span></div>
+                                <!-- ▼▼▼ 修改：删除工作台按钮 ▼▼▼ -->
+                                
+                                <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                                 <div class="action-item"><button class="action-btn"><i class="fa-solid fa-list-check"></i></button><span>DIY</span></div>
                                 <div class="action-item"><button class="action-btn" id="edit-settings-btn"><i class="fa-solid fa-pencil"></i></button><span>编辑</span></div>
                                 <div class="action-item"><button class="action-btn" id="search-history-btn"><i class="fa-solid fa-brain"></i></button><span>数据</span></div>

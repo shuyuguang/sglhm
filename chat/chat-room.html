@@ -83,7 +83,28 @@
                 </div>
             </div>
         </div>
-        <div id="menu-content-style" class="secondary-content-pane">这里是风格内容区</div>
+        <!-- ▼▼▼ 修改：更新风格内容区 ▼▼▼ -->
+        <div id="menu-content-style" class="secondary-content-pane">
+            <div class="style-settings-wrapper">
+                <div class="style-setting-group">
+                    <label>输出条数限制</label>
+                    <div class="min-max-input-container">
+                        <input type="number" id="style-output-min" min="1" max="99">
+                        <span>-</span>
+                        <input type="number" id="style-output-max" min="1" max="99">
+                    </div>
+                </div>
+                <div class="style-setting-group">
+                    <label for="style-visual-limit">视觉上下文限制</label>
+                    <input type="number" id="style-visual-limit" min="30" max="99">
+                </div>
+                <div class="style-setting-group">
+                    <label for="style-memory-limit">记忆轮数限制</label>
+                    <input type="number" id="style-memory-limit" min="10" max="99">
+                </div>
+            </div>
+        </div>
+        <!-- ▲▲▲ 修改结束 ▲▲▲ -->
         <div id="menu-content-model" class="secondary-content-pane">
             <div class="model-selection-group">
                 <h4 class="panel-section-title">当前模型</h4>
@@ -109,7 +130,6 @@
         <div id="menu-content-emoji" class="secondary-content-pane">这里是表情内容区</div>
         <div id="menu-content-inspiration" class="secondary-content-pane">这里是灵感内容区</div>
         <div id="menu-content-prompt" class="secondary-content-pane">这里是指令内容区</div>
-        <!-- ▼▼▼ 修改：更新主题内容区 ▼▼▼ -->
         <div id="menu-content-theme" class="secondary-content-pane">
             <div class="theme-section placeholder-section">
                 <h4 class="panel-section-title">聊天气泡</h4>
@@ -133,7 +153,6 @@
                 </div>
             </div>
         </div>
-        <!-- ▲▲▲ 修改结束 ▲▲▲ -->
     </div>
 
     <!-- 右侧选项卡面板 -->
