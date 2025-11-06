@@ -42,7 +42,7 @@ html, body {
 .chat-header-center {
     display: flex;
     align-items: center; /* 垂直居中内部元素 */
-    padding: 3px 6px 3px 5px; /* 修改：缩小垂直内边距，调整水平内边距 */
+    padding: 3px 6px 3px 4px; /* 修改：缩小垂直内边距，调整水平内边距 */
     background-color: rgba(255, 255, 255, 0.4);
     border-radius: 99px;
     border: 1px solid #C9D0D8;
