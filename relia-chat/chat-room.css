@@ -175,7 +175,7 @@ html, body {
 #actions-toggle-btn,
 #emoji-toggle-btn,
 #inspiration-btn {
-    background-color: transparent;
+    background-color: var(--page-bg);
     border: none;
     font-size: 1.2rem;
     color: var(--text-dark);
@@ -187,7 +187,7 @@ html, body {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: transform 0.3s ease, background-color 0.3s ease; /* <-- 修改后的样子 */
+    transition: all 0.3s ease; 
 }
 
 /* ▼▼▼ 修改点 ▼▼▼ */
