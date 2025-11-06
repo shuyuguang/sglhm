@@ -277,22 +277,22 @@ input:checked + .slider:before {
     width: 100%;
     max-width: none;
     padding: 12px 16px;
-    font-size: 1em;
+    font-size: 1.05em; /* <-- 修改点：字体变大 */
     font-weight: 600;
     border-radius: 10px;
     text-align: center;
     box-sizing: border-box;
     background-color: #f8f9fa;
     border: 1px solid var(--border-color);
-    /* ▼▼▼ 修改点：加深默认文字颜色 ▼▼▼ */
-    color: var(--text-dark);
-    /* ▲▲▲ 修改结束 ▲▲▲ */
+    color: #212529; /* <-- 修改点：颜色加深为近乎黑色 */
 }
+
 #menu-content-model .model-select-btn:hover {
     background-color: #f1f3f5;
 }
+
 #menu-content-model .model-select-btn.active {
     background-color: #e0e9f2;
-    color: var(--send-btn-bg);
+    color: #212529; /* <-- 修改点：选中状态也使用深色，对比更强 */
     border-color: transparent;
 }
