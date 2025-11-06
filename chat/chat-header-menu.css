@@ -16,8 +16,8 @@
 
 .header-panel {
     position: absolute;
-    top: 70px;
-    height: 89vh; 
+    top: 30px;
+    height: 92vh; 
     max-height: 700px;
     background-color: #fff;
     border-radius: 12px;
