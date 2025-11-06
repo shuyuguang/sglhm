@@ -25,17 +25,18 @@ html, body {
     display: flex;
     flex-direction: column;
     height: 100dvh;
+    /* ▼▼▼ 新增：为背景图添加过渡效果 ▼▼▼ */
+    transition: background-image 0.3s ease-in-out;
+    /* ▲▲▲ 新增结束 ▲▲▲ */
 }
 
-/* ▼▼▼ 修改点：调整了聊天室头部的布局方式 ▼▼▼ */
+/* ▼▼▼ 修改：恢复头部的绝对定位 ▼▼▼ */
 .chat-header {
-    /* position: absolute; (移除) */
-    /* top: 15px; (移除) */
-    /* left: 15px; (移除) */
-    /* right: 15px; (移除) */
-    /* z-index: 10; (移除) */
-    margin: 15px 15px 0; /* 新增外边距来定位 */
-    flex-shrink: 0; /* 防止被压缩 */
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    z-index: 10;
     display: flex;
     align-items: center;
     padding: 4px 10px;
@@ -59,8 +60,8 @@ html, body {
 .chat-messages {
     flex-grow: 1;
     overflow-y: auto;
-    /* ▼▼▼ 修改点：调整了消息区的内边距 ▼▼▼ */
-    padding: 15px; /* 原为 85px 15px 15px 15px */
+    /* ▼▼▼ 修改：恢复顶部的内边距，为header留出空间 ▼▼▼ */
+    padding: 85px 15px 15px 15px;
     /* ▲▲▲ 修改结束 ▲▲▲ */
     display: flex;
     flex-direction: column;
@@ -168,10 +169,9 @@ html, body {
     display: none;
 }
 
-/* 聊天背景样式 */
+/* ▼▼▼ 修改：调整聊天背景样式 ▼▼▼ */
 .chat-container.has-background .chat-messages {
-    background-color: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(5px);
+    background-color: transparent; /* 设置为透明，让容器背景透出来 */
 }
 .chat-container.has-background .chat-bubble.character {
     background-color: rgba(251, 238, 193, 0.85);
@@ -179,3 +179,4 @@ html, body {
 .chat-container.has-background .chat-bubble.user {
     background-color: rgba(209, 235, 245, 0.85);
 }
+/* ▲▲▲ 修改结束 ▲▲▲ */
