@@ -158,7 +158,10 @@ html, body {
     transition: all 0.3s ease; 
 }
 #actions-toggle-btn .fa-plus { font-weight: 300; }
-#emoji-toggle-btn { background-color: transparent; }
+
+/* ▼▼▼ 修改点：移除了下面这行导致表情包按钮背景透明的规则 ▼▼▼ */
+/* #emoji-toggle-btn { background-color: transparent; } */
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
 .send-buttons-container {
     display: none;
@@ -197,14 +200,12 @@ html, body {
     align-items: center;
 }
 
-/* ▼▼▼ 修改点：为聚焦时的指定按钮统一设置背景色 ▼▼▼ */
 .chat-input-area.input-focused #actions-toggle-btn,
 .chat-input-area.input-focused #emoji-toggle-btn,
 .chat-input-area.input-focused #respond-btn {
-    order: initial; /* order 对 respond-btn 无影响，但放在这里无妨 */
+    order: initial;
     background-color: var(--page-bg);
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
 
 .chat-input-area.input-focused #chat-input {
     max-height: 120px; 
