@@ -90,10 +90,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             userProfileEditName: document.getElementById('user-profile-edit-name'),
             charProfileEditAvatar: document.getElementById('char-profile-edit-avatar'),
             charProfileEditName: document.getElementById('char-profile-edit-name'),
-            // ▼▼▼ 新增：获取新添加的元素 ▼▼▼
             diySwitch: document.getElementById('enable-diy-switch'),
+            // ▼▼▼ 修改：更新互动模式相关元素 ▼▼▼
+            interactionModeCapsule: document.getElementById('interaction-mode-capsule'),
+            selectedInteractionModeName: document.getElementById('selected-interaction-mode-name'),
+            interactionModeConfirmBtn: document.getElementById('interaction-mode-confirm-btn'),
             modeOptionsContainer: document.getElementById('mode-options-container'),
-            // ▲▲▲ 新增结束 ▲▲▲
+            // ▲▲▲ 修改结束 ▲▲▲
         };
 
         // --- 3. 状态管理 ---
@@ -102,14 +105,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             memories: [],
             currentChatApi: null,
             currentChatStyle: CHAT_STYLES['dialogue'],
-            isDiyEnabled: false, // 新增DIY开关状态
+            isDiyEnabled: false,
+            tempSelectedStyleKey: null, // 新增：用于暂存用户选择的模式
         };
         
         const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`;
         const selectedApiKey = `${CHAT_DB_KEYS.CHAT_SELECTED_API}_${charId}`;
         const styleDbKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_style_${charId}`;
         const memoryDbKey = `relia-chat-memory_${charId}`;
-        const diyDbKey = `relia-chat-diy-enabled_${charId}`; // 新增DIY开关的数据库键
+        const diyDbKey = `relia-chat-diy-enabled_${charId}`;
 
         // --- 4. 模块初始化 ---
         let chatEditor = null;
@@ -191,14 +195,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             elements.chatInputArea.classList.remove('emoji-expanded', 'actions-expanded');
         };
 
-        // ▼▼▼ 新增：更新互动模式按钮UI的函数 ▼▼▼
-        function updateModeButtonsUI() {
+        // ▼▼▼ 修改：更新互动模式UI的函数，现在包括胶囊和按钮 ▼▼▼
+        function updateInteractionModeUI() {
             const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle);
-            elements.modeOptionsContainer.querySelectorAll('.mode-option-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.style === currentStyleKey);
-            });
+            if (currentStyleKey) {
+                // 更新胶囊文本
+                elements.selectedInteractionModeName.textContent = CHAT_STYLES[currentStyleKey].name;
+                // 更新按钮的最终激活状态
+                elements.modeOptionsContainer.querySelectorAll('.mode-option-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.style === currentStyleKey);
+                });
+            }
         }
-        // ▲▲▲ 新增结束 ▲▲▲
+        // ▲▲▲ 修改结束 ▲▲▲
 
         // --- 6. 绑定事件 ---
         elements.input.addEventListener('input', () => {
@@ -247,12 +256,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 onSave: (styleObject) => {
                     console.log('已保存默认风格:', styleObject.name);
                     state.currentChatStyle = styleObject;
-                    updateModeButtonsUI(); // 保存后同步更新模式按钮
+                    updateInteractionModeUI(); // 保存后同步更新模式UI
                 }
             });
         }
 
-        // ▼▼▼ 新增：为DIY开关和互动模式按钮绑定事件 ▼▼▼
         if (elements.diySwitch) {
             elements.diySwitch.addEventListener('change', async () => {
                 state.isDiyEnabled = elements.diySwitch.checked;
@@ -260,21 +268,50 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.log(`DIY mode set to: ${state.isDiyEnabled}`);
             });
         }
-        if (elements.modeOptionsContainer) {
-            elements.modeOptionsContainer.addEventListener('click', async (e) => {
-                const button = e.target.closest('.mode-option-btn');
-                if (!button) return;
-                
-                const selectedStyleKey = button.dataset.style;
-                if (CHAT_STYLES[selectedStyleKey]) {
-                    state.currentChatStyle = CHAT_STYLES[selectedStyleKey];
-                    await dbStorage.setItem(styleDbKey, selectedStyleKey);
-                    updateModeButtonsUI();
-                    console.log(`Interaction mode changed to: ${state.currentChatStyle.name}`);
-                }
+        
+        // ▼▼▼ 修改：重构互动模式的事件绑定逻辑 ▼▼▼
+        if (elements.interactionModeCapsule) {
+            elements.interactionModeCapsule.addEventListener('click', () => {
+                elements.modeOptionsContainer.classList.toggle('active');
+                elements.interactionModeCapsule.classList.toggle('open');
             });
         }
-        // ▲▲▲ 新增结束 ▲▲▲
+        if (elements.modeOptionsContainer) {
+            elements.modeOptionsContainer.addEventListener('click', (e) => {
+                const button = e.target.closest('.mode-option-btn');
+                if (!button) return;
+
+                state.tempSelectedStyleKey = button.dataset.style;
+                
+                // 更新临时选中样式
+                elements.modeOptionsContainer.querySelectorAll('.mode-option-btn').forEach(btn => {
+                    btn.classList.remove('temp-selected');
+                });
+                button.classList.add('temp-selected');
+            });
+        }
+        if (elements.interactionModeConfirmBtn) {
+            elements.interactionModeConfirmBtn.addEventListener('click', async () => {
+                if (state.tempSelectedStyleKey && CHAT_STYLES[state.tempSelectedStyleKey]) {
+                    const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle);
+                    // 只有在选择的模式与当前不同时才更新
+                    if (state.tempSelectedStyleKey !== currentStyleKey) {
+                        state.currentChatStyle = CHAT_STYLES[state.tempSelectedStyleKey];
+                        await dbStorage.setItem(styleDbKey, state.tempSelectedStyleKey);
+                        updateInteractionModeUI();
+                        console.log(`Interaction mode changed to: ${state.currentChatStyle.name}`);
+                    }
+                }
+                // 关闭选项并重置临时状态
+                elements.modeOptionsContainer.classList.remove('active');
+                elements.interactionModeCapsule.classList.remove('open');
+                elements.modeOptionsContainer.querySelectorAll('.mode-option-btn').forEach(btn => {
+                    btn.classList.remove('temp-selected');
+                });
+                state.tempSelectedStyleKey = null;
+            });
+        }
+        // ▲▲▲ 修改结束 ▲▲▲
 
         if (elements.menuBtn && elements.headerContentPanel && elements.headerTabsPanel && elements.headerMenuOverlay) {
             const menuList = elements.headerTabsPanel.querySelector('.header-menu-list');
@@ -326,7 +363,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // --- 7. 初始化页面 ---
         async function initializeChatState() {
-            // ▼▼▼ 修改：加载并应用新设置 ▼▼▼
             const [savedStyleKey, savedApi, savedDiyEnabled] = await Promise.all([
                 dbStorage.getItem(styleDbKey),
                 dbStorage.getItem(selectedApiKey),
@@ -335,6 +371,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (savedStyleKey && CHAT_STYLES[savedStyleKey]) {
                 state.currentChatStyle = CHAT_STYLES[savedStyleKey];
+            } else {
+                // 如果没有保存的风格，默认使用短聊体
+                state.currentChatStyle = CHAT_STYLES['short-chat'];
             }
             if (savedApi) state.currentChatApi = savedApi;
             
@@ -347,7 +386,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             await renderMemoryCards();
             updateButtonStates();
             updateModelButtonText();
-            updateModeButtonsUI(); // 初始化时更新互动模式按钮的UI状态
+            updateInteractionModeUI(); // 初始化时更新互动模式的UI状态
 
             const getChatHistory = () => state.chatHistory;
             const updateChatHistory = async (newHistory) => {
@@ -356,7 +395,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 await loadAndRenderHistory();
             };
             initializeMessageMenu(elements.chatArea, getChatHistory, updateChatHistory);
-             // ▲▲▲ 修改结束 ▲▲▲
         }
         await initializeChatState();
 

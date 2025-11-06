@@ -268,10 +268,12 @@ input:checked + .slider:before {
 }
 .model-selection-title {
     font-size: 1em;
-    font-weight: 500;
-    color: var(--text-meta);
-    margin: 0 0 8px 10px;
-    text-transform: uppercase;
+    font-weight: 600;
+    /* ▼▼▼ 修改：标题颜色 ▼▼▼ */
+    color: var(--text-dark);
+    /* ▲▲▲ 修改结束 ▲▲▲ */
+    margin: 0 0 8px 4px;
+    text-transform: none;
 }
 #menu-content-model .model-select-btn {
     width: 100%;
@@ -295,7 +297,6 @@ input:checked + .slider:before {
     border-color: transparent;
 }
 
-/* ▼▼▼ 新增：DIY开关和互动模式样式 ▼▼▼ */
 .mode-panel-item {
     display: flex;
     justify-content: space-between;
@@ -307,27 +308,90 @@ input:checked + .slider:before {
     font-weight: 500;
     color: var(--text-dark);
 }
+/* ▼▼▼ 修改：重构为胶囊选择器样式 ▼▼▼ */
 .interaction-mode-group {
     padding: 8px;
     margin-top: 8px;
 }
 .interaction-mode-title {
     font-size: 1em;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0 0 8px 4px;
+    text-transform: none;
+}
+.interaction-mode-selector {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.interaction-mode-capsule {
+    flex-grow: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background-color: #f8f9fa;
+    color: #212529;
+    font-size: 1.05em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.interaction-mode-capsule:hover {
+    background-color: #f1f3f5;
+}
+.capsule-arrow {
+    color: #868e96;
+    transition: transform 0.3s ease;
+}
+.interaction-mode-capsule.open .capsule-arrow {
+    transform: rotate(180deg);
+}
+.mode-confirm-btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--send-btn-bg);
+    color: var(--text-light);
+    font-size: 0.95em;
     font-weight: 500;
-    color: var(--text-meta);
-    margin: 0 0 12px 10px;
-    text-transform: uppercase;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: filter 0.2s;
+}
+.mode-confirm-btn:hover {
+    filter: brightness(1.1);
 }
 .mode-options-container {
+    background-color: #f8f9fa;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
+    /* collapsed state */
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    padding: 0 10px;
+    margin-top: 0;
+    transition: max-height 0.3s ease, padding 0.3s ease, margin-top 0.3s ease, opacity 0.2s ease;
+}
+.mode-options-container.active {
+    /* expanded state */
+    max-height: 200px;
+    opacity: 1;
+    padding: 10px;
+    margin-top: 10px;
 }
 .mode-option-btn {
     padding: 10px;
     border-radius: 8px;
     border: 1px solid #dee2e6;
-    background-color: #f8f9fa;
+    background-color: #ffffff;
     color: #495057;
     font-size: 0.95em;
     font-weight: 500;
@@ -338,9 +402,14 @@ input:checked + .slider:before {
 .mode-option-btn:hover {
     background-color: #f1f3f5;
 }
+.mode-option-btn.temp-selected {
+    background-color: #e0e9f2;
+    border-color: var(--send-btn-bg);
+    color: var(--text-dark);
+}
 .mode-option-btn.active {
     background-color: var(--send-btn-bg);
     color: var(--text-light);
     border-color: var(--send-btn-bg);
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */
+/* ▲▲▲ 修改结束 ▲▲▲ */
