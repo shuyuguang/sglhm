@@ -106,9 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             confirmBgUrlBtn: document.getElementById('confirm-bg-url-btn'),
             themeContentPane: document.getElementById('menu-content-theme'),
             multiSelectBgBtn: document.getElementById('multi-select-bg-btn'),
-            bgMultiSelectActions: document.getElementById('bg-multi-select-actions'),
-            cancelMultiSelectBgBtn: document.getElementById('cancel-multi-select-bg-btn'),
-            deleteMultiSelectBgBtn: document.getElementById('delete-multi-select-bg-btn'),
+            deleteSelectedBgBtn: document.getElementById('delete-selected-bg-btn'),
             // ▲▲▲ 修改结束 ▲▲▲
         };
 
@@ -116,12 +114,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const state = {
             chatHistory: [],
             memories: [],
-            backgrounds: [], // 背景图片URL列表
-            activeBackground: null, // 当前激活的背景URL
-            // ▼▼▼ 新增：主题多选状态 ▼▼▼
+            backgrounds: [],
+            activeBackground: null,
             isBgMultiSelectMode: false,
             selectedBgIndices: new Set(),
-            // ▲▲▲ 新增结束 ▲▲▲
             currentChatApi: null,
             currentChatStyle: CHAT_STYLES['dialogue'],
             isDiyEnabled: false,
@@ -217,7 +213,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         
-        // ▼▼▼ 修改：背景主题相关函数（以支持多选） ▼▼▼
         function renderBackgrounds() {
             elements.bgThumbnailsContainer.innerHTML = '';
             if (state.backgrounds.length === 0) {
@@ -274,7 +269,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             elements.themeContentPane.classList.remove('multi-select-mode');
             renderBackgrounds();
         }
-        // ▲▲▲ 修改结束 ▲▲▲
 
         // --- 6. 绑定事件 ---
         elements.input.addEventListener('input', () => {
@@ -423,7 +417,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // ▼▼▼ 修改：背景主题事件绑定（以支持多选） ▼▼▼
+        // ▼▼▼ 修改：背景主题事件绑定 ▼▼▼
         if (elements.addBgFromLocalBtn && elements.bgUploadInput) {
             elements.addBgFromLocalBtn.addEventListener('click', () => {
                 elements.bgUploadInput.click();
@@ -511,14 +505,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
         
-        if (elements.cancelMultiSelectBgBtn) {
-            elements.cancelMultiSelectBgBtn.addEventListener('click', exitBgMultiSelectMode);
-        }
-
-        if (elements.deleteMultiSelectBgBtn) {
-            elements.deleteMultiSelectBgBtn.addEventListener('click', async () => {
-                if (state.selectedBgIndices.size === 0) {
-                    alert('请先选择要删除的背景。');
+        if (elements.deleteSelectedBgBtn) {
+            elements.deleteSelectedBgBtn.addEventListener('click', async () => {
+                if (!state.isBgMultiSelectMode || state.selectedBgIndices.size === 0) {
                     return;
                 }
 
