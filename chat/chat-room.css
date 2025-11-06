@@ -145,7 +145,7 @@ html, body {
 }
 
 #actions-toggle-btn { order: 1; }
-#inspiration-btn { order: 2; } 
+/* #inspiration-btn { order: 2; } <-- 已删除 */
 .chat-input-wrapper { order: 3; } 
 #emoji-toggle-btn { order: 4; } 
 
@@ -173,8 +173,7 @@ html, body {
 }
 
 #actions-toggle-btn,
-#emoji-toggle-btn,
-#inspiration-btn {
+#emoji-toggle-btn {
     background-color: var(--page-bg);
     border: none;
     font-size: 1.2rem;
@@ -190,16 +189,7 @@ html, body {
     transition: all 0.3s ease; 
 }
 
-/* ▼▼▼ 修改点 ▼▼▼ */
-#inspiration-btn {
-    /* display: none;  <-- 移除此行 */
-    position: absolute;
-    right: 60px; /* 放在 emoji 按钮 (15px) 的左边 */
-    bottom: 12px;
-    z-index: 2;
-}
-/* ▲▲▲ 修改结束 ▲▲▲ */
-
+/* ▼▼▼ 修改点：所有和 #inspiration-btn 相关的样式都已删除 ▼▼▼ */
 
 #emoji-toggle-btn {
     position: absolute;
@@ -300,22 +290,10 @@ html, body {
 }
 
 .chat-input-area.input-focused #actions-toggle-btn,
-.chat-input-area.input-focused #emoji-toggle-btn,
-.chat-input-area.input-focused #inspiration-btn {
+.chat-input-area.input-focused #emoji-toggle-btn {
     background-color: transparent;
     color: var(--text-dark);
 }
-
-/* ▼▼▼ 修改点 ▼▼▼ */
-.chat-input-area.input-focused #inspiration-btn {
-    display: flex;
-    margin-left: auto; /* 将灵感按钮推到右侧 */
-    position: relative; /* 恢复其正常定位 */
-    right: auto;
-    bottom: auto;
-    z-index: auto;
-}
-/* ▲▲▲ 修改结束 ▲▲▲ */
 
 .chat-input-area.input-focused #emoji-toggle-btn {
     position: relative;
@@ -330,10 +308,4 @@ html, body {
     padding-right: 15px;
     max-height: 120px; 
     overflow-y: auto;  
-}
-
-/* 新增：移除灯泡和表情按钮的背景 */
-#emoji-toggle-btn,
-#inspiration-btn {
-    background-color: transparent;
 }
