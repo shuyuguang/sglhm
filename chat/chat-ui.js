@@ -53,20 +53,20 @@ export function renderChatRoomUI(character) {
                     </ul>
                 </div>
                 <div class="chat-input-main" id="chat-input-main">
+                    <button id="actions-toggle-btn"><i class="fa-solid fa-plus"></i></button>
                     <div class="chat-input-wrapper" id="chat-input-wrapper">
                         <textarea id="chat-input" placeholder="点击输入消息..." rows="1"></textarea>
-                        <div class="send-buttons-container" id="send-buttons-container">
-                            <button id="select-model-btn" class="send-action-btn model-select-btn">
-                                <span id="selected-model-name">选择模型</span>
-                            </button>
-                            <button id="respond-btn" class="send-action-btn">响应</button>
-                            <button id="send-btn" class="send-action-btn primary">发送</button>
-                        </div>
                     </div>
-                    <div class="chat-input-controls">
-                        <button id="actions-toggle-btn"><i class="fa-solid fa-plus"></i></button>
-                        <button id="emoji-toggle-btn"><i class="fa-regular fa-face-smile"></i></button>
+                    <!-- ▼▼▼ 修改点：将按钮容器移动到此处，并更新按钮内容 ▼▼▼ -->
+                    <div class="send-buttons-container" id="send-buttons-container">
+                        <button id="select-model-btn" class="send-action-btn model-select-btn">
+                            <span id="selected-model-name">选择模型</span>
+                        </button>
+                        <button id="respond-btn" class="send-action-btn"><i class="fa-regular fa-clock"></i></button>
+                        <button id="send-btn" class="send-action-btn primary"><i class="fa-regular fa-paper-plane"></i></button>
                     </div>
+                    <!-- ▲▲▲ 修改结束 ▲▲▲ -->
+                    <button id="emoji-toggle-btn"><i class="fa-regular fa-face-smile"></i></button>
                 </div>
                 <div class="emoji-picker-bar">
                     <div class="emoji-placeholder">表情面板功能待开发...</div>

@@ -140,29 +140,19 @@ html, body {
     background-color: var(--header-bg);
 }
 
-.chat-input-controls {
-    display: contents;
-}
-
-#actions-toggle-btn { order: 1; }
-.chat-input-wrapper { order: 2; } 
-#emoji-toggle-btn { order: 3; } 
-
-
 .chat-input-wrapper {
     flex-grow: 1;
     display: flex;
     background-color: var(--page-bg);
     border-radius: 25px;
     min-height: 42px;
-    position: relative;
 }
 
 #chat-input {
     flex-grow: 1;
     border: none;
     background-color: transparent;
-    padding: 10px 52px 10px 15px;
+    padding: 10px 15px; /* ▼▼▼ 修改：移除了右侧为表情按钮留出的空间 ▼▼▼ */
     font-size: 1.1em;
     resize: none;
     outline: none;
@@ -188,34 +178,19 @@ html, body {
     transition: all 0.3s ease; 
 }
 
-#emoji-toggle-btn {
-    position: absolute;
-    right: 15px;
-    bottom: 12px;
-    z-index: 2;
-}
-
 #actions-toggle-btn .fa-plus {
     font-weight: 300;
 }
 
+/* ▼▼▼ 修改点：更新发送按钮容器的样式 ▼▼▼ */
 .send-buttons-container {
-    position: absolute;
-    top: -45px;
-    right: 0;
-    z-index: 1;
-    display: flex;
+    display: none; /* 默认隐藏 */
     gap: 6px;
-    opacity: 0;
-    transform: translateY(8px);
-    pointer-events: none;
-    transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+    align-items: center;
 }
 
 .send-buttons-container.visible {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
+    display: flex; /* 聚焦时显示 */
 }
 
 .send-action-btn {
@@ -223,9 +198,6 @@ html, body {
     color: #495057;
     border: none;
     border-radius: 20px;
-    padding: 5px 14px;
-    font-size: 0.85rem;
-    font-weight: 500;
     cursor: pointer;
     transition: background-color 0.2s ease;
     white-space: nowrap;
@@ -235,12 +207,25 @@ html, body {
     background-color: #dee2e6;
 }
 
-.send-action-btn.primary {
+/* 为新的图标按钮设置样式 */
+#respond-btn,
+#send-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#send-btn.primary { /* 沿用 primary 类名，或直接用 #send-btn */
     background-color: var(--send-btn-bg);
     color: var(--text-light);
 }
 
-.send-action-btn.primary:hover {
+#send-btn.primary:hover {
     filter: brightness(1.1);
 }
 
@@ -248,10 +233,11 @@ html, body {
     background-color: #f1f3f5;
     color: #495057;
     max-width: 120px;
-    padding-left: 12px;
-    padding-right: 172px;
+    padding: 5px 14px; /* 维持胶囊形状 */
+    font-size: 0.85rem;
+    font-weight: 500;
 }
-
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
 #selected-model-name {
     display: inline-block;
@@ -261,53 +247,31 @@ html, body {
     vertical-align: middle;
 }
 
-
-/* --- 聚焦（展开）时的样式 --- */
+/* ▼▼▼ 修改点：简化聚焦样式，保持单行布局 ▼▼▼ */
 .chat-input-area.input-focused .chat-input-main {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 4px;
-    background-color: var(--page-bg);
-    border-radius: 18px;
-    padding: 10px; 
-    margin: 0 15px 12px;
-}
-
-.chat-input-area.input-focused .chat-input-controls {
-    display: flex;
-    order: 2;
+    align-items: flex-end; /* 垂直对齐，以防输入框变高 */
+    background-color: var(--header-bg); /* 背景颜色改回 header 背景 */
+    border-radius: 0; /* 移除圆角 */
+    padding: 12px 15px; /* 恢复内边距 */
+    margin: 0;
 }
 
 .chat-input-area.input-focused .chat-input-wrapper {
-    order: 1; 
-    background-color: transparent; 
-    min-height: auto; 
-    margin-bottom: 0px;
-    display: flex;
+    background-color: var(--page-bg);
 }
 
 .chat-input-area.input-focused #actions-toggle-btn,
 .chat-input-area.input-focused #emoji-toggle-btn {
-    background-color: transparent;
+    background-color: var(--page-bg);
     color: var(--text-dark);
 }
 
-.chat-input-area.input-focused #emoji-toggle-btn {
-    position: relative;
-    right: auto;
-    bottom: auto;
-    z-index: auto;
-    margin-left: auto; /* 将表情按钮推到右侧 */
-}
-
 .chat-input-area.input-focused #chat-input {
-    padding-bottom: 0px; 
-    padding-right: 15px;
     max-height: 120px; 
     overflow-y: auto;  
 }
 
-/* 新增：移除表情按钮的背景 */
 #emoji-toggle-btn {
     background-color: transparent;
 }
+/* ▲▲▲ 修改结束 ▲▲▲ */
