@@ -95,6 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             interactionModeSheetOverlay: document.getElementById('interaction-mode-sheet-overlay'),
             interactionModeList: document.getElementById('interaction-mode-list'),
             interactionModeCancelBtn: document.getElementById('interaction-mode-cancel-btn'),
+            // ▼▼▼ 新增：主题背景相关元素 ▼▼▼
             addBgFromLocalBtn: document.getElementById('add-bg-from-local-btn'),
             addBgFromUrlBtn: document.getElementById('add-bg-from-url-btn'),
             bgUploadInput: document.getElementById('bg-upload-input'),
@@ -103,14 +104,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             bgUrlInput: document.getElementById('bg-url-input'),
             cancelBgUrlBtn: document.getElementById('cancel-bg-url-btn'),
             confirmBgUrlBtn: document.getElementById('confirm-bg-url-btn'),
+            // ▲▲▲ 新增结束 ▲▲▲
         };
 
         // --- 3. 状态管理 ---
         const state = {
             chatHistory: [],
             memories: [],
-            backgrounds: [],
-            activeBackground: null,
+            backgrounds: [], // 背景图片URL列表
+            activeBackground: null, // 当前激活的背景URL
             currentChatApi: null,
             currentChatStyle: CHAT_STYLES['dialogue'],
             isDiyEnabled: false,
@@ -206,6 +208,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         
+        // ▼▼▼ 新增：背景主题相关函数 ▼▼▼
         function renderBackgrounds() {
             elements.bgThumbnailsContainer.innerHTML = '';
             if (state.backgrounds.length === 0) {
@@ -227,20 +230,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
-        // ▼▼▼ 修改：调整背景设置逻辑 ▼▼▼
         async function setActiveBackground(bgUrl) {
             state.activeBackground = bgUrl;
-            const chatContainer = document.querySelector('.chat-container');
-            if (chatContainer) {
-                chatContainer.style.backgroundImage = bgUrl ? `url('${bgUrl}')` : '';
-                chatContainer.style.backgroundSize = 'cover';
-                chatContainer.style.backgroundPosition = 'center';
-                chatContainer.classList.toggle('has-background', !!bgUrl);
+            if (elements.chatArea) {
+                elements.chatArea.style.backgroundImage = bgUrl ? `url('${bgUrl}')` : '';
+                elements.chatArea.style.backgroundSize = 'cover';
+                elements.chatArea.style.backgroundPosition = 'center';
+                document.querySelector('.chat-container').classList.toggle('has-background', !!bgUrl);
             }
             await dbStorage.setItem(activeBgDbKey, bgUrl);
             renderBackgrounds();
         }
-        // ▲▲▲ 修改结束 ▲▲▲
+        // ▲▲▲ 新增结束 ▲▲▲
 
         // --- 6. 绑定事件 ---
         elements.input.addEventListener('input', () => {
@@ -389,6 +390,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
+        // ▼▼▼ 新增：背景主题事件绑定 ▼▼▼
         if (elements.addBgFromLocalBtn && elements.bgUploadInput) {
             elements.addBgFromLocalBtn.addEventListener('click', () => {
                 elements.bgUploadInput.click();
@@ -455,6 +457,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
+        // ▲▲▲ 新增结束 ▲▲▲
 
         // --- 7. 初始化页面 ---
         async function initializeChatState() {
@@ -479,18 +482,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             state.backgrounds = savedBackgrounds || [];
-            // ▼▼▼ 修改：调整初始化时的背景设置 ▼▼▼
             if (savedActiveBg) {
                 state.activeBackground = savedActiveBg;
-                const chatContainer = document.querySelector('.chat-container');
-                if (chatContainer) {
-                    chatContainer.style.backgroundImage = `url('${savedActiveBg}')`;
-                    chatContainer.style.backgroundSize = 'cover';
-                    chatContainer.style.backgroundPosition = 'center';
-                    chatContainer.classList.add('has-background');
+                if (elements.chatArea) {
+                    elements.chatArea.style.backgroundImage = `url('${savedActiveBg}')`;
+                    elements.chatArea.style.backgroundSize = 'cover';
+                    elements.chatArea.style.backgroundPosition = 'center';
+                    document.querySelector('.chat-container').classList.add('has-background');
                 }
             }
-            // ▲▲▲ 修改结束 ▲▲▲
             
             await loadAndRenderHistory();
             await renderMemoryCards();
