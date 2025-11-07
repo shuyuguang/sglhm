@@ -178,3 +178,9 @@
     background-color: transparent;
 }
 /* ▲▲▲ 修改结束 ▲▲▲ */
+
+/* ▼▼▼ 新增：确保输入框本身背景透明 ▼▼▼ */
+.chat-input-area .input-wrapper textarea {
+    background-color: transparent;
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */
