@@ -132,19 +132,28 @@
     color: var(--send-btn-bg);
 }
 
-/* ▼▼▼ 修改：移除输入框区域元素的背景 ▼▼▼ */
+/* ▼▼▼ 修改：调整输入框样式和布局 ▼▼▼ */
 
-/* 移除输入框区域的背景 */
+/* 移除输入框区域的背景并减小间距 */
 .chat-input-area,
-.chat-input-area .input-wrapper { /* 覆盖两种可能，容器或其子wrapper */
+.chat-input-area .input-wrapper {
     background: none;
     border: none;
     box-shadow: none;
+}
+
+.chat-input-area {
+    gap: 4px; /* 新增：减小各元素之间的间距。您可以按需调整此值，例如 2px */
+}
+
+/* 移除输入框本身的背景 */
+.chat-input-area textarea {
+    background-color: transparent !important;
 }
 
 /* 移除所有按钮的背景和边框 */
 .chat-input-area #actions-toggle-btn,
-.chat-input-area #emoji-toggle-btn, /* 假设表情按钮的ID */
+.chat-input-area #emoji-toggle-btn,
 .chat-input-area #send-btn,
 .chat-input-area #respond-btn {
     background: none;
@@ -152,12 +161,12 @@
     box-shadow: none;
 }
 
-/* 确保图标在无背景情况下可见，可以根据你的设计调整颜色 */
+/* 确保图标在无背景情况下可见 */
 .chat-input-area #actions-toggle-btn,
 .chat-input-area #emoji-toggle-btn,
 .chat-input-area #send-btn,
 .chat-input-area #respond-btn {
-    color: var(--text-meta); /* 设置一个默认的灰色 */
+    color: var(--text-meta);
 }
 
 /* 激活状态的发送按钮，使其颜色更突出 */
