@@ -42,10 +42,10 @@ html, body {
 .chat-header-center {
     display: flex;
     align-items: center; /* 垂直居中内部元素 */
-    padding: 3px 6px 3px 3.5px; /* 修改：缩小垂直内边距，调整水平内边距 */
+    padding: 3px 15px 3px 3.5px; /* 修改：缩小垂直内边距，调整水平内边距 */
     background-color: rgba(255, 255, 255, 0.4);
     border-radius: 99px;
-    border: 1px solid #C9D0D8;
+    
 }
 
 /* 将三杠菜单按钮推到最右侧 */
@@ -54,7 +54,7 @@ html, body {
 }
 /* ▲▲▲ 修改结束 ▲▲▲ */
 .chat-header-btn { background: none; border: none; font-size: 1rem; color: #657881; cursor: pointer; padding: 8px; text-decoration: none; flex-shrink: 0; }
-.char-info { flex-grow: 1; display: flex; align-items: center; gap: 10px; min-width: 0; } /* 修改：减小gap */
+.char-info { flex-grow: 1; display: flex; align-items: center; gap: 7px; min-width: 0; } /* 修改：减小gap */
 .char-info-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; } /* 修改：缩小头像 */
 .char-info-text { display: flex; flex-direction: column; justify-content: space-between; height: 36px; padding: 1px 0; min-width: 0; } /* 修改：匹配头像高度 */
 .char-info-name { font-size: 0.9em; font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #394950; } /* 修改：微调字号 */
