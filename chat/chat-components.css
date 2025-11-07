@@ -131,3 +131,17 @@
 .actions-menu-tabs a.active {
     color: var(--send-btn-bg);
 }
+
+/* ▼▼▼ 新增：聊天输入区布局修正 ▼▼▼ */
+/* 确保输入框的父容器（通常是 .input-wrapper）能够正确地收缩，
+   而不是无限增长把旁边的按钮挤出屏幕。*/
+.chat-input-area .input-wrapper {
+    /* flex: 1; 是 flex-grow: 1; flex-shrink: 1; flex-basis: 0%; 的简写。
+       它允许元素在有空间时增长，在空间不足时收缩。*/
+    flex: 1;
+    
+    /* 这是一个关键的修复。默认情况下，flex 项目不会收缩到比其内容更小。
+       min-width: 0; 覆盖了这个行为，允许它收缩到足够小，为其他按钮腾出空间。*/
+    min-width: 0;
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */
