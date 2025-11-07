@@ -149,10 +149,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 allCharacterProfiles[charIndex] = character;
                 await dbStorage.setItem(PROFILE_DB_KEYS.CHAR_PROFILES, allCharacterProfiles);
             }
+            // 更新UI
             document.querySelector('.char-info-name').textContent = character.name || '未命名';
             document.querySelector('.char-info-avatar').src = character.avatar;
             if (elements.charProfileEditAvatar) elements.charProfileEditAvatar.src = character.avatar;
             if (elements.charProfileEditName) elements.charProfileEditName.textContent = character.name;
+            
+            // ▼▼▼ 新增：遍历聊天区，更新该角色的所有头像 ▼▼▼
+            elements.chatArea.querySelectorAll('.message-row.character .message-avatar').forEach(avatarEl => {
+                avatarEl.src = character.avatar;
+            });
+            // ▲▲▲ 新增结束 ▲▲▲
+            
             chatEditor?.updateProfile(character);
         };
 
@@ -162,8 +170,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (userIndex !== -1) allUsers[userIndex] = user;
             else allUsers.push(user);
             await dbStorage.setItem(PROFILE_DB_KEYS.USER_PROFILES, allUsers);
+            // 更新UI
             if (elements.userProfileEditAvatar) elements.userProfileEditAvatar.src = user.avatar;
             if (elements.userProfileEditName) elements.userProfileEditName.textContent = user.name;
+            
+            // ▼▼▼ 新增：遍历聊天区，更新该用户的所有头像 ▼▼▼
+            elements.chatArea.querySelectorAll('.message-row.user .message-avatar').forEach(avatarEl => {
+                avatarEl.src = user.avatar;
+            });
+            // ▲▲▲ 新增结束 ▲▲▲
+
             userEditor?.updateProfile(user);
         };
 
