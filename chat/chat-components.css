@@ -142,9 +142,13 @@
     box-shadow: none;
 }
 
-/* 新增：移除输入框本身的背景 */
+/* 移除文本输入框本身的胶囊背景和边框 */
 .chat-input-area textarea {
-    background-color: transparent !important;
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding-left: 0; /* 如果有内边距，也一并移除或调整 */
+    padding-right: 0;
 }
 
 /* 移除所有按钮的背景和边框 */
