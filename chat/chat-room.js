@@ -1,11 +1,11 @@
-// 文件名: relia-chat/chat-room.js (重构后)
+// 文件名: relia-chat/chat-room.js (已修正)
 
 import { dbStorage } from '../common/db.js';
 import { PROFILE_DB_KEYS } from '../config/profile.config.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
 import { createChatEditor } from './chat-editor-bridge.js';
 import { initializeMessageMenu } from './message-edit.js';
-import { CHAT_STYLES, createChatPromptPanel } from './chat-prompt.js';
+import { CHAT_STYLES } from './chat-prompt.js'; // 移除了 createChatPromptPanel 的导入
 
 // 导入新模块
 import { renderChatRoomUI, renderMessage, renderSystemMessage } from './chat-ui.js';
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             closeModelSelectorBtn: document.getElementById('close-model-selector-btn'),
             editSettingsBtn: document.getElementById('edit-settings-btn'),
             searchHistoryBtn: document.getElementById('search-history-btn'),
-            workbenchBtn: document.getElementById('workbench-btn'),
+            // workbenchBtn: document.getElementById('workbench-btn'), // 依然获取，但不再绑定事件
             menuBtn: document.getElementById('menu-btn'),
             headerContentPanel: document.getElementById('header-content-panel'),
             headerTabsPanel: document.getElementById('header-tabs-panel'),
@@ -95,7 +95,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             interactionModeSheetOverlay: document.getElementById('interaction-mode-sheet-overlay'),
             interactionModeList: document.getElementById('interaction-mode-list'),
             interactionModeCancelBtn: document.getElementById('interaction-mode-cancel-btn'),
-            // ▼▼▼ 修改：主题相关元素 ▼▼▼
             addBgFromLocalBtn: document.getElementById('add-bg-from-local-btn'),
             addBgFromUrlBtn: document.getElementById('add-bg-from-url-btn'),
             bgUploadInput: document.getElementById('bg-upload-input'),
@@ -107,7 +106,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             themeContentPane: document.getElementById('menu-content-theme'),
             multiSelectBgBtn: document.getElementById('multi-select-bg-btn'),
             deleteSelectedBgBtn: document.getElementById('delete-selected-bg-btn'),
-            // ▲▲▲ 修改结束 ▲▲▲
+            // ▼▼▼ 修正：添加风格设置相关元素 ▼▼▼
+            styleOutputMin: document.getElementById('style-output-min'),
+            styleOutputMax: document.getElementById('style-output-max'),
+            styleVisualLimit: document.getElementById('style-visual-limit'),
+            styleMemoryLimit: document.getElementById('style-memory-limit'),
+            // ▲▲▲ 修正结束 ▲▲▲
         };
 
         // --- 3. 状态管理 ---
@@ -130,6 +134,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const diyDbKey = `relia-chat-diy-enabled_${charId}`;
         const bgDbKey = `relia-chat-backgrounds_${charId}`;
         const activeBgDbKey = `relia-chat-active-background_${charId}`;
+        // ▼▼▼ 修正：添加风格设置数据库键 ▼▼▼
+        const styleSettingsDbKey = `relia-chat-style-settings_${charId}`;
+        // ▲▲▲ 修正结束 ▲▲▲
 
 
         // --- 4. 模块初始化 ---
@@ -270,6 +277,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderBackgrounds();
         }
 
+        // ▼▼▼ 修正：添加保存风格设置的函数 ▼▼▼
+        async function saveStyleSettings() {
+            const settings = {
+                outputMin: elements.styleOutputMin.value,
+                outputMax: elements.styleOutputMax.value,
+                visualLimit: elements.styleVisualLimit.value,
+                memoryLimit: elements.styleMemoryLimit.value,
+            };
+            await dbStorage.setItem(styleSettingsDbKey, settings);
+            console.log('Style settings saved:', settings);
+        }
+        // ▲▲▲ 修正结束 ▲▲▲
+
         // --- 6. 绑定事件 ---
         elements.input.addEventListener('input', () => {
             elements.input.style.height = 'auto';
@@ -308,19 +328,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 elements.chatInputArea.classList.toggle('emoji-expanded');
             });
         }
-
-        if (elements.workbenchBtn) {
-            createChatPromptPanel({
-                triggerElement: elements.workbenchBtn,
-                container: document.body,
-                charId: charId,
-                onSave: (styleObject) => {
-                    console.log('已保存默认风格:', styleObject.name);
-                    state.currentChatStyle = styleObject;
-                    updateInteractionModeUI();
-                }
-            });
-        }
+        
+        // ▼▼▼ 修正：移除工作台按钮的事件绑定 ▼▼▼
+        // if (elements.workbenchBtn) { ... }
+        // ▲▲▲ 修正结束 ▲▲▲
 
         if (elements.diySwitch) {
             elements.diySwitch.addEventListener('change', async () => {
@@ -417,7 +428,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // ▼▼▼ 修改：背景主题事件绑定 ▼▼▼
         if (elements.addBgFromLocalBtn && elements.bgUploadInput) {
             elements.addBgFromLocalBtn.addEventListener('click', () => {
                 elements.bgUploadInput.click();
@@ -527,27 +537,33 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
-        // ▲▲▲ 修改结束 ▲▲▲
+
+        // ▼▼▼ 修正：为风格设置输入框绑定自动保存事件 ▼▼▼
+        [
+            elements.styleOutputMin,
+            elements.styleOutputMax,
+            elements.styleVisualLimit,
+            elements.styleMemoryLimit
+        ].forEach(input => {
+            if (input) {
+                input.addEventListener('input', saveStyleSettings);
+            }
+        });
+        // ▲▲▲ 修正结束 ▲▲▲
 
         // --- 7. 初始化页面 ---
         async function initializeChatState() {
-            const [savedStyleKey, savedApi, savedDiyEnabled, savedBackgrounds, savedActiveBg] = await Promise.all([
+            // ▼▼▼ 修正：Promise.all 的数组和解构 ▼▼▼
+            const [savedStyleKey, savedApi, savedDiyEnabled, savedBackgrounds, savedActiveBg, savedStyleSettings] = await Promise.all([
                 dbStorage.getItem(styleDbKey),
                 dbStorage.getItem(selectedApiKey),
                 dbStorage.getItem(diyDbKey),
                 dbStorage.getItem(bgDbKey),
-                dbStorage.getItem(activeBgDbKey)
-                dbStorage.getItem(styleSettingsDbKey) // 加载风格设置
-    ]);
+                dbStorage.getItem(activeBgDbKey), // 这里加了逗号
+                dbStorage.getItem(styleSettingsDbKey)
+            ]);
+            // ▲▲▲ 修正结束 ▲▲▲
 
-// ▼▼▼ 加载并应用风格设置，若无则使用默认值 ▼▼▼
-    const settings = savedStyleSettings || {};
-    elements.styleOutputMin.value = settings.outputMin || '2';      // 默认值: 2
-    elements.styleOutputMax.value = settings.outputMax || '20';     // 默认值: 20
-    elements.styleVisualLimit.value = settings.visualLimit || '50'; // 默认值: 50
-    elements.styleMemoryLimit.value = settings.memoryLimit || '20'; // 默认值: 20
-    // ▲▲▲ 
-    
             if (savedStyleKey && CHAT_STYLES[savedStyleKey]) {
                 state.currentChatStyle = CHAT_STYLES[savedStyleKey];
             } else {
@@ -559,6 +575,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (elements.diySwitch) {
                 elements.diySwitch.checked = state.isDiyEnabled;
             }
+
+            // ▼▼▼ 修正：加载并应用风格设置，若无则使用默认值 ▼▼▼
+            const settings = savedStyleSettings || {};
+            elements.styleOutputMin.value = settings.outputMin || '2';
+            elements.styleOutputMax.value = settings.outputMax || '20';
+            elements.styleVisualLimit.value = settings.visualLimit || '50';
+            elements.styleMemoryLimit.value = settings.memoryLimit || '20';
+            // ▲▲▲ 修正结束 ▲▲▲
 
             state.backgrounds = savedBackgrounds || [];
             if (savedActiveBg) {
