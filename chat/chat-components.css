@@ -132,9 +132,9 @@
     color: var(--send-btn-bg);
 }
 
-/* ▼▼▼ 修改：调整输入框样式和布局 ▼▼▼ */
+/* ▼▼▼ 修改：移除输入框区域元素的背景 ▼▼▼ */
 
-/* 移除输入框区域的背景并减小间距 */
+/* 移除输入框区域的背景 */
 .chat-input-area,
 .chat-input-area .input-wrapper {
     background: none;
@@ -142,11 +142,7 @@
     box-shadow: none;
 }
 
-.chat-input-area {
-    gap: 4px; /* 新增：减小各元素之间的间距。您可以按需调整此值，例如 2px */
-}
-
-/* 移除输入框本身的背景 */
+/* 新增：移除输入框本身的背景 */
 .chat-input-area textarea {
     background-color: transparent !important;
 }
