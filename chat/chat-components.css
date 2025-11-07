@@ -143,7 +143,7 @@
 
 /* 2. 将包裹输入框的容器设置为白色，并恢复圆角和边框 */
 .chat-input-area .input-wrapper {
-    background-color: #ffffff;
+    background-color: #ffffff !important; /* <-- 关键修改：添加 !important 强制覆盖 */
     border: 1px solid var(--border-color); /* 添加一个细边框以和页面背景区分 */
     border-radius: 24px; /* 恢复胶囊形状 */
 }
@@ -178,15 +178,3 @@
     background-color: transparent;
 }
 /* ▲▲▲ 修改结束 ▲▲▲ */
-
-/* ▼▼▼ 核心修正：强制输入框本身背景透明 ▼▼▼ */
-/* 
- * 这里的 #chat-input 是一个基于通用实践的假设ID。
- * 它通过ID选择器的高优先级，确保能覆盖掉其它可能影响
- * textarea 背景色的样式，使其透明，从而露出父容器的白色。
-*/
-.chat-input-area #chat-input {
-    background-color: transparent;
-    border: none; /* 同时移除它可能自带的边框 */
-}
-/* ▲▲▲ 修正结束 ▲▲▲ */
