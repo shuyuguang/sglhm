@@ -18,7 +18,9 @@ export function renderChatRoomUI(character) {
                             <span class="char-info-status">在线</span>
                         </div>
                     </div>
-                    <button class="chat-header-btn add-btn"><i class="fa-solid fa-plus"></i></button>
+                    <!-- ▼▼▼ 修改：删除了这里的加号按钮 ▼▼▼ -->
+                    
+                    <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                 </div>
                 <button class="chat-header-btn" id="menu-btn"><i class="fa-solid fa-bars"></i></button>
             </header>
