@@ -75,18 +75,45 @@ document.addEventListener('DOMContentLoaded', function() {
     // ▲▲▲ 修改结束 ▲▲▲
 
     /**
-     * ▼▼▼ 修改：加载并渲染初始聊天列表，增加获取最新消息的逻辑 ▼▼▼
+     * ▼▼▼ 核心修改：加载并渲染初始聊天列表，增加自动同步角色信息和获取最新消息的逻辑 ▼▼▼
      */
     async function loadAndRenderInitialChats() {
-        const savedChatList = await dbStorage.getItem(CHAT_DB_KEYS.ACTIVE_CHAT_LIST) || [];
+        // 1. 并行获取当前聊天列表和所有角色档案（源数据）
+        const [savedChatList, allCharProfiles] = await Promise.all([
+            dbStorage.getItem(CHAT_DB_KEYS.ACTIVE_CHAT_LIST) || [],
+            dbStorage.getItem(PROFILE_DB_KEYS.CHAR_PROFILES) || []
+        ]);
+
         if (savedChatList.length === 0) {
             renderChatList([]);
             return;
         }
 
-        // 并行查询所有聊天列表的历史记录，以获取最后一条消息
+        // 2. 创建一个从角色ID到最新角色信息的映射，便于快速查找
+        const profileMap = new Map(allCharProfiles.map(p => [p.id, p]));
+        let hasChanges = false;
+
+        // 3. 同步聊天列表中的信息
+        const syncedChatList = savedChatList.map(chat => {
+            const latestProfile = profileMap.get(chat.id);
+            if (latestProfile && (chat.name !== latestProfile.name || chat.avatar !== latestProfile.avatar)) {
+                hasChanges = true;
+                // 如果信息有变，返回更新后的对象
+                return { ...chat, name: latestProfile.name, avatar: latestProfile.avatar };
+            }
+            // 否则返回原始对象
+            return chat;
+        });
+
+        // 4. 如果有任何信息被更新，则将同步后的列表存回数据库
+        if (hasChanges) {
+            await dbStorage.setItem(CHAT_DB_KEYS.ACTIVE_CHAT_LIST, syncedChatList);
+            console.log('聊天列表已与最新的角色档案同步。');
+        }
+
+        // 5. 并行查询所有聊天列表的历史记录，以获取最后一条消息
         const enhancedChatList = await Promise.all(
-            savedChatList.map(async (char) => {
+            syncedChatList.map(async (char) => {
                 const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${char.id}`;
                 const history = await dbStorage.getItem(historyKey);
                 
@@ -99,6 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
         );
         
+        // 6. 渲染最终的列表
         renderChatList(enhancedChatList);
     }
     // ▲▲▲ 修改结束 ▲▲▲
