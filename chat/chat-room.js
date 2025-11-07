@@ -1,4 +1,4 @@
-// 文件名: relia-chat/chat-room.js (已修正)
+// 文件名: relia-chat/chat-room.js (已按您的要求修改)
 
 import { dbStorage } from '../common/db.js';
 import { PROFILE_DB_KEYS } from '../config/profile.config.js';
@@ -132,7 +132,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const styleDbKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_style_${charId}`;
         const memoryDbKey = `relia-chat-memory_${charId}`;
         const diyDbKey = `relia-chat-diy-enabled_${charId}`;
-        const bgDbKey = `relia-chat-backgrounds_${charId}`;
+        // ▼▼▼ 修改点：将背景图库的存储键改为全局共享 ▼▼▼
+        const bgDbKey = `relia-chat-global-backgrounds`;
+        // ▲▲▲ 修改结束 ▲▲▲
         const activeBgDbKey = `relia-chat-active-background_${charId}`;
         // ▼▼▼ 修正：添加风格设置数据库键 ▼▼▼
         const styleSettingsDbKey = `relia-chat-style-settings_${charId}`;
