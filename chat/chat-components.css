@@ -179,8 +179,14 @@
 }
 /* ▲▲▲ 修改结束 ▲▲▲ */
 
-/* ▼▼▼ 新增：确保输入框本身背景透明 ▼▼▼ */
-.chat-input-area .input-wrapper textarea {
+/* ▼▼▼ 核心修正：强制输入框本身背景透明 ▼▼▼ */
+/* 
+ * 这里的 #chat-input 是一个基于通用实践的假设ID。
+ * 它通过ID选择器的高优先级，确保能覆盖掉其它可能影响
+ * textarea 背景色的样式，使其透明，从而露出父容器的白色。
+*/
+.chat-input-area #chat-input {
     background-color: transparent;
+    border: none; /* 同时移除它可能自带的边框 */
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */
+/* ▲▲▲ 修正结束 ▲▲▲ */
