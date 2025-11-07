@@ -537,8 +537,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 dbStorage.getItem(diyDbKey),
                 dbStorage.getItem(bgDbKey),
                 dbStorage.getItem(activeBgDbKey)
-            ]);
+                dbStorage.getItem(styleSettingsDbKey) // 加载风格设置
+    ]);
 
+// ▼▼▼ 加载并应用风格设置，若无则使用默认值 ▼▼▼
+    const settings = savedStyleSettings || {};
+    elements.styleOutputMin.value = settings.outputMin || '2';      // 默认值: 2
+    elements.styleOutputMax.value = settings.outputMax || '20';     // 默认值: 20
+    elements.styleVisualLimit.value = settings.visualLimit || '50'; // 默认值: 50
+    elements.styleMemoryLimit.value = settings.memoryLimit || '20'; // 默认值: 20
+    // ▲▲▲ 
+    
             if (savedStyleKey && CHAT_STYLES[savedStyleKey]) {
                 state.currentChatStyle = CHAT_STYLES[savedStyleKey];
             } else {
