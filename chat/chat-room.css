@@ -133,9 +133,9 @@ html, body {
 #chat-input {
     flex-grow: 1;
     border: none;
-    background-color: transparent;
-    padding: 10px 15px;
-    font-size: 1.1em;
+    background-color: #ffffff;
+    padding: 10px 0px;
+    font-size: 1.2em;
     resize: none;
     outline: none;
     max-height: 120px;

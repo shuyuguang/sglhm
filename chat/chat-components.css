@@ -132,7 +132,7 @@
     color: var(--send-btn-bg);
 }
 
-/* ▼▼▼ 修改点：调整输入框样式 ▼▼▼ */
+/* ▼▼▼ 修改：调整输入框样式 ▼▼▼ */
 
 /* 1. 将整个输入栏区域的背景设置为透明 */
 .chat-input-area {
@@ -141,14 +141,14 @@
     box-shadow: none;
 }
 
-/* 2. 将包裹输入框的容器设置为白色，并添加圆角和边框 */
+/* 2. 将包裹输入框的容器设置为白色，并恢复圆角和边框 */
 .chat-input-area .input-wrapper {
     background-color: #ffffff;
     border: 1px solid var(--border-color); /* 添加一个细边框以和页面背景区分 */
     border-radius: 24px; /* 恢复胶囊形状 */
 }
 
-/* 3. 确保所有按钮背景都是透明的，以适应新的白色背景 */
+/* 3. 确保所有按钮背景都是透明的 */
 .chat-input-area #actions-toggle-btn,
 .chat-input-area #emoji-toggle-btn, /* 假设表情按钮的ID */
 .chat-input-area #send-btn,
@@ -158,11 +158,11 @@
     box-shadow: none;
 }
 
-/* 4. 加深功能按钮（加号、表情、响应）的图标颜色，使其更明显 */
+/* 4. 加深功能按钮（加号、表情、响应）的图标颜色 */
 .chat-input-area #actions-toggle-btn,
 .chat-input-area #emoji-toggle-btn,
 .chat-input-area #respond-btn {
-    color: #495057; /* 使用一个更深的灰色 */
+    color: #495057; /* 使用一个更深的灰色，使其更明显 */
 }
 
 /* 5. 保持发送按钮的状态颜色逻辑 */
