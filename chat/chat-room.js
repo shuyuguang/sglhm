@@ -207,6 +207,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         function updateButtonStates() {
+            if (!elements.input || !elements.respondBtn || !elements.sendBtn) return;
             const hasText = elements.input.value.trim() !== '';
             if (hasText) {
                 elements.respondBtn.style.display = 'none';
@@ -218,19 +219,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             elements.respondBtn.disabled = false;
         }
         
-        // [核心修改] 将AI回复逻辑移动到AI回复专用函数
         const onAiReply = async (replyMessages) => {
-            // 从历史记录中移除临时的"..."气泡
             const thinkingMessageIndex = state.chatHistory.findIndex(msg => msg.text === '...' && msg.sender === 'character');
             if (thinkingMessageIndex > -1) {
                 state.chatHistory.splice(thinkingMessageIndex, 1);
             }
         
-            // 将AI返回的所有消息（文本或表情）添加到历史记录
             state.chatHistory.push(...replyMessages);
             await dbStorage.setItem(historyKey, state.chatHistory);
             
-            // 重新渲染整个聊天界面以保证顺序和UI正确
             await loadAndRenderHistory();
         };
         
@@ -239,17 +236,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderMessage, renderSystemMessage, updateButtonStates, onAiReply
         });
 
-        // [核心修改] 更新发送表情的回调函数
+        /**
+         * 【已修复】发送表情的回调函数
+         * @param {object} emoji - 被点击的表情对象
+         */
         async function onSendEmoji(emoji) {
             const emojiMessage = {
                 sender: 'user',
                 isEmoji: true,
-                name: emoji.name, // 添加name属性，用于AI理解和编辑
+                name: emoji.name,
                 data: emoji.data
             };
             state.chatHistory.push(emojiMessage);
             await dbStorage.setItem(historyKey, state.chatHistory);
             renderMessage(emojiMessage, state.chatHistory.length - 1, user, character, elements.chatArea);
+            
+            // 【核心修复】发送表情后，立即更新按钮状态
+            updateButtonStates();
         }
 
         function updateInteractionModeUI() {

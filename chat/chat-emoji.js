@@ -44,22 +44,25 @@ async function renderEmojiManagementGrid() {
         container.classList.remove('selection-mode');
     }
 
-    emojis.forEach(emoji => {
-        const item = document.createElement('div');
-        item.className = 'emoji-item';
-        item.dataset.id = emoji.id;
+    if (emojis.length > 0) {
+        emojis.forEach(emoji => {
+            const item = document.createElement('div');
+            item.className = 'emoji-item';
+            item.dataset.id = emoji.id;
 
-        item.innerHTML = `
-            <img src="${emoji.data}" alt="${emoji.name}">
-            <div class="selection-overlay"><i class="fa-solid fa-circle-check"></i></div>
-        `;
+            item.innerHTML = `
+                <img src="${emoji.data}" alt="${emoji.name}">
+                <div class="selection-overlay"><i class="fa-solid fa-circle-check"></i></div>
+            `;
 
-        if (isSelectionMode && selectedEmojiIds.has(emoji.id)) {
-            item.classList.add('selected');
-        }
+            if (isSelectionMode && selectedEmojiIds.has(emoji.id)) {
+                item.classList.add('selected');
+            }
 
-        grid.appendChild(item);
-    });
+            grid.appendChild(item);
+        });
+    }
+
 
     // 重新绑定管理按钮的事件
     bindManagementHeaderEvents();
@@ -122,27 +125,50 @@ function updateDeleteButtonState() {
     }
 }
 
+/**
+ * 【已修复】处理本地文件上传，支持多文件
+ * @param {FileList} files - 用户选择的文件列表
+ */
 async function handleLocalUpload(files) {
-    for (const file of files) {
-        if (!file.type.startsWith('image/')) continue;
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const imageDataUrl = e.target.result;
-            const name = prompt('请输入表情包名称:', file.name.split('.').slice(0, -1).join('.'));
-            if (name === null) return; // 用户取消
-
-            const newEmoji = {
-                id: `emoji_${Date.now()}_${Math.random()}`,
-                name: name || '未命名表情',
-                data: imageDataUrl
+    const filePromises = Array.from(files).map(file => {
+        return new Promise((resolve, reject) => {
+            if (!file.type.startsWith('image/')) {
+                // 如果不是图片，直接resolve一个null值，后面会过滤掉
+                return resolve(null);
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const imageDataUrl = e.target.result;
+                const name = prompt(`请输入表情包名称:`, file.name.split('.').slice(0, -1).join('.'));
+                if (name === null) { // 用户点击了取消
+                    return resolve(null);
+                }
+                resolve({
+                    id: `emoji_${Date.now()}_${Math.random()}`,
+                    name: name || '未命名表情',
+                    data: imageDataUrl
+                });
             };
-            
+            reader.onerror = (error) => reject(error);
+            reader.readAsDataURL(file);
+        });
+    });
+
+    try {
+        const newEmojisRaw = await Promise.all(filePromises);
+        // 过滤掉用户取消或非图片文件的结果
+        const newEmojis = newEmojisRaw.filter(emoji => emoji !== null);
+
+        if (newEmojis.length > 0) {
             const emojis = await dbStorage.getItem(EMOJI_DB_KEY) || [];
-            emojis.push(newEmoji);
+            emojis.push(...newEmojis);
             await dbStorage.setItem(EMOJI_DB_KEY, emojis);
             await renderAll();
-        };
-        reader.readAsDataURL(file);
+            alert(`成功添加了 ${newEmojis.length} 个表情！`);
+        }
+    } catch (error) {
+        console.error("处理文件上传时出错:", error);
+        alert("文件读取失败，请重试。");
     }
 }
 
@@ -284,10 +310,14 @@ export function initializeEmojiSystem(domElements, chatState, onSend) {
                 elements.webEmojiModal.classList.remove('active');
             }
         });
-        elements.cancelWebEmojiBtn.addEventListener('click', () => {
-            elements.webEmojiModal.classList.remove('active');
-        });
-        elements.confirmWebEmojiBtn.addEventListener('click', handleWebUpload);
+        if(elements.cancelWebEmojiBtn) {
+             elements.cancelWebEmojiBtn.addEventListener('click', () => {
+                elements.webEmojiModal.classList.remove('active');
+            });
+        }
+        if(elements.confirmWebEmojiBtn) {
+            elements.confirmWebEmojiBtn.addEventListener('click', handleWebUpload);
+        }
     }
     
     // 初始渲染

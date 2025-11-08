@@ -6,10 +6,17 @@ import { CHAT_DB_KEYS } from '../config/chat.config.js'; // [新增] 引入配�
 // [新增] 辅助函数，用于判断字符串是否为图片URL
 function isImageUrl(url) {
     if (typeof url !== 'string') return false;
-    return url.startsWith('http') && /\.(jpeg|jpg|gif|png|webp)$/i.test(url);
+    // 修正：确保URL以http开头，避免误判
+    return url.toLowerCase().startsWith('http') && /\.(jpeg|jpg|gif|png|webp)$/i.test(url);
 }
 
-// [核心修改] 更新System Prompt，使其支持表情包
+/**
+ * 【已修复】更新System Prompt，使其支持表情包
+ * @param {object} charProfile 
+ * @param {object} userProfile 
+ * @param {object} currentChatStyle 
+ * @returns {Promise<string>}
+ */
 async function constructSystemPrompt(charProfile, userProfile, currentChatStyle) {
     let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
     prompt += `### 角色设定\n`;
@@ -33,7 +40,7 @@ async function constructSystemPrompt(charProfile, userProfile, currentChatStyle)
     prompt += `\n### 对话者信息\n`;
     prompt += `- 对方名字: ${userProfile.name || 'User'}\n`;
 
-    // [新增] 注入表情包工具
+    // 【核心修复】注入表情包工具
     const emojis = await dbStorage.getItem(CHAT_DB_KEYS.EMOJIS) || [];
     if (emojis.length > 0) {
         const emojiListForAI = emojis.map(e => `${e.name}: ${e.data}`).join('\n');
@@ -58,12 +65,10 @@ async function constructSystemPrompt(charProfile, userProfile, currentChatStyle)
     return prompt;
 }
 
-// [核心修改] 更新历史记录格式化，让AI能看懂表情
 function formatChatHistoryForApi(history) {
     return history.map(msg => {
         let content = '';
         if (msg.isEmoji) {
-            // 将表情消息转换为AI能理解的文本描述
             content = `[发送了表情: ${msg.name || '未命名表情'}]`;
         } else {
             content = msg.text;
@@ -92,7 +97,7 @@ export function createApiHandler(context) {
         renderMessage,
         renderSystemMessage,
         updateButtonStates,
-        onAiReply, // [修改] 接收一个新的回调函数
+        onAiReply,
     } = context;
 
     /**
@@ -123,15 +128,13 @@ export function createApiHandler(context) {
             elements.sendBtn.disabled = true;
             elements.respondBtn.disabled = true;
             
-            // [新增] 添加一个临时的"思考中"气泡
             const thinkingMessage = { text: '...', sender: 'character' };
             state.chatHistory.push(thinkingMessage);
             renderMessage(thinkingMessage, state.chatHistory.length - 1, user, character, elements.chatArea);
 
-            // [核心修改] constructSystemPrompt 现在是异步的
+            // 【核心修复】使用 await 调用异步的 constructSystemPrompt
             const systemPrompt = await constructSystemPrompt(character, user, state.currentChatStyle);
             
-            // [核心修改] 从历史记录中排除临时的"..."气泡
             const historyForApi = formatChatHistoryForApi(state.chatHistory.slice(0, -1));
             const messages = [{ role: 'system', content: systemPrompt }, ...historyForApi];
             const endpoint = (state.currentChatApi.baseUrl.replace(/\/$/, '')) + (state.currentChatApi.path || '/v1/chat/completions');
@@ -147,28 +150,23 @@ export function createApiHandler(context) {
                     const errorData = await response.json();
                     throw new Error(errorData.error?.message || `API 请求失败，状态码: ${response.status}`);
                 }
-
-                // [核心修改] 流式处理现在只返回最终结果，不直接操作UI
+                
                 const handlerContext = {
                     reader: response.body.getReader(),
                     decoder: new TextDecoder('utf-8'),
                 };
                 
-                // streamHandler 现在返回一个消息对象数组
                 const replyMessages = await state.currentChatStyle.streamHandler(handlerContext);
                 
-                // 使用回调函数更新UI和历史记录
                 if (replyMessages.length > 0) {
                     await onAiReply(replyMessages);
                 } else {
-                    // 如果AI没返回任何内容，也需要清理"..."
                     await onAiReply([]);
                 }
 
 
             } catch (error) {
                 console.error('AI 回复生成失败:', error);
-                // 同样使用回调来处理错误，以便清理"..."
                 await onAiReply([]);
                 renderSystemMessage(`错误: ${error.message}`, 'error', elements.chatArea);
             } finally {
