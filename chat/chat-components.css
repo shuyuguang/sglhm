@@ -86,34 +86,35 @@
     padding: 15px 5px; /* 调整内边距 */
 }
 
-/* ▼▼▼ 核心修改：调整三栏布局和对齐方式 ▼▼▼ */
+/* ▼▼▼ 核心修改：调整 padding 属性以手动控制左边距 ▼▼▼ */
 .actions-columns-container {
     display: flex;
-    justify-content: space-between; /* 确保列之间有最大间距 */
-    padding: 0 10px; /* 给左右两边一些内边距 */
+    justify-content: space-between;
+    /* 
+      padding: top right bottom left;
+      这里设置了 25px 的左边距和 15px 的右边距。
+      你可以随意修改 25px 这个值来调整左区到屏幕边缘的距离。
+    */
+    padding: 0 15px 0 10px; 
 }
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
 .actions-column {
     display: flex;
     flex-direction: column;
     gap: 18px;
-    flex: 1; /* 让每一列都平分可用空间 */
+    flex: 1;
 }
 
-/* 左区内容（按钮）靠左对齐 */
 .actions-column:nth-child(1) {
     align-items: flex-start;
 }
-/* 中区内容（按钮）居中对齐 */
 .actions-column:nth-child(2) {
     align-items: center;
 }
-/* 右区内容（按钮）靠右对齐 */
 .actions-column:nth-child(3) {
     align-items: flex-end;
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
-
 
 .action-list-item {
     display: flex;
@@ -124,7 +125,7 @@
     cursor: pointer;
     font-size: 0.9em;
     color: #595959;
-    width: auto; /* 让宽度由内容决定 */
+    width: auto;
     text-align: left;
 }
 
@@ -134,7 +135,7 @@
 
 .action-list-item i {
     font-size: 1.1em;
-    width: 28px; /* 固定图标宽度以对齐文本 */
+    width: 28px; 
     text-align: center;
     margin-right: 5px;
     color: #868e96;
