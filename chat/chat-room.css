@@ -171,6 +171,20 @@ html, body {
 }
 #actions-toggle-btn .fa-plus { font-weight: 300; }
 
+/* ▼▼▼ 核心修改：调整底部按钮间距 ▼▼▼ */
+#actions-toggle-btn {
+    margin-left: -5px; /* 负值会把它向左拉，使其更靠近边缘 */
+}
+
+#emoji-toggle-btn {
+    margin-left: 4px; /* 在输入框和表情按钮之间增加一点空隙 */
+}
+
+.send-buttons-container {
+    margin-left: 4px; /* 在表情按钮和发送按钮组之间增加一点空隙 */
+}
+/* ▲▲▲ 修改结束 ▲▲▲ */
+
 .send-buttons-container {
     display: flex;
     gap: 6px;
