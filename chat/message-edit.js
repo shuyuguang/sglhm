@@ -1,22 +1,20 @@
 // relia-chat/message-edit.js
 
-const LONG_PRESS_THRESHOLD = 400;
+const LONG_PRESS_THRESHOLD = 400; // 长按阈值，单位：毫秒
 
 let longPressTimer = null;
 let isLongPress = false;
-let getEmojisCallback = () => []; // 用于存储获取表情包列表的函数
 
 /**
  * 初始化消息长按和单击事件处理。
  * @param {HTMLElement} container - 消息列表的容器元素 (chatArea)。
  * @param {function} getChatHistory - 一个返回当前聊天历史数组的函数。
  * @param {function} updateChatHistory - 一个用新历史数组更新状态和UI的函数。
- * @param {function} getEmojis - 一个返回当前所有表情包对象的函数。
+ * @param {function} getEmojis - 一个返回当前所有可用表情包数组的函数。
  */
 export function initializeMessageMenu(container, getChatHistory, updateChatHistory, getEmojis) {
     const menuOverlay = document.getElementById('message-menu-overlay');
     const menu = document.getElementById('message-menu');
-    getEmojisCallback = getEmojis; // 保存函数以便后续使用
 
     if (!container || !menuOverlay || !menu) {
         console.warn('消息菜单所需的一个或多个 DOM 元素未找到。');
@@ -40,11 +38,10 @@ export function initializeMessageMenu(container, getChatHistory, updateChatHisto
         const messageGroup = bubble.closest('.message-group-container');
         if (!messageGroup) return;
         const index = parseInt(messageGroup.dataset.index, 10);
-        
         const messageRow = bubble.closest('.message-row');
         const partIndex = messageRow && messageRow.dataset.partIndex ? parseInt(messageRow.dataset.partIndex, 10) : -1;
         
-        showMenu(e, index, partIndex, bubble, getChatHistory, updateChatHistory);
+        showMenu(e, index, partIndex, bubble, getChatHistory, updateChatHistory, getEmojis);
     });
 
     menuOverlay.addEventListener('click', (e) => {
@@ -55,7 +52,7 @@ export function initializeMessageMenu(container, getChatHistory, updateChatHisto
 /**
  * 显示操作菜单。
  */
-function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHistory) {
+function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHistory, getEmojis) {
     const menu = document.getElementById('message-menu');
     const menuOverlay = document.getElementById('message-menu-overlay');
     const chatHistory = getChatHistory();
@@ -63,23 +60,25 @@ function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHis
 
     if (!messageData) return;
 
-    // ▼▼▼ 核心修改：统一所有消息类型的操作逻辑 ▼▼▼
-    let canCopy = true;
-    let canEdit = true;
+    let canCopy = false;
+    let canEdit = false; // 默认所有消息都可以编辑
     let textToCopy = '';
-    let targetPart = null; // 用来存储被操作的具体消息部分
+    let currentPart = null;
 
     if (messageData.sender === 'user') {
-        targetPart = messageData;
-    } else if (messageData.sender === 'character') {
-        if (partIndex !== -1) {
-            targetPart = messageData.replyVersions[messageData.activeReplyIndex][partIndex];
+        currentPart = messageData;
+        textToCopy = messageData.isEmoji ? messageData.name : messageData.text;
+    } else if (messageData.sender === 'character' && partIndex !== -1) {
+        const activeVersion = messageData.replyVersions[messageData.activeReplyIndex];
+        currentPart = activeVersion[partIndex];
+        if (currentPart) {
+            textToCopy = currentPart.isEmoji ? currentPart.name : currentPart.text;
         }
     }
-    
-    if (!targetPart) return; // 如果找不到目标，则不显示菜单
 
-    textToCopy = targetPart.isEmoji ? `[Emoji: ${targetPart.name}]` : targetPart.text;
+    // ▼▼▼ 核心修改：简化判断逻辑 ▼▼▼
+    canCopy = !!currentPart && textToCopy.length > 0;
+    canEdit = !!currentPart; // 只要有内容部分，就可以编辑
     // ▲▲▲ 修改结束 ▲▲▲
 
     const menuItems = [
@@ -93,7 +92,11 @@ function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHis
         { action: 'branch', icon: 'fa-solid fa-code-branch', text: '分支' }
     ];
 
-    menu.innerHTML = menuItems.map(item => `...`).join(''); // (HTML不变)
+    menu.innerHTML = menuItems.map(item => `
+        <div class="message-menu-item ${item.disabled ? 'disabled' : ''}" data-action="${item.action}" ${item.isDestructive ? 'style="color: #e53e3e;"' : ''}>
+            <i class="${item.icon}"></i><span>${item.text}</span>
+        </div>
+    `).join('');
 
     menu.onclick = (e) => {
         const item = e.target.closest('.message-menu-item');
@@ -106,28 +109,29 @@ function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHis
             case 'copy':
                 navigator.clipboard.writeText(textToCopy).catch(err => console.error('复制失败:', err));
                 break;
+            // ▼▼▼ 核心修改：重写删除逻辑 ▼▼▼
             case 'delete':
                 if (confirm('确定要删除这条消息吗？')) {
                     const newHistory = [...chatHistory];
-                    const msgGroupToDeleteFrom = newHistory[index];
-                    
-                    if (msgGroupToDeleteFrom.sender === 'user') {
-                        newHistory.splice(index, 1); // 用户消息，直接删除整个组
-                    } else if (msgGroupToDeleteFrom.sender === 'character' && partIndex !== -1) {
-                        const activeVersion = msgGroupToDeleteFrom.replyVersions[msgGroupToDeleteFrom.activeReplyIndex];
-                        activeVersion.splice(partIndex, 1); // AI消息，只删除被点击的部分
-                        
-                        // 如果删除后当前版本空了，并且是唯一版本，则删除整个消息组
-                        if (activeVersion.length === 0 && msgGroupToDeleteFrom.replyVersions.length === 1) {
-                             newHistory.splice(index, 1);
+                    const messageToDelete = newHistory[index];
+
+                    if (messageToDelete.sender === 'user') {
+                        newHistory.splice(index, 1);
+                    } else if (messageToDelete.sender === 'character' && partIndex !== -1) {
+                        const activeVersion = messageToDelete.replyVersions[messageToDelete.activeReplyIndex];
+                        activeVersion.splice(partIndex, 1); // 从当前版本中删除该部分
+
+                        // 如果删除后当前版本为空，则删除整个消息组
+                        if (activeVersion.length === 0) {
+                            newHistory.splice(index, 1);
                         }
-                        // (如果还有其他版本，我们保留这个空版本，用户可以切换到其他版本或重新生成)
                     }
                     updateChatHistory(newHistory);
                 }
                 break;
+            // ▲▲▲ 修改结束 ▲▲▲
             case 'edit':
-                startEditing(bubble, index, partIndex, getChatHistory, updateChatHistory);
+                startEditing(bubble, index, partIndex, getChatHistory, updateChatHistory, getEmojis);
                 break;
             default:
                 alert(`“${actionText}”功能待开发...`);
@@ -136,7 +140,6 @@ function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHis
         hideMenu();
     };
 
-    // (菜单定位逻辑不变)
     const menuWidth = 240, menuHeight = 120;
     const screenWidth = window.innerWidth, screenHeight = window.innerHeight;
     let top = event.clientY, left = event.clientX;
@@ -154,7 +157,7 @@ function hideMenu() {
 /**
  * 将消息气泡变为可编辑状态。
  */
-function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistory) {
+function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistory, getEmojis) {
     bubble.classList.add('editing');
     
     const messageData = getChatHistory()[index];
@@ -164,12 +167,15 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
     if (messageData.sender === 'user') {
         originalPart = messageData;
     } else if (messageData.sender === 'character') {
-        originalPart = messageData.replyVersions[messageData.activeReplyIndex][partIndex];
+        const activeVersion = messageData.replyVersions[messageData.activeReplyIndex];
+        originalPart = activeVersion[partIndex];
     }
     
-    if (!originalPart) return;
-
-    originalContent = originalPart.isEmoji ? originalPart.name : originalPart.text;
+    // ▼▼▼ 核心修改：根据内容类型决定编辑框的初始文本 ▼▼▼
+    if (originalPart) {
+        originalContent = originalPart.isEmoji ? originalPart.name : originalPart.text;
+    }
+    // ▲▲▲ 修改结束 ▲▲▲
 
     bubble.innerHTML = `
         <div class="message-edit-container">
@@ -182,51 +188,72 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
     `;
 
     const textarea = bubble.querySelector('.message-edit-textarea');
-    // ... (textarea自适应高度逻辑不变)
-    
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight}px`;
+    textarea.focus();
+    textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+    textarea.addEventListener('input', () => {
+        textarea.style.height = 'auto';
+        textarea.style.height = `${textarea.scrollHeight}px`;
+    });
+
     const stopEditing = (shouldSave) => {
+        bubble.classList.remove('editing');
+        const originalMessageGroup = getChatHistory()[index];
+        const newHistory = [...getChatHistory()];
+        
         if (shouldSave) {
-            const newContent = textarea.value.trim();
-            const newHistory = [...getChatHistory()];
-            let partToUpdate;
-            
-            if (messageData.sender === 'user') {
-                partToUpdate = newHistory[index];
+            const newText = textarea.value.trim();
+            if (!newText) { // 不允许保存为空
+                shouldSave = false;
             } else {
-                // 确保我们修改的是正确的版本！
-                partToUpdate = newHistory[index].replyVersions[messageData.activeReplyIndex][partIndex];
-            }
-            
-            if (originalPart.isEmoji) {
-                const availableEmojis = getEmojisCallback();
-                const foundEmoji = availableEmojis.find(e => e.name === newContent);
+                const allEmojis = getEmojis();
+                const foundEmoji = allEmojis.find(e => e.name === newText);
+                
+                let partToUpdate;
+                if (originalMessageGroup.sender === 'user') {
+                    partToUpdate = newHistory[index];
+                } else {
+                    partToUpdate = newHistory[index].replyVersions[originalMessageGroup.activeReplyIndex][partIndex];
+                }
+
+                // ▼▼▼ 核心修改：实现文本与表情的智能转换和保存 ▼▼▼
                 if (foundEmoji) {
+                    // 如果输入内容匹配到一个表情，则更新为表情消息
+                    partToUpdate.isEmoji = true;
                     partToUpdate.name = foundEmoji.name;
                     partToUpdate.data = foundEmoji.data;
-                    updateChatHistory(newHistory);
+                    delete partToUpdate.text; // 删除旧的text属性
                 } else {
-                    alert(`表情 "${newContent}" 不存在！`);
-                    bubble.classList.remove('editing');
-                    bubble.innerHTML = `<img src="${originalPart.data}" alt="emoji" class="message-emoji-img">`;
+                    // 否则，更新为纯文本消息
+                    partToUpdate.isEmoji = false;
+                    partToUpdate.text = newText;
+                    delete partToUpdate.name; // 删除旧的表情属性
+                    delete partToUpdate.data;
                 }
-            } else { // 是文本
-                if (newContent && newContent !== originalPart.text) {
-                    partToUpdate.text = newContent;
-                    updateChatHistory(newHistory);
-                } else {
-                    bubble.classList.remove('editing');
-                    bubble.textContent = originalPart.text;
-                }
-            }
-        } else {
-            // 取消编辑，恢复原状
-            bubble.classList.remove('editing');
-            if(originalPart.isEmoji) {
-                bubble.innerHTML = `<img src="${originalPart.data}" alt="emoji" class="message-emoji-img">`;
-            } else {
-                bubble.textContent = originalPart.text;
+                updateChatHistory(newHistory);
+                // ▲▲▲ 修改结束 ▲▲▲
+                return; // 直接返回，因为UI会由updateChatHistory刷新
             }
         }
+        
+        // 如果是取消编辑或保存失败，则恢复原始气泡内容
+        let partToRestore;
+        if (originalMessageGroup.sender === 'user') {
+             partToRestore = originalMessageGroup;
+        } else {
+             partToRestore = originalMessageGroup.replyVersions[originalMessageGroup.activeReplyIndex][partIndex];
+        }
+
+        // ▼▼▼ 核心修改：恢复时也需要区分表情和文本 ▼▼▼
+        if (partToRestore.isEmoji) {
+            bubble.innerHTML = `<img src="${partToRestore.data}" alt="emoji" class="message-emoji-img">`;
+            bubble.classList.add('is-emoji-message');
+        } else {
+            bubble.textContent = partToRestore.text;
+            bubble.classList.remove('is-emoji-message');
+        }
+        // ▲▲▲ 修改结束 ▲▲▲
     };
     
     bubble.querySelector('.save').onclick = () => stopEditing(true);

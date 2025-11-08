@@ -7,9 +7,7 @@ import { createChatEditor } from './chat-editor-bridge.js';
 import { initializeMessageMenu } from './message-edit.js';
 import { CHAT_STYLES, STYLE_DEFAULT_SETTINGS } from './chat-prompt.js';
 
-// ▼▼▼ 核心修改：引入新的渲染函数 ▼▼▼
 import { renderChatRoomUI, renderMessageGroup, renderSystemMessage } from './chat-ui.js';
-// ▲▲▲ 修改结束 ▲▲▲
 import { initializeMemorySystem } from './chat-memory.js';
 import { initializeModelSelector, updateModelButtonText } from './chat-model-selector.js';
 import { createApiHandler } from './chat-api.js';
@@ -92,6 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const state = {
             chatHistory: [],
             memories: [],
+            emojis: [], // ▼▼▼ 核心修改：新增emojis状态 ▼▼▼
             backgrounds: [],
             activeBackground: null,
             isBgMultiSelectMode: false,
@@ -111,6 +110,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             selectedApiKey: `${CHAT_DB_KEYS.CHAT_SELECTED_API}_${charId}`,
             styleDbKey: `${CHAT_DB_KEYS.CHAT_HISTORY}_style_${charId}`,
             memoryDbKey: `relia-chat-memory_${charId}`,
+            emojiDbKey: CHAT_DB_KEYS.EMOJIS, // ▼▼▼ 核心修改：添加emoji的DB Key ▼▼▼
             diyDbKey: `relia-chat-diy-enabled_${charId}`,
             bgDbKey: `relia-chat-global-backgrounds`,
             activeBgDbKey: `relia-chat-active-background_${charId}`,
@@ -363,7 +363,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             await loadAndRenderHistory();
         });
 
-        // ▼▼▼ 核心修改：为所有初始化函数传递完整的参数 ▼▼▼
         const { renderMemoryCards } = initializeMemorySystem(
             { ...elements, ...{
                 addMemoryBtn: document.getElementById('add-memory-btn'),
@@ -415,7 +414,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         initializeInputArea(elements, updateButtonStates, state, dbKeys.diyDbKey, dbStorage);
         
         async function initializeChatState() {
-            const [savedHistory, savedStyleKey, savedApi, savedDiyEnabled, savedBackgrounds, savedActiveBg, savedStyleSettings] = await Promise.all([
+            // ▼▼▼ 核心修改：在Promise.all中增加emojis的读取 ▼▼▼
+            const [savedHistory, savedStyleKey, savedApi, savedDiyEnabled, savedBackgrounds, savedActiveBg, savedStyleSettings, savedEmojis] = await Promise.all([
                 dbStorage.getItem(dbKeys.historyKey),
                 dbStorage.getItem(dbKeys.styleDbKey),
                 dbStorage.getItem(dbKeys.selectedApiKey),
@@ -423,6 +423,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 dbStorage.getItem(dbKeys.bgDbKey),
                 dbStorage.getItem(dbKeys.activeBgDbKey),
                 dbStorage.getItem(dbKeys.styleSettingsDbKey),
+                dbStorage.getItem(dbKeys.emojiDbKey),
             ]);
             
             state.chatHistory = (savedHistory && Array.isArray(savedHistory)) ? savedHistory : [];
@@ -431,6 +432,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             state.isDiyEnabled = savedDiyEnabled || false;
             if (elements.diySwitch) elements.diySwitch.checked = state.isDiyEnabled;
             state.backgrounds = savedBackgrounds || [];
+            state.emojis = savedEmojis || []; // ▼▼▼ 核心修改：将读取到的emojis存入state ▼▼▼
             
             const finalSettings = {};
             const savedSettings = savedStyleSettings || {};
@@ -454,6 +456,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             initializeInteractionModeAndStyle();
 
             const getChatHistory = () => state.chatHistory;
+            const getEmojis = () => state.emojis; // ▼▼▼ 核心修改：创建获取emojis的函数 ▼▼▼
             const updateChatHistory = async (newHistory) => {
                 state.chatHistory = newHistory;
                 await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
@@ -461,9 +464,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 updateButtonStates();
             };
             
-            // ▼▼▼ 核心修改：将表情包列表作为参数传递 ▼▼▼
-            initializeMessageMenu(elements.chatArea, getChatHistory, updateChatHistory, () => state.emojis);
-            // ▲▲▲ 修改结束 ▲▲▲
+            // ▼▼▼ 核心修改：将getEmojis函数传递给菜单初始化函数 ▼▼▼
+            initializeMessageMenu(elements.chatArea, getChatHistory, updateChatHistory, getEmojis);
             
             initializeEmojiSystem(
                 { ...elements, ...{
