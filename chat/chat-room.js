@@ -5,13 +5,14 @@ import { PROFILE_DB_KEYS } from '../config/profile.config.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
 import { createChatEditor } from './chat-editor-bridge.js';
 import { initializeMessageMenu } from './message-edit.js';
-import { CHAT_STYLES } from './chat-prompt.js';
+import { CHAT_STYLES } from './chat-prompt.js'; // 移除了 createChatPromptPanel 的导入
 
 // 导入新模块
 import { renderChatRoomUI, renderMessage, renderSystemMessage } from './chat-ui.js';
 import { initializeMemorySystem } from './chat-memory.js';
 import { initializeModelSelector, updateModelButtonText } from './chat-model-selector.js';
 import { createApiHandler } from './chat-api.js';
+// [新增] 引入表情包系统
 import { initializeEmojiSystem } from './chat-emoji.js';
 
 
@@ -62,7 +63,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             sendButtonsContainer: document.getElementById('send-buttons-container'),
             sendBtn: document.getElementById('send-btn'),
             respondBtn: document.getElementById('respond-btn'),
-            thinkingBtn: document.getElementById('thinking-btn'),
             selectModelBtn: document.getElementById('select-model-btn'),
             selectedModelName: document.getElementById('selected-model-name'),
             modelSelectorOverlay: document.getElementById('model-selector-overlay'),
@@ -111,6 +111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             styleOutputMax: document.getElementById('style-output-max'),
             styleVisualLimit: document.getElementById('style-visual-limit'),
             styleMemoryLimit: document.getElementById('style-memory-limit'),
+            // [新增] 表情包相关元素
             emojiPickerBar: document.querySelector('.emoji-picker-bar'),
             emojiManagementGridContainer: document.getElementById('emoji-management-container'),
             emojiUploadInput: document.getElementById('emoji-upload-input'),
@@ -133,6 +134,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             isDiyEnabled: false,
         };
         
+        // ▼▼▼ 【新增】在这里添加新的状态变量 ▼▼▼
+        let isAiReplying = false;
+        let currentAbortController = null;
+        // ▲▲▲ 新增结束 ▲▲▲
+
         const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`;
         const selectedApiKey = `${CHAT_DB_KEYS.CHAT_SELECTED_API}_${charId}`;
         const styleDbKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_style_${charId}`;
@@ -215,6 +221,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
             }
+            elements.respondBtn.disabled = false;
         }
         
         const onAiReply = async (replyMessages) => {
@@ -223,17 +230,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                 state.chatHistory.splice(thinkingMessageIndex, 1);
             }
         
-            state.chatHistory.push(...replyMessages);
-            await dbStorage.setItem(historyKey, state.chatHistory);
+            // [修改] 只有在有实际消息时才添加
+            if (replyMessages && replyMessages.length > 0) {
+                state.chatHistory.push(...replyMessages);
+            }
             
+            await dbStorage.setItem(historyKey, state.chatHistory);
             await loadAndRenderHistory();
         };
         
         const handleSendMessage = createApiHandler({
             state, elements, character, user, historyKey, dbStorage,
-            renderMessage, renderSystemMessage, updateButtonStates, onAiReply
+            renderMessage, renderSystemMessage, updateButtonStates, onAiReply,
+            getIsAiReplying: () => isAiReplying,
+            setIsAiReplying: (value) => { isAiReplying = value; },
+            setAbortController: (controller) => { currentAbortController = controller; }
         });
 
+        /**
+         * 【已修复】发送表情的回调函数
+         * @param {object} emoji - 被点击的表情对象
+         */
         async function onSendEmoji(emoji) {
             const emojiMessage = {
                 sender: 'user',
@@ -244,6 +261,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             state.chatHistory.push(emojiMessage);
             await dbStorage.setItem(historyKey, state.chatHistory);
             renderMessage(emojiMessage, state.chatHistory.length - 1, user, character, elements.chatArea);
+            
+            // 【核心修复】发送表情后，立即更新按钮状态
             updateButtonStates();
         }
 
@@ -359,7 +378,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             updateButtonStates();
         });
         if (elements.sendBtn) elements.sendBtn.addEventListener('click', () => handleSendMessage(false));
-        if (elements.respondBtn) elements.respondBtn.addEventListener('click', () => handleSendMessage(true));
+        
+        // ▼▼▼ 【核心修改】重写 respondBtn 的点击事件 ▼▼▼
+        if (elements.respondBtn) {
+            elements.respondBtn.addEventListener('click', () => {
+                if (isAiReplying) {
+                    // 如果正在回复，则这次点击是“取消”
+                    if (currentAbortController) {
+                        currentAbortController.abort();
+                    }
+                } else {
+                    // 否则，是正常的“请求回复”
+                    handleSendMessage(true);
+                }
+            });
+        }
+        // ▲▲▲ 修改结束 ▲▲▲
+
 
         if (elements.actionsToggleBtn && elements.actionsMenu) {
             const tabs = elements.actionsMenu.querySelector('.actions-menu-tabs');
@@ -680,6 +715,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 updateButtonStates();
             };
             initializeMessageMenu(elements.chatArea, getChatHistory, updateChatHistory);
+            // [新增] 初始化表情包系统
             initializeEmojiSystem(elements, state, onSendEmoji);
         }
         await initializeChatState();

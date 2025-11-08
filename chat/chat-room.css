@@ -201,6 +201,8 @@ html, body {
     background-color: rgba(209, 235, 245, 0.85);
 }
 
+/* relia-chat/chat-room.css -> 在文件末尾添加 */
+
 /* --- 【核心修复】聊天气泡内表情样式 --- */
 .chat-bubble.is-emoji-message {
     padding: 0;
@@ -228,32 +230,15 @@ html, body {
 */
 /* ▲▲▲ 修改结束 ▲▲▲ */
 
-/* ▼▼▼ 新增：在文件末尾添加“思考中”按钮的样式和动画 ▼▼▼ */
-
-/* “思考中”按钮基础样式 */
-.thinking-btn {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    font-size: 1.2rem; /* 图标大小 */
-    color: #DAA520; /* 铜钱颜色 */
-    background-color: #f1f3f5;
-    cursor: pointer;
-    display: flex; /* 确保 display: flex 生效 */
-    align-items: center;
-    justify-content: center;
-    animation: flash 1.5s infinite; /* 应用动画 */
+/* --- 【新增】AI响应中按钮闪烁动画 --- */
+@keyframes blink-animation {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.95); }
 }
 
-/* 定义闪烁动画 */
-@keyframes flash {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.6;
-        transform: scale(0.95);
-    }
+#respond-btn.blinking {
+    animation: blink-animation 1.2s infinite ease-in-out;
+    background-color: var(--send-btn-bg) !important; /* 强制改变背景色以提示 */
+    color: var(--text-light) !important; /* 强制改变图标颜色 */
+    cursor: pointer !important; /* 确保在任何情况下都可点击 */
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */
