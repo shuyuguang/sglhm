@@ -40,9 +40,7 @@
     left: 5px;
     right: 59px;
     padding: 12px;
-    /* ▼▼▼ 核心修复 ①: 移除此处的滚动，将其转变为Flex布局的根容器 ▼▼▼ */
-    display: flex;
-    flex-direction: column;
+    overflow-y: auto; /* 让整个内容面板可以滚动 */
 }
 
 #header-tabs-panel {
@@ -81,17 +79,9 @@
     display: none;
     font-size: 0.9em;
     color: #495057;
-    position: relative;
-    height: 100%;
-    box-sizing: border-box;
 }
 .secondary-content-pane.active {
-    display: flex;
-    flex-direction: column;
-    /* ▼▼▼ 核心修复 ②: 让激活的面板填满父容器，并默认提供滚动条 ▼▼▼ */
-    flex-grow: 1;
-    min-height: 0; /* flex布局防溢出的关键 */
-    overflow-y: auto; /* 为简单面板提供默认滚动能力 */
+    display: block; /* 改回 block，让内容自然撑开 */
 }
 
 /* --- 顶部菜单 - 记忆面板样式 --- */
@@ -531,17 +521,9 @@ input:checked + .slider:before {
 }
 
 /* --- 顶部菜单 - 表情包管理面板样式 --- */
-/* ▼▼▼ 核心修复 ③: 覆盖默认滚动行为，让内部布局接管 ▼▼▼ */
-#menu-content-emoji.secondary-content-pane.active {
-    overflow: hidden; /* 禁用面板自身的滚动条 */
-}
-
 #emoji-management-container {
     padding: 8px;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    box-sizing: border-box;
+    /* 移除所有复杂的布局属性，让它成为一个普通容器 */
 }
 
 .emoji-management-header {
@@ -549,7 +531,6 @@ input:checked + .slider:before {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 12px;
-    flex-shrink: 0; /* Header高度固定，不参与压缩 */
 }
 
 .emoji-management-title {
@@ -584,15 +565,11 @@ input:checked + .slider:before {
     color: var(--text-dark);
 }
 
-/* ▼▼▼ 核心修复 ④: 表情网格现在可以正确计算高度并滚动 ▼▼▼ */
 .emoji-management-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-    gap: 10px;
-    overflow-y: auto; /* 网格内部滚动 */
-    flex-grow: 1; /* 占据所有剩余空间 */
-    padding-right: 5px; /* for scrollbar */
-    min-height: 0; /* 再次强调，防止溢出 */
+    gap: 5px; /* ▼▼▼ 核心修复：严格遵守你的命令，5px间距！ ▼▼▼ */
+    /* 移除所有flex和height相关属性，让它自由排列 */
 }
 
 .emoji-management-grid .emoji-item {
