@@ -103,6 +103,8 @@ export function createApiHandler(context) {
         onAiReply,
     } = context;
 
+// chat-api.js -> 替换整个 handleSendMessage 函数
+
     /**
      * 处理发送消息或请求AI响应的逻辑。
      * @param {boolean} shouldTriggerReply - 是否应请求AI响应。
@@ -135,31 +137,47 @@ export function createApiHandler(context) {
             state.chatHistory.push(thinkingMessage);
             renderMessage(thinkingMessage, state.chatHistory.length - 1, user, character, elements.chatArea);
 
-            // 【核心修复】使用 await 调用异步的 constructSystemPrompt
-            const systemPrompt = await constructSystemPrompt(character, user, state.currentChatStyle);
-            
-            // ======================== [核心修改] ========================
-            // 1. 在这里获取一次表情列表
-            const emojis = await dbStorage.getItem(CHAT_DB_KEYS.EMOJIS) || [];
+            try {
+                // 【核心修复】使用 await 调用异步的 constructSystemPrompt
+                const systemPrompt = await constructSystemPrompt(character, user, state.currentChatStyle);
+                
+                const historyForApi = formatChatHistoryForApi(state.chatHistory.slice(0, -1));
+                const messages = [{ role: 'system', content: systemPrompt }, ...historyForApi];
+                const endpoint = (state.currentChatApi.baseUrl.replace(/\/$/, '')) + (state.currentChatApi.path || '/v1/chat/completions');
+                const payload = { model: state.currentChatApi.model, messages: messages, stream: true };
 
-            // 2. 将表情列表加入到传递给 streamHandler 的上下文中
-            const handlerContext = {
-                reader: response.body.getReader(),
-                decoder: new TextDecoder('utf-8'),
-                emojis: emojis // <-- 把表情列表传进去
-            };
-            
-            // 3. 调用 streamHandler
-            const replyMessages = await state.currentChatStyle.streamHandler(handlerContext);
-            // ==========================================================
+                // 1. 先发起 fetch 请求，拿到 response
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.currentChatApi.apiKey}` },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || `API 请求失败，状态码: ${response.status}`);
+                }
+                
+                // ======================== [这是你新加的代码的正确位置] ========================
+                // 2. 在这里获取表情列表
+                const emojis = await dbStorage.getItem(CHAT_DB_KEYS.EMOJIS) || [];
 
-            if (replyMessages.length > 0) {
-                await onAiReply(replyMessages);
-            } else {
-                // 如果AI回复为空（例如，只回复了一个无法识别的表情），也需要清掉“输入中”状态
-                await onAiReply([]);
-            }
+                // 3. 用已经存在的 response 和 emojis 创建 handlerContext
+                const handlerContext = {
+                    reader: response.body.getReader(),
+                    decoder: new TextDecoder('utf-8'),
+                    emojis: emojis 
+                };
+                
+                // 4. 调用 streamHandler
+                const replyMessages = await state.currentChatStyle.streamHandler(handlerContext);
+                // =========================================================================
 
+                if (replyMessages.length > 0) {
+                    await onAiReply(replyMessages);
+                } else {
+                    // 如果AI回复为空（例如，只回复了一个无法识别的表情），也需要清掉“输入中”状态
+                    await onAiReply([]);
+                }
 
             } catch (error) {
                 console.error('AI 回复生成失败:', error);
