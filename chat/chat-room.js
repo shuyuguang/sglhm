@@ -461,7 +461,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 updateButtonStates();
             };
             
-            initializeMessageMenu(elements.chatArea, getChatHistory, updateChatHistory);
+            // ▼▼▼ 核心修改：将表情包列表作为参数传递 ▼▼▼
+            initializeMessageMenu(elements.chatArea, getChatHistory, updateChatHistory, () => state.emojis);
+            // ▲▲▲ 修改结束 ▲▲▲
             
             initializeEmojiSystem(
                 { ...elements, ...{
