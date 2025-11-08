@@ -20,60 +20,72 @@ export function initializeMessageMenu(container, getChatHistory, updateChatHisto
         return;
     }
 
-    // --- 核心逻辑：区分单击和长按 ---
     container.addEventListener('mousedown', (e) => {
         const bubble = e.target.closest('.chat-bubble');
         if (!bubble) return;
-
         isLongPress = false; 
-        
-        longPressTimer = setTimeout(() => {
-            isLongPress = true;
-        }, LONG_PRESS_THRESHOLD);
+        longPressTimer = setTimeout(() => { isLongPress = true; }, LONG_PRESS_THRESHOLD);
     });
 
     container.addEventListener('mouseup', (e) => {
         clearTimeout(longPressTimer);
-        
         const bubble = e.target.closest('.chat-bubble');
-        
-        if (!bubble || isLongPress || bubble.classList.contains('editing')) {
-            return;
-        }
+        if (!bubble || isLongPress || bubble.classList.contains('editing')) return;
 
-        // --- 如果不是长按，这就是一次单击 ---
         e.preventDefault();
-        const messageRow = bubble.closest('.message-row');
-        const index = parseInt(messageRow.dataset.index, 10);
         
-        showMenu(e, index, bubble, getChatHistory, updateChatHistory);
+        const messageGroup = bubble.closest('.message-group-container');
+        if (!messageGroup) return;
+        const index = parseInt(messageGroup.dataset.index, 10);
+
+        // ▼▼▼ 核心修改：获取是哪个部分被点击了 ▼▼▼
+        const messageRow = bubble.closest('.message-row');
+        const partIndex = messageRow && messageRow.dataset.partIndex ? parseInt(messageRow.dataset.partIndex, 10) : -1;
+        // ▲▲▲ 修改结束 ▲▲▲
+        
+        showMenu(e, index, partIndex, bubble, getChatHistory, updateChatHistory);
     });
 
-    // 点击菜单外部区域隐藏菜单
     menuOverlay.addEventListener('click', (e) => {
-        if (e.target === menuOverlay) {
-            hideMenu();
-        }
+        if (e.target === menuOverlay) hideMenu();
     });
 }
-
 
 /**
  * 显示操作菜单。
  */
-function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
+function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHistory) {
     const menu = document.getElementById('message-menu');
     const menuOverlay = document.getElementById('message-menu-overlay');
     const chatHistory = getChatHistory();
-    const message = chatHistory[index];
+    const messageData = chatHistory[index];
 
-    if (!message) return;
+    if (!messageData) return;
 
-    // ▼▼▼ 核心修改：允许编辑所有发送者的消息 ▼▼▼
-    const canCopy = message.text || message.isEmoji;
-    // 移除了 message.sender === 'user' 的判断条件
-    const canEdit = message.text || message.isEmoji; 
-    // ▲▲▲ 修改结束 ▲▲▲
+    let canCopy = false;
+    let canEdit = false;
+    let textToCopy = '';
+
+    if (messageData.sender === 'user') {
+        if (messageData.isEmoji) {
+            textToCopy = `[Emoji: ${messageData.name}]`;
+            canCopy = true;
+            canEdit = false;
+        } else {
+            textToCopy = messageData.text;
+            canCopy = true;
+            canEdit = true;
+        }
+    } else if (messageData.sender === 'character') {
+        const activeVersion = messageData.replyVersions[messageData.activeReplyIndex];
+        textToCopy = activeVersion.map(part => part.isEmoji ? `[Emoji: ${part.name}]` : part.text).join('\n');
+        canCopy = textToCopy.length > 0;
+        
+        // ▼▼▼ 核心修改：现在可以编辑AI的文本消息了 ▼▼▼
+        const clickedPart = (partIndex !== -1) ? activeVersion[partIndex] : null;
+        canEdit = clickedPart ? !clickedPart.isEmoji : false; // 只能编辑文本部分，不能编辑表情
+        // ▲▲▲ 修改结束 ▲▲▲
+    }
 
     const menuItems = [
         { action: 'edit', icon: 'fa-regular fa-pen-to-square', text: '编辑', disabled: !canEdit },
@@ -101,10 +113,7 @@ function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
 
         switch (action) {
             case 'copy':
-                const textToCopy = message.isEmoji ? `[Emoji: ${message.name}]` : message.text;
-                navigator.clipboard.writeText(textToCopy)
-                    .then(() => console.log('消息已复制'))
-                    .catch(err => console.error('复制失败:', err));
+                navigator.clipboard.writeText(textToCopy).catch(err => console.error('复制失败:', err));
                 break;
             case 'delete':
                 if (confirm('确定要删除这条消息吗？')) {
@@ -114,54 +123,47 @@ function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
                 }
                 break;
             case 'edit':
-                startEditing(bubble, index, getChatHistory, updateChatHistory);
+                // ▼▼▼ 核心修改：传递 partIndex ▼▼▼
+                startEditing(bubble, index, partIndex, getChatHistory, updateChatHistory);
+                // ▲▲▲ 修改结束 ▲▲▲
                 break;
             default:
                 alert(`“${actionText}”功能待开发...`);
                 break;
         }
-
         hideMenu();
     };
 
-    const menuWidth = 240;
-    const menuHeight = 120;
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
-
-    let top = event.clientY;
-    let left = event.clientX;
-
-    if (left + menuWidth > screenWidth - 10) {
-        left = screenWidth - menuWidth - 10;
-    }
-    if (top + menuHeight > screenHeight - 10) {
-        top = screenHeight - menuHeight - 10;
-    }
-
+    const menuWidth = 240, menuHeight = 120;
+    const screenWidth = window.innerWidth, screenHeight = window.innerHeight;
+    let top = event.clientY, left = event.clientX;
+    if (left + menuWidth > screenWidth - 10) left = screenWidth - menuWidth - 10;
+    if (top + menuHeight > screenHeight - 10) top = screenHeight - menuHeight - 10;
     menu.style.top = `${top}px`;
     menu.style.left = `${left}px`;
-
     menuOverlay.classList.add('active');
 }
 
-/**
- * 隐藏操作菜单。
- */
 function hideMenu() {
-    const menuOverlay = document.getElementById('message-menu-overlay');
-    menuOverlay.classList.remove('active');
+    document.getElementById('message-menu-overlay').classList.remove('active');
 }
 
 /**
  * 将消息气泡变为可编辑状态。
  */
-function startEditing(bubble, index, getChatHistory, updateChatHistory) {
+function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistory) {
     bubble.classList.add('editing');
     
-    const message = getChatHistory()[index];
-    const originalContent = message.isEmoji ? `[Emoji: ${message.name}]` : message.text;
-    
+    const messageData = getChatHistory()[index];
+    let originalContent = '';
+
+    if (messageData.sender === 'user') {
+        originalContent = messageData.text;
+    } else if (messageData.sender === 'character') {
+        const activeVersion = messageData.replyVersions[messageData.activeReplyIndex];
+        originalContent = activeVersion[partIndex].text;
+    }
+
     bubble.innerHTML = `
         <div class="message-edit-container">
             <textarea class="message-edit-textarea">${originalContent}</textarea>
@@ -177,33 +179,42 @@ function startEditing(bubble, index, getChatHistory, updateChatHistory) {
     textarea.style.height = `${textarea.scrollHeight}px`;
     textarea.focus();
     textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
-
     textarea.addEventListener('input', () => {
         textarea.style.height = 'auto';
         textarea.style.height = `${textarea.scrollHeight}px`;
     });
 
     const stopEditing = (shouldSave) => {
-        const originalMessage = getChatHistory()[index];
-
-        if (originalMessage.isEmoji) {
-            bubble.classList.remove('editing');
-            bubble.innerHTML = `<img src="${originalMessage.data}" alt="emoji" class="message-emoji-img">`;
-            return; 
-        }
-
         bubble.classList.remove('editing');
+        const originalMessageGroup = getChatHistory()[index];
+        const newHistory = [...getChatHistory()];
+        
         if (shouldSave) {
             const newText = textarea.value.trim();
-            if (newText && newText !== originalMessage.text) {
-                const newHistory = [...getChatHistory()];
-                newHistory[index].text = newText;
-                updateChatHistory(newHistory);
-            } else {
-                bubble.textContent = originalMessage.text;
+            if (originalMessageGroup.sender === 'user') {
+                if (newText && newText !== originalMessageGroup.text) {
+                    newHistory[index].text = newText;
+                    updateChatHistory(newHistory);
+                } else {
+                    bubble.textContent = originalMessageGroup.text;
+                }
+            } else if (originalMessageGroup.sender === 'character') {
+                const partToUpdate = newHistory[index].replyVersions[originalMessageGroup.activeReplyIndex][partIndex];
+                if (newText && newText !== partToUpdate.text) {
+                    partToUpdate.text = newText;
+                    updateChatHistory(newHistory);
+                } else {
+                    bubble.textContent = partToUpdate.text;
+                }
             }
         } else {
-            bubble.textContent = originalMessage.text;
+            // 取消编辑，无论如何都恢复原始内容
+            if (originalMessageGroup.sender === 'user') {
+                 bubble.textContent = originalMessageGroup.text;
+            } else {
+                 const partToRestore = originalMessageGroup.replyVersions[originalMessageGroup.activeReplyIndex][partIndex];
+                 bubble.textContent = partToRestore.text;
+            }
         }
     };
     

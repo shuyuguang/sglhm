@@ -34,10 +34,8 @@ export function renderChatRoomUI(character) {
                                 <button class="action-list-item"><i class="fa-solid fa-magnifying-glass"></i><span>查找记录</span></button>
                                 <button class="action-list-item"><i class="fa-regular fa-star"></i><span>收藏</span></button>
                                 <button class="action-list-item"><i class="fa-solid fa-timeline"></i><span>时间线</span></button>
-                                <!-- ▼▼▼ 核心修改：为按钮添加ID ▼▼▼ -->
                                 <button class="action-list-item" id="regenerate-btn"><i class="fa-solid fa-arrows-rotate"></i><span>重新生成</span></button>
                                 <button class="action-list-item" id="continue-btn"><i class="fa-solid fa-forward"></i><span>继续</span></button>
-                                <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                             </div>
                             <!-- 中区 -->
                             <div class="actions-column">
@@ -79,7 +77,6 @@ export function renderChatRoomUI(character) {
 }
 
 /**
- * ▼▼▼ 核心修改：重构 renderMessage 为 renderMessageGroup 以支持多气泡和分页 ▼▼▼
  * 在聊天区域渲染一个完整的消息组（可能包含多个气泡）。
  * @param {object} messageGroup - 消息组对象。
  * @param {number} index - 消息组在历史记录中的索引。
@@ -90,7 +87,6 @@ export function renderChatRoomUI(character) {
 export function renderMessageGroup(messageGroup, index, user, character, chatArea) {
     const { sender } = messageGroup;
     
-    // 创建一个容器来包裹属于同一次发送的所有消息行
     const messageGroupContainer = document.createElement('div');
     messageGroupContainer.className = 'message-group-container';
     messageGroupContainer.dataset.index = index;
@@ -105,7 +101,13 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
 
         const bubble = document.createElement('div');
         bubble.className = `chat-bubble ${sender}`;
-        bubble.textContent = messageGroup.text;
+
+        if (messageGroup.isEmoji) {
+            bubble.classList.add('is-emoji-message');
+            bubble.innerHTML = `<img src="${messageGroup.data}" alt="emoji" class="message-emoji-img">`;
+        } else {
+            bubble.textContent = messageGroup.text;
+        }
 
         messageRow.appendChild(avatar);
         messageRow.appendChild(bubble);
@@ -115,11 +117,12 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
         const activeReplyIndex = messageGroup.activeReplyIndex || 0;
         const currentReplyVersion = messageGroup.replyVersions[activeReplyIndex];
 
-        // 渲染当前版本的所有消息气泡
-        currentReplyVersion.forEach(messagePart => {
+        // ▼▼▼ 核心修改：为AI的每个消息气泡添加 partIndex ▼▼▼
+        currentReplyVersion.forEach((messagePart, partIndex) => {
             const { isEmoji, data, text } = messagePart;
             const messageRow = document.createElement('div');
             messageRow.className = `message-row ${sender}`;
+            messageRow.dataset.partIndex = partIndex; // 添加部分索引
             
             const avatar = document.createElement('img');
             avatar.className = 'message-avatar';
@@ -139,8 +142,8 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
             messageRow.appendChild(bubble);
             messageGroupContainer.appendChild(messageRow);
         });
+        // ▲▲▲ 修改结束 ▲▲▲
 
-        // 如果有多个版本，则渲染分页器
         if (messageGroup.replyVersions.length > 1) {
             const pager = document.createElement('div');
             pager.className = 'reply-pager';
@@ -159,7 +162,6 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
     
     chatArea.appendChild(messageGroupContainer);
 }
-// ▲▲▲ 修改结束 ▲▲▲
 
 
 /**
