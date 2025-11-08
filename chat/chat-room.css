@@ -201,34 +201,21 @@ html, body {
     background-color: rgba(209, 235, 245, 0.85);
 }
 
-/* relia-chat/chat-room.css -> 在文件末尾添加 */
-
 /* --- 【核心修复】聊天气泡内表情样式 --- */
 .chat-bubble.is-emoji-message {
     padding: 0;
     background-color: transparent;
-    /* 移除对气泡本身的尺寸限制，让它由内部图片决定 */
     max-width: none;
 }
 
 .message-emoji-img {
     display: block;
-    /* 直接在这里严格限制图片的最大显示尺寸 */
     max-width: 128px;
     max-height: 128px;
-    /* 保持图片自身宽高比 */
     width: auto;
     height: auto;
     border-radius: 10px;
 }
-
-/* ▼▼▼ 修改：移除此处的表情选择器样式，统一到 chat-components.css 中管理 ▼▼▼ */
-/* 
-.emoji-picker-grid { ... }
-.emoji-picker-item { ... }
-...
-*/
-/* ▲▲▲ 修改结束 ▲▲▲ */
 
 /* --- 【新增】AI响应中按钮闪烁动画 --- */
 @keyframes blink-animation {
@@ -238,7 +225,27 @@ html, body {
 
 #respond-btn.blinking {
     animation: blink-animation 1.2s infinite ease-in-out;
-    background-color: var(--send-btn-bg) !important; /* 强制改变背景色以提示 */
-    color: var(--text-light) !important; /* 强制改变图标颜色 */
-    cursor: pointer !important; /* 确保在任何情况下都可点击 */
+    background-color: var(--send-btn-bg) !important;
+    color: var(--text-light) !important;
+    cursor: pointer !important;
 }
+
+/* ▼▼▼ 新增：“加载历史消息”按钮样式 ▼▼▼ */
+.load-more-btn {
+    display: block;
+    margin: 0 auto 10px;
+    padding: 8px 16px;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.7);
+    color: var(--send-btn-bg);
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    flex-shrink: 0;
+}
+.load-more-btn:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */

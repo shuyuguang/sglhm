@@ -159,7 +159,8 @@ export const CHAT_STYLES = {
     }
 };
 
-const STYLE_DEFAULT_SETTINGS = {
+// ▼▼▼ 核心修改：导出默认设置，以便全局使用 ▼▼▼
+export const STYLE_DEFAULT_SETTINGS = {
     'dialogue': {
         outputMin: '2',
         outputMax: '20',
@@ -167,8 +168,8 @@ const STYLE_DEFAULT_SETTINGS = {
         memoryLimit: '20'
     },
     'short-chat': {
-        outputMin: '2',
-        outputMax: '10',
+        outputMin: '3',
+        outputMax: '15',
         visualLimit: '30',
         memoryLimit: '15'
     },
@@ -182,9 +183,10 @@ const STYLE_DEFAULT_SETTINGS = {
         outputMin: '3',
         outputMax: '15',
         visualLimit: '30',
-        memoryLimit: '10'
+        memoryLimit: '15'
     }
 };
+// ▲▲▲ 修改结束 ▲▲▲
 
 export function createChatPromptPanel({ triggerElement, container, onSave, charId }) {
 

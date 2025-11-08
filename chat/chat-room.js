@@ -5,7 +5,9 @@ import { PROFILE_DB_KEYS } from '../config/profile.config.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
 import { createChatEditor } from './chat-editor-bridge.js';
 import { initializeMessageMenu } from './message-edit.js';
-import { CHAT_STYLES } from './chat-prompt.js';
+// ▼▼▼ 核心修改：引入 STYLE_DEFAULT_SETTINGS ▼▼▼
+import { CHAT_STYLES, STYLE_DEFAULT_SETTINGS } from './chat-prompt.js';
+// ▲▲▲ 修改结束 ▲▲▲
 
 // 引入拆分后的模块
 import { renderChatRoomUI, renderMessage, renderSystemMessage } from './chat-ui.js';
@@ -13,11 +15,9 @@ import { initializeMemorySystem } from './chat-memory.js';
 import { initializeModelSelector, updateModelButtonText } from './chat-model-selector.js';
 import { createApiHandler } from './chat-api.js';
 import { initializeEmojiSystem } from './chat-emoji.js';
-// ▼▼▼ 引入新增的模块 ▼▼▼
 import { initializeHeaderMenu } from './chat-header.js';
 import { initializeThemeSystem } from './chat-theme.js';
 import { initializeInputArea } from './chat-input-handler.js';
-// ▲▲▲ 引入结束 ▲▲▲
 
 /**
  * 异步加载HTML片段并注入到页面中
@@ -30,7 +30,6 @@ async function loadHtmlFragments(paths) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // ▼▼▼ 核心修改：在执行任何操作前，先加载所有HTML片段 ▼▼▼
     try {
         await loadHtmlFragments([
             './chat-header.html',
@@ -42,7 +41,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.body.innerHTML = '页面组件加载失败，请检查网络或联系管理员。';
         return;
     }
-    // ▲▲▲ 修改结束 ▲▲▲
 
     const appContainer = document.getElementById('app-container');
     if (!appContainer) {
@@ -84,12 +82,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             chatInputArea: document.getElementById('chat-input-area'),
             sendBtn: document.getElementById('send-btn'),
             respondBtn: document.getElementById('respond-btn'),
-            // 各模块所需的元素引用
-            // (注意：为保持简洁，新模块会在其内部自行获取所需元素)
             actionsToggleBtn: document.getElementById('actions-toggle-btn'),
             emojiToggleBtn: document.getElementById('emoji-toggle-btn'),
             actionsMenu: document.getElementById('actions-menu'),
-            diySwitch: document.getElementById('enable-diy-switch'),
             menuBtn: document.getElementById('menu-btn'),
             headerContentPanel: document.getElementById('header-content-panel'),
             headerTabsPanel: document.getElementById('header-tabs-panel'),
@@ -100,6 +95,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             userProfileEditName: document.getElementById('user-profile-edit-name'),
             charProfileEditAvatar: document.getElementById('char-profile-edit-avatar'),
             charProfileEditName: document.getElementById('char-profile-edit-name'),
+            // ▼▼▼ 新增：风格面板和互动模式所需元素 ▼▼▼
+            styleOutputMin: document.getElementById('style-output-min'),
+            styleOutputMax: document.getElementById('style-output-max'),
+            styleVisualLimit: document.getElementById('style-visual-limit'),
+            styleMemoryLimit: document.getElementById('style-memory-limit'),
+            interactionModeCapsule: document.getElementById('interaction-mode-capsule'),
+            interactionModeSheetOverlay: document.getElementById('interaction-mode-sheet-overlay'),
+            interactionModeList: document.getElementById('interaction-mode-list'),
+            interactionModeCancelBtn: document.getElementById('interaction-mode-cancel-btn'),
+            selectedInteractionModeName: document.getElementById('selected-interaction-mode-name'),
+            diySwitch: document.getElementById('enable-diy-switch'),
+            // ▲▲▲ 新增结束 ▲▲▲
         };
 
         // --- 3. 状态管理 ---
@@ -113,6 +120,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             currentChatApi: null,
             currentChatStyle: CHAT_STYLES['dialogue'],
             isDiyEnabled: false,
+            // ▼▼▼ 新增：风格设置和视觉上下文状态 ▼▼▼
+            styleSettings: {},
+            visualHistoryStartIndex: 0,
+            // ▲▲▲ 新增结束 ▲▲▲
         };
         
         let isAiReplying = false;
@@ -126,7 +137,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             diyDbKey: `relia-chat-diy-enabled_${charId}`,
             bgDbKey: `relia-chat-global-backgrounds`,
             activeBgDbKey: `relia-chat-active-background_${charId}`,
+            // ▼▼▼ 新增：统一的风格设置存储键 ▼▼▼
             styleSettingsDbKey: `relia-chat-style-settings_${charId}`,
+            // ▲▲▲ 新增结束 ▲▲▲
         };
 
         // --- 4. 模块初始化 (编辑器部分) ---
@@ -170,12 +183,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         // --- 5. 核心功能函数 ---
-        async function loadAndRenderHistory() {
-            const savedHistory = await dbStorage.getItem(dbKeys.historyKey);
-            state.chatHistory = (savedHistory && Array.isArray(savedHistory)) ? savedHistory : [];
-            elements.chatArea.innerHTML = '';
-            state.chatHistory.forEach((message, index) => renderMessage(message, index, user, character, elements.chatArea));
+
+        // ▼▼▼ 核心修改：重写历史记录加载函数，实现视觉上下文限制 ▼▼▼
+        async function loadAndRenderHistory(loadMore = false) {
+            const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle) || 'dialogue';
+            const settings = state.styleSettings[currentStyleKey] || STYLE_DEFAULT_SETTINGS[currentStyleKey];
+            const visualLimit = parseInt(settings.visualLimit, 10) || 50;
+
+            if (!loadMore) {
+                state.visualHistoryStartIndex = Math.max(0, state.chatHistory.length - visualLimit);
+            } else {
+                state.visualHistoryStartIndex = Math.max(0, state.visualHistoryStartIndex - visualLimit);
+            }
+            
+            const messagesToRender = state.chatHistory.slice(state.visualHistoryStartIndex);
+            
+            elements.chatArea.innerHTML = ''; // 清空
+
+            if (state.visualHistoryStartIndex > 0) {
+                const loadMoreBtn = document.createElement('button');
+                loadMoreBtn.textContent = '加载历史消息';
+                loadMoreBtn.className = 'load-more-btn';
+                loadMoreBtn.onclick = () => loadAndRenderHistory(true);
+                elements.chatArea.appendChild(loadMoreBtn);
+            }
+
+            messagesToRender.forEach((message, index) => {
+                const originalIndex = state.visualHistoryStartIndex + index;
+                renderMessage(message, originalIndex, user, character, elements.chatArea);
+            });
+
+            if (!loadMore) {
+                setTimeout(() => elements.chatArea.scrollTop = elements.chatArea.scrollHeight, 0);
+            }
         }
+        // ▲▲▲ 修改结束 ▲▲▲
         
         function updateButtonStates() {
             if (!elements.input || !elements.respondBtn || !elements.sendBtn) return;
@@ -200,10 +242,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         
-        const onAiReply = async (replyMessages) => {
-            const thinkingMessageIndex = state.chatHistory.findIndex(msg => msg.text === '...' && msg.sender === 'character');
-            if (thinkingMessageIndex > -1) state.chatHistory.splice(thinkingMessageIndex, 1);
-            if (replyMessages && replyMessages.length > 0) state.chatHistory.push(...replyMessages);
+        const onAiReply = async (replyMessages, clearThinking = true) => {
+            if (clearThinking) {
+                const thinkingMessageIndex = state.chatHistory.findIndex(msg => msg.text === '...' && msg.sender === 'character');
+                if (thinkingMessageIndex > -1) state.chatHistory.splice(thinkingMessageIndex, 1);
+            }
+            if (replyMessages && replyMessages.length > 0) {
+                state.chatHistory.push(...replyMessages);
+            }
             await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
             await loadAndRenderHistory();
         };
@@ -213,32 +259,95 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderMessage, renderSystemMessage, updateButtonStates, onAiReply,
             getIsAiReplying: () => isAiReplying,
             setIsAiReplying: (value) => { isAiReplying = value; },
-            setAbortController: (controller) => { currentAbortController = controller; }
+            setAbortController: (controller) => { currentAbortController = controller; },
+            // ▼▼▼ 新增：传递获取当前风格设置的函数 ▼▼▼
+            getStyleSettings: () => {
+                const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle) || 'dialogue';
+                return state.styleSettings[currentStyleKey];
+            }
+            // ▲▲▲ 新增结束 ▲▲▲
         });
 
         async function onSendEmoji(emoji) {
             const emojiMessage = { sender: 'user', isEmoji: true, name: emoji.name, data: emoji.data };
             state.chatHistory.push(emojiMessage);
             await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
-            renderMessage(emojiMessage, state.chatHistory.length - 1, user, character, elements.chatArea);
+            await loadAndRenderHistory();
             updateButtonStates();
         }
 
-        function updateInteractionModeUI() {
-            // 这部分逻辑与互动模式选择器紧密相关，保留在这里
-            const interactionModeCapsule = document.getElementById('interaction-mode-capsule');
-            const selectedInteractionModeName = document.getElementById('selected-interaction-mode-name');
-            const interactionModeList = document.getElementById('interaction-mode-list');
-            if (!interactionModeCapsule || !selectedInteractionModeName || !interactionModeList) return;
+        // ▼▼▼ 核心修改：将互动模式和风格设置相关逻辑整合 ▼▼▼
+        function initializeInteractionModeAndStyle() {
+            const updateInteractionModeUI = () => {
+                const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle);
+                if (currentStyleKey && elements.selectedInteractionModeName && elements.interactionModeList) {
+                    elements.selectedInteractionModeName.textContent = CHAT_STYLES[currentStyleKey].name;
+                    elements.interactionModeList.querySelectorAll('.action-button').forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.style === currentStyleKey);
+                    });
+                }
+            };
 
-            const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle);
-            if (currentStyleKey) {
-                selectedInteractionModeName.textContent = CHAT_STYLES[currentStyleKey].name;
-                interactionModeList.querySelectorAll('.action-button').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.style === currentStyleKey);
+            const updateStyleSettingsPanelUI = () => {
+                const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle);
+                if (currentStyleKey && state.styleSettings[currentStyleKey]) {
+                    const settings = state.styleSettings[currentStyleKey];
+                    elements.styleOutputMin.value = settings.outputMin;
+                    elements.styleOutputMax.value = settings.outputMax;
+                    elements.styleVisualLimit.value = settings.visualLimit;
+                    elements.styleMemoryLimit.value = settings.memoryLimit;
+                }
+            };
+            
+            updateInteractionModeUI();
+            updateStyleSettingsPanelUI();
+
+            elements.interactionModeCapsule?.addEventListener('click', () => {
+                elements.interactionModeSheetOverlay.classList.add('active');
+            });
+            elements.interactionModeCancelBtn?.addEventListener('click', () => {
+                elements.interactionModeSheetOverlay.classList.remove('active');
+            });
+            elements.interactionModeSheetOverlay?.addEventListener('click', (e) => {
+                if (e.target === elements.interactionModeSheetOverlay) {
+                    elements.interactionModeSheetOverlay.classList.remove('active');
+                }
+            });
+            elements.interactionModeList?.addEventListener('click', async (e) => {
+                const button = e.target.closest('.action-button');
+                if (!button) return;
+
+                const newStyleKey = button.dataset.style;
+                if (newStyleKey && CHAT_STYLES[newStyleKey]) {
+                    state.currentChatStyle = CHAT_STYLES[newStyleKey];
+                    await dbStorage.setItem(dbKeys.styleDbKey, newStyleKey);
+                    updateInteractionModeUI();
+                    updateStyleSettingsPanelUI();
+                    await loadAndRenderHistory(); // 切换风格后，视觉限制可能改变，需刷新
+                    elements.interactionModeSheetOverlay.classList.remove('active');
+                }
+            });
+
+            // 绑定风格设置面板输入事件
+            [elements.styleOutputMin, elements.styleOutputMax, elements.styleVisualLimit, elements.styleMemoryLimit].forEach(input => {
+                input?.addEventListener('input', async (e) => {
+                    const key = e.target.id.replace('style-', ''); // e.g., 'outputMin'
+                    const value = e.target.value;
+                    const currentStyleKey = Object.keys(CHAT_STYLES).find(k => CHAT_STYLES[k] === state.currentChatStyle);
+                    
+                    if (currentStyleKey && state.styleSettings[currentStyleKey]) {
+                        state.styleSettings[currentStyleKey][key] = value;
+                        // 保存整个设置对象
+                        await dbStorage.setItem(dbKeys.styleSettingsDbKey, state.styleSettings);
+                        // 如果修改了视觉限制，需要立即刷新
+                        if (key === 'visualLimit') {
+                           await loadAndRenderHistory();
+                        }
+                    }
                 });
-            }
+            });
         }
+        // ▲▲▲ 修改结束 ▲▲▲
         
         // --- 6. 事件绑定与模块初始化 ---
         if (elements.sendBtn) elements.sendBtn.addEventListener('click', () => handleSendMessage(false));
@@ -253,7 +362,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         const { renderMemoryCards } = initializeMemorySystem(
-            { ...elements, ...{ // 传递模块所需的特定元素
+            { ...elements, ...{
                 addMemoryBtn: document.getElementById('add-memory-btn'),
                 memoryCardsContainer: document.getElementById('memory-cards-container'),
                 memoryEditorOverlay: document.getElementById('memory-editor-overlay'),
@@ -304,20 +413,35 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // --- 7. 页面状态初始化 ---
         async function initializeChatState() {
-            const [savedStyleKey, savedApi, savedDiyEnabled, savedBackgrounds, savedActiveBg] = await Promise.all([
+            // ▼▼▼ 核心修改：调整状态加载顺序和逻辑 ▼▼▼
+            const [savedHistory, savedStyleKey, savedApi, savedDiyEnabled, savedBackgrounds, savedActiveBg, savedStyleSettings] = await Promise.all([
+                dbStorage.getItem(dbKeys.historyKey),
                 dbStorage.getItem(dbKeys.styleDbKey),
                 dbStorage.getItem(dbKeys.selectedApiKey),
                 dbStorage.getItem(dbKeys.diyDbKey),
                 dbStorage.getItem(dbKeys.bgDbKey),
                 dbStorage.getItem(dbKeys.activeBgDbKey),
+                dbStorage.getItem(dbKeys.styleSettingsDbKey),
             ]);
-
+            
+            state.chatHistory = (savedHistory && Array.isArray(savedHistory)) ? savedHistory : [];
             state.currentChatStyle = (savedStyleKey && CHAT_STYLES[savedStyleKey]) ? CHAT_STYLES[savedStyleKey] : CHAT_STYLES['short-chat'];
             if (savedApi) state.currentChatApi = savedApi;
             state.isDiyEnabled = savedDiyEnabled || false;
             if (elements.diySwitch) elements.diySwitch.checked = state.isDiyEnabled;
             state.backgrounds = savedBackgrounds || [];
             
+            // 合并数据库中的设置和默认设置
+            const finalSettings = {};
+            const savedSettings = savedStyleSettings || {};
+            Object.keys(STYLE_DEFAULT_SETTINGS).forEach(key => {
+                finalSettings[key] = {
+                    ...STYLE_DEFAULT_SETTINGS[key],
+                    ...(savedSettings[key] || {})
+                };
+            });
+            state.styleSettings = finalSettings;
+
             const defaultBgColor = '#F8F9FB';
             await setActiveBackground(savedActiveBg || defaultBgColor);
             
@@ -326,13 +450,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderBackgrounds();
             updateButtonStates();
             updateModelButtonText();
-            updateInteractionModeUI();
+            
+            initializeInteractionModeAndStyle(); // 初始化互动模式和风格面板
+            // ▲▲▲ 修改结束 ▲▲▲
 
             const getChatHistory = () => state.chatHistory;
             const updateChatHistory = async (newHistory) => {
                 state.chatHistory = newHistory;
                 await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
-                await loadAndRenderHistory();
+                await loadAndRenderHistory(); // 使用新的历史记录刷新UI
                 updateButtonStates();
             };
             
