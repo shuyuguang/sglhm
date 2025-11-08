@@ -196,14 +196,19 @@
     color: var(--send-btn-bg);
 }
 
+/* ▼▼▼ 修改：调整底部表情选择器为4列固定布局 ▼▼▼ */
 .emoji-picker-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    /* 核心：创建4列，每列等宽 */
+    grid-template-columns: repeat(4, 1fr);
     gap: 10px;
     height: 100%;
+    /* 核心：设置最大高度并允许滚动 */
     max-height: 250px;
     overflow-y: auto;
 }
+/* ▲▲▲ 修改结束 ▲▲▲ */
+
 
 .emoji-picker-item {
     aspect-ratio: 1 / 1;
