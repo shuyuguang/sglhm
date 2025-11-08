@@ -24,7 +24,6 @@ export function renderChatRoomUI(character) {
             <main class="chat-messages" id="chat-messages-area"></main>
             <footer class="chat-input-area" id="chat-input-area">
                 <div class="actions-menu" id="actions-menu">
-                    <!-- ▼▼▼ 核心修改：将网格布局改为三栏列表布局 ▼▼▼ -->
                     <div class="actions-menu-content">
                         <div class="actions-columns-container">
                             <!-- 左区 -->
@@ -51,13 +50,14 @@ export function renderChatRoomUI(character) {
                             </div>
                             <!-- 右区 -->
                             <div class="actions-column">
-                                <button class="action-list-item"><i class="fa-solid fa-arrow-up-to-line"></i><span>回顶</span></button>
+                                <!-- ▼▼▼ 核心修改：更换图标 ▼▼▼ -->
+                                <button class="action-list-item"><i class="fa-solid fa-arrow-up"></i><span>回顶</span></button>
                                 <button class="action-list-item"><i class="fa-solid fa-location-crosshairs"></i><span>跳转</span></button>
-                                <button class="action-list-item"><i class="fa-solid fa-arrow-down-to-line"></i><span>回底</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-arrow-down"></i><span>回底</span></button>
+                                <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                             </div>
                         </div>
                     </div>
-                    <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                 </div>
                 <div class="chat-input-main" id="chat-input-main">
                     <div class="chat-input-controls">

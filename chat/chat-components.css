@@ -83,7 +83,7 @@
 .actions-menu-content {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 15px 5px; /* 调整内边距 */
+    padding: 10px 3px; /* 调整内边距 */
 }
 
 /* ▼▼▼ 核心修改：新的三栏列表布局样式 ▼▼▼ */
