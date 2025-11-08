@@ -1,18 +1,17 @@
-// 文件名: relia-chat/chat-room.js (已按您的要求修改)
+// 文件名: relia-chat/chat-room.js
 
 import { dbStorage } from '../common/db.js';
 import { PROFILE_DB_KEYS } from '../config/profile.config.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
 import { createChatEditor } from './chat-editor-bridge.js';
 import { initializeMessageMenu } from './message-edit.js';
-import { CHAT_STYLES } from './chat-prompt.js'; // 移除了 createChatPromptPanel 的导入
+import { CHAT_STYLES } from './chat-prompt.js';
 
 // 导入新模块
 import { renderChatRoomUI, renderMessage, renderSystemMessage } from './chat-ui.js';
 import { initializeMemorySystem } from './chat-memory.js';
 import { initializeModelSelector, updateModelButtonText } from './chat-model-selector.js';
 import { createApiHandler } from './chat-api.js';
-// [新增] 引入表情包系统
 import { initializeEmojiSystem } from './chat-emoji.js';
 
 
@@ -63,6 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             sendButtonsContainer: document.getElementById('send-buttons-container'),
             sendBtn: document.getElementById('send-btn'),
             respondBtn: document.getElementById('respond-btn'),
+            thinkingBtn: document.getElementById('thinking-btn'),
             selectModelBtn: document.getElementById('select-model-btn'),
             selectedModelName: document.getElementById('selected-model-name'),
             modelSelectorOverlay: document.getElementById('model-selector-overlay'),
@@ -111,7 +111,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             styleOutputMax: document.getElementById('style-output-max'),
             styleVisualLimit: document.getElementById('style-visual-limit'),
             styleMemoryLimit: document.getElementById('style-memory-limit'),
-            // [新增] 表情包相关元素
             emojiPickerBar: document.querySelector('.emoji-picker-bar'),
             emojiManagementGridContainer: document.getElementById('emoji-management-container'),
             emojiUploadInput: document.getElementById('emoji-upload-input'),
@@ -216,7 +215,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
             }
-            elements.respondBtn.disabled = false;
         }
         
         const onAiReply = async (replyMessages) => {
@@ -236,10 +234,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderMessage, renderSystemMessage, updateButtonStates, onAiReply
         });
 
-        /**
-         * 【已修复】发送表情的回调函数
-         * @param {object} emoji - 被点击的表情对象
-         */
         async function onSendEmoji(emoji) {
             const emojiMessage = {
                 sender: 'user',
@@ -250,8 +244,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             state.chatHistory.push(emojiMessage);
             await dbStorage.setItem(historyKey, state.chatHistory);
             renderMessage(emojiMessage, state.chatHistory.length - 1, user, character, elements.chatArea);
-            
-            // 【核心修复】发送表情后，立即更新按钮状态
             updateButtonStates();
         }
 
@@ -685,9 +677,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 state.chatHistory = newHistory;
                 await dbStorage.setItem(historyKey, state.chatHistory);
                 await loadAndRenderHistory();
+                updateButtonStates();
             };
             initializeMessageMenu(elements.chatArea, getChatHistory, updateChatHistory);
-            // [新增] 初始化表情包系统
             initializeEmojiSystem(elements, state, onSendEmoji);
         }
         await initializeChatState();
