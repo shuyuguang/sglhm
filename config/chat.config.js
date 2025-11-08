@@ -10,8 +10,18 @@ export const CHAT_DB_KEYS = {
     
     // 用于存储聊天记录的键名前缀
     // 我们会用 'chatHistory_角色ID' 的格式来为每个角色单独存储聊天记录
-    CHAT_HISTORY: 'chatHistory', // ▼▼▼ 修复：在这里添加了缺失的逗号 ▼▼▼
-    CHAT_SELECTED_API: 'chat_selected_api'
+    CHAT_HISTORY: 'chatHistory',
+    
+    // 用于存储每个聊天会话选择的API模型
+    CHAT_SELECTED_API: 'chat_selected_api',
+
+    // ▼▼▼ 新增：表情包和背景的数据库键 ▼▼▼
+    // 用于存储所有自定义表情包
+    EMOJIS: 'relia-chat-emojis',
+
+    // 用于存储所有自定义聊天背景
+    GLOBAL_BACKGROUNDS: 'relia-chat-global-backgrounds'
+    // ▲▲▲ 新增结束 ▲▲▲
 };
 
 // 为了方便，提供一个包含所有键的数组
