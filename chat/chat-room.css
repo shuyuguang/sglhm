@@ -181,7 +181,7 @@ html, body {
 }
 
 .send-buttons-container {
-    margin-left: -2px; /* 在表情按钮和发送按钮组之间减少一点空隙 */
+    margin-left: -5px; /* 在表情按钮和发送按钮组之间减少一点空隙 */
 }
 /* ▲▲▲ 修改结束 ▲▲▲ */
 
