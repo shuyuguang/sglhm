@@ -27,15 +27,15 @@ export function renderChatRoomUI(character) {
                     <div class="actions-menu-content">
                         <div class="actions-columns-container">
                             <!-- 左区 -->
-                            <div class="actions-column">
-                                <button class="action-list-item"><i class="fa-solid fa-folder-open"></i><span>管理聊天文件</span></button>
-                                <button class="action-list-item"><i class="fa-solid fa-pen-ruler"></i><span>编辑聊天记录</span></button>
-                                <button class="action-list-item"><i class="fa-solid fa-magnifying-glass"></i><span>查找关键词</span></button>
-                                <button class="action-list-item"><i class="fa-solid fa-timeline"></i><span>时间线</span></button>
-                                <button class="action-list-item"><i class="fa-regular fa-star"></i><span>收藏</span></button>
+                            <div class="actions-column">         
                                 <button class="action-list-item"><i class="fa-regular fa-comments"></i><span>新聊天</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-folder-open"></i><span>管理文件</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-pen-ruler"></i><span>全局编辑</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-magnifying-glass"></i><span>查找记录</span></button>
+                                <button class="action-list-item"><i class="fa-regular fa-star"></i><span>收藏</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-timeline"></i><span>时间线</span></button>
                                 <button class="action-list-item"><i class="fa-solid fa-arrows-rotate"></i><span>重新生成</span></button>
-                                <button class="action-list-item"><i class="fa-solid fa-forward"></i><span>继续生成</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-forward"></i><span>继续</span></button>
                             </div>
                             <!-- 中区 -->
                             <div class="actions-column">
