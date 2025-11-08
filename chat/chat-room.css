@@ -177,11 +177,11 @@ html, body {
 }
 
 #emoji-toggle-btn {
-    margin-left: 2px; /* 在输入框和表情按钮之间增加一点空隙 */
+    margin-left: 0px; /* 在输入框和表情按钮之间增加一点空隙 */
 }
 
 .send-buttons-container {
-    margin-left: 0px; /* 在表情按钮和发送按钮组之间增加一点空隙 */
+    margin-left: -2px; /* 在表情按钮和发送按钮组之间减少一点空隙 */
 }
 /* ▲▲▲ 修改结束 ▲▲▲ */
 
