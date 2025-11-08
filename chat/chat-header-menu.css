@@ -84,10 +84,8 @@
     box-sizing: border-box;
 }
 .secondary-content-pane.active {
-    /* ▼▼▼ 核心修复 ①: 强制父级也使用flex布局，为子元素提供稳定的高度计算基础 ▼▼▼ */
     display: flex;
     flex-direction: column;
-    /* ▲▲▲ 修复结束 ▲▲▲ */
 }
 
 /* --- 顶部菜单 - 记忆面板样式 --- */
@@ -268,7 +266,7 @@ input:checked + .slider:before {
     text-overflow: ellipsis;
 }
 
-/* ▼▼▼ 新增：顶部菜单 - 风格面板样式 ▼▼▼ */
+/* --- 顶部菜单 - 风格面板样式 --- */
 .style-settings-wrapper {
     padding: 8px;
     display: flex;
@@ -313,7 +311,6 @@ input:checked + .slider:before {
     color: #868e96;
     font-weight: 500;
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */
 
 /* --- 顶部菜单 - 模式面板样式 --- */
 .model-selection-group {
@@ -466,7 +463,6 @@ input:checked + .slider:before {
     object-fit: cover;
 }
 
-/* ▼▼▼ 新增：默认纯色背景的样式 ▼▼▼ */
 .bg-default-preview {
     width: 100%;
     height: 100%;
@@ -475,7 +471,6 @@ input:checked + .slider:before {
     cursor: not-allowed;
     opacity: 0.6;
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */
 
 /* 主题面板多选模式样式 */
 .theme-section.placeholder-section {
@@ -514,9 +509,8 @@ input:checked + .slider:before {
     opacity: 1;
 }
 
-/* 新的多选和删除按钮激活样式 */
 #delete-selected-bg-btn {
-    color: #ced4da; /* 默认禁用颜色 */
+    color: #ced4da;
     pointer-events: none;
 }
 
@@ -529,8 +523,6 @@ input:checked + .slider:before {
     color: var(--danger-color);
     pointer-events: auto;
 }
-
-/* relia-chat/chat-header-menu.css -> 在文件末尾添加 */
 
 /* --- 顶部菜单 - 表情包管理面板样式 --- */
 #emoji-management-container {
@@ -584,13 +576,11 @@ input:checked + .slider:before {
 .emoji-management-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-    /* ▼▼▼ 核心修改：统一使用 gap 属性，与背景图区域保持一致，确保行列间距，防止重叠 ▼▼▼ */
-    gap: 10px;
-    /* ▲▲▲ 修改结束 ▲▲▲ */
-    overflow-y: auto;
-    flex-grow: 1;
-    padding-right: 5px; /* for scrollbar */
-    min-height: 0; /* 这个属性对于防止flex子元素溢出至关重要 */
+    gap: 10px; /* 修改点：使用 gap 简写属性，确保行列间距 */
+    overflow-y: auto; /* 修改点：当内容超出时，垂直滚动 */
+    flex-grow: 1; /* 修改点：占据父容器所有剩余空间 */
+    padding-right: 5px; /* 为滚动条留出空间 */
+    min-height: 0; /* 修改点：flex 布局下的关键属性，防止子元素溢出 */
 }
 
 .emoji-management-grid .emoji-item {
