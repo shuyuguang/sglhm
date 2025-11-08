@@ -1,12 +1,8 @@
 // data-integration.js
 
-// ▼▼▼ 修改开始 ▼▼▼
-// 导入需要的配置变量
 import { ALL_APP_DB_KEYS } from '../config/app.config.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
-// 新增：导入 Profile 模块的 DB 键，用于识别和分离数据
-import { PROFILE_DB_KEYS } from '../config/profile.config.js'; 
-// ▲▲▲ 修改结束 ▲▲▲
+import { PROFILE_DB_KEYS } from '../config/profile.config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // ====================【数据库和配置】====================
@@ -24,14 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ====================【通用辅助函数】====================
     const getKeysToProcess = async () => {
-        const keys = new Set(ALL_APP_DB_KEYS);
-        const activeChatListData = await db.keyValueStore.get(CHAT_DB_KEYS.ACTIVE_CHAT_LIST);
-        if (activeChatListData && activeChatListData.value) {
-            activeChatListData.value.forEach(char => {
-                if (char.id) keys.add(`${CHAT_DB_KEYS.CHAT_HISTORY}_${char.id}`);
-            });
-        }
-        return Array.from(keys);
+        const staticKeys = new Set(ALL_APP_DB_KEYS);
+        const allKeys = await db.keyValueStore.toCollection().keys();
+        allKeys.forEach(key => staticKeys.add(key));
+        return Array.from(staticKeys);
     };
 
     const fetchDataFromDB = async (keys) => {
@@ -53,14 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getExtensionFromMime(mimeType) { return mimeType.split('/')[1] || 'bin'; }
 
-    // 新增：安全的文件名生成器
     function getSafeFilename(name, fallbackPrefix, id) {
         if (!name || name.trim() === '') {
-            return `${fallbackPrefix}_${id}.json`;
+            return `${fallbackPrefix}_${id}`;
         }
-        // 移除非法字符，替换为空格，然后去除多余空格
         const safeName = name.replace(/[\\/:*?"<>|]/g, ' ').trim();
-        return safeName ? `${safeName}.json` : `${fallbackPrefix}_${id}.json`;
+        return safeName || `${fallbackPrefix}_${id}`;
     }
 
     // ▼▼▼【核心修改】重写导出函数 `handleExport` ▼▼▼
@@ -75,66 +65,126 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const zip = new JSZip();
-            const profileFolder = zip.folder("profile");
-            const userFolder = profileFolder.folder("user");
-            const charFolder = profileFolder.folder("char");
-            const imageFolder = profileFolder.folder("image");
-            
-            const imageFiles = new Map();
+            const imageFiles = new Map(); // 用于收集所有需要写入文件的图片Blob
 
-            // 图片处理函数：将 dataURL 替换为文件路径
-            const imageReplacer = (key, value) => {
-                if (typeof value === 'string' && value.startsWith('data:image/')) {
-                    const blob = dataURLtoBlob(value);
-                    if (blob) {
-                        const extension = getExtensionFromMime(blob.type);
-                        const filename = `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${extension}`;
-                        imageFiles.set(filename, blob);
-                        // 注意：路径现在是相对于 profile 文件夹的根目录
-                        return `image/${filename}`; 
+            // --- 1. 处理 Profile 数据 ---
+            const profileFolder = zip.folder("profile");
+            if (profileFolder) {
+                const imageReplacer = (key, value) => {
+                    if (typeof value === 'string' && value.startsWith('data:image/')) {
+                        const blob = dataURLtoBlob(value);
+                        if (blob) {
+                            const extension = getExtensionFromMime(blob.type);
+                            const filename = `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${extension}`;
+                            imageFiles.set(`profile/image/${filename}`, blob);
+                            return `image/${filename}`;
+                        }
+                    }
+                    return value;
+                };
+                
+                const userData = allData[PROFILE_DB_KEYS.USER_PROFILES] || [];
+                userData.forEach(user => {
+                    const filename = getSafeFilename(user.name, 'user', user.id) + '.json';
+                    profileFolder.file(`user/${filename}`, JSON.stringify(user, imageReplacer, 2));
+                });
+                delete allData[PROFILE_DB_KEYS.USER_PROFILES];
+
+                const charData = allData[PROFILE_DB_KEYS.CHAR_PROFILES] || [];
+                charData.forEach(char => {
+                    const filename = getSafeFilename(char.name, 'char', char.id) + '.json';
+                    profileFolder.file(`char/${filename}`, JSON.stringify(char, imageReplacer, 2));
+                });
+                delete allData[PROFILE_DB_KEYS.CHAR_PROFILES];
+
+                if (allData[PROFILE_DB_KEYS.PRESETS]) {
+                    profileFolder.file("public.json", JSON.stringify(allData[PROFILE_DB_KEYS.PRESETS], null, 2));
+                    delete allData[PROFILE_DB_KEYS.PRESETS];
+                }
+            }
+            Object.values(PROFILE_DB_KEYS).forEach(key => delete allData[key]);
+
+            // --- 2. 处理 Chat 数据 ---
+            const chatFolder = zip.folder("chat");
+            if (chatFolder) {
+                // 2.1 导出 Active Chat List 到 public.json
+                if (allData[CHAT_DB_KEYS.ACTIVE_CHAT_LIST]) {
+                    chatFolder.file("public.json", JSON.stringify(allData[CHAT_DB_KEYS.ACTIVE_CHAT_LIST], null, 2));
+                    delete allData[CHAT_DB_KEYS.ACTIVE_CHAT_LIST];
+                }
+
+                // 2.2 导出 Emojis
+                const emojis = allData[CHAT_DB_KEYS.EMOJIS] || [];
+                const webEmojis = [];
+                emojis.forEach(emoji => {
+                    if (typeof emoji.data === 'string' && emoji.data.startsWith('data:image/')) {
+                        const blob = dataURLtoBlob(emoji.data);
+                        if (blob) {
+                            const extension = getExtensionFromMime(blob.type);
+                            const safeName = getSafeFilename(emoji.name, 'emoji', emoji.id);
+                            const filename = `${safeName}.${extension}`;
+                            imageFiles.set(`chat/emoji/image/${filename}`, blob);
+                            webEmojis.push({ ...emoji, data: `image/${filename}` });
+                        }
+                    } else {
+                        webEmojis.push(emoji);
+                    }
+                });
+                if (webEmojis.length > 0) {
+                    chatFolder.file("emoji/emoji.json", JSON.stringify(webEmojis, null, 2));
+                }
+                delete allData[CHAT_DB_KEYS.EMOJIS];
+
+                // 2.3 导出 Backgrounds
+                const backgrounds = allData[CHAT_DB_KEYS.GLOBAL_BACKGROUNDS] || [];
+                const webBackgrounds = [];
+                backgrounds.forEach((bg, index) => {
+                    if (typeof bg === 'string' && bg.startsWith('data:image/')) {
+                        const blob = dataURLtoBlob(bg);
+                        if (blob) {
+                            const extension = getExtensionFromMime(blob.type);
+                            const filename = `background_${index}.${extension}`;
+                            imageFiles.set(`chat/backgrounds/image/${filename}`, blob);
+                            webBackgrounds.push(`image/${filename}`);
+                        }
+                    } else {
+                        webBackgrounds.push(bg);
+                    }
+                });
+                 if (webBackgrounds.length > 0) {
+                    chatFolder.file("backgrounds/backgrounds.json", JSON.stringify(webBackgrounds, null, 2));
+                }
+                delete allData[CHAT_DB_KEYS.GLOBAL_BACKGROUNDS];
+                
+                // 2.4 导出聊天记录
+                const allCharProfiles = await db.keyValueStore.get(PROFILE_DB_KEYS.CHAR_PROFILES).then(d => d ? d.value : []) || [];
+                const charIdToNameMap = new Map(allCharProfiles.map(c => [c.id, c.name]));
+                
+                for (const key in allData) {
+                    if (key.startsWith(`${CHAT_DB_KEYS.CHAT_HISTORY}_`)) {
+                        const charId = key.substring(CHAT_DB_KEYS.CHAT_HISTORY.length + 1);
+                        const charName = charIdToNameMap.get(charId) || 'UnknownChar';
+                        const safeCharName = getSafeFilename(charName, 'chat', charId);
+                        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                        const historyFilename = `${safeCharName}_${timestamp}.json`;
+                        chatFolder.file(`${safeCharName}/${historyFilename}`, JSON.stringify(allData[key], null, 2));
+                        delete allData[key];
                     }
                 }
-                return value;
-            };
-
-            // 1. 处理用户(User)数据
-            const userData = allData[PROFILE_DB_KEYS.USER_PROFILES] || [];
-            userData.forEach(user => {
-                const filename = getSafeFilename(user.name, 'user', user.id);
-                const jsonString = JSON.stringify(user, imageReplacer, 2);
-                userFolder.file(filename, jsonString);
-            });
-            delete allData[PROFILE_DB_KEYS.USER_PROFILES]; // 从主数据中移除，避免重复打包
-
-            // 2. 处理角色(Char)数据
-            const charData = allData[PROFILE_DB_KEYS.CHAR_PROFILES] || [];
-            charData.forEach(char => {
-                const filename = getSafeFilename(char.name, 'char', char.id);
-                const jsonString = JSON.stringify(char, imageReplacer, 2);
-                charFolder.file(filename, jsonString);
-            });
-            delete allData[PROFILE_DB_KEYS.CHAR_PROFILES];
-
-            // 3. 处理公共预设(Public)数据
-            const presets = allData[PROFILE_DB_KEYS.PRESETS];
-            if (presets) {
-                profileFolder.file("public.json", JSON.stringify(presets, null, 2));
             }
-            delete allData[PROFILE_DB_KEYS.PRESETS];
-
-            // 4. 将剩余的其他数据（如聊天、API设置等）存入根目录的 data.json
-            // 同时，也移除 profile 相关的其他键
-            Object.values(PROFILE_DB_KEYS).forEach(key => delete allData[key]);
+            
+            // --- 3. 处理剩余数据 ---
+            Object.values(CHAT_DB_KEYS).forEach(key => delete allData[key]);
             if (Object.keys(allData).length > 0) {
                  zip.file("data.json", JSON.stringify(allData, null, 2));
             }
 
-            // 5. 将收集到的所有图片文件写入 image 文件夹
-            for (const [filename, blob] of imageFiles.entries()) {
-                imageFolder.file(filename, blob);
+            // --- 4. 写入所有图片文件 ---
+            for (const [path, blob] of imageFiles.entries()) {
+                zip.file(path, blob);
             }
 
-            // 6. 生成并下载 ZIP 文件
+            // --- 5. 生成并下载 ZIP ---
             const content = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 9 } });
             const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
             const zipFilename = `felotus-data-${timestamp}.zip`;
@@ -146,7 +196,6 @@ document.addEventListener('DOMContentLoaded', () => {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(a.href);
-
             alert(`数据已成功导出为 ${zipFilename}`);
         } catch (error) {
             console.error('导出数据时出错:', error);
@@ -165,106 +214,113 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const zip = await JSZip.loadAsync(file);
             let importedData = {};
+            const imageBase64Map = new Map();
 
-            // 检查是新结构还是旧结构
-            const isNewStructure = zip.folder("profile").length > 0;
-
-            if (isNewStructure) {
-                // --- 新结构导入逻辑 ---
-                const imageBase64Map = new Map();
-                const imagePromises = [];
-                zip.folder("profile/image").forEach((relativePath, imageFile) => {
+            // --- 1. 预加载所有图片为 DataURL ---
+            const imageFolders = ["profile/image/", "chat/emoji/image/", "chat/backgrounds/image/", "images/"];
+            const imagePromises = [];
+            for (const folderPrefix of imageFolders) {
+                zip.folder(folderPrefix).forEach((relativePath, imageFile) => {
                     const promise = imageFile.async("blob").then(blob => new Promise((resolve, reject) => {
                         const reader = new FileReader();
-                        reader.onloadend = () => resolve({ filename: `image/${relativePath}`, dataUrl: reader.result });
+                        reader.onloadend = () => resolve({
+                            // 标准化路径，移除前导文件夹
+                            filename: `image/${relativePath}`, 
+                            dataUrl: reader.result
+                        });
                         reader.onerror = reject;
                         reader.readAsDataURL(blob);
                     }));
                     imagePromises.push(promise);
                 });
-                const resolvedImages = await Promise.all(imagePromises);
-                resolvedImages.forEach(img => imageBase64Map.set(img.filename, img.dataUrl));
-                
-                function reconstructData(data) {
-                    if (Array.isArray(data)) return data.map(item => reconstructData(item));
-                    if (data !== null && typeof data === 'object') {
-                        return Object.fromEntries(Object.entries(data).map(([key, value]) => [key, reconstructData(value)]));
-                    }
-                    if (typeof data === 'string' && data.startsWith('image/')) {
-                        return imageBase64Map.get(data) || data;
-                    }
-                    return data;
+            }
+            const resolvedImages = await Promise.all(imagePromises);
+            resolvedImages.forEach(img => imageBase64Map.set(img.filename, img.dataUrl));
+            
+            // --- 2. 定义通用的数据重构函数 ---
+            function reconstructData(data) {
+                if (Array.isArray(data)) return data.map(item => reconstructData(item));
+                if (data !== null && typeof data === 'object') {
+                    return Object.fromEntries(Object.entries(data).map(([key, value]) => [key, reconstructData(value)]));
                 }
-
-                // 读取 profile/user/ 下的所有json
-                const userFiles = zip.folder("profile/user").filter((path, file) => file.name.endsWith('.json'));
-                const userPromises = userFiles.map(file => file.async("string").then(JSON.parse));
-                importedData[PROFILE_DB_KEYS.USER_PROFILES] = await Promise.all(userPromises);
-
-                // 读取 profile/char/ 下的所有json
-                const charFiles = zip.folder("profile/char").filter((path, file) => file.name.endsWith('.json'));
-                const charPromises = charFiles.map(file => file.async("string").then(JSON.parse));
-                importedData[PROFILE_DB_KEYS.CHAR_PROFILES] = await Promise.all(charPromises);
-
-                // 读取 public.json
-                const publicFile = zip.file("profile/public.json");
-                if (publicFile) {
-                    importedData[PROFILE_DB_KEYS.PRESETS] = JSON.parse(await publicFile.async("string"));
+                if (typeof data === 'string' && data.startsWith('image/')) {
+                    // 兼容新旧两种路径前缀
+                    return imageBase64Map.get(data) || imageBase64Map.get(data.replace(/^image\//, 'images/')) || data;
                 }
-                
-                // 读取根目录的 data.json (其他数据)
-                const otherDataFile = zip.file("data.json");
-                if (otherDataFile) {
-                    const otherData = JSON.parse(await otherDataFile.async("string"));
-                    Object.assign(importedData, otherData);
-                }
-                
-                // 替换所有数据中的图片路径为 dataURL
-                importedData = reconstructData(importedData);
-
-            } else {
-                // --- 旧结构导入逻辑 (兼容) ---
-                const jsonFile = zip.file("data.json");
-                if (!jsonFile) throw new Error("ZIP 文件中未找到 data.json");
-                const jsonContent = await jsonFile.async("string");
-                let oldImportedData = JSON.parse(jsonContent);
-
-                const imageBase64Map = new Map();
-                const imagePromises = [];
-                zip.folder("images").forEach((relativePath, imageFile) => {
-                    const promise = imageFile.async("blob").then(blob => new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onloadend = () => resolve({ filename: `images/${relativePath}`, dataUrl: reader.result });
-                        reader.onerror = reject;
-                        reader.readAsDataURL(blob);
-                    }));
-                    imagePromises.push(promise);
-                });
-                const resolvedImages = await Promise.all(imagePromises);
-                resolvedImages.forEach(img => imageBase64Map.set(img.filename, img.dataUrl));
-                
-                function reconstructOldData(data) {
-                    if (Array.isArray(data)) return data.map(item => reconstructOldData(item));
-                    if (data !== null && typeof data === 'object') {
-                         return Object.fromEntries(Object.entries(data).map(([key, value]) => [key, reconstructOldData(value)]));
-                    }
-                    if (typeof data === 'string' && data.startsWith('images/')) {
-                        return imageBase64Map.get(data) || data;
-                    }
-                    return data;
-                }
-                importedData = reconstructOldData(oldImportedData);
+                return data;
             }
 
-            // --- 通用写入数据库逻辑 ---
+            // --- 3. 按顺序处理数据文件 ---
+            // 3.1 导入 Profile (必须先做，为聊天记录提供ID映射)
+            const profileUserFiles = zip.folder("profile/user").filter((p, f) => f.name.endsWith('.json'));
+            if (profileUserFiles.length > 0) {
+                 const userPromises = profileUserFiles.map(f => f.async("string").then(JSON.parse));
+                 importedData[PROFILE_DB_KEYS.USER_PROFILES] = await Promise.all(userPromises);
+            }
+            const profileCharFiles = zip.folder("profile/char").filter((p, f) => f.name.endsWith('.json'));
+            let nameToIdMap = new Map();
+            if (profileCharFiles.length > 0) {
+                const charPromises = profileCharFiles.map(f => f.async("string").then(JSON.parse));
+                const charProfiles = await Promise.all(charPromises);
+                importedData[PROFILE_DB_KEYS.CHAR_PROFILES] = charProfiles;
+                nameToIdMap = new Map(charProfiles.map(c => [getSafeFilename(c.name, 'char', c.id), c.id]));
+            }
+            const profilePublicFile = zip.file("profile/public.json");
+            if (profilePublicFile) {
+                importedData[PROFILE_DB_KEYS.PRESETS] = JSON.parse(await profilePublicFile.async("string"));
+            }
+
+            // 3.2 导入 Chat
+            const chatPublicFile = zip.file("chat/public.json");
+            if (chatPublicFile) {
+                importedData[CHAT_DB_KEYS.ACTIVE_CHAT_LIST] = JSON.parse(await chatPublicFile.async("string"));
+            }
+            const emojiFile = zip.file("chat/emoji/emoji.json");
+            if (emojiFile) {
+                importedData[CHAT_DB_KEYS.EMOJIS] = JSON.parse(await emojiFile.async("string"));
+            }
+            const backgroundsFile = zip.file("chat/backgrounds/backgrounds.json");
+            if(backgroundsFile) {
+                 importedData[CHAT_DB_KEYS.GLOBAL_BACKGROUNDS] = JSON.parse(await backgroundsFile.async("string"));
+            }
+            
+            const chatHistoryFolders = zip.folder("chat").filter((path, file) => file.dir);
+            for (const folder of chatHistoryFolders) {
+                // 排除 emoji 和 backgrounds 文件夹
+                if (folder.name.endsWith('emoji/') || folder.name.endsWith('backgrounds/')) continue;
+                
+                const safeCharName = folder.name.split('/').filter(Boolean).pop();
+                const charId = nameToIdMap.get(safeCharName);
+                if (charId) {
+                    const historyFiles = zip.folder(folder.name).filter((p, f) => f.name.endsWith('.json'));
+                    if (historyFiles.length > 0) {
+                        // 假设每个文件夹只有一个最新的历史文件，或者合并它们
+                        const historyContent = await historyFiles[0].async("string");
+                        importedData[`${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`] = JSON.parse(historyContent);
+                    }
+                }
+            }
+
+            // 3.3 导入根目录的 data.json (兼容旧版和新版的剩余数据)
+            const rootDataFile = zip.file("data.json");
+            if (rootDataFile) {
+                Object.assign(importedData, JSON.parse(await rootDataFile.async("string")));
+            }
+
+            // --- 4. 最终处理和写入 ---
+            const finalData = reconstructData(importedData);
+            
             const dataToPut = [];
-            const allKeys = await getKeysToProcess();
-            for (const key in importedData) {
-                 if (allKeys.includes(key) || key.startsWith(`${CHAT_DB_KEYS.CHAT_HISTORY}_`)) {
-                    dataToPut.push({ key, value: importedData[key] });
+            const allKnownKeys = new Set(await getKeysToProcess());
+            for (const key in finalData) {
+                if (allKnownKeys.has(key) || key.startsWith(CHAT_DB_KEYS.CHAT_HISTORY) || key.startsWith('relia-chat-')) {
+                     dataToPut.push({ key, value: finalData[key] });
                 }
             }
-            if (dataToPut.length === 0) { alert('文件中没有找到可导入的数据。'); return; }
+            if (dataToPut.length === 0) {
+                alert('文件中没有找到可导入的数据。'); 
+                return;
+            }
             
             await db.keyValueStore.bulkPut(dataToPut);
             alert('数据导入成功！\n请返回主页并刷新页面。');
