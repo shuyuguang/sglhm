@@ -581,13 +581,13 @@ input:checked + .slider:before {
 .emoji-management-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-    /* ▼▼▼ 核心修改：明确设置行和列的间距，确保一致性 ▼▼▼ */
-    row-gap: 10px;
-    column-gap: 10px;
-    /* ▲▲▲ 修改结束 ▲▲▲ */
+    gap: 10px; /* 统一设置行列间距 */
     overflow-y: auto;
     flex-grow: 1;
     padding-right: 5px; /* for scrollbar */
+    /* ▼▼▼ 核心修复：添加此行以解决flex容器内滚动区域的计算问题 ▼▼▼ */
+    min-height: 0;
+    /* ▲▲▲ 修复结束 ▲▲▲ */
 }
 
 .emoji-management-grid .emoji-item {
