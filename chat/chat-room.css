@@ -169,7 +169,8 @@ html, body {
 
 .send-action-btn { background-color: #e9ecef; color: #495057; border: none; border-radius: 20px; cursor: pointer; transition: background-color 0.2s ease; white-space: nowrap; }
 .send-action-btn:hover { background-color: #dee2e6; }
-#respond-btn, #send-btn { width: 42px; height: 42px; border-radius: 50%; font-size: 1.1rem; padding: 0; display: flex; align-items: center; justify-content: center; }
+#respond-btn { width: 42px; height: 42px; border-radius: 50%; font-size: 1.1rem; padding: 0; display: flex; align-items: center; justify-content: center; }
+#send-btn { width: 42px; height: 42px; border-radius: 50%; font-size: 1.3rem;transform: rotate(45deg); padding: 0; display: flex; align-items: center; justify-content: center; }
 #send-btn.primary { background-color: var(--send-btn-bg); color: var(--text-light); }
 #send-btn.primary:hover { filter: brightness(1.1); }
 .send-action-btn.model-select-btn { background-color: #f1f3f5; color: #495057; max-width: 120px; padding: 5px 14px; font-size: 0.85rem; font-weight: 500; }
