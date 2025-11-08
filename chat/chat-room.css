@@ -203,16 +203,21 @@ html, body {
 
 /* relia-chat/chat-room.css -> 在文件末尾添加 */
 
-/* --- 聊天气泡内表情样式 --- */
+/* --- 【核心修复】聊天气泡内表情样式 --- */
 .chat-bubble.is-emoji-message {
     padding: 0;
     background-color: transparent;
-    max-width: 120px;
+    /* 移除对气泡本身的尺寸限制，让它由内部图片决定 */
+    max-width: none;
 }
 
 .message-emoji-img {
     display: block;
-    width: 100%;
+    /* 直接在这里严格限制图片的最大显示尺寸 */
+    max-width: 128px;
+    max-height: 128px;
+    /* 保持图片自身宽高比 */
+    width: auto;
     height: auto;
     border-radius: 10px;
 }
