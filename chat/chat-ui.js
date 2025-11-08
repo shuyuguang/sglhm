@@ -24,25 +24,36 @@ export function renderChatRoomUI(character) {
             <main class="chat-messages" id="chat-messages-area"></main>
             <footer class="chat-input-area" id="chat-input-area">
                 <div class="actions-menu" id="actions-menu">
-                    <!-- ▼▼▼ 核心修改：移除了Tab栏和其它面板，只保留核心动作网格 ▼▼▼ -->
-                    <div class="actions-menu-content" id="actions-menu-content">
-                        <div id="menu-content-actions" class="actions-menu-pane active">
-                            <div class="actions-grid-container">
-                                <div class="action-item"><button class="action-btn"><i class="fa-solid fa-image"></i></button><span>图片</span></div>
-                                <div class="action-item"><button class="action-btn"><i class="fa-solid fa-camera"></i></button><span>拍照</span></div>
-                                <div class="action-item"><button class="action-btn"><i class="fa-solid fa-microphone"></i></button><span>音频</span></div>
-                                <div class="action-item"><button class="action-btn"><i class="fa-solid fa-palette"></i></button><span>主题</span></div>
-                                <div class="action-item"><button class="action-btn"><i class="fa-solid fa-list-check"></i></button><span>DIY</span></div>
-                                <div class="action-item"><button class="action-btn" id="edit-settings-btn"><i class="fa-solid fa-pencil"></i></button><span>编辑</span></div>
-                                <div class="action-item"><button class="action-btn" id="search-history-btn"><i class="fa-solid fa-brain"></i></button><span>数据</span></div>
-                                <div class="action-item"><button class="action-btn"><i class="fa-solid fa-money-bill-transfer"></i></button><span>转账</span></div>
-                                <div class="action-item"><button class="action-btn"><i class="fa-solid fa-sack-dollar"></i></button><span>收款</span></div>
-                                <div class="action-item"><button class="action-btn"><i class="fa-solid fa-gift"></i></button><span>礼物</span></div>
-                                <div class="action-item"><button class="action-btn"><i class="fa-solid fa-phone"></i></button><span>通话</span></div>
-                                <div class="action-item"><button class="action-btn"><i class="fa-solid fa-location-dot"></i></button><span>位置</span></div>
-                                <div class="action-item"><button class="action-btn"><i class="fa-solid fa-music"></i></button><span>听歌</span></div>
-                                <div class="action-item"><button class="action-btn"><i class="fa-solid fa-calendar-check"></i></button><span>打卡</span></div>
-                                <div class="action-item"><button class="action-btn"><i class="fa-solid fa-link"></i></button><span>接龙</span></div>
+                    <!-- ▼▼▼ 核心修改：将网格布局改为三栏列表布局 ▼▼▼ -->
+                    <div class="actions-menu-content">
+                        <div class="actions-columns-container">
+                            <!-- 左区 -->
+                            <div class="actions-column">
+                                <button class="action-list-item"><i class="fa-solid fa-folder-open"></i><span>管理聊天文件</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-pen-ruler"></i><span>编辑聊天记录</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-magnifying-glass"></i><span>查找关键词</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-timeline"></i><span>时间线</span></button>
+                                <button class="action-list-item"><i class="fa-regular fa-star"></i><span>收藏</span></button>
+                                <button class="action-list-item"><i class="fa-regular fa-comments"></i><span>新聊天</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-arrows-rotate"></i><span>重新生成</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-forward"></i><span>继续生成</span></button>
+                            </div>
+                            <!-- 中区 -->
+                            <div class="actions-column">
+                                <button class="action-list-item"><i class="fa-solid fa-image"></i><span>图片</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-link"></i><span>链接</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-microphone"></i><span>语音</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-money-bill-transfer"></i><span>转账</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-gift"></i><span>礼物</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-phone"></i><span>通话</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-location-dot"></i><span>定位</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-music"></i><span>听歌</span></button>
+                            </div>
+                            <!-- 右区 -->
+                            <div class="actions-column">
+                                <button class="action-list-item"><i class="fa-solid fa-arrow-up-to-line"></i><span>回顶</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-location-crosshairs"></i><span>跳转</span></button>
+                                <button class="action-list-item"><i class="fa-solid fa-arrow-down-to-line"></i><span>回底</span></button>
                             </div>
                         </div>
                     </div>
@@ -61,7 +72,6 @@ export function renderChatRoomUI(character) {
                         </div>
                     </div>
                 </div>
-                <!-- [修改] 填充底部表情选择面板 -->
                 <div class="emoji-picker-bar">
                     <!-- 表情选择器将由JS动态生成到这里 -->
                 </div>
@@ -93,7 +103,6 @@ export function renderMessage(message, index, user, character, chatArea) {
     const bubble = document.createElement('div');
     bubble.className = `chat-bubble ${sender}`;
 
-    // [修改] 核心修改：判断是否为表情消息
     if (isEmoji) {
         bubble.classList.add('is-emoji-message');
         bubble.innerHTML = `<img src="${data}" alt="emoji" class="message-emoji-img">`;

@@ -71,7 +71,7 @@
 }
 
 .chat-input-area.actions-expanded .actions-menu {
-    max-height: 280px;
+    max-height: 320px; /* 稍微增加高度以容纳更多行 */
     opacity: 1;
 }
 
@@ -83,37 +83,60 @@
 .actions-menu-content {
     flex-grow: 1;
     overflow-y: auto;
-    /* ▼▼▼ 核心修改：调整内边距，使其上下一致 ▼▼▼ */
-    padding: 20px 15px;
+    padding: 15px 5px; /* 调整内边距 */
 }
 
-.actions-menu-pane {
+/* ▼▼▼ 核心修改：新的三栏列表布局样式 ▼▼▼ */
+.actions-columns-container {
+    display: flex;
+    justify-content: space-around; /* 均匀分布各列 */
+}
+
+.actions-column {
+    display: flex;
+    flex-direction: column;
+    gap: 18px; /* 设置每列中项目的垂直间距 */
+}
+
+.action-list-item {
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-size: 0.9em;
+    color: #595959;
+    width: 100%;
+    text-align: left;
+}
+
+.action-list-item:hover {
+    color: #333;
+}
+
+.action-list-item i {
+    font-size: 1.1em;
+    width: 28px; /* 固定图标宽度以对齐文本 */
+    text-align: center;
+    margin-right: 10px;
+    color: #868e96;
+}
+
+.action-list-item:hover i {
+    color: var(--send-btn-bg);
+}
+
+/* 移除旧的网格样式 */
+.actions-grid-container,
+.placeholder-pane {
     display: none;
 }
-.actions-menu-pane.active {
-    display: block;
-}
-
-.actions-grid-container {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    row-gap: 20px;
-}
-
-.placeholder-pane {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100px;
-    color: var(--text-meta);
-}
-
-/* ▼▼▼ 核心修改：移除了所有 .actions-menu-tabs 的样式 ▼▼▼ */
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
 /* 1. 将整个输入栏区域背景设为白色，并保留底部安全距离 */
 .chat-input-area {
     background-color: #ffffff;
-    /* 适配 iPhone 等设备的底部安全区域 */
     padding-bottom: constant(safe-area-inset-bottom);
     padding-bottom: env(safe-area-inset-bottom);
 }
@@ -147,9 +170,6 @@
 .chat-input-area.actions-expanded #actions-toggle-btn {
     background-color: transparent;
 }
-/* ▲▲▲ 修正结束 ▲▲▲ */
-
-/* relia-chat/chat-components.css -> 在文件末尾添加 */
 
 /* --- 底部表情选择器样式 --- */
 .emoji-picker-bar {
@@ -162,7 +182,6 @@
 }
 
 .chat-input-area.emoji-expanded .emoji-picker-bar {
-    /* ▼▼▼ 核心修改：减小展开后的最大高度，以限制内容区域大小 ▼▼▼ */
     max-height: 250px;
     opacity: 1;
     padding: 15px;
@@ -172,17 +191,13 @@
     color: var(--send-btn-bg);
 }
 
-/* ▼▼▼ 核心修改：调整表情网格为4列、约3行高，并可滚动 ▼▼▼ */
 .emoji-picker-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
-    /* 设置一个固定的最大高度，视觉上容纳约3行，超出部分则可滚动 */
     max-height: 220px;
     overflow-y: auto;
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
-
 
 .emoji-picker-item {
     aspect-ratio: 1 / 1;
