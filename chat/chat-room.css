@@ -17,7 +17,7 @@ html, body {
     height: 100%;
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: var(--page-bg);
+    background-color: #fff; /* 将页面默认背景设为白色或任何中性色 */
     overflow: hidden;
 }
 
@@ -25,6 +25,12 @@ html, body {
     display: flex;
     flex-direction: column;
     height: 100dvh;
+    /* ▼▼▼ 新增：为容器设置默认背景和背景图样式 ▼▼▼ */
+    background-color: var(--page-bg);
+    background-size: cover;
+    background-position: center;
+    transition: background-color 0.3s ease;
+    /* ▲▲▲ 新增结束 ▲▲▲ */
 }
 
 /* ▼▼▼ 修改点：调整了聊天室头部的布局方式和尺寸 ▼▼▼ */
@@ -76,7 +82,9 @@ html, body {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    background-color: #ffffff;
+    /* ▼▼▼ 修改：默认背景改为透明，以显示父容器的背景 ▼▼▼ */
+    background-color: transparent;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
     transition: background-color 0.3s ease;
 }
 .message-row { display: flex; align-items: flex-start; gap: 10px; max-width: 80%; }
@@ -170,7 +178,7 @@ html, body {
 .send-action-btn { background-color: #e9ecef; color: #495057; border: none; border-radius: 20px; cursor: pointer; transition: background-color 0.2s ease; white-space: nowrap; }
 .send-action-btn:hover { background-color: #dee2e6; }
 #respond-btn { width: 42px; height: 42px; border-radius: 50%; font-size: 1.1rem; padding: 0; display: flex; align-items: center; justify-content: center; }
-#send-btn { width: 42px; height: 42px; border-radius: 50%; font-size: 1.3rem;transform: rotate(45deg); align-items: center; justify-content: center; }
+#send-btn { width: 42px; height: 42px; border-radius: 50%; font-size: 1.5rem;transform: rotate(45deg); align-items: center; justify-content: center; }
 #send-btn.primary { background-color: var(--send-btn-bg); color: var(--text-light); }
 #send-btn.primary:hover { filter: brightness(1.1); }
 .send-action-btn.model-select-btn { background-color: #f1f3f5; color: #495057; max-width: 120px; padding: 5px 14px; font-size: 0.85rem; font-weight: 500; }

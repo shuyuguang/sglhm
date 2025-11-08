@@ -139,7 +139,7 @@
     background-color: #ffffff;
     border: 1px solid var(--border-color);
     border-radius: 24px; /* 胶囊形状 */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); /* 可以加一点阴影增加层次感 */
+
     /* 移除从父级继承的背景和边框 */
     border-top: none; 
 }
@@ -154,19 +154,19 @@
     box-shadow: none;
 }
 
-/* 3. 加深功能按钮（加号、表情、响应）的图标颜色 */
+/* 3. 加号、表情、响应按钮的图标颜色改为与顶部三杠菜单一致 */
 .chat-input-area #actions-toggle-btn,
 .chat-input-area #emoji-toggle-btn,
 .chat-input-area #respond-btn {
-    color: #495057; /* 使用一个更深的灰色，使其更明显 */
+    color: #657881; /* 与顶部菜单图标颜色统一 */
 }
 
-/* 4. 保持发送按钮的状态颜色逻辑 */
+/* 4. 修改发送按钮的图标颜色 */
 .chat-input-area #send-btn {
-    color: var(--text-meta); /* 默认时保持原来的浅灰色 */
+    color: #39f; 
 }
 .chat-input-area #send-btn.active {
-    color: var(--send-btn-bg); /* 激活时变为主题色 */
+    color: #39f; 
 }
 
 /* 5. 确保在其他状态下（如展开菜单时）按钮背景依然是透明的 */

@@ -234,19 +234,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         
-        // ▼▼▼ 修改点：重写 renderBackgrounds 函数以包含默认背景 ▼▼▼
         function renderBackgrounds() {
             elements.bgThumbnailsContainer.innerHTML = '';
             const defaultBgColor = '#F8F9FB';
 
-            // 1. 创建并渲染默认背景项
             const defaultItem = document.createElement('div');
             defaultItem.className = 'bg-thumbnail-item';
-            defaultItem.dataset.defaultBg = 'true'; // 添加特殊标记
+            defaultItem.dataset.defaultBg = 'true'; 
             if (defaultBgColor === state.activeBackground) {
                 defaultItem.classList.add('active');
             }
-            // 多选模式下，默认项不可被选中
             if (state.isBgMultiSelectMode) {
                 defaultItem.classList.add('disabled');
             }
@@ -255,11 +252,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             colorPreview.className = 'bg-default-preview';
             colorPreview.style.backgroundColor = defaultBgColor;
             
-            // 默认项不需要多选覆盖层
             defaultItem.appendChild(colorPreview);
             elements.bgThumbnailsContainer.appendChild(defaultItem);
 
-            // 2. 渲染用户上传的背景
             state.backgrounds.forEach((bgUrl, index) => {
                 const item = document.createElement('div');
                 item.className = 'bg-thumbnail-item';
@@ -284,33 +279,30 @@ document.addEventListener('DOMContentLoaded', async () => {
                 elements.bgThumbnailsContainer.appendChild(item);
             });
         }
-        // ▲▲▲ 修改结束 ▲▲▲
 
+        // ▼▼▼ 核心修改：将背景应用到 .chat-container 而不是 .chat-messages-area ▼▼▼
         async function setActiveBackground(bgUrl) {
             state.activeBackground = bgUrl;
-            if (elements.chatArea) {
-                // ▼▼▼ 修改点：根据传入的是URL还是颜色值来设置背景 ▼▼▼
+            const container = document.querySelector('.chat-container');
+            if (container) {
                 if (bgUrl && bgUrl.startsWith('#')) {
-                    elements.chatArea.style.backgroundImage = '';
-                    elements.chatArea.style.backgroundColor = bgUrl;
-                    document.querySelector('.chat-container').classList.remove('has-background');
+                    container.style.backgroundImage = '';
+                    container.style.backgroundColor = bgUrl;
+                    container.classList.remove('has-background');
                 } else if (bgUrl) {
-                    elements.chatArea.style.backgroundColor = '';
-                    elements.chatArea.style.backgroundImage = `url('${bgUrl}')`;
-                    elements.chatArea.style.backgroundSize = 'cover';
-                    elements.chatArea.style.backgroundPosition = 'center';
-                    document.querySelector('.chat-container').classList.add('has-background');
+                    container.style.backgroundColor = '';
+                    container.style.backgroundImage = `url('${bgUrl}')`;
+                    container.classList.add('has-background');
                 } else {
-                    // 如果传入null，清除所有背景
-                    elements.chatArea.style.backgroundImage = '';
-                    elements.chatArea.style.backgroundColor = ''; // 也可以设置为默认页面背景色
-                    document.querySelector('.chat-container').classList.remove('has-background');
+                    container.style.backgroundImage = '';
+                    container.style.backgroundColor = ''; 
+                    container.classList.remove('has-background');
                 }
-                // ▲▲▲ 修改结束 ▲▲▲
             }
             await dbStorage.setItem(activeBgDbKey, bgUrl);
             renderBackgrounds();
         }
+        // ▲▲▲ 修改结束 ▲▲▲
 
         function enterBgMultiSelectMode() {
             state.isBgMultiSelectMode = true;
@@ -522,24 +514,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
         
-        // ▼▼▼ 修改点：调整背景容器的点击事件处理 ▼▼▼
         if (elements.bgThumbnailsContainer) {
             elements.bgThumbnailsContainer.addEventListener('click', (e) => {
                 const item = e.target.closest('.bg-thumbnail-item');
                 if (!item) return;
 
-                // Case 1: 点击了默认背景
                 if (item.dataset.defaultBg === 'true') {
                     const defaultBgColor = '#F8F9FB';
                     if (state.activeBackground === defaultBgColor) {
-                        setActiveBackground(null); // 再次点击则取消
+                        setActiveBackground(null);
                     } else {
                         setActiveBackground(defaultBgColor);
                     }
                     return;
                 }
 
-                // Case 2: 点击了用户上传的背景
                 const index = parseInt(item.dataset.index, 10);
                 if (isNaN(index)) return;
                 
@@ -561,7 +550,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
-        // ▲▲▲ 修改结束 ▲▲▲
 
         if (elements.multiSelectBgBtn) {
             elements.multiSelectBgBtn.addEventListener('click', () => {
@@ -638,21 +626,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             state.backgrounds = savedBackgrounds || [];
             
-            // ▼▼▼ 修改点：初始化时应用背景 ▼▼▼
+            // ▼▼▼ 核心修改：初始化时应用背景到 .chat-container，若无保存则使用默认背景 ▼▼▼
+            const container = document.querySelector('.chat-container');
+            const defaultBgColor = '#F8F9FB';
             if (savedActiveBg) {
                 state.activeBackground = savedActiveBg;
-                if (elements.chatArea) {
+                if (container) {
                      if (savedActiveBg.startsWith('#')) {
-                        elements.chatArea.style.backgroundImage = '';
-                        elements.chatArea.style.backgroundColor = savedActiveBg;
-                        document.querySelector('.chat-container').classList.remove('has-background');
+                        container.style.backgroundImage = '';
+                        container.style.backgroundColor = savedActiveBg;
+                        container.classList.remove('has-background');
                     } else {
-                        elements.chatArea.style.backgroundColor = '';
-                        elements.chatArea.style.backgroundImage = `url('${savedActiveBg}')`;
-                        elements.chatArea.style.backgroundSize = 'cover';
-                        elements.chatArea.style.backgroundPosition = 'center';
-                        document.querySelector('.chat-container').classList.add('has-background');
+                        container.style.backgroundColor = '';
+                        container.style.backgroundImage = `url('${savedActiveBg}')`;
+                        container.classList.add('has-background');
                     }
+                }
+            } else {
+                state.activeBackground = defaultBgColor;
+                if (container) {
+                    container.style.backgroundImage = '';
+                    container.style.backgroundColor = defaultBgColor;
+                    container.classList.remove('has-background');
                 }
             }
             // ▲▲▲ 修改结束 ▲▲▲
