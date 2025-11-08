@@ -24,31 +24,15 @@ export function initializeInputArea(elements, updateButtonStates, state, diyDbKe
         });
     }
 
-    // “+” 动作菜单的展开/收起和标签页逻辑
+    // “+” 动作菜单的展开/收起
     if (elements.actionsToggleBtn && elements.actionsMenu) {
-        const tabs = elements.actionsMenu.querySelector('.actions-menu-tabs');
-        const contentContainer = elements.actionsMenu.querySelector('#actions-menu-content');
-        
+        // ▼▼▼ 核心修改：移除了Tab切换的逻辑 ▼▼▼
         elements.actionsToggleBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             elements.chatInputArea.classList.remove('emoji-expanded');
             elements.chatInputArea.classList.toggle('actions-expanded');
         });
-
-        if (tabs && contentContainer) {
-            tabs.addEventListener('click', (e) => {
-                const link = e.target.closest('a');
-                if (!link) return;
-                e.preventDefault();
-                const targetId = link.dataset.target;
-
-                tabs.querySelectorAll('a.active').forEach(l => l.classList.remove('active'));
-                link.classList.add('active');
-                
-                contentContainer.querySelectorAll('.actions-menu-pane.active').forEach(p => p.classList.remove('active'));
-                document.getElementById(targetId)?.classList.add('active');
-            });
-        }
+        // ▲▲▲ 修改结束 ▲▲▲
     }
     
     // DIY 开关逻辑

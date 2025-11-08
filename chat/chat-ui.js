@@ -24,6 +24,7 @@ export function renderChatRoomUI(character) {
             <main class="chat-messages" id="chat-messages-area"></main>
             <footer class="chat-input-area" id="chat-input-area">
                 <div class="actions-menu" id="actions-menu">
+                    <!-- ▼▼▼ 核心修改：移除了Tab栏和其它面板，只保留核心动作网格 ▼▼▼ -->
                     <div class="actions-menu-content" id="actions-menu-content">
                         <div id="menu-content-actions" class="actions-menu-pane active">
                             <div class="actions-grid-container">
@@ -44,14 +45,8 @@ export function renderChatRoomUI(character) {
                                 <div class="action-item"><button class="action-btn"><i class="fa-solid fa-link"></i></button><span>接龙</span></div>
                             </div>
                         </div>
-                        <div id="menu-content-inspiration-actions" class="actions-menu-pane"><div class="placeholder-pane">灵感功能待开发...</div></div>
-                        <div id="menu-content-prompt-actions" class="actions-menu-pane"><div class="placeholder-pane">指令功能待开发...</div></div>
                     </div>
-                    <ul class="actions-menu-tabs">
-                        <li><a href="#" class="active" data-target="menu-content-actions">选项</a></li>
-                        <li><a href="#" data-target="menu-content-inspiration-actions">灵感</a></li>
-                        <li><a href="#" data-target="menu-content-prompt-actions">指令</a></li>
-                    </ul>
+                    <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                 </div>
                 <div class="chat-input-main" id="chat-input-main">
                     <div class="chat-input-controls">
