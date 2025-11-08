@@ -173,3 +173,52 @@
     background-color: transparent;
 }
 /* ▲▲▲ 修正结束 ▲▲▲ */
+
+/* relia-chat/chat-components.css -> 在文件末尾添加 */
+
+/* --- 底部表情选择器样式 --- */
+.emoji-picker-bar {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+    background-color: var(--page-bg);
+    padding: 0 15px;
+}
+
+.chat-input-area.emoji-expanded .emoji-picker-bar {
+    max-height: 280px;
+    opacity: 1;
+    padding: 15px;
+}
+
+.chat-input-area.emoji-expanded #emoji-toggle-btn {
+    color: var(--send-btn-bg);
+}
+
+.emoji-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 10px;
+    height: 100%;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.emoji-picker-item {
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.emoji-picker-item:hover {
+    transform: scale(1.1);
+}
+
+.emoji-picker-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

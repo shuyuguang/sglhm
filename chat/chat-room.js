@@ -12,6 +12,8 @@ import { renderChatRoomUI, renderMessage, renderSystemMessage } from './chat-ui.
 import { initializeMemorySystem } from './chat-memory.js';
 import { initializeModelSelector, updateModelButtonText } from './chat-model-selector.js';
 import { createApiHandler } from './chat-api.js';
+// [新增] 引入表情包系统
+import { initializeEmojiSystem } from './chat-emoji.js';
 
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -68,7 +70,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             closeModelSelectorBtn: document.getElementById('close-model-selector-btn'),
             editSettingsBtn: document.getElementById('edit-settings-btn'),
             searchHistoryBtn: document.getElementById('search-history-btn'),
-            // workbenchBtn: document.getElementById('workbench-btn'), // 依然获取，但不再绑定事件
             menuBtn: document.getElementById('menu-btn'),
             headerContentPanel: document.getElementById('header-content-panel'),
             headerTabsPanel: document.getElementById('header-tabs-panel'),
@@ -106,12 +107,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             themeContentPane: document.getElementById('menu-content-theme'),
             multiSelectBgBtn: document.getElementById('multi-select-bg-btn'),
             deleteSelectedBgBtn: document.getElementById('delete-selected-bg-btn'),
-            // ▼▼▼ 修正：添加风格设置相关元素 ▼▼▼
             styleOutputMin: document.getElementById('style-output-min'),
             styleOutputMax: document.getElementById('style-output-max'),
             styleVisualLimit: document.getElementById('style-visual-limit'),
             styleMemoryLimit: document.getElementById('style-memory-limit'),
-            // ▲▲▲ 修正结束 ▲▲▲
+            // [新增] 表情包相关元素
+            emojiPickerBar: document.querySelector('.emoji-picker-bar'),
+            emojiManagementGridContainer: document.getElementById('emoji-management-container'),
+            emojiUploadInput: document.getElementById('emoji-upload-input'),
+            webEmojiModal: document.getElementById('web-emoji-modal'),
+            webEmojiUrlInput: document.getElementById('web-emoji-url-input'),
+            confirmWebEmojiBtn: document.getElementById('confirm-web-emoji-btn'),
+            cancelWebEmojiBtn: document.getElementById('cancel-web-emoji-btn'),
         };
 
         // --- 3. 状态管理 ---
@@ -149,17 +156,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 allCharacterProfiles[charIndex] = character;
                 await dbStorage.setItem(PROFILE_DB_KEYS.CHAR_PROFILES, allCharacterProfiles);
             }
-            // 更新UI
             document.querySelector('.char-info-name').textContent = character.name || '未命名';
             document.querySelector('.char-info-avatar').src = character.avatar;
             if (elements.charProfileEditAvatar) elements.charProfileEditAvatar.src = character.avatar;
             if (elements.charProfileEditName) elements.charProfileEditName.textContent = character.name;
             
-            // ▼▼▼ 新增：遍历聊天区，更新该角色的所有头像 ▼▼▼
             elements.chatArea.querySelectorAll('.message-row.character .message-avatar').forEach(avatarEl => {
                 avatarEl.src = character.avatar;
             });
-            // ▲▲▲ 新增结束 ▲▲▲
             
             chatEditor?.updateProfile(character);
         };
@@ -170,15 +174,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (userIndex !== -1) allUsers[userIndex] = user;
             else allUsers.push(user);
             await dbStorage.setItem(PROFILE_DB_KEYS.USER_PROFILES, allUsers);
-            // 更新UI
             if (elements.userProfileEditAvatar) elements.userProfileEditAvatar.src = user.avatar;
             if (elements.userProfileEditName) elements.userProfileEditName.textContent = user.name;
             
-            // ▼▼▼ 新增：遍历聊天区，更新该用户的所有头像 ▼▼▼
             elements.chatArea.querySelectorAll('.message-row.user .message-avatar').forEach(avatarEl => {
                 avatarEl.src = user.avatar;
             });
-            // ▲▲▲ 新增结束 ▲▲▲
 
             userEditor?.updateProfile(user);
         };
@@ -221,6 +222,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             state, elements, character, user, historyKey, dbStorage,
             renderMessage, renderSystemMessage, loadAndRenderHistory, updateButtonStates
         });
+
+        // [新增] 发送表情的回调函数
+        async function onSendEmoji(emoji) {
+            const emojiMessage = {
+                sender: 'user',
+                isEmoji: true,
+                data: emoji.data // 存储图片URL或Base64
+            };
+            state.chatHistory.push(emojiMessage);
+            await dbStorage.setItem(historyKey, state.chatHistory);
+            renderMessage(emojiMessage, state.chatHistory.length - 1, user, character, elements.chatArea);
+            
+            // 可选：发送表情后自动收起面板
+            // elements.chatInputArea.classList.remove('emoji-expanded');
+        }
 
         function updateInteractionModeUI() {
             const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle);
@@ -280,7 +296,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
-        // ▼▼▼ 核心修改：将背景应用到 .chat-container 而不是 .chat-messages-area ▼▼▼
         async function setActiveBackground(bgUrl) {
             state.activeBackground = bgUrl;
             const container = document.querySelector('.chat-container');
@@ -302,7 +317,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             await dbStorage.setItem(activeBgDbKey, bgUrl);
             renderBackgrounds();
         }
-        // ▲▲▲ 修改结束 ▲▲▲
 
         function enterBgMultiSelectMode() {
             state.isBgMultiSelectMode = true;
@@ -360,14 +374,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         
-        if (elements.emojiToggleBtn) {
-            elements.emojiToggleBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                elements.chatInputArea.classList.remove('actions-expanded');
-                elements.chatInputArea.classList.toggle('emoji-expanded');
-            });
-        }
-
         if (elements.diySwitch) {
             elements.diySwitch.addEventListener('change', async () => {
                 state.isDiyEnabled = elements.diySwitch.checked;
@@ -626,7 +632,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             state.backgrounds = savedBackgrounds || [];
             
-            // ▼▼▼ 核心修改：初始化时应用背景到 .chat-container，若无保存则使用默认背景 ▼▼▼
             const container = document.querySelector('.chat-container');
             const defaultBgColor = '#F8F9FB';
             if (savedActiveBg) {
@@ -650,7 +655,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     container.classList.remove('has-background');
                 }
             }
-            // ▲▲▲ 修改结束 ▲▲▲
             
             await loadAndRenderHistory();
             await renderMemoryCards();
@@ -666,6 +670,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 await loadAndRenderHistory();
             };
             initializeMessageMenu(elements.chatArea, getChatHistory, updateChatHistory);
+            // [新增] 初始化表情包系统
+            initializeEmojiSystem(elements, state, onSendEmoji);
         }
         await initializeChatState();
 

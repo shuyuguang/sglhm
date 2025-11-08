@@ -18,9 +18,6 @@ export function renderChatRoomUI(character) {
                             <span class="char-info-status">在线</span>
                         </div>
                     </div>
-                    <!-- ▼▼▼ 修改：删除了这里的加号按钮 ▼▼▼ -->
-                    
-                    <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                 </div>
                 <button class="chat-header-btn" id="menu-btn"><i class="fa-solid fa-bars"></i></button>
             </header>
@@ -34,9 +31,6 @@ export function renderChatRoomUI(character) {
                                 <div class="action-item"><button class="action-btn"><i class="fa-solid fa-camera"></i></button><span>拍照</span></div>
                                 <div class="action-item"><button class="action-btn"><i class="fa-solid fa-microphone"></i></button><span>音频</span></div>
                                 <div class="action-item"><button class="action-btn"><i class="fa-solid fa-palette"></i></button><span>主题</span></div>
-                                <!-- ▼▼▼ 修改：删除工作台按钮 ▼▼▼ -->
-                                
-                                <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                                 <div class="action-item"><button class="action-btn"><i class="fa-solid fa-list-check"></i></button><span>DIY</span></div>
                                 <div class="action-item"><button class="action-btn" id="edit-settings-btn"><i class="fa-solid fa-pencil"></i></button><span>编辑</span></div>
                                 <div class="action-item"><button class="action-btn" id="search-history-btn"><i class="fa-solid fa-brain"></i></button><span>数据</span></div>
@@ -67,14 +61,14 @@ export function renderChatRoomUI(character) {
                         </div>
                         <button id="emoji-toggle-btn"><i class="fa-regular fa-face-smile"></i></button>
                         <div class="send-buttons-container" id="send-buttons-container">
-                            <!-- ▼▼▼ 修改：将时钟图标 fa-regular fa-clock 替换为魔法棒图标 fa-solid fa-wand-magic-sparkles ▼▼▼ -->
                             <button id="respond-btn" class="send-action-btn"><i class="fa-regular fa-paper-plane"></i></button>
                             <button id="send-btn" class="send-action-btn primary"><i class="fa-solid fa-location-arrow"></i></button>
-        
+                        </div>
                     </div>
                 </div>
+                <!-- [修改] 填充底部表情选择面板 -->
                 <div class="emoji-picker-bar">
-                    <div class="emoji-placeholder">表情面板功能待开发...</div>
+                    <!-- 表情选择器将由JS动态生成到这里 -->
                 </div>
             </footer>
         </div>
@@ -83,14 +77,16 @@ export function renderChatRoomUI(character) {
 
 /**
  * 在聊天区域渲染一条消息。
- * @param {object} message - 消息对象 { text, sender }。
+ * @param {object} message - 消息对象 { text, sender, isEmoji, data }。
  * @param {number} index - 消息在历史记录中的索引。
  * @param {object} user - 当前用户对象。
  * @param {object} character - 当前角色对象。
  * @param {HTMLElement} chatArea - 聊天消息容器元素。
  * @returns {HTMLElement} - 创建的消息气泡元素。
  */
-export function renderMessage({ text, sender }, index, user, character, chatArea) {
+export function renderMessage(message, index, user, character, chatArea) {
+    const { sender, isEmoji, data, text } = message;
+
     const messageRow = document.createElement('div');
     messageRow.className = `message-row ${sender}`;
     messageRow.dataset.index = index;
@@ -101,7 +97,14 @@ export function renderMessage({ text, sender }, index, user, character, chatArea
 
     const bubble = document.createElement('div');
     bubble.className = `chat-bubble ${sender}`;
-    bubble.textContent = text;
+
+    // [修改] 核心修改：判断是否为表情消息
+    if (isEmoji) {
+        bubble.classList.add('is-emoji-message');
+        bubble.innerHTML = `<img src="${data}" alt="emoji" class="message-emoji-img">`;
+    } else {
+        bubble.textContent = text;
+    }
 
     messageRow.appendChild(avatar);
     messageRow.appendChild(bubble);
@@ -110,6 +113,7 @@ export function renderMessage({ text, sender }, index, user, character, chatArea
     chatArea.scrollTop = chatArea.scrollHeight;
     return bubble;
 }
+
 
 /**
  * 在聊天区域渲染一条系统消息（如加载中、错误提示）。

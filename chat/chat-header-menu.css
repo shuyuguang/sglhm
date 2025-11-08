@@ -526,3 +526,108 @@ input:checked + .slider:before {
     color: var(--danger-color);
     pointer-events: auto;
 }
+
+/* relia-chat/chat-header-menu.css -> 在文件末尾添加 */
+
+/* --- 顶部菜单 - 表情包管理面板样式 --- */
+#emoji-management-container {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.emoji-management-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+}
+
+.emoji-management-title {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #495057;
+    margin: 0;
+}
+
+.emoji-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.emoji-action-btn {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    color: #868e96;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.emoji-action-btn:hover {
+    background-color: #f1f3f5;
+    color: var(--text-dark);
+}
+
+.emoji-management-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 10px;
+    overflow-y: auto;
+    flex-grow: 1;
+    padding-right: 5px; /* for scrollbar */
+}
+
+.emoji-management-grid .emoji-item {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+}
+
+.emoji-management-grid .emoji-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 选择模式样式 */
+#emoji-management-container.selection-mode #emoji-select-btn {
+    color: var(--send-btn-bg);
+    background-color: #e0e9f2;
+}
+#emoji-delete-btn {
+    color: #ced4da;
+    pointer-events: none;
+}
+#emoji-delete-btn.active {
+    color: var(--danger-color);
+    pointer-events: auto;
+}
+
+.emoji-item .selection-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(255, 255, 255, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    color: var(--send-btn-bg);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+#emoji-management-container.selection-mode .emoji-item.selected .selection-overlay {
+    opacity: 1;
+}

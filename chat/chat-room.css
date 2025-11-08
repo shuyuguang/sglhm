@@ -200,3 +200,19 @@ html, body {
 .chat-container.has-background .chat-bubble.user {
     background-color: rgba(209, 235, 245, 0.85);
 }
+
+/* relia-chat/chat-room.css -> 在文件末尾添加 */
+
+/* --- 聊天气泡内表情样式 --- */
+.chat-bubble.is-emoji-message {
+    padding: 0;
+    background-color: transparent;
+    max-width: 120px;
+}
+
+.message-emoji-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+}

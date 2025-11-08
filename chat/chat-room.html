@@ -83,7 +83,6 @@
                 </div>
             </div>
         </div>
-        <!-- ▼▼▼ 修改：更新风格内容区 ▼▼▼ -->
         <div id="menu-content-style" class="secondary-content-pane">
             <div class="style-settings-wrapper">
                 <div class="style-setting-group">
@@ -104,7 +103,6 @@
                 </div>
             </div>
         </div>
-        <!-- ▲▲▲ 修改结束 ▲▲▲ -->
         <div id="menu-content-model" class="secondary-content-pane">
             <div class="model-selection-group">
                 <h4 class="panel-section-title">当前模型</h4>
@@ -127,7 +125,12 @@
                 </button>
             </div>
         </div>
-        <div id="menu-content-emoji" class="secondary-content-pane">这里是表情内容区</div>
+        <!-- [修改] 填充表情内容区 -->
+        <div id="menu-content-emoji" class="secondary-content-pane">
+            <div id="emoji-management-container">
+                <!-- 表情管理UI将由JS动态生成到这里 -->
+            </div>
+        </div>
         <div id="menu-content-inspiration" class="secondary-content-pane">这里是灵感内容区</div>
         <div id="menu-content-prompt" class="secondary-content-pane">这里是指令内容区</div>
         <div id="menu-content-theme" class="secondary-content-pane">
@@ -224,6 +227,27 @@
             </div>
         </div>
     </div>
+    
+    <!-- [新增] 添加网络表情模态框 -->
+    <div class="modal-overlay" id="web-emoji-modal">
+        <div class="modal-panel web-emoji-panel">
+            <div class="modal-header">
+                <h3 class="modal-title">批量添加网络表情</h3>
+            </div>
+            <div class="modal-body">
+                <p class="modal-description">请按 <strong>链接+名称</strong> 的格式粘贴，每行一个。</p>
+                <textarea id="web-emoji-url-input" placeholder="例如:&#10;https://.../cat.png 猫猫&#10;https://.../dog.gif 狗狗"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn-cancel" id="cancel-web-emoji-btn">取消</button>
+                <button class="modal-btn-confirm" id="confirm-web-emoji-btn">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- [新增] 隐藏的文件上传输入框 -->
+    <input type="file" id="emoji-upload-input" accept="image/*,image/gif" multiple style="display: none;">
+
 
     <!-- ==================== 角色编辑面板 (Character Editor) ==================== -->
     <div class="modal-overlay" id="edit-modal-overlay">
@@ -360,6 +384,8 @@
     <script src="chat-memory.js" type="module"></script>
     <script src="chat-model-selector.js" type="module"></script>
     <script src="chat-api.js" type="module"></script>
+    <!-- [新增] 引入表情包模块 -->
+    <script src="chat-emoji.js" type="module"></script>
 
     <script src="chat-room.js" type="module"></script> <!-- 主文件最后加载 -->
 </body>
