@@ -84,7 +84,10 @@
     box-sizing: border-box;
 }
 .secondary-content-pane.active {
-    display: block;
+    /* ▼▼▼ 核心修复 ①: 强制父级也使用flex布局，为子元素提供稳定的高度计算基础 ▼▼▼ */
+    display: flex;
+    flex-direction: column;
+    /* ▲▲▲ 修复结束 ▲▲▲ */
 }
 
 /* --- 顶部菜单 - 记忆面板样式 --- */
@@ -581,13 +584,14 @@ input:checked + .slider:before {
 .emoji-management-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-    gap: 10px; /* 统一设置行列间距 */
+    /* ▼▼▼ 核心修复 ②: 明确地设置上下和左右间距，保证不重叠 ▼▼▼ */
+    row-gap: 10px;
+    column-gap: 10px;
+    /* ▲▲▲ 修复结束 ▲▲▲ */
     overflow-y: auto;
     flex-grow: 1;
     padding-right: 5px; /* for scrollbar */
-    /* ▼▼▼ 核心修复：添加此行以解决flex容器内滚动区域的计算问题 ▼▼▼ */
-    min-height: 0;
-    /* ▲▲▲ 修复结束 ▲▲▲ */
+    min-height: 0; /* 这个属性对于防止flex子元素溢出至关重要 */
 }
 
 .emoji-management-grid .emoji-item {
