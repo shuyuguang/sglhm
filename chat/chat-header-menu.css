@@ -262,8 +262,6 @@ input:checked + .slider:before {
     text-overflow: ellipsis;
 }
 
-/* ▼▼▼ 核心修改：风格面板样式已被删除 ▼▼▼ */
-
 /* --- 顶部菜单 - 模式面板样式 --- */
 .model-selection-group {
     padding: 8px;
@@ -346,11 +344,10 @@ input:checked + .slider:before {
     font-weight: 600;
 }
 
-/* ▼▼▼ 核心修改：原风格面板的样式已移动到此处 ▼▼▼ */
 .style-settings-wrapper {
     padding: 8px;
     margin-top: 8px; /* 与上方元素保持间距 */
-    border-top: 1px solid var(--border-color); /* 添加分割线 */
+    /* ▼▼▼ 核心修改：已删除 border-top 属性 ▼▼▼ */
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -393,7 +390,6 @@ input:checked + .slider:before {
     color: #868e96;
     font-weight: 500;
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
 
 /* --- 顶部菜单 - 主题面板样式 --- */
 .theme-section {
