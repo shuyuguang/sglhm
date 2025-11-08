@@ -50,10 +50,8 @@ export function renderChatRoomUI(character) {
                             </div>
                             <!-- 右区 -->
                             <div class="actions-column">
-                                <!-- ▼▼▼ 核心修改：更换图标 ▼▼▼ -->
-                                <button class="action-list-item"><i class="fa-solid fa-arrow-up"></i><span>回顶</span></button>
-                                <button class="action-list-item"><i class="fa-solid fa-location-crosshairs"></i><span>跳转</span></button>
-                                <button class="action-list-item"><i class="fa-solid fa-arrow-down"></i><span>回底</span></button>
+                                <!-- ▼▼▼ 核心修改：移除回顶/回底，修改跳转文本 ▼▼▼ -->
+                                <button class="action-list-item"><i class="fa-solid fa-location-crosshairs"></i><span>跳转楼层</span></button>
                                 <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                             </div>
                         </div>
