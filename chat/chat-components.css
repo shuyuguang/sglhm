@@ -187,7 +187,8 @@
 }
 
 .chat-input-area.emoji-expanded .emoji-picker-bar {
-    max-height: 280px;
+    /* ▼▼▼ 核心修改：减小展开后的最大高度，以限制内容区域大小 ▼▼▼ */
+    max-height: 250px;
     opacity: 1;
     padding: 15px;
 }
@@ -196,15 +197,13 @@
     color: var(--send-btn-bg);
 }
 
-/* ▼▼▼ 修改：调整底部表情选择器为4列固定布局 ▼▼▼ */
+/* ▼▼▼ 核心修改：调整表情网格为4列、约3行高，并可滚动 ▼▼▼ */
 .emoji-picker-grid {
     display: grid;
-    /* 核心：创建4列，每列等宽 */
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
-    height: 100%;
-    /* 核心：设置最大高度并允许滚动 */
-    max-height: 250px;
+    /* 设置一个固定的最大高度，视觉上容纳约3行，超出部分则可滚动 */
+    max-height: 220px;
     overflow-y: auto;
 }
 /* ▲▲▲ 修改结束 ▲▲▲ */
