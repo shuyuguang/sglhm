@@ -132,12 +132,12 @@
     color: var(--send-btn-bg);
 }
 
-/* ▼▼▼ 修正：修复空隙并恢复您喜欢的按钮样式 ▼▼▼ */
+/* ▼▼▼ 修正：移除输入区域顶部的横线 ▼▼▼ */
 
-/* 1. 将整个输入栏区域背景设为白色，并添加顶部边框和底部安全距离 */
+/* 1. 将整个输入栏区域背景设为白色，并保留底部安全距离 */
 .chat-input-area {
     background-color: #ffffff;
-    border-top: 1px solid var(--border-color);
+    /* ▼▼▼ 核心修改：已删除 border-top 属性 ▼▼▼ */
     /* 适配 iPhone 等设备的底部安全区域 */
     padding-bottom: constant(safe-area-inset-bottom);
     padding-bottom: env(safe-area-inset-bottom);
