@@ -69,9 +69,11 @@ function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
 
     if (!message) return;
 
-    // [核心修改] 复制和编辑按钮的可用性判断
+    // ▼▼▼ 核心修改：允许编辑所有发送者的消息 ▼▼▼
     const canCopy = message.text || message.isEmoji;
-    const canEdit = message.sender === 'user' && (message.text || message.isEmoji);
+    // 移除了 message.sender === 'user' 的判断条件
+    const canEdit = message.text || message.isEmoji; 
+    // ▲▲▲ 修改结束 ▲▲▲
 
     const menuItems = [
         { action: 'edit', icon: 'fa-regular fa-pen-to-square', text: '编辑', disabled: !canEdit },
@@ -99,7 +101,6 @@ function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
 
         switch (action) {
             case 'copy':
-                // [核心修改] 复制时也处理表情
                 const textToCopy = message.isEmoji ? `[Emoji: ${message.name}]` : message.text;
                 navigator.clipboard.writeText(textToCopy)
                     .then(() => console.log('消息已复制'))
@@ -158,7 +159,6 @@ function hideMenu() {
 function startEditing(bubble, index, getChatHistory, updateChatHistory) {
     bubble.classList.add('editing');
     
-    // [核心修改] 获取消息对象并判断类型
     const message = getChatHistory()[index];
     const originalContent = message.isEmoji ? `[Emoji: ${message.name}]` : message.text;
     
@@ -186,28 +186,23 @@ function startEditing(bubble, index, getChatHistory, updateChatHistory) {
     const stopEditing = (shouldSave) => {
         const originalMessage = getChatHistory()[index];
 
-        // [核心修改] 如果是表情消息，直接恢复，不保存文本修改
         if (originalMessage.isEmoji) {
             bubble.classList.remove('editing');
             bubble.innerHTML = `<img src="${originalMessage.data}" alt="emoji" class="message-emoji-img">`;
-            // 因为内容没变，所以不需要调用 updateChatHistory
             return; 
         }
 
-        // --- 以下是原有的文本消息处理逻辑 ---
         bubble.classList.remove('editing');
         if (shouldSave) {
             const newText = textarea.value.trim();
             if (newText && newText !== originalMessage.text) {
                 const newHistory = [...getChatHistory()];
                 newHistory[index].text = newText;
-                updateChatHistory(newHistory); // 这个函数会重新渲染，所以我们不需要手动改bubble.textContent
+                updateChatHistory(newHistory);
             } else {
-                // 如果没变或者为空，恢复原始文本
                 bubble.textContent = originalMessage.text;
             }
         } else {
-            // 取消编辑，恢复原始文本
             bubble.textContent = originalMessage.text;
         }
     };
