@@ -5,6 +5,58 @@ import { CHAT_DB_KEYS } from '../config/chat.config.js';
 
 const EMOJI_DB_KEY = CHAT_DB_KEYS.EMOJIS || 'relia-chat-emojis'; // 从配置或默认值获取
 
+// [新增] 图片压缩辅助函数
+/**
+ * 将图片（Data URL）压缩到指定的最大尺寸。
+ * @param {string} dataUrl - 图片的原始Data URL。
+ * @param {string} fileType - 文件的MIME类型 (e.g., 'image/jpeg')。
+ * @param {number} maxSize - 压缩后的最大宽度或高度。
+ * @returns {Promise<string>} 返回压缩后的新Data URL。
+ */
+function compressImage(dataUrl, fileType, maxSize = 128) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            // 如果图片本身就很小，则无需压缩
+            if (img.width <= maxSize && img.height <= maxSize) {
+                resolve(dataUrl);
+                return;
+            }
+
+            // 计算新的尺寸，保持宽高比
+            let { width, height } = img;
+            if (width > height) {
+                if (width > maxSize) {
+                    height = Math.round(height * (maxSize / width));
+                    width = maxSize;
+                }
+            } else {
+                if (height > maxSize) {
+                    width = Math.round(width * (maxSize / height));
+                    height = maxSize;
+                }
+            }
+
+            // 使用canvas进行绘制和压缩
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // 根据文件类型导出为新的Data URL
+            // 对于JPEG格式，可以指定压缩质量
+            const quality = fileType === 'image/jpeg' ? 0.85 : 1.0;
+            const compressedDataUrl = canvas.toDataURL(fileType, quality);
+            
+            resolve(compressedDataUrl);
+        };
+        img.onerror = (error) => reject(error);
+        img.src = dataUrl;
+    });
+}
+
+
 let state = {};
 let elements = {};
 let onSendEmojiCallback = null;
@@ -126,28 +178,46 @@ function updateDeleteButtonState() {
 }
 
 /**
- * 【已修复】处理本地文件上传，支持多文件
+ * 【核心修改】处理本地文件上传，增加图片压缩逻辑
  * @param {FileList} files - 用户选择的文件列表
  */
 async function handleLocalUpload(files) {
     const filePromises = Array.from(files).map(file => {
         return new Promise((resolve, reject) => {
-            if (!file.type.startsWith('image/')) {
-                // 如果不是图片，直接resolve一个null值，后面会过滤掉
+            // 判断文件类型
+            const isCompressible = file.type === 'image/jpeg' || file.type === 'image/png';
+            const isGif = file.type === 'image/gif';
+
+            // 如果不是支持的图片类型，则跳过
+            if (!isCompressible && !isGif) {
+                console.warn(`Skipped unsupported file type: ${file.type}`);
                 return resolve(null);
             }
+
             const reader = new FileReader();
-            reader.onload = (e) => {
-                const imageDataUrl = e.target.result;
-                const name = prompt(`请输入表情包名称:`, file.name.split('.').slice(0, -1).join('.'));
-                if (name === null) { // 用户点击了取消
-                    return resolve(null);
+            reader.onload = async (e) => { // 改为 async 函数以使用 await
+                try {
+                    let imageDataUrl = e.target.result;
+
+                    // [核心修改] 如果是JPG或PNG，则进行压缩
+                    if (isCompressible) {
+                        imageDataUrl = await compressImage(imageDataUrl, file.type);
+                    }
+                    // GIF图片会直接使用原始的 imageDataUrl
+
+                    const name = prompt(`请输入表情包名称:`, file.name.split('.').slice(0, -1).join('.'));
+                    if (name === null) { // 用户点击了取消
+                        return resolve(null);
+                    }
+                    resolve({
+                        id: `emoji_${Date.now()}_${Math.random()}`,
+                        name: name || '未命名表情',
+                        data: imageDataUrl // 使用处理过的（可能被压缩的）图片数据
+                    });
+                } catch (error) {
+                    console.error("处理单个文件时出错:", file.name, error);
+                    reject(error); // 遇到错误则中断此文件的处理
                 }
-                resolve({
-                    id: `emoji_${Date.now()}_${Math.random()}`,
-                    name: name || '未命名表情',
-                    data: imageDataUrl
-                });
             };
             reader.onerror = (error) => reject(error);
             reader.readAsDataURL(file);
@@ -168,7 +238,7 @@ async function handleLocalUpload(files) {
         }
     } catch (error) {
         console.error("处理文件上传时出错:", error);
-        alert("文件读取失败，请重试。");
+        alert("文件读取或压缩失败，请检查控制台获取详细信息。");
     }
 }
 
