@@ -40,16 +40,19 @@ async function constructSystemPrompt(charProfile, userProfile, currentChatStyle)
     prompt += `\n### 对话者信息\n`;
     prompt += `- 对方名字: ${userProfile.name || 'User'}\n`;
 
-    // 【核心修复】注入表情包工具
+    // ======================== [核心修改] ========================
+    // 注入新的、更清晰的表情包工具指令
     const emojis = await dbStorage.getItem(CHAT_DB_KEYS.EMOJIS) || [];
     if (emojis.length > 0) {
-        const emojiListForAI = emojis.map(e => `${e.name}: ${e.data}`).join('\n');
+        // 只把表情包的名称给AI看
+        const emojiNameList = emojis.map(e => e.name).join(', ');
         prompt += `\n### 工具：发送表情包\n`;
-        prompt += `- 你有一个发送表情包的工具。可用表情列表如下 (格式为 名称: 链接)。\n`;
-        prompt += `${emojiListForAI}\n`;
-        prompt += `- **使用规则 (非常重要)**: 当你想发送表情时，必须从列表中选择一个表情的**完整链接**，并**单独成行**输出这个链接。不要在链接前后添加任何多余的文字、符号或换行。\n`;
-        prompt += `- **正确示例**: \n你好呀！\nhttps://i.postimg.cc/mkwvfN7q/image.jpg\n今天天气真好。\n`;
+        prompt += `- 你有一个发送表情包的工具。你的可用表情包有：[${emojiNameList}]。\n`;
+        prompt += `- **使用规则 (非常重要)**: 当你想发送表情时，必须使用格式 **[Emoji: 表情名称]**，并确保它**单独占据一行**。不要添加任何多余的文字或符号。\n`;
+        prompt += `- **正确示例**: \n你好呀！\n[Emoji: 猫猫]\n今天天气真好。\n`;
+        prompt += `- **错误示例**: \n我发一个表情[Emoji: 猫猫]\n`;
     }
+    // ==========================================================
 
     prompt += `\n### 扮演要求\n`;
     prompt += `- 你必须完全沉浸在 **${charProfile.name}** 的角色中，用TA的身份、口吻、性格和知识进行回复。\n`;
@@ -135,34 +138,27 @@ export function createApiHandler(context) {
             // 【核心修复】使用 await 调用异步的 constructSystemPrompt
             const systemPrompt = await constructSystemPrompt(character, user, state.currentChatStyle);
             
-            const historyForApi = formatChatHistoryForApi(state.chatHistory.slice(0, -1));
-            const messages = [{ role: 'system', content: systemPrompt }, ...historyForApi];
-            const endpoint = (state.currentChatApi.baseUrl.replace(/\/$/, '')) + (state.currentChatApi.path || '/v1/chat/completions');
-            const payload = { model: state.currentChatApi.model, messages: messages, stream: true };
+            // ======================== [核心修改] ========================
+            // 1. 在这里获取一次表情列表
+            const emojis = await dbStorage.getItem(CHAT_DB_KEYS.EMOJIS) || [];
 
-            try {
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.currentChatApi.apiKey}` },
-                    body: JSON.stringify(payload)
-                });
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error?.message || `API 请求失败，状态码: ${response.status}`);
-                }
-                
-                const handlerContext = {
-                    reader: response.body.getReader(),
-                    decoder: new TextDecoder('utf-8'),
-                };
-                
-                const replyMessages = await state.currentChatStyle.streamHandler(handlerContext);
-                
-                if (replyMessages.length > 0) {
-                    await onAiReply(replyMessages);
-                } else {
-                    await onAiReply([]);
-                }
+            // 2. 将表情列表加入到传递给 streamHandler 的上下文中
+            const handlerContext = {
+                reader: response.body.getReader(),
+                decoder: new TextDecoder('utf-8'),
+                emojis: emojis // <-- 把表情列表传进去
+            };
+            
+            // 3. 调用 streamHandler
+            const replyMessages = await state.currentChatStyle.streamHandler(handlerContext);
+            // ==========================================================
+
+            if (replyMessages.length > 0) {
+                await onAiReply(replyMessages);
+            } else {
+                // 如果AI回复为空（例如，只回复了一个无法识别的表情），也需要清掉“输入中”状态
+                await onAiReply([]);
+            }
 
 
             } catch (error) {

@@ -11,7 +11,7 @@ function isImageUrl(url) {
 
 // [核心修改] 所有 streamHandler 现在都返回一个消息对象数组
 async function defaultStreamHandler(context) {
-    const { reader, decoder } = context;
+    const { reader, decoder, emojis } = context; // <-- [新增] 获取 emojis 列表
     let fullReply = '';
     try {
         while (true) {
@@ -37,17 +37,30 @@ async function defaultStreamHandler(context) {
         const cleanReply = fullReply.replace(/\(thought[\s\S]*?\)/g, '').trim();
         const replyParts = cleanReply.split(/(\r\n|\n|\r)/);
         const messages = [];
-        
+
+        // ======================== [核心修改] ========================
+        const emojiRegex = /^\[Emoji:\s*(.*?)\s*\]$/; // 用于匹配 [Emoji: xxx] 格式的正则表达式
+
         replyParts.forEach(part => {
             const trimmedPart = part.trim();
             if (!trimmedPart) return;
 
-            if (isImageUrl(trimmedPart)) {
+            const match = trimmedPart.match(emojiRegex);
+            if (match && match[1]) {
+                const emojiName = match[1];
+                // 在我们传入的 emojis 列表中查找对应的表情
+                const foundEmoji = emojis.find(e => e.name === emojiName);
+                if (foundEmoji) {
+                    messages.push({ sender: 'character', isEmoji: true, data: foundEmoji.data, name: foundEmoji.name });
+                }
+            } else if (isImageUrl(trimmedPart)) {
+                // 保留对直接图片链接的兼容
                 messages.push({ sender: 'character', isEmoji: true, data: trimmedPart, name: 'AI表情' });
             } else {
                 messages.push({ sender: 'character', text: trimmedPart });
             }
         });
+        // ==========================================================
         
         return messages;
 
@@ -58,7 +71,7 @@ async function defaultStreamHandler(context) {
 }
 
 async function dialogueStreamHandler(context) {
-    const { reader, decoder } = context;
+    const { reader, decoder, emojis } = context; // <-- [新增] 获取 emojis 列表
     let rawStreamBuffer = '';
     
     try {
@@ -83,19 +96,31 @@ async function dialogueStreamHandler(context) {
         }
 
         const cleanFullStream = rawStreamBuffer.replace(/\(thought[\s\S]*?\)/g, '');
-        const messageParts = cleanFullStream.split('[split]');
+        // [核心修改] 这里是你提到的关键点，把 [split] 改成换行符
+        const messageParts = cleanFullStream.split(/(\r\n|\n|\r)/); 
         const messages = [];
+
+        // ======================== [核心修改] ========================
+        const emojiRegex = /^\[Emoji:\s*(.*?)\s*\]$/; // 同样的正则表达式
 
         messageParts.forEach(part => {
             const trimmedPart = part.trim();
             if (!trimmedPart) return;
 
-            if (isImageUrl(trimmedPart)) {
+            const match = trimmedPart.match(emojiRegex);
+            if (match && match[1]) {
+                const emojiName = match[1];
+                const foundEmoji = emojis.find(e => e.name === emojiName);
+                if (foundEmoji) {
+                    messages.push({ sender: 'character', isEmoji: true, data: foundEmoji.data, name: foundEmoji.name });
+                }
+            } else if (isImageUrl(trimmedPart)) {
                 messages.push({ sender: 'character', isEmoji: true, data: trimmedPart, name: 'AI表情' });
             } else {
                 messages.push({ sender: 'character', text: trimmedPart });
             }
         });
+        // ==========================================================
         
         return messages;
 
@@ -104,6 +129,7 @@ async function dialogueStreamHandler(context) {
         return [{ sender: 'character', text: `抱歉，处理对话时出错: ${error.message}` }];
     }
 }
+
 
 
 export const CHAT_STYLES = {
