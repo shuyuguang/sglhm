@@ -584,10 +584,9 @@ input:checked + .slider:before {
 .emoji-management-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-    /* ▼▼▼ 核心修复 ②: 明确地设置上下和左右间距，保证不重叠 ▼▼▼ */
-    row-gap: 10px;
-    column-gap: 10px;
-    /* ▲▲▲ 修复结束 ▲▲▲ */
+    /* ▼▼▼ 核心修改：统一使用 gap 属性，与背景图区域保持一致，确保行列间距，防止重叠 ▼▼▼ */
+    gap: 10px;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
     overflow-y: auto;
     flex-grow: 1;
     padding-right: 5px; /* for scrollbar */
