@@ -85,10 +85,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             interactionModeCancelBtn: document.getElementById('interaction-mode-cancel-btn'),
             selectedInteractionModeName: document.getElementById('selected-interaction-mode-name'),
             diySwitch: document.getElementById('enable-diy-switch'),
-            // ▼▼▼ 核心修改：获取新按钮 ▼▼▼
             regenerateBtn: document.getElementById('regenerate-btn'),
             continueBtn: document.getElementById('continue-btn'),
-            // ▲▲▲ 修改结束 ▲▲▲
         };
 
         const state = {
@@ -155,7 +153,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elements.userProfileEditName) elements.userProfileEditName.textContent = user.name;
         
         async function loadAndRenderHistory(loadMore = false) {
-            // ... (此函数内容不变)
             const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle) || 'dialogue';
             const settings = state.styleSettings[currentStyleKey] || STYLE_DEFAULT_SETTINGS[currentStyleKey];
             const visualLimit = parseInt(settings.visualLimit, 10) || 50;
@@ -177,12 +174,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 loadMoreBtn.onclick = () => loadAndRenderHistory(true);
                 elements.chatArea.appendChild(loadMoreBtn);
             }
-            // ▼▼▼ 核心修改：使用新的渲染函数 ▼▼▼
             messagesToRender.forEach((messageGroup, index) => {
                 const originalIndex = state.visualHistoryStartIndex + index;
                 renderMessageGroup(messageGroup, originalIndex, user, character, elements.chatArea);
             });
-            // ▲▲▲ 修改结束 ▲▲▲
 
             if (!loadMore) {
                 setTimeout(() => elements.chatArea.scrollTop = elements.chatArea.scrollHeight, 0);
@@ -190,7 +185,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         function updateButtonStates() {
-             // ... (此函数内容不变)
             if (!elements.input || !elements.respondBtn || !elements.sendBtn) return;
             const hasText = elements.input.value.trim() !== '';
 
@@ -213,15 +207,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         
-        /**
-         * ▼▼▼ 核心修改：重构 onAiReply 以处理不同模式的数据更新 ▼▼▼
-         * @param {object} action - { mode, data }
-         */
         const onAiReply = async (action) => {
             const { mode, data: replyMessages } = action;
             let shouldReRender = false;
 
-            // 清理旧的 "思考中..." 系统消息
             const thinkingMessage = elements.chatArea.querySelector('.message-row.system.loading');
             if (thinkingMessage) thinkingMessage.remove();
             
@@ -247,13 +236,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 case 'continue':
                     const lastCharMessageForCont = state.chatHistory[state.chatHistory.length - 1];
                     if (lastCharMessageForCont && lastCharMessageForCont.sender === 'character' && replyMessages && replyMessages.length > 0) {
-                        // 替换当前活动版本的回复为更长的版本
-                        lastCharMessageForCont.replyVersions[lastCharMessageForCont.activeReplyIndex] = replyMessages;
+                        const currentReply = lastCharMessageForCont.replyVersions[lastCharMessageForCont.activeReplyIndex];
+                        const combinedReply = [...currentReply, ...replyMessages];
+                        lastCharMessageForCont.replyVersions[lastCharMessageForCont.activeReplyIndex] = combinedReply;
                          shouldReRender = true;
                     }
                     break;
-                case 'ui_update': // 仅UI更新，如用户发送消息后
-                case 'clear_thinking': // 仅清理UI
+                case 'ui_update':
+                case 'clear_thinking':
                     shouldReRender = true;
                     break;
             }
@@ -277,7 +267,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         async function onSendEmoji(emoji) {
-            // ... (此函数内容不变)
             const emojiMessage = { sender: 'user', isEmoji: true, name: emoji.name, data: emoji.data };
             state.chatHistory.push(emojiMessage);
             await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
@@ -286,7 +275,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         function initializeInteractionModeAndStyle() {
-             // ... (此函数内容不变)
             const updateInteractionModeUI = () => {
                 const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle);
                 if (currentStyleKey && elements.selectedInteractionModeName && elements.interactionModeList) {
@@ -311,21 +299,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             updateInteractionModeUI();
             updateStyleSettingsPanelUI();
 
-            elements.interactionModeCapsule?.addEventListener('click', () => {
-                elements.interactionModeSheetOverlay.classList.add('active');
-            });
-            elements.interactionModeCancelBtn?.addEventListener('click', () => {
-                elements.interactionModeSheetOverlay.classList.remove('active');
-            });
+            elements.interactionModeCapsule?.addEventListener('click', () => elements.interactionModeSheetOverlay.classList.add('active'));
+            elements.interactionModeCancelBtn?.addEventListener('click', () => elements.interactionModeSheetOverlay.classList.remove('active'));
             elements.interactionModeSheetOverlay?.addEventListener('click', (e) => {
-                if (e.target === elements.interactionModeSheetOverlay) {
-                    elements.interactionModeSheetOverlay.classList.remove('active');
-                }
+                if (e.target === elements.interactionModeSheetOverlay) elements.interactionModeSheetOverlay.classList.remove('active');
             });
             elements.interactionModeList?.addEventListener('click', async (e) => {
                 const button = e.target.closest('.action-button');
                 if (!button) return;
-
                 const newStyleKey = button.dataset.style;
                 if (newStyleKey && CHAT_STYLES[newStyleKey]) {
                     state.currentChatStyle = CHAT_STYLES[newStyleKey];
@@ -342,19 +323,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const key = e.target.id.replace('style-', '');
                     const value = e.target.value;
                     const currentStyleKey = Object.keys(CHAT_STYLES).find(k => CHAT_STYLES[k] === state.currentChatStyle);
-                    
                     if (currentStyleKey && state.styleSettings[currentStyleKey]) {
                         state.styleSettings[currentStyleKey][key] = value;
                         await dbStorage.setItem(dbKeys.styleSettingsDbKey, state.styleSettings);
-                        if (key === 'visualLimit') {
-                           await loadAndRenderHistory();
-                        }
+                        if (key === 'visualLimit') await loadAndRenderHistory();
                     }
                 });
             });
         }
         
-        // --- 6. 事件绑定与模块初始化 ---
         if (elements.sendBtn) elements.sendBtn.addEventListener('click', () => handleSendMessage('new'));
         if (elements.respondBtn) {
             elements.respondBtn.addEventListener('click', () => {
@@ -362,17 +339,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 else handleSendMessage('new');
             });
         }
+        if (elements.regenerateBtn) elements.regenerateBtn.addEventListener('click', () => handleSendMessage('regenerate'));
+        if (elements.continueBtn) elements.continueBtn.addEventListener('click', () => handleSendMessage('continue'));
 
-        // ▼▼▼ 核心修改：为新功能按钮绑定事件 ▼▼▼
-        if (elements.regenerateBtn) {
-            elements.regenerateBtn.addEventListener('click', () => handleSendMessage('regenerate'));
-        }
-        if (elements.continueBtn) {
-            elements.continueBtn.addEventListener('click', () => handleSendMessage('continue'));
-        }
-        // ▲▲▲ 修改结束 ▲▲▲
-
-        // ▼▼▼ 核心修改：为分页器添加事件委托 ▼▼▼
         elements.chatArea.addEventListener('click', async (e) => {
             const pagerButton = e.target.closest('.pager-btn');
             if (!pagerButton) return;
@@ -393,16 +362,59 @@ document.addEventListener('DOMContentLoaded', async () => {
             await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
             await loadAndRenderHistory();
         });
-        // ▲▲▲ 修改结束 ▲▲▲
 
-        const { renderMemoryCards } = initializeMemorySystem(/* ... */);
-        initializeModelSelector(/* ... */);
+        // ▼▼▼ 核心修改：为所有初始化函数传递完整的参数 ▼▼▼
+        const { renderMemoryCards } = initializeMemorySystem(
+            { ...elements, ...{
+                addMemoryBtn: document.getElementById('add-memory-btn'),
+                memoryCardsContainer: document.getElementById('memory-cards-container'),
+                memoryEditorOverlay: document.getElementById('memory-editor-overlay'),
+                memoryEditorTitle: document.getElementById('memory-editor-title'),
+                memoryEditorTextarea: document.getElementById('memory-editor-textarea'),
+                memoryEditorConfirmBtn: document.getElementById('memory-editor-confirm-btn'),
+                memoryEditorCancelBtn: document.getElementById('memory-editor-cancel-btn'),
+                memoryEditorDeleteBtn: document.getElementById('memory-editor-delete-btn'),
+                memoryEditorCloseBtn: document.getElementById('memory-editor-close-btn'),
+            }},
+            state,
+            dbKeys.memoryDbKey
+        );
+
+        initializeModelSelector(
+            { ...elements, ...{
+                selectModelBtn: document.getElementById('select-model-btn'),
+                selectedModelName: document.getElementById('selected-model-name'),
+                modelSelectorOverlay: document.getElementById('model-selector-overlay'),
+                modelListContainer: document.getElementById('model-list-container'),
+                closeModelSelectorBtn: document.getElementById('close-model-selector-btn'),
+            }},
+            state,
+            dbKeys.selectedApiKey
+        );
+
         initializeHeaderMenu(elements, { chatEditor, userEditor });
-        const { renderBackgrounds, setActiveBackground } = initializeThemeSystem(/* ... */);
+        
+        const { renderBackgrounds, setActiveBackground } = initializeThemeSystem(
+            { ...elements, ...{
+                themeContentPane: document.getElementById('menu-content-theme'),
+                bgThumbnailsContainer: document.getElementById('bg-thumbnails-container'),
+                multiSelectBgBtn: document.getElementById('multi-select-bg-btn'),
+                deleteSelectedBgBtn: document.getElementById('delete-selected-bg-btn'),
+                addBgFromLocalBtn: document.getElementById('add-bg-from-local-btn'),
+                bgUploadInput: document.getElementById('bg-upload-input'),
+                addBgFromUrlBtn: document.getElementById('add-bg-from-url-btn'),
+                bgUrlPromptOverlay: document.getElementById('bg-url-prompt-overlay'),
+                bgUrlInput: document.getElementById('bg-url-input'),
+                cancelBgUrlBtn: document.getElementById('cancel-bg-url-btn'),
+                confirmBgUrlBtn: document.getElementById('confirm-bg-url-btn'),
+            }},
+            state,
+            { bgDbKey: dbKeys.bgDbKey, activeBgDbKey: dbKeys.activeBgDbKey }
+        );
+
         initializeInputArea(elements, updateButtonStates, state, dbKeys.diyDbKey, dbStorage);
         
         async function initializeChatState() {
-            // ... (此函数内容不变)
             const [savedHistory, savedStyleKey, savedApi, savedDiyEnabled, savedBackgrounds, savedActiveBg, savedStyleSettings] = await Promise.all([
                 dbStorage.getItem(dbKeys.historyKey),
                 dbStorage.getItem(dbKeys.styleDbKey),
@@ -451,7 +463,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             initializeMessageMenu(elements.chatArea, getChatHistory, updateChatHistory);
             
-            initializeEmojiSystem(/* ... */);
+            initializeEmojiSystem(
+                { ...elements, ...{
+                    emojiPickerBar: document.querySelector('.emoji-picker-bar'),
+                    emojiManagementGridContainer: document.getElementById('emoji-management-container'),
+                    emojiUploadInput: document.getElementById('emoji-upload-input'),
+                    webEmojiModal: document.getElementById('web-emoji-modal'),
+                    webEmojiUrlInput: document.getElementById('web-emoji-url-input'),
+                    confirmWebEmojiBtn: document.getElementById('confirm-web-emoji-btn'),
+                    cancelWebEmojiBtn: document.getElementById('cancel-web-emoji-btn'),
+                }},
+                state, 
+                onSendEmoji
+            );
         }
         await initializeChatState();
 
