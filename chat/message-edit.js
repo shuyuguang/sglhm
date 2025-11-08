@@ -69,33 +69,39 @@ function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
 
     if (!message) return;
 
+    // [核心修改] 复制和编辑按钮的可用性判断
+    const canCopy = message.text || message.isEmoji;
+    const canEdit = message.sender === 'user' && (message.text || message.isEmoji);
+
     const menuItems = [
-        { action: 'edit', icon: 'fa-regular fa-pen-to-square', text: '编辑' },
+        { action: 'edit', icon: 'fa-regular fa-pen-to-square', text: '编辑', disabled: !canEdit },
         { action: 'reply', icon: 'fa-solid fa-quote-left', text: '回复' },
         { action: 'favorite', icon: 'fa-regular fa-star', text: '收藏' },
         { action: 'delete', icon: 'fa-regular fa-trash-can', text: '删除', isDestructive: true },
         { action: 'forward', icon: 'fa-solid fa-share', text: '转发' },
-        { action: 'copy', icon: 'fa-regular fa-copy', text: '复制' },
+        { action: 'copy', icon: 'fa-regular fa-copy', text: '复制', disabled: !canCopy },
         { action: 'multiselect', icon: 'fa-solid fa-check-double', text: '多选' },
         { action: 'branch', icon: 'fa-solid fa-code-branch', text: '分支' }
     ];
 
     menu.innerHTML = menuItems.map(item => `
-        <div class="message-menu-item" data-action="${item.action}" ${item.isDestructive ? 'style="color: #e53e3e;"' : ''}>
+        <div class="message-menu-item ${item.disabled ? 'disabled' : ''}" data-action="${item.action}" ${item.isDestructive ? 'style="color: #e53e3e;"' : ''}>
             <i class="${item.icon}"></i><span>${item.text}</span>
         </div>
     `).join('');
 
     menu.onclick = (e) => {
         const item = e.target.closest('.message-menu-item');
-        if (!item) return;
+        if (!item || item.classList.contains('disabled')) return;
 
         const action = item.dataset.action;
         const actionText = item.querySelector('span')?.textContent || '该功能';
 
         switch (action) {
             case 'copy':
-                navigator.clipboard.writeText(message.text)
+                // [核心修改] 复制时也处理表情
+                const textToCopy = message.isEmoji ? `[Emoji: ${message.name}]` : message.text;
+                navigator.clipboard.writeText(textToCopy)
                     .then(() => console.log('消息已复制'))
                     .catch(err => console.error('复制失败:', err));
                 break;
@@ -117,11 +123,8 @@ function showMenu(event, index, bubble, getChatHistory, updateChatHistory) {
         hideMenu();
     };
 
-    // ▼▼▼ 修改点：减小估算的菜单宽高 ▼▼▼
-    const menuWidth = 240;  // 宽度从 280 减小到 240
-    const menuHeight = 120; // 高度从 140 减小到 120
-    // ▲▲▲ 修改结束 ▲▲▲
-
+    const menuWidth = 240;
+    const menuHeight = 120;
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
 
@@ -155,10 +158,13 @@ function hideMenu() {
 function startEditing(bubble, index, getChatHistory, updateChatHistory) {
     bubble.classList.add('editing');
     
-    const originalText = getChatHistory()[index].text;
+    // [核心修改] 获取消息对象并判断类型
+    const message = getChatHistory()[index];
+    const originalContent = message.isEmoji ? `[Emoji: ${message.name}]` : message.text;
+    
     bubble.innerHTML = `
         <div class="message-edit-container">
-            <textarea class="message-edit-textarea">${originalText}</textarea>
+            <textarea class="message-edit-textarea">${originalContent}</textarea>
             <div class="message-edit-actions">
                 <button class="message-edit-btn cancel">取消</button>
                 <button class="message-edit-btn save">保存</button>
@@ -178,19 +184,31 @@ function startEditing(bubble, index, getChatHistory, updateChatHistory) {
     });
 
     const stopEditing = (shouldSave) => {
-        bubble.classList.remove('editing');
+        const originalMessage = getChatHistory()[index];
 
+        // [核心修改] 如果是表情消息，直接恢复，不保存文本修改
+        if (originalMessage.isEmoji) {
+            bubble.classList.remove('editing');
+            bubble.innerHTML = `<img src="${originalMessage.data}" alt="emoji" class="message-emoji-img">`;
+            // 因为内容没变，所以不需要调用 updateChatHistory
+            return; 
+        }
+
+        // --- 以下是原有的文本消息处理逻辑 ---
+        bubble.classList.remove('editing');
         if (shouldSave) {
             const newText = textarea.value.trim();
-            if (newText && newText !== originalText) {
+            if (newText && newText !== originalMessage.text) {
                 const newHistory = [...getChatHistory()];
                 newHistory[index].text = newText;
-                updateChatHistory(newHistory);
+                updateChatHistory(newHistory); // 这个函数会重新渲染，所以我们不需要手动改bubble.textContent
             } else {
-                bubble.textContent = originalText;
+                // 如果没变或者为空，恢复原始文本
+                bubble.textContent = originalMessage.text;
             }
         } else {
-            bubble.textContent = originalText;
+            // 取消编辑，恢复原始文本
+            bubble.textContent = originalMessage.text;
         }
     };
     

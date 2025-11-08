@@ -1,6 +1,16 @@
 // 文件名: relia-chat/chat-api.js
 
-function constructSystemPrompt(charProfile, userProfile, currentChatStyle) {
+import { dbStorage } from '../common/db.js'; // [新增] 引入 db
+import { CHAT_DB_KEYS } from '../config/chat.config.js'; // [新增] 引入配置
+
+// [新增] 辅助函数，用于判断字符串是否为图片URL
+function isImageUrl(url) {
+    if (typeof url !== 'string') return false;
+    return url.startsWith('http') && /\.(jpeg|jpg|gif|png|webp)$/i.test(url);
+}
+
+// [核心修改] 更新System Prompt，使其支持表情包
+async function constructSystemPrompt(charProfile, userProfile, currentChatStyle) {
     let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
     prompt += `### 角色设定\n`;
     prompt += `- 名字: ${charProfile.name || '未命名'}\n`;
@@ -22,6 +32,18 @@ function constructSystemPrompt(charProfile, userProfile, currentChatStyle) {
     }
     prompt += `\n### 对话者信息\n`;
     prompt += `- 对方名字: ${userProfile.name || 'User'}\n`;
+
+    // [新增] 注入表情包工具
+    const emojis = await dbStorage.getItem(CHAT_DB_KEYS.EMOJIS) || [];
+    if (emojis.length > 0) {
+        const emojiListForAI = emojis.map(e => `${e.name}: ${e.data}`).join('\n');
+        prompt += `\n### 工具：发送表情包\n`;
+        prompt += `- 你有一个发送表情包的工具。可用表情列表如下 (格式为 名称: 链接)。\n`;
+        prompt += `${emojiListForAI}\n`;
+        prompt += `- **使用规则 (非常重要)**: 当你想发送表情时，必须从列表中选择一个表情的**完整链接**，并**单独成行**输出这个链接。不要在链接前后添加任何多余的文字、符号或换行。\n`;
+        prompt += `- **正确示例**: \n你好呀！\nhttps://i.postimg.cc/mkwvfN7q/image.jpg\n今天天气真好。\n`;
+    }
+
     prompt += `\n### 扮演要求\n`;
     prompt += `- 你必须完全沉浸在 **${charProfile.name}** 的角色中，用TA的身份、口吻、性格和知识进行回复。\n`;
     prompt += `- 不要暴露你是AI模型或程序，不要提及“扮演”或“角色设定”。\n`;
@@ -36,12 +58,23 @@ function constructSystemPrompt(charProfile, userProfile, currentChatStyle) {
     return prompt;
 }
 
+// [核心修改] 更新历史记录格式化，让AI能看懂表情
 function formatChatHistoryForApi(history) {
-    return history.map(msg => ({
-        role: msg.sender === 'user' ? 'user' : 'assistant',
-        content: msg.text
-    }));
+    return history.map(msg => {
+        let content = '';
+        if (msg.isEmoji) {
+            // 将表情消息转换为AI能理解的文本描述
+            content = `[发送了表情: ${msg.name || '未命名表情'}]`;
+        } else {
+            content = msg.text;
+        }
+        return {
+            role: msg.sender === 'user' ? 'user' : 'assistant',
+            content: content
+        };
+    });
 }
+
 
 /**
  * 创建一个处理消息发送和API响应的处理器。
@@ -58,8 +91,8 @@ export function createApiHandler(context) {
         dbStorage,
         renderMessage,
         renderSystemMessage,
-        loadAndRenderHistory,
-        updateButtonStates
+        updateButtonStates,
+        onAiReply, // [修改] 接收一个新的回调函数
     } = context;
 
     /**
@@ -89,9 +122,17 @@ export function createApiHandler(context) {
             }
             elements.sendBtn.disabled = true;
             elements.respondBtn.disabled = true;
+            
+            // [新增] 添加一个临时的"思考中"气泡
+            const thinkingMessage = { text: '...', sender: 'character' };
+            state.chatHistory.push(thinkingMessage);
+            renderMessage(thinkingMessage, state.chatHistory.length - 1, user, character, elements.chatArea);
 
-            const systemPrompt = constructSystemPrompt(character, user, state.currentChatStyle);
-            const historyForApi = formatChatHistoryForApi(state.chatHistory);
+            // [核心修改] constructSystemPrompt 现在是异步的
+            const systemPrompt = await constructSystemPrompt(character, user, state.currentChatStyle);
+            
+            // [核心修改] 从历史记录中排除临时的"..."气泡
+            const historyForApi = formatChatHistoryForApi(state.chatHistory.slice(0, -1));
             const messages = [{ role: 'system', content: systemPrompt }, ...historyForApi];
             const endpoint = (state.currentChatApi.baseUrl.replace(/\/$/, '')) + (state.currentChatApi.path || '/v1/chat/completions');
             const payload = { model: state.currentChatApi.model, messages: messages, stream: true };
@@ -107,19 +148,28 @@ export function createApiHandler(context) {
                     throw new Error(errorData.error?.message || `API 请求失败，状态码: ${response.status}`);
                 }
 
+                // [核心修改] 流式处理现在只返回最终结果，不直接操作UI
                 const handlerContext = {
                     reader: response.body.getReader(),
                     decoder: new TextDecoder('utf-8'),
-                    renderMessage: (msg, idx) => renderMessage(msg, idx, user, character, elements.chatArea),
-                    chatHistory: state.chatHistory,
-                    historyKey,
-                    chatArea: elements.chatArea,
-                    loadAndRenderHistory
                 };
-                await state.currentChatStyle.streamHandler(handlerContext);
+                
+                // streamHandler 现在返回一个消息对象数组
+                const replyMessages = await state.currentChatStyle.streamHandler(handlerContext);
+                
+                // 使用回调函数更新UI和历史记录
+                if (replyMessages.length > 0) {
+                    await onAiReply(replyMessages);
+                } else {
+                    // 如果AI没返回任何内容，也需要清理"..."
+                    await onAiReply([]);
+                }
+
 
             } catch (error) {
                 console.error('AI 回复生成失败:', error);
+                // 同样使用回调来处理错误，以便清理"..."
+                await onAiReply([]);
                 renderSystemMessage(`错误: ${error.message}`, 'error', elements.chatArea);
             } finally {
                 updateButtonStates();

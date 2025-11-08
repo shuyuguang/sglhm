@@ -217,25 +217,39 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             elements.respondBtn.disabled = false;
         }
-
+        
+        // [核心修改] 将AI回复逻辑移动到AI回复专用函数
+        const onAiReply = async (replyMessages) => {
+            // 从历史记录中移除临时的"..."气泡
+            const thinkingMessageIndex = state.chatHistory.findIndex(msg => msg.text === '...' && msg.sender === 'character');
+            if (thinkingMessageIndex > -1) {
+                state.chatHistory.splice(thinkingMessageIndex, 1);
+            }
+        
+            // 将AI返回的所有消息（文本或表情）添加到历史记录
+            state.chatHistory.push(...replyMessages);
+            await dbStorage.setItem(historyKey, state.chatHistory);
+            
+            // 重新渲染整个聊天界面以保证顺序和UI正确
+            await loadAndRenderHistory();
+        };
+        
         const handleSendMessage = createApiHandler({
             state, elements, character, user, historyKey, dbStorage,
-            renderMessage, renderSystemMessage, loadAndRenderHistory, updateButtonStates
+            renderMessage, renderSystemMessage, updateButtonStates, onAiReply
         });
 
-        // [新增] 发送表情的回调函数
+        // [核心修改] 更新发送表情的回调函数
         async function onSendEmoji(emoji) {
             const emojiMessage = {
                 sender: 'user',
                 isEmoji: true,
-                data: emoji.data // 存储图片URL或Base64
+                name: emoji.name, // 添加name属性，用于AI理解和编辑
+                data: emoji.data
             };
             state.chatHistory.push(emojiMessage);
             await dbStorage.setItem(historyKey, state.chatHistory);
             renderMessage(emojiMessage, state.chatHistory.length - 1, user, character, elements.chatArea);
-            
-            // 可选：发送表情后自动收起面板
-            // elements.chatInputArea.classList.remove('emoji-expanded');
         }
 
         function updateInteractionModeUI() {

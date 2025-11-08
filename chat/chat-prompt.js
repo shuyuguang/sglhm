@@ -3,15 +3,17 @@
 import { dbStorage } from '../common/db.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
 
-// ======================= 1. 风格定义与逻辑中心 =======================
+// [新增] 辅助函数，用于判断字符串是否为图片URL
+function isImageUrl(url) {
+    if (typeof url !== 'string') return false;
+    return url.startsWith('http') && /\.(jpeg|jpg|gif|png|webp)$/i.test(url);
+}
 
+// [核心修改] 所有 streamHandler 现在都返回一个消息对象数组
 async function defaultStreamHandler(context) {
-    const { reader, decoder, renderMessage, chatHistory, historyKey, chatArea } = context;
-    const thinkingBubble = renderMessage({ text: '...', sender: 'character' }, -1);
-    const thinkingBubbleRow = thinkingBubble.parentElement;
+    const { reader, decoder } = context;
     let fullReply = '';
     try {
-        thinkingBubble.textContent = '';
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
@@ -26,35 +28,40 @@ async function defaultStreamHandler(context) {
                         const content = data.choices[0]?.delta?.content;
                         if (content) {
                             fullReply += content;
-                            thinkingBubble.textContent = fullReply;
-                            chatArea.scrollTop = chatArea.scrollHeight;
                         }
                     } catch (e) { /* 忽略解析错误 */ }
                 }
             }
         }
+        
         const cleanReply = fullReply.replace(/\(thought[\s\S]*?\)/g, '').trim();
-        thinkingBubbleRow.remove();
-        if (cleanReply) {
-            const replyMessage = { text: cleanReply, sender: 'character' };
-            chatHistory.push(replyMessage);
-            await dbStorage.setItem(historyKey, chatHistory);
-            renderMessage(replyMessage, chatHistory.length - 1);
-        }
+        const replyParts = cleanReply.split(/(\r\n|\n|\r)/);
+        const messages = [];
+        
+        replyParts.forEach(part => {
+            const trimmedPart = part.trim();
+            if (!trimmedPart) return;
+
+            if (isImageUrl(trimmedPart)) {
+                messages.push({ sender: 'character', isEmoji: true, data: trimmedPart, name: 'AI表情' });
+            } else {
+                messages.push({ sender: 'character', text: trimmedPart });
+            }
+        });
+        
+        return messages;
+
     } catch (error) {
-        thinkingBubbleRow.remove();
-        throw error;
+        console.error("Stream handling error:", error);
+        return [{ sender: 'character', text: `抱歉，处理回复时出错: ${error.message}` }];
     }
 }
 
 async function dialogueStreamHandler(context) {
-    const { reader, decoder, renderMessage, chatHistory, historyKey, chatArea, loadAndRenderHistory } = context;
-    let currentBubble = renderMessage({ text: '...', sender: 'character' }, -1);
-    let currentBubbleRow = currentBubble.parentElement;
+    const { reader, decoder } = context;
     let rawStreamBuffer = '';
-    const fullReplyForHistory = [];
+    
     try {
-        currentBubble.textContent = '';
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
@@ -73,43 +80,31 @@ async function dialogueStreamHandler(context) {
                     } catch (e) { /* 忽略不完整的JSON */ }
                 }
             }
-            const cleanFullStream = rawStreamBuffer.replace(/\(thought[\s\S]*?\)/g, '');
-            const messageParts = cleanFullStream.split('[split]');
-            for (let i = fullReplyForHistory.length; i < messageParts.length - 1; i++) {
-                const completedMessage = messageParts[i].trim();
-                if (completedMessage) {
-                    currentBubble.textContent = completedMessage;
-                    fullReplyForHistory.push(completedMessage);
-                    currentBubble = renderMessage({ text: '...', sender: 'character' }, -1);
-                    currentBubble.textContent = '';
-                    currentBubbleRow = currentBubble.parentElement;
-                }
+        }
+
+        const cleanFullStream = rawStreamBuffer.replace(/\(thought[\s\S]*?\)/g, '');
+        const messageParts = cleanFullStream.split('[split]');
+        const messages = [];
+
+        messageParts.forEach(part => {
+            const trimmedPart = part.trim();
+            if (!trimmedPart) return;
+
+            if (isImageUrl(trimmedPart)) {
+                messages.push({ sender: 'character', isEmoji: true, data: trimmedPart, name: 'AI表情' });
+            } else {
+                messages.push({ sender: 'character', text: trimmedPart });
             }
-            const currentlyStreamingMsg = messageParts[messageParts.length - 1].trimStart();
-            currentBubble.textContent = currentlyStreamingMsg;
-            chatArea.scrollTop = chatArea.scrollHeight;
-        }
-        const finalMessage = currentBubble.textContent.trim();
-        if (finalMessage) {
-            fullReplyForHistory.push(finalMessage);
-        } else {
-            currentBubbleRow?.remove();
-        }
-        if (fullReplyForHistory.length > 0) {
-            const lastMsgIndex = chatHistory.length -1;
-            if(lastMsgIndex >= 0 && chatHistory[lastMsgIndex].text === '...' && chatHistory[lastMsgIndex].sender === 'character') {
-                 chatHistory.pop();
-            }
-            const newMessages = fullReplyForHistory.map(text => ({ text, sender: 'character' }));
-            chatHistory.push(...newMessages);
-            await dbStorage.setItem(historyKey, chatHistory);
-            await loadAndRenderHistory();
-        }
+        });
+        
+        return messages;
+
     } catch (error) {
-        currentBubbleRow?.remove();
-        throw error;
+        console.error("Dialogue stream handling error:", error);
+        return [{ sender: 'character', text: `抱歉，处理对话时出错: ${error.message}` }];
     }
 }
+
 
 export const CHAT_STYLES = {
     'dialogue': {
@@ -138,7 +133,6 @@ export const CHAT_STYLES = {
     }
 };
 
-// ▼▼▼ 新增：为每种风格定义不同的默认设置 ▼▼▼
 const STYLE_DEFAULT_SETTINGS = {
     'dialogue': {
         outputMin: '2',
@@ -165,9 +159,6 @@ const STYLE_DEFAULT_SETTINGS = {
         memoryLimit: '10'
     }
 };
-// ▲▲▲ 新增结束 ▲▲▲
-
-// ======================= 2. UI 面板创建与管理 (已修改) =======================
 
 export function createChatPromptPanel({ triggerElement, container, onSave, charId }) {
 
@@ -250,25 +241,20 @@ export function createChatPromptPanel({ triggerElement, container, onSave, charI
         }
     }
     
-    // ▼▼▼ 修改：此函数现在会根据风格加载对应的默认值 ▼▼▼
     async function loadAndDisplaySettings(styleKey) {
-        // 1. 获取该风格的专属默认值，如果找不到则用对话体作为后备
         const defaults = STYLE_DEFAULT_SETTINGS[styleKey] || STYLE_DEFAULT_SETTINGS['dialogue'];
         
-        // 2. 从数据库加载用户保存的设置
         const settingsDbKey = `${CHAT_DB_KEYS.CHAT_SETTINGS}_${charId}_${styleKey}`;
         const savedSettings = await dbStorage.getItem(settingsDbKey);
         
         const settings = savedSettings || {};
         const outputLimit = settings.outputLimit || {};
 
-        // 3. 更新UI：优先使用保存值，否则使用该风格的默认值
         ui.outputLimitMinInput.value = outputLimit.min || defaults.outputMin;
         ui.outputLimitMaxInput.value = outputLimit.max || defaults.outputMax;
         ui.visualLimitInput.value = settings.visualLimit || defaults.visualLimit;
         ui.memoryLimitInput.value = settings.memoryLimit || defaults.memoryLimit;
     }
-    // ▲▲▲ 修改结束 ▲▲▲
 
     async function setActiveStyle(targetStyleKey) {
         activeStyle = targetStyleKey;
