@@ -101,7 +101,6 @@ export function createApiHandler(context) {
         renderSystemMessage,
         updateButtonStates,
         onAiReply,
-        // [新增] 接收状态管理器
         getIsAiReplying,
         setIsAiReplying,
         setAbortController
@@ -112,7 +111,6 @@ export function createApiHandler(context) {
      * @param {boolean} shouldTriggerReply - 是否应请求AI响应。
      */
     async function handleSendMessage(shouldTriggerReply) {
-        // [修改] 如果正在回复，则不允许发送新消息
         if (getIsAiReplying() && shouldTriggerReply) {
             console.log("AI is already replying. New request blocked.");
             return;
@@ -139,18 +137,16 @@ export function createApiHandler(context) {
                 return;
             }
             
-            // [修改] 进入 AI 回复状态
+            // ▼▼▼ 【核心修复】简化此处的逻辑 ▼▼▼
             setIsAiReplying(true);
-            elements.respondBtn.classList.add('blinking'); // 开启闪烁
-            // 保持按钮可用，以便用户点击取消
-            elements.sendBtn.disabled = true;
-            elements.respondBtn.disabled = false; 
+            elements.respondBtn.classList.add('blinking');
+            updateButtonStates(); // 直接调用状态更新函数，不再手动设置 disabled 属性
+            // ▲▲▲ 修复结束 ▲▲▲
 
             const thinkingMessage = { text: '...', sender: 'character' };
             state.chatHistory.push(thinkingMessage);
             renderMessage(thinkingMessage, state.chatHistory.length - 1, user, character, elements.chatArea);
 
-            // [新增] 创建 AbortController
             const controller = new AbortController();
             setAbortController(controller);
 
@@ -165,7 +161,7 @@ export function createApiHandler(context) {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.currentChatApi.apiKey}` },
                     body: JSON.stringify(payload),
-                    signal: controller.signal // [新增] 传入 signal
+                    signal: controller.signal
                 });
 
                 if (!response.ok) {
@@ -189,10 +185,9 @@ export function createApiHandler(context) {
                 }
 
             } catch (error) {
-                // [修改] 捕获中断错误
                 if (error.name === 'AbortError') {
                     console.log('AI reply cancelled by user.');
-                    await onAiReply([]); // 清理"思考中"消息
+                    await onAiReply([]);
                     renderSystemMessage('AI回复已取消', 'info', elements.chatArea);
                 } else {
                     console.error('AI 回复生成失败:', error);
@@ -200,10 +195,9 @@ export function createApiHandler(context) {
                     renderSystemMessage(`错误: ${error.message}`, 'error', elements.chatArea);
                 }
             } finally {
-                // [修改] 退出 AI 回复状态
                 setIsAiReplying(false);
                 setAbortController(null);
-                elements.respondBtn.classList.remove('blinking'); // 停止闪烁
+                elements.respondBtn.classList.remove('blinking');
                 updateButtonStates();
                 elements.input.focus();
             }

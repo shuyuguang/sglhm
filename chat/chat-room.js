@@ -134,10 +134,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             isDiyEnabled: false,
         };
         
-        // ▼▼▼ 【新增】在这里添加新的状态变量 ▼▼▼
         let isAiReplying = false;
         let currentAbortController = null;
-        // ▲▲▲ 新增结束 ▲▲▲
 
         const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`;
         const selectedApiKey = `${CHAT_DB_KEYS.CHAT_SELECTED_API}_${charId}`;
@@ -211,18 +209,32 @@ document.addEventListener('DOMContentLoaded', async () => {
             state.chatHistory.forEach((message, index) => renderMessage(message, index, user, character, elements.chatArea));
         }
         
+        // ▼▼▼ 【核心修复】重写此函数以管理所有按钮状态 ▼▼▼
         function updateButtonStates() {
             if (!elements.input || !elements.respondBtn || !elements.sendBtn) return;
             const hasText = elements.input.value.trim() !== '';
+
+            // 场景1：AI 正在回复中
+            if (isAiReplying) {
+                elements.respondBtn.style.display = 'flex';
+                elements.sendBtn.style.display = 'none';
+                elements.respondBtn.disabled = false; // 允许点击取消
+                elements.sendBtn.disabled = true;    // 禁用发送
+                return; // 提前结束函数
+            }
+
+            // 场景2：AI 未回复，根据输入框内容判断
             if (hasText) {
                 elements.respondBtn.style.display = 'none';
                 elements.sendBtn.style.display = 'flex';
+                elements.sendBtn.disabled = false; // 【关键】确保发送按钮是可用的
             } else {
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
+                elements.respondBtn.disabled = false;
             }
-            elements.respondBtn.disabled = false;
         }
+        // ▲▲▲ 修复结束 ▲▲▲
         
         const onAiReply = async (replyMessages) => {
             const thinkingMessageIndex = state.chatHistory.findIndex(msg => msg.text === '...' && msg.sender === 'character');
@@ -230,7 +242,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 state.chatHistory.splice(thinkingMessageIndex, 1);
             }
         
-            // [修改] 只有在有实际消息时才添加
             if (replyMessages && replyMessages.length > 0) {
                 state.chatHistory.push(...replyMessages);
             }
@@ -247,10 +258,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             setAbortController: (controller) => { currentAbortController = controller; }
         });
 
-        /**
-         * 【已修复】发送表情的回调函数
-         * @param {object} emoji - 被点击的表情对象
-         */
         async function onSendEmoji(emoji) {
             const emojiMessage = {
                 sender: 'user',
@@ -262,7 +269,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             await dbStorage.setItem(historyKey, state.chatHistory);
             renderMessage(emojiMessage, state.chatHistory.length - 1, user, character, elements.chatArea);
             
-            // 【核心修复】发送表情后，立即更新按钮状态
             updateButtonStates();
         }
 
@@ -379,21 +385,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         if (elements.sendBtn) elements.sendBtn.addEventListener('click', () => handleSendMessage(false));
         
-        // ▼▼▼ 【核心修改】重写 respondBtn 的点击事件 ▼▼▼
         if (elements.respondBtn) {
             elements.respondBtn.addEventListener('click', () => {
                 if (isAiReplying) {
-                    // 如果正在回复，则这次点击是“取消”
                     if (currentAbortController) {
                         currentAbortController.abort();
                     }
                 } else {
-                    // 否则，是正常的“请求回复”
                     handleSendMessage(true);
                 }
             });
         }
-        // ▲▲▲ 修改结束 ▲▲▲
 
 
         if (elements.actionsToggleBtn && elements.actionsMenu) {
