@@ -67,9 +67,10 @@ export function renderChatRoomUI(character) {
                         </div>
                         <button id="emoji-toggle-btn"><i class="fa-regular fa-face-smile"></i></button>
                         <div class="send-buttons-container" id="send-buttons-container">
-                            <button id="respond-btn" class="send-action-btn"><i class="fa-regular fa-clock"></i></button>
-                            <button id="send-btn" class="send-action-btn primary"><i class="fa-regular fa-paper-plane"></i></button>
-                        </div>
+                            <!-- ▼▼▼ 修改：将时钟图标 fa-regular fa-clock 替换为魔法棒图标 fa-solid fa-wand-magic-sparkles ▼▼▼ -->
+                            <button id="respond-btn" class="send-action-btn"><i class="fa-regular fa-paper-plane"></i></button>
+                            <button id="send-btn" class="send-action-btn primary"><i class="fa-solid fa-location-arrow"></i></button>
+        
                     </div>
                 </div>
                 <div class="emoji-picker-bar">
