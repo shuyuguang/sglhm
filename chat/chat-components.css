@@ -132,19 +132,18 @@
     color: var(--send-btn-bg);
 }
 
-/* ▼▼▼ 修改：调整输入框样式 (已修正) ▼▼▼ */
+/* ▼▼▼ 修正：修复空隙并恢复您喜欢的按钮样式 ▼▼▼ */
 
-/* 1. 将整个输入栏区域的背景设置为白色，并添加边框和圆角 */
+/* 1. 将整个输入栏区域背景设为白色，并添加顶部边框和底部安全距离 */
 .chat-input-area {
     background-color: #ffffff;
-    border: 1px solid var(--border-color);
-    border-radius: 24px; /* 胶囊形状 */
-
-    /* 移除从父级继承的背景和边框 */
-    border-top: none; 
+    border-top: 1px solid var(--border-color);
+    /* 适配 iPhone 等设备的底部安全区域 */
+    padding-bottom: constant(safe-area-inset-bottom);
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* 2. 确保所有按钮背景都是透明的，以便显示父级的白色背景 */
+/* 2. 确保所有按钮背景都是透明的，以显示父级的白色背景 */
 .chat-input-area #actions-toggle-btn,
 .chat-input-area #emoji-toggle-btn,
 .chat-input-area #send-btn,
@@ -154,14 +153,14 @@
     box-shadow: none;
 }
 
-/* 3. 加号、表情、响应按钮的图标颜色改为与顶部三杠菜单一致 */
+/* 3. 恢复您设置的图标颜色 */
 .chat-input-area #actions-toggle-btn,
 .chat-input-area #emoji-toggle-btn,
 .chat-input-area #respond-btn {
-    color: #657881; /* 与顶部菜单图标颜色统一 */
+    color: #657881;
 }
 
-/* 4. 修改发送按钮的图标颜色 */
+/* 4. 恢复您设置的发送按钮图标颜色 */
 .chat-input-area #send-btn {
     color: #39f; 
 }
@@ -169,8 +168,8 @@
     color: #39f; 
 }
 
-/* 5. 确保在其他状态下（如展开菜单时）按钮背景依然是透明的 */
+/* 5. 确保在展开菜单时，加号按钮背景依然是透明的 */
 .chat-input-area.actions-expanded #actions-toggle-btn {
     background-color: transparent;
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
+/* ▲▲▲ 修正结束 ▲▲▲ */
