@@ -1,23 +1,14 @@
 // 文件名: relia-chat/chat-api.js
 
-import { dbStorage } from '../common/db.js'; // [新增] 引入 db
-import { CHAT_DB_KEYS } from '../config/chat.config.js'; // [新增] 引入配置
+import { dbStorage } from '../common/db.js';
+import { CHAT_DB_KEYS } from '../config/chat.config.js';
 
 // [新增] 辅助函数，用于判断字符串是否为图片URL
 function isImageUrl(url) {
     if (typeof url !== 'string') return false;
-    // 修正：确保URL以http开头，避免误判
     return url.toLowerCase().startsWith('http') && /\.(jpeg|jpg|gif|png|webp)$/i.test(url);
 }
 
-/**
- * 【已修复和增强】更新System Prompt，使其支持表情包和风格设置
- * @param {object} charProfile 
- * @param {object} userProfile 
- * @param {object} currentChatStyle 
- * @param {object} styleSettings - 当前风格的设置对象
- * @returns {Promise<string>}
- */
 async function constructSystemPrompt(charProfile, userProfile, currentChatStyle, styleSettings) {
     let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
     prompt += `### 角色设定\n`;
@@ -41,32 +32,23 @@ async function constructSystemPrompt(charProfile, userProfile, currentChatStyle,
     prompt += `\n### 对话者信息\n`;
     prompt += `- 对方名字: ${userProfile.name || 'User'}\n`;
 
-    // ======================== [核心修改] ========================
-    // 注入新的、更清晰的表情包工具指令
     const emojis = await dbStorage.getItem(CHAT_DB_KEYS.EMOJIS) || [];
     if (emojis.length > 0) {
-        // 只把表情包的名称给AI看
         const emojiNameList = emojis.map(e => e.name).join(', ');
         prompt += `\n### 工具：发送表情包\n`;
         prompt += `- 你有一个发送表情包的工具。你的可用表情包有：[${emojiNameList}]。\n`;
         prompt += `- **使用规则 (非常重要)**: 当你想发送表情时，必须使用格式 **[Emoji: 表情名称]**，并确保它**单独占据一行**。不要添加任何多余的文字或符号。\n`;
-        prompt += `- **正确示例**: \n你好呀！\n[Emoji: 猫猫]\n今天天气真好。\n`;
-        prompt += `- **错误示例**: \n我发一个表情[Emoji: 猫猫]\n`;
     }
-    // ==========================================================
 
     prompt += `\n### 扮演要求\n`;
     prompt += `- 你必须完全沉浸在 **${charProfile.name}** 的角色中，用TA的身份、口吻、性格和知识进行回复。\n`;
     prompt += `- 不要暴露你是AI模型或程序，不要提及“扮演”或“角色设定”。\n`;
-    prompt += `- 你的回复应该是自然的、符合角色的，就像TA真的在和 **${userProfile.name}** 聊天一样。\n`;
     
-    // ▼▼▼ 新增：添加风格和输出限制指令 ▼▼▼
     prompt += `\n### 对话风格与限制\n`;
     prompt += `- 你的回复应该遵循 **${currentChatStyle.name}** 风格。\n`;
     if (styleSettings && styleSettings.outputMin && styleSettings.outputMax) {
         prompt += `- 你的回复应该包含最少 **${styleSettings.outputMin}** 条、最多 **${styleSettings.outputMax}** 条消息，每条消息单独占一行。\n`;
     }
-    // ▲▲▲ 新增结束 ▲▲▲
 
     if (currentChatStyle && typeof currentChatStyle.getPromptAddition === 'function') {
         const stylePrompt = currentChatStyle.getPromptAddition();
@@ -77,19 +59,26 @@ async function constructSystemPrompt(charProfile, userProfile, currentChatStyle,
     return prompt;
 }
 
+/**
+ * ▼▼▼ 核心修改：更新此函数以处理新的复杂历史记录结构 ▼▼▼
+ */
 function formatChatHistoryForApi(history) {
-    return history.map(msg => {
-        let content = '';
-        if (msg.isEmoji) {
-            content = `[发送了表情: ${msg.name || '未命名表情'}]`;
-        } else {
-            content = msg.text;
+    const formatted = [];
+    history.forEach(msg => {
+        if (msg.sender === 'user') {
+            formatted.push({ role: 'user', content: msg.text });
+        } else if (msg.sender === 'character') {
+            const activeVersion = msg.replyVersions[msg.activeReplyIndex];
+            const content = activeVersion.map(part => {
+                if (part.isEmoji) {
+                    return `[发送了表情: ${part.name || '未命名表情'}]`;
+                }
+                return part.text;
+            }).join('\n');
+            formatted.push({ role: 'assistant', content });
         }
-        return {
-            role: msg.sender === 'user' ? 'user' : 'assistant',
-            content: content
-        };
     });
+    return formatted;
 }
 
 
@@ -100,130 +89,148 @@ function formatChatHistoryForApi(history) {
  */
 export function createApiHandler(context) {
     const {
-        state,
-        elements,
-        character,
-        user,
-        historyKey,
-        dbStorage,
-        renderMessage,
-        renderSystemMessage,
-        updateButtonStates,
-        onAiReply,
-        getIsAiReplying,
-        setIsAiReplying,
-        setAbortController,
-        // ▼▼▼ 新增：获取当前风格设置的函数 ▼▼▼
-        getStyleSettings
-        // ▲▲▲ 新增结束 ▲▲▲
+        state, elements, character, user, historyKey, dbStorage,
+        renderSystemMessage, updateButtonStates, onAiReply,
+        getIsAiReplying, setIsAiReplying, setAbortController, getStyleSettings
     } = context;
 
     /**
-     * 处理发送消息或请求AI响应的逻辑。
-     * @param {boolean} shouldTriggerReply - 是否应请求AI响应。
+     * ▼▼▼ 核心修改：重构 handleSendMessage 以支持不同模式 ▼▼▼
+     * @param {string} mode - 'new', 'regenerate', 'continue'
      */
-    async function handleSendMessage(shouldTriggerReply) {
-        if (getIsAiReplying() && shouldTriggerReply) {
+    async function handleSendMessage(mode = 'new') {
+        if (getIsAiReplying()) {
             console.log("AI is already replying. New request blocked.");
             return;
         }
 
-        const text = elements.input.value.trim();
-        if (text !== '') {
-            const userMessage = { text, sender: 'user' };
-            state.chatHistory.push(userMessage);
-            // 立即刷新UI显示用户消息
-            await onAiReply([], false); // 传递false表示不清空思考消息
-            
-            await dbStorage.setItem(historyKey, state.chatHistory);
+        let historyForApi;
+        const currentStyleSettings = getStyleSettings();
+        const memoryLimit = parseInt(currentStyleSettings.memoryLimit, 10) || 15;
+        const memoryInMsgCount = memoryLimit * 2;
+        
+        // --- 准备阶段：根据不同模式处理输入和历史记录 ---
+        if (mode === 'new') {
+            const text = elements.input.value.trim();
+            if (text !== '') {
+                const userMessage = { text, sender: 'user' };
+                state.chatHistory.push(userMessage);
+                await dbStorage.setItem(historyKey, state.chatHistory);
+                await onAiReply({ mode: 'ui_update' }); // 仅更新UI
+                
+                elements.input.value = '';
+                elements.input.style.height = '';
+                updateButtonStates();
+                elements.input.focus();
+            } else {
+                 // 如果是空输入，只有 "继续" 模式可以触发
+                 if (mode !== 'continue') return;
+            }
+        }
 
-            elements.input.value = '';
-            elements.input.style.height = '';
-            updateButtonStates();
-            elements.input.focus();
-        } else if (!shouldTriggerReply) {
+        // 检查是否可以触发AI
+        const lastMessage = state.chatHistory[state.chatHistory.length - 1];
+        if (!state.currentChatApi) {
+            alert('请先点击“选择模型”按钮选择一个牵引仪模型！');
+            return;
+        }
+        if (!lastMessage) {
+            alert('还没有聊天记录，无法触发AI。');
             return;
         }
 
-        if (shouldTriggerReply) {
-            if (state.chatHistory.length === 0 || !state.currentChatApi) {
-                alert(state.chatHistory.length === 0 ? '还没有聊天记录，请先说点什么吧！' : '请先点击“选择模型”按钮选择一个牵引仪模型！');
-                return;
+        // --- API请求阶段 ---
+        setIsAiReplying(true);
+        elements.respondBtn.classList.add('blinking');
+        updateButtonStates();
+        
+        let thinkingMessageIndex = -1;
+        if (mode === 'new') {
+            thinkingMessageIndex = state.chatHistory.length;
+            renderSystemMessage('...', 'loading', elements.chatArea);
+        }
+
+        const controller = new AbortController();
+        setAbortController(controller);
+
+        try {
+            const systemPrompt = await constructSystemPrompt(character, user, state.currentChatStyle, currentStyleSettings);
+            let messagesForApi = [{ role: 'system', content: systemPrompt }];
+
+            if (mode === 'regenerate') {
+                let lastUserMessageIndex = -1;
+                for (let i = state.chatHistory.length - 1; i >= 0; i--) {
+                    if (state.chatHistory[i].sender === 'user') {
+                        lastUserMessageIndex = i;
+                        break;
+                    }
+                }
+                if (lastUserMessageIndex === -1) throw new Error("找不到可供重新生成的用户消息。");
+                // 截取到最后一条用户消息（包含）
+                historyForApi = state.chatHistory.slice(0, lastUserMessageIndex + 1);
+
+            } else if (mode === 'continue') {
+                if (lastMessage.sender !== 'character') throw new Error("最后一条消息不是AI的回复，无法继续。");
+                historyForApi = state.chatHistory;
+                // 添加一个特殊指令让AI知道要继续
+                 messagesForApi.push(...formatChatHistoryForApi(historyForApi));
+                 messagesForApi.push({ role: 'user', content: '[继续]' });
+                 // 将 historyForApi 设为空数组，避免下面重复添加
+                 historyForApi = [];
+
+            } else { // 'new' mode
+                historyForApi = state.chatHistory;
             }
-            
-            setIsAiReplying(true);
-            elements.respondBtn.classList.add('blinking');
+
+            const recentHistory = historyForApi.slice(-memoryInMsgCount);
+            messagesForApi.push(...formatChatHistoryForApi(recentHistory));
+
+            const endpoint = (state.currentChatApi.baseUrl.replace(/\/$/, '')) + (state.currentChatApi.path || '/v1/chat/completions');
+            const payload = { model: state.currentChatApi.model, messages: messagesForApi, stream: true };
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.currentChatApi.apiKey}` },
+                body: JSON.stringify(payload),
+                signal: controller.signal
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || `API 请求失败，状态码: ${response.status}`);
+            }
+
+            const emojis = await dbStorage.getItem(CHAT_DB_KEYS.EMOJIS) || [];
+            const handlerContext = {
+                reader: response.body.getReader(),
+                decoder: new TextDecoder('utf-8'),
+                emojis: emojis
+            };
+
+            const replyMessages = await state.currentChatStyle.streamHandler(handlerContext);
+
+            if (replyMessages.length > 0) {
+                await onAiReply({ mode, data: replyMessages });
+            } else {
+                await onAiReply({ mode: 'clear_thinking' });
+            }
+
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                console.log('AI reply cancelled by user.');
+                await onAiReply({ mode: 'clear_thinking' });
+                renderSystemMessage('AI回复已取消', 'info', elements.chatArea);
+            } else {
+                console.error('AI 回复生成失败:', error);
+                await onAiReply({ mode: 'clear_thinking' });
+                renderSystemMessage(`错误: ${error.message}`, 'error', elements.chatArea);
+            }
+        } finally {
+            setIsAiReplying(false);
+            setAbortController(null);
+            elements.respondBtn.classList.remove('blinking');
             updateButtonStates();
-
-            const thinkingMessage = { text: '...', sender: 'character' };
-            state.chatHistory.push(thinkingMessage);
-            await onAiReply([], false); // 传递false表示不清空思考消息，仅刷新UI
-
-            const controller = new AbortController();
-            setAbortController(controller);
-
-            try {
-                // ▼▼▼ 核心修改：使用新的设置来构建请求 ▼▼▼
-                const currentStyleSettings = getStyleSettings();
-                const memoryLimit = parseInt(currentStyleSettings.memoryLimit, 10) || 15;
-                const memoryInMsgCount = memoryLimit * 2; // 1轮 = 1用户 + 1AI = 2条消息
-                
-                const systemPrompt = await constructSystemPrompt(character, user, state.currentChatStyle, currentStyleSettings);
-                
-                // 从聊天历史末尾截取记忆轮数限制内的消息
-                const historyForApi = formatChatHistoryForApi(state.chatHistory.slice(-memoryInMsgCount -1, -1)); // -1排除最后的'...'
-                
-                const messages = [{ role: 'system', content: systemPrompt }, ...historyForApi];
-                // ▲▲▲ 修改结束 ▲▲▲
-                
-                const endpoint = (state.currentChatApi.baseUrl.replace(/\/$/, '')) + (state.currentChatApi.path || '/v1/chat/completions');
-                const payload = { model: state.currentChatApi.model, messages: messages, stream: true };
-
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.currentChatApi.apiKey}` },
-                    body: JSON.stringify(payload),
-                    signal: controller.signal
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error?.message || `API 请求失败，状态码: ${response.status}`);
-                }
-                
-                const emojis = await dbStorage.getItem(CHAT_DB_KEYS.EMOJIS) || [];
-                const handlerContext = {
-                    reader: response.body.getReader(),
-                    decoder: new TextDecoder('utf-8'),
-                    emojis: emojis 
-                };
-                
-                const replyMessages = await state.currentChatStyle.streamHandler(handlerContext);
-                
-                // onAiReply 会处理'...'消息的替换
-                if (replyMessages.length > 0) {
-                    await onAiReply(replyMessages);
-                } else {
-                    await onAiReply([]);
-                }
-
-            } catch (error) {
-                if (error.name === 'AbortError') {
-                    console.log('AI reply cancelled by user.');
-                    await onAiReply([]); // 清理'...'
-                    renderSystemMessage('AI回复已取消', 'info', elements.chatArea);
-                } else {
-                    console.error('AI 回复生成失败:', error);
-                    await onAiReply([]); // 清理'...'
-                    renderSystemMessage(`错误: ${error.message}`, 'error', elements.chatArea);
-                }
-            } finally {
-                setIsAiReplying(false);
-                setAbortController(null);
-                elements.respondBtn.classList.remove('blinking');
-                updateButtonStates();
-                elements.input.focus();
-            }
+            elements.input.focus();
         }
     }
 

@@ -34,8 +34,10 @@ export function renderChatRoomUI(character) {
                                 <button class="action-list-item"><i class="fa-solid fa-magnifying-glass"></i><span>查找记录</span></button>
                                 <button class="action-list-item"><i class="fa-regular fa-star"></i><span>收藏</span></button>
                                 <button class="action-list-item"><i class="fa-solid fa-timeline"></i><span>时间线</span></button>
-                                <button class="action-list-item"><i class="fa-solid fa-arrows-rotate"></i><span>重新生成</span></button>
-                                <button class="action-list-item"><i class="fa-solid fa-forward"></i><span>继续</span></button>
+                                <!-- ▼▼▼ 核心修改：为按钮添加ID ▼▼▼ -->
+                                <button class="action-list-item" id="regenerate-btn"><i class="fa-solid fa-arrows-rotate"></i><span>重新生成</span></button>
+                                <button class="action-list-item" id="continue-btn"><i class="fa-solid fa-forward"></i><span>继续</span></button>
+                                <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                             </div>
                             <!-- 中区 -->
                             <div class="actions-column">
@@ -50,9 +52,7 @@ export function renderChatRoomUI(character) {
                             </div>
                             <!-- 右区 -->
                             <div class="actions-column">
-                                <!-- ▼▼▼ 核心修改：移除回顶/回底，修改跳转文本 ▼▼▼ -->
                                 <button class="action-list-item"><i class="fa-solid fa-location-crosshairs"></i><span>跳转楼层</span></button>
-                                <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                             </div>
                         </div>
                     </div>
@@ -79,42 +79,87 @@ export function renderChatRoomUI(character) {
 }
 
 /**
- * 在聊天区域渲染一条消息。
- * @param {object} message - 消息对象 { text, sender, isEmoji, data }。
- * @param {number} index - 消息在历史记录中的索引。
+ * ▼▼▼ 核心修改：重构 renderMessage 为 renderMessageGroup 以支持多气泡和分页 ▼▼▼
+ * 在聊天区域渲染一个完整的消息组（可能包含多个气泡）。
+ * @param {object} messageGroup - 消息组对象。
+ * @param {number} index - 消息组在历史记录中的索引。
  * @param {object} user - 当前用户对象。
  * @param {object} character - 当前角色对象。
  * @param {HTMLElement} chatArea - 聊天消息容器元素。
- * @returns {HTMLElement} - 创建的消息气泡元素。
  */
-export function renderMessage(message, index, user, character, chatArea) {
-    const { sender, isEmoji, data, text } = message;
+export function renderMessageGroup(messageGroup, index, user, character, chatArea) {
+    const { sender } = messageGroup;
+    
+    // 创建一个容器来包裹属于同一次发送的所有消息行
+    const messageGroupContainer = document.createElement('div');
+    messageGroupContainer.className = 'message-group-container';
+    messageGroupContainer.dataset.index = index;
 
-    const messageRow = document.createElement('div');
-    messageRow.className = `message-row ${sender}`;
-    messageRow.dataset.index = index;
+    if (sender === 'user') {
+        const messageRow = document.createElement('div');
+        messageRow.className = `message-row ${sender}`;
+        
+        const avatar = document.createElement('img');
+        avatar.className = 'message-avatar';
+        avatar.src = user.avatar;
 
-    const avatar = document.createElement('img');
-    avatar.className = 'message-avatar';
-    avatar.src = (sender === 'user') ? user.avatar : character.avatar;
+        const bubble = document.createElement('div');
+        bubble.className = `chat-bubble ${sender}`;
+        bubble.textContent = messageGroup.text;
 
-    const bubble = document.createElement('div');
-    bubble.className = `chat-bubble ${sender}`;
+        messageRow.appendChild(avatar);
+        messageRow.appendChild(bubble);
+        messageGroupContainer.appendChild(messageRow);
 
-    if (isEmoji) {
-        bubble.classList.add('is-emoji-message');
-        bubble.innerHTML = `<img src="${data}" alt="emoji" class="message-emoji-img">`;
-    } else {
-        bubble.textContent = text;
+    } else if (sender === 'character') {
+        const activeReplyIndex = messageGroup.activeReplyIndex || 0;
+        const currentReplyVersion = messageGroup.replyVersions[activeReplyIndex];
+
+        // 渲染当前版本的所有消息气泡
+        currentReplyVersion.forEach(messagePart => {
+            const { isEmoji, data, text } = messagePart;
+            const messageRow = document.createElement('div');
+            messageRow.className = `message-row ${sender}`;
+            
+            const avatar = document.createElement('img');
+            avatar.className = 'message-avatar';
+            avatar.src = character.avatar;
+
+            const bubble = document.createElement('div');
+            bubble.className = `chat-bubble ${sender}`;
+
+            if (isEmoji) {
+                bubble.classList.add('is-emoji-message');
+                bubble.innerHTML = `<img src="${data}" alt="emoji" class="message-emoji-img">`;
+            } else {
+                bubble.textContent = text;
+            }
+
+            messageRow.appendChild(avatar);
+            messageRow.appendChild(bubble);
+            messageGroupContainer.appendChild(messageRow);
+        });
+
+        // 如果有多个版本，则渲染分页器
+        if (messageGroup.replyVersions.length > 1) {
+            const pager = document.createElement('div');
+            pager.className = 'reply-pager';
+            pager.innerHTML = `
+                <button class="pager-btn" data-action="prev" ${activeReplyIndex === 0 ? 'disabled' : ''}>
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <span class="pager-text">${activeReplyIndex + 1} / ${messageGroup.replyVersions.length}</span>
+                <button class="pager-btn" data-action="next" ${activeReplyIndex === messageGroup.replyVersions.length - 1 ? 'disabled' : ''}>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            `;
+            messageGroupContainer.appendChild(pager);
+        }
     }
-
-    messageRow.appendChild(avatar);
-    messageRow.appendChild(bubble);
-
-    chatArea.appendChild(messageRow);
-    chatArea.scrollTop = chatArea.scrollHeight;
-    return bubble;
+    
+    chatArea.appendChild(messageGroupContainer);
 }
+// ▲▲▲ 修改结束 ▲▲▲
 
 
 /**
