@@ -421,7 +421,9 @@
     border-radius: 50%;
     border: none;
     cursor: pointer;
-    background-color: #5F91B9;
+    /* ▼▼▼ 修改点：背景色与帮助按钮统一 ▼▼▼ */
+    background-color: #7290B2;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
     color: var(--text-light);
     font-size: 1.3rem;
     transform: rotate(45deg);
@@ -432,6 +434,14 @@
     padding: 0; /* 覆盖 modal-btn-confirm 的默认 padding */
     flex-shrink: 0; /* 防止按钮被压缩 */
 }
+
+/* ▼▼▼ 新增：微调发送按钮内图标的位置 ▼▼▼ */
+#send-image-btn > i {
+    position: relative;
+    left: -1px;
+    top: 1px;
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */
 
 #send-image-btn:hover:not(:disabled) {
     filter: brightness(1.1);
