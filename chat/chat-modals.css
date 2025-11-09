@@ -416,8 +416,8 @@
 
 /* ▼▼▼ 核心修改：为新的发送按钮添加样式 ▼▼▼ */
 #send-image-btn {
-    width: 42px;
-    height: 42px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     border: none;
     cursor: pointer;
