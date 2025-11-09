@@ -223,13 +223,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         
-        // ▼▼▼ 核心命令执行：重写按钮状态更新逻辑 ▼▼▼
         function updateButtonStates() {
             if (!elements.input || !elements.respondBtn || !elements.sendBtn) return;
         
             const respondBtnIcon = elements.respondBtn.querySelector('i');
         
-            // 1. AI回复中：显示可点击的“停止”按钮
             if (isAiReplying) {
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
@@ -240,28 +238,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return; 
             }
         
-            // 2. 恢复“响应”按钮的默认图标
             if (respondBtnIcon) {
                 respondBtnIcon.className = 'fa-regular fa-paper-plane';
             }
         
-            // 3. 核心规则：根据输入框是否有文本显示不同按钮
             const hasText = elements.input.value.trim() !== '';
         
             if (hasText) {
-                // 有文本 -> 显示“发送”按钮
                 elements.respondBtn.style.display = 'none';
                 elements.sendBtn.style.display = 'flex';
                 elements.sendBtn.disabled = false;
             } else {
-                // 无文本 -> 显示“响应”按钮
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
-                // “响应”按钮仅在聊天记录为空时禁用
                 elements.respondBtn.disabled = state.chatHistory.length === 0;
             }
         }
-        // ▲▲▲ 核心命令结束 ▲▲▲
         
         const onAiReply = async (action) => {
             const { mode, data: replyMessages } = action;
@@ -329,11 +321,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             await loadAndRenderHistory();
             updateButtonStates();
             
-            // ▼▼▼ 新增：发送图片或链接后，自动触发AI回复 ▼▼▼
             if (message.type === 'image' || message.type === 'link' || message.type === 'text-photo') {
                 triggerAiResponse('new');
             }
-            // ▲▲▲ 新增结束 ▲▲▲
         }
 
         async function handleUserSend() {
@@ -345,17 +335,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             elements.input.style.height = 'auto';
             elements.input.focus();
             
-            // ▼▼▼ 新增：发送文本后，自动触发AI回复 ▼▼▼
             triggerAiResponse('new');
-            // ▲▲▲ 新增结束 ▲▲▲
         }
 
         async function onSendEmoji(emoji) {
             const emojiMessage = { sender: 'user', isEmoji: true, name: emoji.name, data: emoji.data };
             await onSendUserMessage(emojiMessage);
-            // ▼▼▼ 新增：发送表情后，自动触发AI回复 ▼▼▼
             triggerAiResponse('new');
-            // ▲▲▲ 新增结束 ▲▲▲
         }
 
         function initializeInteractionModeAndStyle() {
@@ -432,7 +418,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         elements.chatArea.addEventListener('click', async (e) => {
             const link = e.target.closest('.is-link-message a, .is-image-message a');
             if (link) {
-                // 阻止默认的点击跳转行为，因为长按/单击由JS处理
                 e.preventDefault(); 
             }
             
@@ -601,7 +586,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         appContainer.innerHTML = `<p style="text-align: center;">页面加载时发生严重错误。</p>`;
     }
 
-    window.addEventListener('unload', () => {
+    // ▼▼▼ 核心修复：将 'unload' 事件替换为 'pagehide' ▼▼▼
+    window.addEventListener('pagehide', () => {
         blobUrlManager.cleanup();
     });
+    // ▲▲▲ 修复结束 ▲▲▲
 });
