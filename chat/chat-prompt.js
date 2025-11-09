@@ -3,40 +3,73 @@
 import { dbStorage } from '../common/db.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
 
-// 辅助函数，用于判断字符串是否为图片URL
+// ... (isImageUrl and isBase64 functions remain unchanged)
 function isImageUrl(url) {
     if (typeof url !== 'string') return false;
     return url.startsWith('http') && /\.(jpeg|jpg|gif|png|webp)$/i.test(url);
 }
 
-// 新增辅助函数：判断是否为Base64字符串
 function isBase64(str) {
     if (typeof str !== 'string' || !str) return false;
-    // 简单的正则，检查是否只包含Base64字符，且长度合理
     const base64Regex = /^[A-Za-z0-9+/=]+$/;
-    // 长度大于50，且是4的倍数，是base64的典型特征
     return str.length > 50 && str.length % 4 === 0 && base64Regex.test(str);
 }
 
-// 核心修改：重写解析逻辑以支持链接卡片
+
+// ▼▼▼ 【核心优化】使用更健壮的解析逻辑 ▼▼▼
 function parseAiReply(fullReply, emojis) {
     const messages = [];
-    // 正则表达式，用于匹配链接卡片格式
-    // 修正：让 Source 和 Illustration 都是可选的，且能正确捕获
-    const linkCardRegex = /\[Title:([\s\S]*?)\nBody text:([\s\S]*?)(?:\nSource:([\s\S]*?))?(?:\nIllustration:([\s\S]*?))?\]/g;
+    const mainRegex = /\[([\s\S]+?)\]|([^\[\]]+)/g;
     const emojiRegex = /^\[Emoji:\s*(.*?)\s*\]$/;
     
-    let lastIndex = 0;
     let match;
+    while ((match = mainRegex.exec(fullReply)) !== null) {
+        const potentialCardContent = match[1];
+        const plainText = match[2];
 
-    // 遍历所有匹配到的链接卡片
-    while ((match = linkCardRegex.exec(fullReply)) !== null) {
-        // 1. 处理卡片之前的所有普通文本
-        const precedingText = fullReply.substring(lastIndex, match.index);
-        if (precedingText.trim()) {
-            precedingText.split(/(\r\n|\n|\r)/).forEach(part => {
+        if (potentialCardContent && potentialCardContent.includes('Title:') && potentialCardContent.includes('Body text:')) {
+            // 尝试解析为链接卡片
+            const lines = potentialCardContent.split('\n');
+            const cardData = { sender: 'character', type: 'link', image: null };
+            let currentKey = '';
+            
+            lines.forEach(line => {
+                if (line.startsWith('Title:')) {
+                    currentKey = 'title';
+                    cardData.title = line.substring(6).trim();
+                } else if (line.startsWith('Body text:')) {
+                    currentKey = 'body';
+                    cardData.body = line.substring(10).trim();
+                } else if (line.startsWith('Source:')) {
+                    currentKey = 'source';
+                    cardData.source = line.substring(7).trim();
+                } else if (line.startsWith('Illustration:')) {
+                    currentKey = 'illustration';
+                    const illustrationText = line.substring(13).trim();
+                    if (isBase64(illustrationText)) {
+                        cardData.image = { type: 'image', data: `data:image/jpeg;base64,${illustrationText}` };
+                    } else {
+                        cardData.image = { type: 'text-photo', text: illustrationText };
+                    }
+                } else if (currentKey) {
+                    // 处理多行内容
+                    if (currentKey === 'body') cardData.body += '\n' + line.trim();
+                }
+            });
+
+            if (cardData.title && cardData.body) {
+                messages.push(cardData);
+            } else {
+                // 解析失败，作为普通文本处理
+                messages.push({ sender: 'character', text: `[${potentialCardContent}]` });
+            }
+
+        } else if (plainText && plainText.trim()) {
+            // 处理普通文本和表情
+            plainText.split(/(\r\n|\n|\r)/).forEach(part => {
                 const trimmedPart = part.trim();
                 if (!trimmedPart) return;
+
                 const emojiMatch = trimmedPart.match(emojiRegex);
                 if (emojiMatch && emojiMatch[1]) {
                     const foundEmoji = emojis.find(e => e.name === emojiMatch[1]);
@@ -46,55 +79,11 @@ function parseAiReply(fullReply, emojis) {
                 }
             });
         }
-
-        // 2. 处理链接卡片本身
-        const [, title, body, source, illustration] = match;
-        const linkCardMessage = {
-            sender: 'character',
-            type: 'link',
-            title: title.trim(),
-            body: body.trim(),
-            source: source ? source.trim() : '',
-            image: null
-        };
-
-        if (illustration) {
-            const trimmedIllustration = illustration.trim();
-            if (isBase64(trimmedIllustration)) {
-                linkCardMessage.image = {
-                    type: 'image',
-                    data: `data:image/jpeg;base64,${trimmedIllustration}` // 默认用jpeg
-                };
-            } else {
-                linkCardMessage.image = {
-                    type: 'text-photo',
-                    text: trimmedIllustration
-                };
-            }
-        }
-        messages.push(linkCardMessage);
-
-        lastIndex = linkCardRegex.lastIndex;
-    }
-
-    // 3. 处理最后一个卡片之后的所有剩余文本
-    const remainingText = fullReply.substring(lastIndex);
-    if (remainingText.trim()) {
-        remainingText.split(/(\r\n|\n|\r)/).forEach(part => {
-            const trimmedPart = part.trim();
-            if (!trimmedPart) return;
-            const emojiMatch = trimmedPart.match(emojiRegex);
-            if (emojiMatch && emojiMatch[1]) {
-                const foundEmoji = emojis.find(e => e.name === emojiMatch[1]);
-                if (foundEmoji) messages.push({ sender: 'character', isEmoji: true, data: foundEmoji.data, name: foundEmoji.name });
-            } else {
-                messages.push({ sender: 'character', text: trimmedPart });
-            }
-        });
     }
 
     return messages;
 }
+// ▲▲▲ 优化结束 ▲▲▲
 
 async function universalStreamHandler(context) {
     const { reader, decoder, emojis } = context;
@@ -129,7 +118,7 @@ async function universalStreamHandler(context) {
     }
 }
 
-// 核心修改：统一使用新的解析器
+// ... (CHAT_STYLES, STYLE_DEFAULT_SETTINGS, and createChatPromptPanel function remain unchanged)
 export const CHAT_STYLES = {
     'dialogue': {
         name: '对话体',

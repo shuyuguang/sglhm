@@ -3,10 +3,7 @@
 const LONG_PRESS_THRESHOLD = 400; // 长按阈值，单位：毫秒
 
 let longPressTimer = null;
-
-// ▼▼▼ 核心修改：移除 isLongPress 全局状态，逻辑简化 ▼▼▼
-// let isLongPress = false; 
-// ▲▲▲ 修改结束 ▲▲▲
+let longPressFired = false; // 新增标志位，判断长按是否已触发
 
 function escapeHtml(unsafe) {
     if (!unsafe) return '';
@@ -17,15 +14,7 @@ function escapeHtml(unsafe) {
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#039;");
 }
-// ▲▲▲ 新增结束 ▲▲▲
 
-/**
- * 初始化消息长按和单击事件处理。
- * @param {HTMLElement} container - 消息列表的容器元素 (chatArea)。
- * @param {function} getChatHistory - 一个返回当前聊天历史数组的函数。
- * @param {function} updateChatHistory - 一个用新历史数组更新状态和UI的函数。
- * @param {function} getEmojis - 一个返回当前所有可用表情包数组的函数。
- */
 export function initializeMessageMenu(container, getChatHistory, updateChatHistory, getEmojis) {
     const menuOverlay = document.getElementById('message-menu-overlay');
     const menu = document.getElementById('message-menu');
@@ -35,21 +24,29 @@ export function initializeMessageMenu(container, getChatHistory, updateChatHisto
         return;
     }
 
+    // ▼▼▼ 【核心修改】重写事件处理以区分长按和单击 ▼▼▼
     container.addEventListener('mousedown', (e) => {
         const bubble = e.target.closest('.chat-bubble');
         if (!bubble || bubble.classList.contains('editing')) return;
 
-        // 对链接卡片，设置长按后直接显示菜单
-        if (bubble.classList.contains('is-link-message')) {
-            longPressTimer = setTimeout(() => {
+        longPressFired = false; // 每次按下时重置标志位
+
+        longPressTimer = setTimeout(() => {
+            longPressFired = true; // 标记长按已触发
+            
+            // 只有链接卡片在长按时才显示菜单
+            if (bubble.classList.contains('is-link-message')) {
                 const messageGroup = bubble.closest('.message-group-container');
                 if (!messageGroup) return;
+
                 const index = parseInt(messageGroup.dataset.index, 10);
-                const partIndex = -1; // 用户链接卡片没有partIndex
-                
+                const messageRow = bubble.closest('.message-row');
+                // 正确获取AI或用户的partIndex
+                const partIndex = messageRow && messageRow.dataset.partIndex ? parseInt(messageRow.dataset.partIndex, 10) : -1;
+            
                 showMenu(e, index, partIndex, bubble, getChatHistory, updateChatHistory, getEmojis);
-            }, LONG_PRESS_THRESHOLD);
-        }
+            }
+        }, LONG_PRESS_THRESHOLD);
     });
 
     container.addEventListener('mouseup', (e) => {
@@ -57,16 +54,20 @@ export function initializeMessageMenu(container, getChatHistory, updateChatHisto
     });
 
     container.addEventListener('click', (e) => {
-        const bubble = e.target.closest('.chat-bubble');
-        
-        // 忽略预览按钮点击
-        if (e.target.closest('.text-photo-preview-btn')) {
+        // 如果长按已经触发了操作，或者点击的是预览按钮，则click事件不执行任何操作
+        if (longPressFired || e.target.closest('.text-photo-preview-btn')) {
             return;
         }
 
-        // 如果是链接卡片或正在编辑的气泡，则单击无效果
-        if (!bubble || bubble.classList.contains('editing') || bubble.classList.contains('is-link-message')) return;
+        const bubble = e.target.closest('.chat-bubble');
+        if (!bubble || bubble.classList.contains('editing')) return;
+        
+        // 链接卡片不响应单击事件
+        if (bubble.classList.contains('is-link-message')) {
+            return;
+        }
 
+        // 其他所有类型的消息，都响应单击事件
         e.preventDefault();
         
         const messageGroup = bubble.closest('.message-group-container');
@@ -75,7 +76,6 @@ export function initializeMessageMenu(container, getChatHistory, updateChatHisto
         const messageRow = bubble.closest('.message-row');
         const partIndex = messageRow && messageRow.dataset.partIndex ? parseInt(messageRow.dataset.partIndex, 10) : -1;
         
-        // 普通消息单击显示菜单
         showMenu(e, index, partIndex, bubble, getChatHistory, updateChatHistory, getEmojis);
     });
     // ▲▲▲ 修改结束 ▲▲▲
@@ -99,7 +99,6 @@ function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHis
     let textToCopy = '';
     let currentPart = null;
 
-    // 定位到具体的消息部分
     if (messageData.sender === 'user') {
         currentPart = messageData;
     } else if (messageData.sender === 'character' && partIndex !== -1) {
@@ -119,16 +118,15 @@ function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHis
                 canEdit = false;
                 break;
             case 'link':
-                // ▼▼▼ 核心修改：链接卡片禁用复制和编辑 ▼▼▼
-                textToCopy = ''; // 没有可复制的内容
+                // 链接卡片禁用复制和编辑
+                textToCopy = '';
                 canCopy = false;
                 canEdit = false;
-                // ▲▲▲ 修改结束 ▲▲▲
                 break;
             default: // 兼容旧文本和表情
                 textToCopy = currentPart.isEmoji ? `[Emoji: ${currentPart.name}]` : currentPart.text;
                 canCopy = textToCopy.length > 0;
-                canEdit = true;
+                canEdit = !currentPart.isEmoji; // 表情不可编辑
                 break;
         }
     }
@@ -149,6 +147,8 @@ function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHis
             <i class="${item.icon}"></i><span>${item.text}</span>
         </div>
     `).join('');
+
+    
 
     menu.onclick = (e) => {
         const item = e.target.closest('.message-menu-item');

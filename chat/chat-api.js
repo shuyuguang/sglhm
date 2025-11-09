@@ -3,13 +3,12 @@
 import { dbStorage } from '../common/db.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
 
-// [新增] 辅助函数，用于判断字符串是否为图片URL
+// ... (isImageUrl and blobUrlToDataUrl functions remain unchanged)
 function isImageUrl(url) {
     if (typeof url !== 'string') return false;
     return url.toLowerCase().startsWith('http') && /\.(jpeg|jpg|gif|png|webp)$/i.test(url);
 }
 
-// ▼▼▼ [新增] Blob URL 转 Data URL 的辅助函数 ▼▼▼
 function blobUrlToDataUrl(blobUrl) {
     return new Promise((resolve, reject) => {
         fetch(blobUrl)
@@ -25,7 +24,7 @@ function blobUrlToDataUrl(blobUrl) {
             .catch(reject);
     });
 }
-// ▲▲▲ [新增] 结束 ▲▲▲
+
 
 async function constructSystemPrompt(charProfile, userProfile, currentChatStyle, styleSettings) {
     let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
@@ -58,6 +57,14 @@ async function constructSystemPrompt(charProfile, userProfile, currentChatStyle,
         prompt += `- **使用规则 (非常重要)**: 当你想发送表情时，必须使用格式 **[Emoji: 表情名称]**，并确保它**单独占据一行**。不要添加任何多余的文字或符号。\n`;
     }
 
+    // ▼▼▼ 【核心新增】明确告知AI如何使用链接卡片 ▼▼▼
+    prompt += `\n### 工具：发送链接卡片\n`;
+    prompt += `- 你还可以发送链接卡片来分享结构化的信息，例如分享文章、推荐地点等。\n`;
+    prompt += `- **使用规则 (非常重要)**: 当你想发送链接卡片时，必须严格使用以下格式，并确保它**单独占据一段**:\n`;
+    prompt += "```\n[Title: 卡片标题\nBody text: 卡片正文内容\nSource: 卡片来源 (可选)\nIllustration: 对配图的文字描述 (可选，例如 '一只正在打哈欠的猫')]\n```\n";
+    prompt += `- **注意**: \`Title\` 和 \`Body text\` 是必填项。\`Source\` 和 \`Illustration\` 是可选项。\`Illustration\` 字段应该是一段简短的**文字描述**，而不是图片数据或链接。\n`;
+    // ▲▲▲ 新增结束 ▲▲▲
+
     prompt += `\n### 扮演要求\n`;
     prompt += `- 你必须完全沉浸在 **${charProfile.name}** 的角色中，用TA的身份、口吻、性格和知识进行回复。\n`;
     prompt += `- 不要暴露你是AI模型或程序，不要提及“扮演”或“角色设定”。\n`;
@@ -77,6 +84,7 @@ async function constructSystemPrompt(charProfile, userProfile, currentChatStyle,
     return prompt;
 }
 
+// ... (formatChatHistoryForApi and createApiHandler functions remain unchanged)
 async function formatChatHistoryForApi(history) {
     const formattedPromises = history.map(async (msg) => {
         if (msg.sender === 'user') {
@@ -96,7 +104,6 @@ async function formatChatHistoryForApi(history) {
                     ];
                     return { role: 'user', content: content };
                 case 'link':
-                    // ▼▼▼ 核心修改：将链接对象格式化为指定字符串 ▼▼▼
                     content = `[Title: ${msg.title}\nBody text: ${msg.body}`;
                     if (msg.source) {
                         content += `\nSource: ${msg.source}`;
@@ -110,14 +117,12 @@ async function formatChatHistoryForApi(history) {
                             if (imageData.startsWith('blob:')) {
                                 imageData = await blobUrlToDataUrl(imageData);
                             }
-                            // 提取Base64部分
                             const base64String = imageData.substring(imageData.indexOf(',') + 1);
                             content += `\nIllustration: ${base64String}`;
                         }
                     }
                     content += ']';
                     return { role: 'user', content: content };
-                    // ▲▲▲ 修改结束 ▲▲▲
                 default: // 兼容旧文本和表情
                     content = msg.isEmoji ? `[Emoji: ${msg.name}]` : msg.text;
                     return { role: 'user', content: content };
@@ -128,7 +133,6 @@ async function formatChatHistoryForApi(history) {
                 if (part.isEmoji) {
                     return `[Emoji: ${part.name}]`;
                 }
-                // ▼▼▼ 核心修改：格式化AI发送的链接卡片 ▼▼▼
                 if (part.type === 'link') {
                     let linkContent = `[Title: ${part.title}\nBody text: ${part.body}`;
                     if (part.source) linkContent += `\nSource: ${part.source}`;
@@ -136,7 +140,6 @@ async function formatChatHistoryForApi(history) {
                         if (part.image.type === 'text-photo') {
                             linkContent += `\nIllustration: ${part.image.text}`;
                         } else if (part.image.type === 'image' && part.image.data) {
-                            // 假设AI回复的图片已经是URL或Base64，直接用
                              const base64String = part.image.data.substring(part.image.data.indexOf(',') + 1);
                              linkContent += `\nIllustration: ${base64String}`;
                         }
@@ -144,7 +147,6 @@ async function formatChatHistoryForApi(history) {
                     linkContent += ']';
                     return linkContent;
                 }
-                // ▲▲▲ 修改结束 ▲▲▲
                 return part.text;
             }).join('\n');
             return { role: 'assistant', content };
@@ -179,14 +181,15 @@ export function createApiHandler(context) {
             alert('请先点击“选择模型”按钮选择一个牵引仪模型！');
             return;
         }
-        if (!lastMessage) {
+        if (mode !== 'new' && state.chatHistory.length === 0) {
             alert('还没有聊天记录，无法触发AI。');
             return;
         }
-        if (mode === 'new' && lastMessage.sender !== 'user') {
+        if (mode === 'new' && lastMessage && lastMessage.sender !== 'user') {
             console.log("AI can only respond after a user message.");
             return;
         }
+
 
         setIsAiReplying(true);
         elements.respondBtn.classList.add('blinking');
@@ -255,7 +258,10 @@ export function createApiHandler(context) {
             if (replyMessages.length > 0) {
                 await onAiReply({ mode, data: replyMessages });
             } else {
-                await onAiReply({ mode: 'clear_thinking' });
+                 if (mode === 'new') {
+                    const thinkingMessage = elements.chatArea.querySelector('.message-row.system.loading');
+                    if (thinkingMessage) thinkingMessage.remove();
+                 }
             }
 
         } catch (error) {
