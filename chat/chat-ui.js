@@ -5,9 +5,7 @@
  * @param {object} character - 角色对象。
  * @returns {string} - 聊天室的innerHTML字符串。
  */
-// ▼▼▼ 核心修复：重新添加 export 关键字 ▼▼▼
 export function renderChatRoomUI(character) {
-// ▲▲▲ 修复结束 ▲▲▲
     return `
         <div class="chat-container">
             <header class="chat-header">
@@ -78,7 +76,7 @@ export function renderChatRoomUI(character) {
     `;
 }
 
-// ... the rest of the file (escapeHtml, renderMessageGroup, renderSystemMessage) remains the same
+// [新增] 一个简单的HTML转义函数，防止XSS攻击
 function escapeHtml(unsafe) {
     if (!unsafe) return '';
     return unsafe
@@ -90,6 +88,14 @@ function escapeHtml(unsafe) {
 }
 
 
+/**
+ * 在聊天区域渲染一个完整的消息组（可能包含多个气泡）。
+ * @param {object} messageGroup - 消息组对象。
+ * @param {number} index - 消息组在历史记录中的索引。
+ * @param {object} user - 当前用户对象。
+ * @param {object} character - 当前角色对象。
+ * @param {HTMLElement} chatArea - 聊天消息容器元素。
+ */
 export function renderMessageGroup(messageGroup, index, user, character, chatArea) {
     const { sender, type } = messageGroup; 
     
@@ -133,20 +139,34 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
                 break;
             case 'link':
                 bubble.classList.add('is-link-message');
+                const { title, body, source, image } = messageGroup;
+                
+                let imageHtml = '';
+                if (image) {
+                     let imageContent = '';
+                     if (image.type === 'text-photo') {
+                        imageContent = `<div class="link-card-image text-photo">${escapeHtml(image.text)}</div>`;
+                    } else if (image.type === 'image') {
+                        // 使用 renderData (blob URL) 优先，否则用 data (base64)
+                        const imageUrl = image.renderData || image.data;
+                        imageContent = `<img src="${imageUrl}" class="link-card-image">`;
+                    }
+                    imageHtml = `<div class="link-card-image-wrapper">${imageContent}</div>`;
+                }
+
                 bubble.innerHTML = `
-                    <a href="${escapeHtml(messageGroup.url)}" target="_blank" class="link-card-container">
-                        ${messageGroup.image ? `
-                        <div class="link-card-image">
-                            <img src="${escapeHtml(messageGroup.image)}" alt="Link preview">
-                        </div>` : ''}
-                        <div class="link-card-text">
-                            <div class="link-card-title">${escapeHtml(messageGroup.title)}</div>
-                            <div class="link-card-description">${escapeHtml(messageGroup.description)}</div>
+                    <div class="link-card-container">
+                        <div class="link-card-title">${escapeHtml(title)}</div>
+                        <div class="link-card-main">
+                            <div class="link-card-body">${escapeHtml(body)}</div>
+                            ${imageHtml}
                         </div>
-                    </a>
+                        ${source ? `<div class="link-card-footer">${escapeHtml(source)}</div>` : ''}
+                    </div>
                 `;
+                // ▲▲▲ 修改结束 ▲▲▲
                 break;
-            default:
+            default: // 兼容旧的文本和表情消息
                 if (messageGroup.isEmoji) {
                     bubble.classList.add('is-emoji-message');
                     bubble.innerHTML = `<img src="${messageGroup.data}" alt="emoji" class="message-emoji-img">`;
@@ -178,30 +198,42 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
 
             if (messagePart.type === 'link') {
                 bubble.classList.add('is-link-message');
+                const { title, body, source, image } = messagePart;
+                
+                let imageHtml = '';
+                if (image) {
+                     let imageContent = '';
+                     if (image.type === 'text-photo') {
+                        imageContent = `<div class="link-card-image text-photo">${escapeHtml(image.text)}</div>`;
+                    } else if (image.type === 'image') {
+                        imageContent = `<img src="${image.data}" class="link-card-image">`;
+                    }
+                    imageHtml = `<div class="link-card-image-wrapper">${imageContent}</div>`;
+                }
+
                 bubble.innerHTML = `
-                    <a href="${escapeHtml(messagePart.url)}" target="_blank" class="link-card-container">
-                         ${messagePart.image ? `
-                        <div class="link-card-image">
-                            <img src="${escapeHtml(messagePart.image)}" alt="Link preview">
-                        </div>` : ''}
-                        <div class="link-card-text">
-                            <div class="link-card-title">${escapeHtml(messagePart.title)}</div>
-                            <div class="link-card-description">${escapeHtml(messagePart.description)}</div>
+                    <div class="link-card-container">
+                        <div class="link-card-title">${escapeHtml(title)}</div>
+                        <div class="link-card-main">
+                            <div class="link-card-body">${escapeHtml(body)}</div>
+                            ${imageHtml}
                         </div>
-                    </a>
+                        ${source ? `<div class="link-card-footer">${escapeHtml(source)}</div>` : ''}
+                    </div>
                 `;
-            }
-            else if (messagePart.isEmoji) {
+            } else if (messagePart.isEmoji) {
                 bubble.classList.add('is-emoji-message');
                 bubble.innerHTML = `<img src="${messagePart.data}" alt="emoji" class="message-emoji-img">`;
             } else {
                 bubble.textContent = messagePart.text;
             }
+            // ▲▲▲ 修改结束 ▲▲▲
 
             messageRow.appendChild(avatar);
             messageRow.appendChild(bubble);
             messageGroupContainer.appendChild(messageRow);
         });
+
 
         if (messageGroup.replyVersions.length > 1) {
             const pager = document.createElement('div');
@@ -223,6 +255,13 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
 }
 
 
+/**
+ * 在聊天区域渲染一条系统消息（如加载中、错误提示）。
+ * @param {string} text - 消息文本。
+ * @param {string} type - 消息类型 ('loading', 'error', etc.)。
+ * @param {HTMLElement} chatArea - 聊天消息容器元素。
+ * @returns {HTMLElement} - 创建的消息行元素。
+ */
 export function renderSystemMessage(text, type = 'loading', chatArea) {
     const messageRow = document.createElement('div');
     messageRow.className = `message-row system ${type}`;

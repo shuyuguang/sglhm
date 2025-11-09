@@ -619,67 +619,55 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding-top: 16px;
     flex-shrink: 0;
 }
 
-.link-image-preview {
+/* ▼▼▼ 核心修改：预览区域样式 ▼▼▼ */
+.link-card-preview-area {
     position: relative;
     width: 100%;
-    aspect-ratio: 16 / 9;
-    background-color: #f0f3f6;
-    border-radius: 8px;
-    overflow: hidden;
+    min-height: 120px;
+    background-color: #f8f9fa;
+    border: 1px dashed #ced4da;
+    border-radius: 12px;
+    padding: 10px;
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px dashed #ced4da;
-    flex-shrink: 0;
 }
-
-.link-image-preview .placeholder { text-align: center; color: #adb5bd; }
-.link-image-preview .placeholder i { font-size: 2rem; margin-bottom: 8px; }
-
-.link-image-preview img,
-.link-image-preview .text-photo-preview {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+/* 预览区域内的卡片，强制宽度并缩放以适应容器 */
+.link-card-preview-area .link-card-container {
+    width: 280px;
+    transform-origin: center;
+    /* 动态计算缩放比例，使其能容纳在预览区内 */
+    transform: scale(calc((100% - 20px) / 280px)); 
 }
-.link-image-preview .text-photo-preview {
-    display: flex; align-items: center; justify-content: center;
-    padding: 10px; font-size: 1em; color: #333;
-    text-align: center; overflow: hidden;
-}
-
-.link-image-preview .remove-image-btn {
-    position: absolute; top: 5px; right: 5px;
+.link-card-preview-area .remove-image-btn {
+    position: absolute; top: 15px; right: 15px; /* 调整位置 */
     width: 22px; height: 22px; border-radius: 50%;
     border: none; background-color: rgba(0,0,0,0.6);
     color: white; cursor: pointer; display: flex;
     align-items: center; justify-content: center;
+    z-index: 10;
 }
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
-/* ▼▼▼ 核心修改：调整输入框和按钮组的布局 ▼▼▼ */
 .link-image-controls {
     display: flex;
     gap: 8px;
-    align-items: flex-end; /* 底部对齐 */
+    align-items: flex-end;
 }
 .link-image-controls textarea {
     flex-grow: 1;
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
 
-/* ▼▼▼ 核心新增：统一的水平按钮组样式 ▼▼▼ */
 .image-add-buttons {
     display: flex;
     gap: 5px;
     flex-shrink: 0;
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */
 
-/* ▼▼▼ 核心修改：统一图标按钮样式 ▼▼▼ */
 .add-btn.small {
     width: 36px; 
     height: 36px;
@@ -700,5 +688,4 @@
     background-color: #f1f3f5;
     border-color: #ced4da;
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
 /* --- ▲▲▲ 发送链接模态框样式结束 ▲▲▲ --- */

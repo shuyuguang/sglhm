@@ -1,18 +1,104 @@
-// 文件名: relia-chat/chat-prompt.js
+// relia-chat/chat-prompt.js
 
 import { dbStorage } from '../common/db.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
 
+// 辅助函数，用于判断字符串是否为图片URL
 function isImageUrl(url) {
     if (typeof url !== 'string') return false;
     return url.startsWith('http') && /\.(jpeg|jpg|gif|png|webp)$/i.test(url);
 }
 
-// ▼▼▼ 核心修复：整合为一个通用的流处理函数，并恢复正确的函数定义 ▼▼▼
-async function processStream(context, splitter) {
-    const { reader, decoder, emojis } = context;
-    let rawStreamBuffer = '';
+// 新增辅助函数：判断是否为Base64字符串
+function isBase64(str) {
+    if (typeof str !== 'string' || !str) return false;
+    // 简单的正则，检查是否只包含Base64字符，且长度合理
+    const base64Regex = /^[A-Za-z0-9+/=]+$/;
+    // 长度大于50，且是4的倍数，是base64的典型特征
+    return str.length > 50 && str.length % 4 === 0 && base64Regex.test(str);
+}
+
+// 核心修改：重写解析逻辑以支持链接卡片
+function parseAiReply(fullReply, emojis) {
+    const messages = [];
+    // 正则表达式，用于匹配链接卡片格式
+    // 修正：让 Source 和 Illustration 都是可选的，且能正确捕获
+    const linkCardRegex = /\[Title:([\s\S]*?)\nBody text:([\s\S]*?)(?:\nSource:([\s\S]*?))?(?:\nIllustration:([\s\S]*?))?\]/g;
+    const emojiRegex = /^\[Emoji:\s*(.*?)\s*\]$/;
     
+    let lastIndex = 0;
+    let match;
+
+    // 遍历所有匹配到的链接卡片
+    while ((match = linkCardRegex.exec(fullReply)) !== null) {
+        // 1. 处理卡片之前的所有普通文本
+        const precedingText = fullReply.substring(lastIndex, match.index);
+        if (precedingText.trim()) {
+            precedingText.split(/(\r\n|\n|\r)/).forEach(part => {
+                const trimmedPart = part.trim();
+                if (!trimmedPart) return;
+                const emojiMatch = trimmedPart.match(emojiRegex);
+                if (emojiMatch && emojiMatch[1]) {
+                    const foundEmoji = emojis.find(e => e.name === emojiMatch[1]);
+                    if (foundEmoji) messages.push({ sender: 'character', isEmoji: true, data: foundEmoji.data, name: foundEmoji.name });
+                } else {
+                    messages.push({ sender: 'character', text: trimmedPart });
+                }
+            });
+        }
+
+        // 2. 处理链接卡片本身
+        const [, title, body, source, illustration] = match;
+        const linkCardMessage = {
+            sender: 'character',
+            type: 'link',
+            title: title.trim(),
+            body: body.trim(),
+            source: source ? source.trim() : '',
+            image: null
+        };
+
+        if (illustration) {
+            const trimmedIllustration = illustration.trim();
+            if (isBase64(trimmedIllustration)) {
+                linkCardMessage.image = {
+                    type: 'image',
+                    data: `data:image/jpeg;base64,${trimmedIllustration}` // 默认用jpeg
+                };
+            } else {
+                linkCardMessage.image = {
+                    type: 'text-photo',
+                    text: trimmedIllustration
+                };
+            }
+        }
+        messages.push(linkCardMessage);
+
+        lastIndex = linkCardRegex.lastIndex;
+    }
+
+    // 3. 处理最后一个卡片之后的所有剩余文本
+    const remainingText = fullReply.substring(lastIndex);
+    if (remainingText.trim()) {
+        remainingText.split(/(\r\n|\n|\r)/).forEach(part => {
+            const trimmedPart = part.trim();
+            if (!trimmedPart) return;
+            const emojiMatch = trimmedPart.match(emojiRegex);
+            if (emojiMatch && emojiMatch[1]) {
+                const foundEmoji = emojis.find(e => e.name === emojiMatch[1]);
+                if (foundEmoji) messages.push({ sender: 'character', isEmoji: true, data: foundEmoji.data, name: foundEmoji.name });
+            } else {
+                messages.push({ sender: 'character', text: trimmedPart });
+            }
+        });
+    }
+
+    return messages;
+}
+
+async function universalStreamHandler(context) {
+    const { reader, decoder, emojis } = context;
+    let fullReply = '';
     try {
         while (true) {
             const { done, value } = await reader.read();
@@ -22,58 +108,20 @@ async function processStream(context, splitter) {
             for (const line of lines) {
                 if (line.startsWith('data: ')) {
                     const dataStr = line.substring(6);
-                    if (dataStr === '[DONE]') continue;
+                    if (dataStr === '[DONE]') break;
                     try {
                         const data = JSON.parse(dataStr);
                         const content = data.choices[0]?.delta?.content;
                         if (content) {
-                            rawStreamBuffer += content;
+                            fullReply += content;
                         }
-                    } catch (e) { /* 忽略不完整的JSON */ }
+                    } catch (e) { /* 忽略解析错误 */ }
                 }
             }
         }
-
-        const cleanFullStream = rawStreamBuffer.replace(/\(thought[\s\S]*?\)/g, '');
-        const messageParts = cleanFullStream.split(splitter); 
-        const messages = [];
-
-        const emojiRegex = /^\[Emoji:\s*(.*?)\s*\]$/;
-        const linkRegex = /^\[Link:\s*(.*?)\s*\]$/; 
-
-        messageParts.forEach(part => {
-            const trimmedPart = part.trim();
-            if (!trimmedPart) return;
-
-            const emojiMatch = trimmedPart.match(emojiRegex);
-            const linkMatch = trimmedPart.match(linkRegex);
-
-            if (emojiMatch && emojiMatch[1]) {
-                const emojiName = emojiMatch[1];
-                const foundEmoji = emojis.find(e => e.name === emojiName);
-                if (foundEmoji) {
-                    messages.push({ sender: 'character', isEmoji: true, data: foundEmoji.data, name: foundEmoji.name });
-                }
-            } else if (linkMatch && linkMatch[1]) {
-                const parts = linkMatch[1].split('|').map(p => p.trim());
-                if (parts.length >= 3) {
-                    messages.push({
-                        type: 'link',
-                        sender: 'character',
-                        url: parts[0],
-                        title: parts[1],
-                        description: parts[2],
-                        image: parts[3] || ''
-                    });
-                }
-            } else if (isImageUrl(trimmedPart)) {
-                messages.push({ sender: 'character', isEmoji: true, data: trimmedPart, name: 'AI表情' });
-            } else {
-                messages.push({ sender: 'character', text: trimmedPart });
-            }
-        });
         
-        return messages;
+        const cleanReply = fullReply.replace(/\(thought[\s\S]*?\)/g, '').trim();
+        return parseAiReply(cleanReply, emojis);
 
     } catch (error) {
         console.error("Stream handling error:", error);
@@ -81,71 +129,40 @@ async function processStream(context, splitter) {
     }
 }
 
-async function defaultStreamHandler(context) {
-    // 默认使用换行符作为分隔
-    return processStream(context, /(\r\n|\n|\r)/);
-}
-
-async function dialogueStreamHandler(context) {
-    // 对话体也使用换行符分隔
-    return processStream(context, /(\r\n|\n|\r)/);
-}
-// ▲▲▲ 修复结束 ▲▲▲
-
+// 核心修改：统一使用新的解析器
 export const CHAT_STYLES = {
     'dialogue': {
         name: '对话体',
         description: '此风格模仿日常对话，不包含动作或环境描述，该模式下角色允许扩展内的一切行为如语音、表情包、转账、礼物等。',
         getPromptAddition: () => { /* 此函数当前为空，返回 undefined */ },
-        streamHandler: dialogueStreamHandler,
+        streamHandler: universalStreamHandler,
     },
     'short-chat': {
         name: '短聊体',
         description: '此风格类似社交软件聊天，动作或环境描述会用括号标注，该模式下角色允许扩展内的一切行为如语音、表情包、转账、礼物等。',
         getPromptAddition: () => { /* 此函数当前为空，返回 undefined */ },
-        streamHandler: defaultStreamHandler,
+        streamHandler: universalStreamHandler,
     },
     'novel': {
         name: '小说体',
         description: '此风格以小说或剧本形式输出，包含角色的语言、动作、神态和心理活动。该模式下禁用表情包。',
         getPromptAddition: () => { /* 此函数当前为空，返回 undefined */ },
-        streamHandler: defaultStreamHandler,
+        streamHandler: universalStreamHandler,
     },
     'text-adventure': {
         name: '文游体',
         description: '此风格以文字冒险游戏（MUD/TRPG）的形式进行，包含详细的环境与人物状态描写，并在末尾提供选项引导用户互动。该模式UI特殊。',
         getPromptAddition: () => { /* 此函数当前为空，返回 undefined */ },
-        streamHandler: defaultStreamHandler,
+        streamHandler: universalStreamHandler,
     }
 };
 
 export const STYLE_DEFAULT_SETTINGS = {
-    'dialogue': {
-        outputMin: '2',
-        outputMax: '20',
-        visualLimit: '50',
-        memoryLimit: '20'
-    },
-    'short-chat': {
-        outputMin: '3',
-        outputMax: '15',
-        visualLimit: '30',
-        memoryLimit: '15'
-    },
-    'novel': {
-        outputMin: '2',
-        outputMax: '10',
-        visualLimit: '30',
-        memoryLimit: '15'
-    },
-    'text-adventure': {
-        outputMin: '3',
-        outputMax: '15',
-        visualLimit: '30',
-        memoryLimit: '15'
-    }
+    'dialogue': { outputMin: '2', outputMax: '20', visualLimit: '50', memoryLimit: '20' },
+    'short-chat': { outputMin: '3', outputMax: '15', visualLimit: '30', memoryLimit: '15' },
+    'novel': { outputMin: '2', outputMax: '10', visualLimit: '30', memoryLimit: '15' },
+    'text-adventure': { outputMin: '3', outputMax: '15', visualLimit: '30', memoryLimit: '15' }
 };
-
 
 export function createChatPromptPanel({ triggerElement, container, onSave, charId }) {
 

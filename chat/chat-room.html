@@ -1,12 +1,10 @@
-<!-- 文件名: chat-room.html -->
+<!-- chat-room.html -->
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>聊天中</title>
-    
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
     
     <!-- 引入公共资源 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -29,6 +27,12 @@
         <!-- 聊天室UI将由JS动态生成到这里 -->
     </div>
 
+    <!-- 
+      ▼▼▼ 核心修改 ▼▼▼
+      所有静态的HTML面板都已移出，将由 chat-room.js 动态载入。
+      这样主HTML文件就非常干净了。
+    -->
+    
     <!-- JS 库 -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -53,10 +57,10 @@
     <script src="chat-header.js" type="module"></script>
     <script src="chat-theme.js" type="module"></script>
     <script src="chat-input-handler.js" type="module"></script>
+    <!-- ▼▼▼ 新增引入的模块 ▼▼▼ -->
     <script src="chat-image-sender.js" type="module"></script>
-    <!-- ▼▼▼ 核心修复：添加缺失的模块引入 ▼▼▼ -->
     <script src="chat-link-sender.js" type="module"></script>
-    <!-- ▲▲▲ 修复结束 ▲▲▲ -->
+    <!-- ▲▲▲ 新增结束 ▲▲▲ -->
 
     <script src="chat-room.js" type="module"></script> <!-- 主文件最后加载 -->
 </body>

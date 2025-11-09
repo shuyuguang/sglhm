@@ -16,12 +16,14 @@ import { initializeHeaderMenu } from './chat-header.js';
 import { initializeThemeSystem } from './chat-theme.js';
 import { initializeInputArea } from './chat-input-handler.js';
 import { initializeImageSender, openImageSender } from './chat-image-sender.js';
-// ▼▼▼ 核心新增：导入链接发送模块 ▼▼▼
 import { initializeLinkSender, openLinkSender } from './chat-link-sender.js';
-// ▲▲▲ 新增结束 ▲▲▲
 
+
+// ▼▼▼ [新增] Blob URL 管理器，解决Base64超长链接问题 ▼▼▼
 const blobUrlManager = {
-    cache: new Map(),
+    cache: new Map(), // 使用 Map 来缓存 Data URL -> Blob URL 的转换结果
+    
+    // 将 Data URL 转换为 Blob URL
     async dataUrlToBlobUrl(dataUrl) {
         if (this.cache.has(dataUrl)) {
             return this.cache.get(dataUrl);
@@ -30,13 +32,15 @@ const blobUrlManager = {
             const response = await fetch(dataUrl);
             const blob = await response.blob();
             const blobUrl = URL.createObjectURL(blob);
-            this.cache.set(dataUrl, blobUrl);
+            this.cache.set(dataUrl, blobUrl); // 缓存结果
             return blobUrl;
         } catch (error) {
             console.error("Data URL to Blob URL conversion failed:", error);
-            return dataUrl;
+            return dataUrl; // 转换失败则返回原始URL
         }
     },
+    
+    // 清理所有创建的 Blob URL，防止内存泄漏
     cleanup() {
         for (const blobUrl of this.cache.values()) {
             URL.revokeObjectURL(blobUrl);
@@ -45,6 +49,7 @@ const blobUrlManager = {
         console.log("Blob URLs cleaned up.");
     }
 };
+// ▲▲▲ [新增] 结束 ▲▲▲
 
 async function loadHtmlFragments(paths) {
     const fetchPromises = paths.map(path => fetch(path).then(res => res.text()));
@@ -116,9 +121,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             regenerateBtn: document.getElementById('regenerate-btn'),
             continueBtn: document.getElementById('continue-btn'),
             imageActionBtn: document.querySelector('.action-list-item [class*="fa-image"]')?.parentElement,
-            // ▼▼▼ 核心新增：获取链接按钮 ▼▼▼
             linkActionBtn: document.querySelector('.action-list-item [class*="fa-link"]')?.parentElement,
-            // ▲▲▲ 新增结束 ▲▲▲
             textPreviewOverlay: document.getElementById('text-preview-overlay'),
             textPreviewContent: document.querySelector('#text-preview-overlay .text-preview-content'),
         };
@@ -206,6 +209,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const blobUrl = await blobUrlManager.dataUrlToBlobUrl(msg.data);
                     return { ...msg, renderData: blobUrl };
                 }
+                // ▼▼▼ 核心修正：添加对link类型消息中图片的Blob URL转换 ▼▼▼
+                if (msg.sender === 'user' && msg.type === 'link' && msg.image?.type === 'image' && msg.image.data.startsWith('data:')) {
+                    const blobUrl = await blobUrlManager.dataUrlToBlobUrl(msg.image.data);
+                    const newMsg = JSON.parse(JSON.stringify(msg)); // 深拷贝以避免修改原始历史记录
+                    newMsg.image.renderData = blobUrl;
+                    return newMsg;
+                }
+                // ▲▲▲ 修正结束 ▲▲▲
                 return msg;
             }));
 
@@ -241,7 +252,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (respondBtnIcon) {
                     respondBtnIcon.className = 'fa-solid fa-stop';
                 }
-                return; 
+                return;
             }
         
             if (respondBtnIcon) {
@@ -326,30 +337,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
             await loadAndRenderHistory();
             updateButtonStates();
-            
-            // 只有用户发送了消息，才触发AI响应
-            triggerAiResponse('new');
         }
 
         async function handleUserSend() {
             const text = elements.input.value.trim();
             if (text === '') return;
             const userMessage = { text, sender: 'user' };
-            // 只调用 onSendUserMessage，它内部会处理后续流程
-            await onSendUserMessage(userMessage); 
+            await onSendUserMessage(userMessage);
             elements.input.value = '';
             elements.input.style.height = 'auto';
             elements.input.focus();
-            // 此处不再需要 triggerAiResponse('new');
         }
 
         async function onSendEmoji(emoji) {
             const emojiMessage = { sender: 'user', isEmoji: true, name: emoji.name, data: emoji.data };
-            // 只调用 onSendUserMessage
-            await onSendUserMessage(emojiMessage); 
-             // 此处不再需要 triggerAiResponse('new');
+            await onSendUserMessage(emojiMessage);
         }
-// ▲▲▲ 修改结束 ▲▲▲
 
         function initializeInteractionModeAndStyle() {
             const updateInteractionModeUI = () => {
@@ -423,11 +426,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elements.continueBtn) elements.continueBtn.addEventListener('click', () => triggerAiResponse('continue'));
 
         elements.chatArea.addEventListener('click', async (e) => {
-            const link = e.target.closest('.is-link-message a, .is-image-message a');
-            if (link) {
+            const imageLink = e.target.closest('.is-image-message a');
+            if (imageLink) {
                 e.preventDefault(); 
             }
-            
+
             const previewBtn = e.target.closest('.text-photo-preview-btn');
             if (previewBtn) {
                 const text = previewBtn.dataset.text;
@@ -581,27 +584,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             );
         
             initializeImageSender(elements, onSendUserMessage);
-            // ▼▼▼ 核心新增：初始化链接发送模块 ▼▼▼
             initializeLinkSender(elements, onSendUserMessage);
-            // ▲▲▲ 新增结束 ▲▲▲
         }
         await initializeChatState();
 
         if (elements.imageActionBtn) {
             elements.imageActionBtn.addEventListener('click', openImageSender);
         }
-        // ▼▼▼ 核心新增：绑定链接按钮点击事件 ▼▼▼
         if (elements.linkActionBtn) {
             elements.linkActionBtn.addEventListener('click', openLinkSender);
         }
-        // ▲▲▲ 新增结束 ▲▲▲
 
     } catch (error) {
         console.error("页面初始化时发生严重错误:", error);
         appContainer.innerHTML = `<p style="text-align: center;">页面加载时发生严重错误。</p>`;
     }
 
-    window.addEventListener('pagehide', () => {
+    window.addEventListener('unload', () => {
         blobUrlManager.cleanup();
     });
 });
