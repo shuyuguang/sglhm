@@ -421,9 +421,9 @@
     border-radius: 50%;
     border: none;
     cursor: pointer;
-    background-color: var(--send-btn-bg);
+    background-color: #5F91B9;
     color: var(--text-light);
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     transform: rotate(45deg);
     display: flex;
     align-items: center;
