@@ -369,6 +369,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elements.continueBtn) elements.continueBtn.addEventListener('click', () => triggerAiResponse('continue'));
 
         elements.chatArea.addEventListener('click', async (e) => {
+            // ▼▼▼ 核心修复：阻止图片链接的默认跳转行为 ▼▼▼
+            const imageLink = e.target.closest('.is-image-message a');
+            if (imageLink) {
+                // 只阻止默认跳转，不停止事件冒泡，这样 message-edit.js 才能接收到点击
+                e.preventDefault(); 
+            }
+            // ▲▲▲ 修复结束 ▲▲▲
+
             // ▼▼▼ 新增：处理文字图预览点击 ▼▼▼
             const previewBtn = e.target.closest('.text-photo-preview-btn');
             if (previewBtn) {
