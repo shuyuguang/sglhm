@@ -3,13 +3,11 @@
 import { dbStorage } from '../common/db.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
 
-// 辅助函数，用于判断字符串是否为图片URL
 function isImageUrl(url) {
     if (typeof url !== 'string') return false;
     return url.toLowerCase().startsWith('http') && /\.(jpeg|jpg|gif|png|webp)$/i.test(url);
 }
 
-// Blob URL 转 Data URL 的辅助函数
 function blobUrlToDataUrl(blobUrl) {
     return new Promise((resolve, reject) => {
         fetch(blobUrl)
@@ -26,6 +24,7 @@ function blobUrlToDataUrl(blobUrl) {
     });
 }
 
+// ▼▼▼ 核心修改：在系统提示中加入链接卡片的说明 ▼▼▼
 async function constructSystemPrompt(charProfile, userProfile, currentChatStyle, styleSettings) {
     let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
     prompt += `### 角色设定\n`;
@@ -50,12 +49,25 @@ async function constructSystemPrompt(charProfile, userProfile, currentChatStyle,
     prompt += `- 对方名字: ${userProfile.name || 'User'}\n`;
 
     const emojis = await dbStorage.getItem(CHAT_DB_KEYS.EMOJIS) || [];
+    
+    prompt += `\n### 工具使用规则 (非常重要)\n`;
     if (emojis.length > 0) {
         const emojiNameList = emojis.map(e => e.name).join(', ');
-        prompt += `\n### 工具：发送表情包\n`;
-        prompt += `- 你有一个发送表情包的工具。你的可用表情包有：[${emojiNameList}]。\n`;
-        prompt += `- **使用规则 (非常重要)**: 当你想发送表情时，必须使用格式 **[Emoji: 表情名称]**，并确保它**单独占据一行**。不要添加任何多余的文字或符号。\n`;
+        prompt += `#### 1. 发送表情包\n`;
+        prompt += `- 你的可用表情包有：[${emojiNameList}]。\n`;
+        prompt += `- **使用格式**: 当你想发送表情时，必须使用 **[Emoji: 表情名称]**，并确保它**单独占据一行**。\n`;
     }
+    
+    prompt += `#### 2. 发送链接卡片\n`;
+    prompt += `- 当你需要分享一个网址时，必须使用链接卡片格式。\n`;
+    prompt += `- **使用格式**: **[Link: 链接URL | 标题 | 描述 | 图片URL]**，并确保它**单独占据一行**。\n`;
+    prompt += `- **格式说明**:\n`;
+    prompt += `  - **链接URL**: 必须是完整的 http/https 链接。\n`;
+    prompt += `  - **标题**: 卡片的标题，简洁明了。\n`;
+    prompt += `  - **描述**: 对链接内容的简短介绍。\n`;
+    prompt += `  - **图片URL**: (可选) 用于卡片预览的图片链接。如果提供，必须是完整的图片URL。\n`;
+    prompt += `- **示例**: [Link: https://www.bilibili.com | B站 | 一个有趣的视频网站 | https://.../cover.jpg]\n`;
+
 
     prompt += `\n### 扮演要求\n`;
     prompt += `- 你必须完全沉浸在 **${charProfile.name}** 的角色中，用TA的身份、口吻、性格和知识进行回复。\n`;
@@ -75,6 +87,8 @@ async function constructSystemPrompt(charProfile, userProfile, currentChatStyle,
     }
     return prompt;
 }
+// ▲▲▲ 修改结束 ▲▲▲
+
 
 async function formatChatHistoryForApi(history) {
     const formattedPromises = history.map(async (msg) => {
@@ -94,30 +108,12 @@ async function formatChatHistoryForApi(history) {
                         { type: 'image_url', image_url: { url: imageUrlForApi } }
                     ];
                     return { role: 'user', content: content };
-                
-                // ▼▼▼ [核心修改] 重写link类型的格式化逻辑 ▼▼▼
+                // ▼▼▼ 新增：处理用户发送的链接消息 ▼▼▼
                 case 'link':
-                    let linkContent = `[Title: ${msg.title}\nBody text: ${msg.body}`;
-                    if (msg.source) {
-                        linkContent += `\nSource: ${msg.source}`;
-                    }
-
-                    let illustrationContent = '无';
-                    if (msg.image?.type === 'text-photo') {
-                        illustrationContent = msg.image.text;
-                    } else if (msg.image?.type === 'image') {
-                        let linkImageUrlForApi = msg.image.data;
-                        if (linkImageUrlForApi.startsWith('blob:')) {
-                           linkImageUrlForApi = await blobUrlToDataUrl(linkImageUrlForApi);
-                        }
-                        illustrationContent = linkImageUrlForApi; // 直接赋值base64
-                    }
-                    
-                    linkContent += `\nIllustration: ${illustrationContent}]`;
-                    return { role: 'user', content: linkContent };
-                // ▲▲▲ [核心修改] 结束 ▲▲▲
-
-                default: // 兼容旧文本和表情
+                    content = `[Link: ${msg.url} | ${msg.title} | ${msg.description} | ${msg.image}]`;
+                    return { role: 'user', content: content };
+                // ▲▲▲ 新增结束 ▲▲▲
+                default:
                     content = msg.isEmoji ? `[Emoji: ${msg.name}]` : msg.text;
                     return { role: 'user', content: content };
             }
@@ -127,6 +123,11 @@ async function formatChatHistoryForApi(history) {
                 if (part.isEmoji) {
                     return `[Emoji: ${part.name}]`;
                 }
+                // ▼▼▼ 新增：处理AI回复的链接消息 ▼▼▼
+                if (part.type === 'link') {
+                    return `[Link: ${part.url} | ${part.title} | ${part.description} | ${part.image}]`;
+                }
+                // ▲▲▲ 新增结束 ▲▲▲
                 return part.text;
             }).join('\n');
             return { role: 'assistant', content };
@@ -161,11 +162,11 @@ export function createApiHandler(context) {
             alert('请先点击“选择模型”按钮选择一个牵引仪模型！');
             return;
         }
-        if (!lastMessage) {
-            alert('还没有聊天记录，无法触发AI。');
-            return;
+        if (mode !== 'new' && !lastMessage) {
+             alert('还没有聊天记录，无法触发AI。');
+             return;
         }
-        if (mode === 'new' && lastMessage.sender !== 'user') {
+        if (mode === 'new' && lastMessage && lastMessage.sender !== 'user') {
             console.log("AI can only respond after a user message.");
             return;
         }
@@ -203,7 +204,7 @@ export function createApiHandler(context) {
                  messagesForApi.push({ role: 'user', content: '[继续]' });
                  historyForApi = [];
 
-            } else { // 'new' mode
+            } else {
                 historyForApi = state.chatHistory;
             }
 

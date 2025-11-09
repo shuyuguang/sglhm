@@ -16,14 +16,9 @@ import { initializeHeaderMenu } from './chat-header.js';
 import { initializeThemeSystem } from './chat-theme.js';
 import { initializeInputArea } from './chat-input-handler.js';
 import { initializeImageSender, openImageSender } from './chat-image-sender.js';
-import { initializeLinkSender, openLinkSender } from './chat-link-sender.js';
 
-
-// ▼▼▼ [新增] Blob URL 管理器，解决Base64超长链接问题 ▼▼▼
 const blobUrlManager = {
-    cache: new Map(), // 使用 Map 来缓存 Data URL -> Blob URL 的转换结果
-    
-    // 将 Data URL 转换为 Blob URL
+    cache: new Map(),
     async dataUrlToBlobUrl(dataUrl) {
         if (this.cache.has(dataUrl)) {
             return this.cache.get(dataUrl);
@@ -32,15 +27,13 @@ const blobUrlManager = {
             const response = await fetch(dataUrl);
             const blob = await response.blob();
             const blobUrl = URL.createObjectURL(blob);
-            this.cache.set(dataUrl, blobUrl); // 缓存结果
+            this.cache.set(dataUrl, blobUrl);
             return blobUrl;
         } catch (error) {
             console.error("Data URL to Blob URL conversion failed:", error);
-            return dataUrl; // 转换失败则返回原始URL
+            return dataUrl;
         }
     },
-    
-    // 清理所有创建的 Blob URL，防止内存泄漏
     cleanup() {
         for (const blobUrl of this.cache.values()) {
             URL.revokeObjectURL(blobUrl);
@@ -49,7 +42,6 @@ const blobUrlManager = {
         console.log("Blob URLs cleaned up.");
     }
 };
-// ▲▲▲ [新增] 结束 ▲▲▲
 
 async function loadHtmlFragments(paths) {
     const fetchPromises = paths.map(path => fetch(path).then(res => res.text()));
@@ -121,7 +113,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             regenerateBtn: document.getElementById('regenerate-btn'),
             continueBtn: document.getElementById('continue-btn'),
             imageActionBtn: document.querySelector('.action-list-item [class*="fa-image"]')?.parentElement,
-            linkActionBtn: document.querySelector('.action-list-item [class*="fa-link"]')?.parentElement,
             textPreviewOverlay: document.getElementById('text-preview-overlay'),
             textPreviewContent: document.querySelector('#text-preview-overlay .text-preview-content'),
         };
@@ -209,14 +200,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const blobUrl = await blobUrlManager.dataUrlToBlobUrl(msg.data);
                     return { ...msg, renderData: blobUrl };
                 }
-                // ▼▼▼ 核心修正：添加对link类型消息中图片的Blob URL转换 ▼▼▼
-                if (msg.sender === 'user' && msg.type === 'link' && msg.image?.type === 'image' && msg.image.data.startsWith('data:')) {
-                    const blobUrl = await blobUrlManager.dataUrlToBlobUrl(msg.image.data);
-                    const newMsg = JSON.parse(JSON.stringify(msg)); // 深拷贝以避免修改原始历史记录
-                    newMsg.image.renderData = blobUrl;
-                    return newMsg;
-                }
-                // ▲▲▲ 修正结束 ▲▲▲
                 return msg;
             }));
 
@@ -240,11 +223,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         
+        // ▼▼▼ 核心命令执行：重写按钮状态更新逻辑 ▼▼▼
         function updateButtonStates() {
             if (!elements.input || !elements.respondBtn || !elements.sendBtn) return;
         
             const respondBtnIcon = elements.respondBtn.querySelector('i');
         
+            // 1. AI回复中：显示可点击的“停止”按钮
             if (isAiReplying) {
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
@@ -252,25 +237,31 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (respondBtnIcon) {
                     respondBtnIcon.className = 'fa-solid fa-stop';
                 }
-                return;
+                return; 
             }
         
+            // 2. 恢复“响应”按钮的默认图标
             if (respondBtnIcon) {
                 respondBtnIcon.className = 'fa-regular fa-paper-plane';
             }
         
+            // 3. 核心规则：根据输入框是否有文本显示不同按钮
             const hasText = elements.input.value.trim() !== '';
         
             if (hasText) {
+                // 有文本 -> 显示“发送”按钮
                 elements.respondBtn.style.display = 'none';
                 elements.sendBtn.style.display = 'flex';
                 elements.sendBtn.disabled = false;
             } else {
+                // 无文本 -> 显示“响应”按钮
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
+                // “响应”按钮仅在聊天记录为空时禁用
                 elements.respondBtn.disabled = state.chatHistory.length === 0;
             }
         }
+        // ▲▲▲ 核心命令结束 ▲▲▲
         
         const onAiReply = async (action) => {
             const { mode, data: replyMessages } = action;
@@ -337,6 +328,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
             await loadAndRenderHistory();
             updateButtonStates();
+            
+            // ▼▼▼ 新增：发送图片或链接后，自动触发AI回复 ▼▼▼
+            if (message.type === 'image' || message.type === 'link' || message.type === 'text-photo') {
+                triggerAiResponse('new');
+            }
+            // ▲▲▲ 新增结束 ▲▲▲
         }
 
         async function handleUserSend() {
@@ -347,11 +344,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             elements.input.value = '';
             elements.input.style.height = 'auto';
             elements.input.focus();
+            
+            // ▼▼▼ 新增：发送文本后，自动触发AI回复 ▼▼▼
+            triggerAiResponse('new');
+            // ▲▲▲ 新增结束 ▲▲▲
         }
 
         async function onSendEmoji(emoji) {
             const emojiMessage = { sender: 'user', isEmoji: true, name: emoji.name, data: emoji.data };
             await onSendUserMessage(emojiMessage);
+            // ▼▼▼ 新增：发送表情后，自动触发AI回复 ▼▼▼
+            triggerAiResponse('new');
+            // ▲▲▲ 新增结束 ▲▲▲
         }
 
         function initializeInteractionModeAndStyle() {
@@ -426,11 +430,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elements.continueBtn) elements.continueBtn.addEventListener('click', () => triggerAiResponse('continue'));
 
         elements.chatArea.addEventListener('click', async (e) => {
-            const imageLink = e.target.closest('.is-image-message a');
-            if (imageLink) {
+            const link = e.target.closest('.is-link-message a, .is-image-message a');
+            if (link) {
+                // 阻止默认的点击跳转行为，因为长按/单击由JS处理
                 e.preventDefault(); 
             }
-
+            
             const previewBtn = e.target.closest('.text-photo-preview-btn');
             if (previewBtn) {
                 const text = previewBtn.dataset.text;
@@ -584,15 +589,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             );
         
             initializeImageSender(elements, onSendUserMessage);
-            initializeLinkSender(elements, onSendUserMessage);
         }
         await initializeChatState();
 
         if (elements.imageActionBtn) {
             elements.imageActionBtn.addEventListener('click', openImageSender);
-        }
-        if (elements.linkActionBtn) {
-            elements.linkActionBtn.addEventListener('click', openLinkSender);
         }
 
     } catch (error) {

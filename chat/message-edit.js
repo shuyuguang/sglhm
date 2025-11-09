@@ -1,11 +1,10 @@
 // relia-chat/message-edit.js
 
-const LONG_PRESS_THRESHOLD = 400; // 长按阈值，单位：毫秒
+const LONG_PRESS_THRESHOLD = 400;
 
 let longPressTimer = null;
 let isLongPress = false;
 
-// HTML转义函数，确保安全
 function escapeHtml(unsafe) {
     if (!unsafe) return '';
     return unsafe
@@ -16,13 +15,6 @@ function escapeHtml(unsafe) {
          .replace(/'/g, "&#039;");
 }
 
-/**
- * 初始化消息长按和单击事件处理。
- * @param {HTMLElement} container - 消息列表的容器元素 (chatArea)。
- * @param {function} getChatHistory - 一个返回当前聊天历史数组的函数。
- * @param {function} updateChatHistory - 一个用新历史数组更新状态和UI的函数。
- * @param {function} getEmojis - 一个返回当前所有可用表情包数组的函数。
- */
 export function initializeMessageMenu(container, getChatHistory, updateChatHistory, getEmojis) {
     const menuOverlay = document.getElementById('message-menu-overlay');
     const menu = document.getElementById('message-menu');
@@ -35,40 +27,52 @@ export function initializeMessageMenu(container, getChatHistory, updateChatHisto
     container.addEventListener('mousedown', (e) => {
         const bubble = e.target.closest('.chat-bubble');
         if (!bubble) return;
+        
+        // ▼▼▼ 核心修复：如果目标是链接，阻止默认的拖拽行为 ▼▼▼
+        if (e.target.closest('a')) {
+            e.preventDefault();
+        }
+        // ▲▲▲ 修复结束 ▲▲▲
+
         isLongPress = false; 
-        longPressTimer = setTimeout(() => { isLongPress = true; }, LONG_PRESS_THRESHOLD);
+        longPressTimer = setTimeout(() => {
+            isLongPress = true;
+            // ▼▼▼ 核心修复：长按时直接显示菜单 ▼▼▼
+            const longPressBubble = e.target.closest('.chat-bubble');
+            if (longPressBubble) {
+                showMenuForBubble(e, longPressBubble, getChatHistory, updateChatHistory, getEmojis);
+            }
+            // ▲▲▲ 修复结束 ▲▲▲
+        }, LONG_PRESS_THRESHOLD);
     });
 
     container.addEventListener('mouseup', (e) => {
+        const wasLongPress = isLongPress;
         clearTimeout(longPressTimer);
+        isLongPress = false; 
+
+        if (wasLongPress) { // 如果是长按，mouseup 时不做任何事，因为菜单已在 mousedown 的计时器中显示
+            return;
+        }
+
         const bubble = e.target.closest('.chat-bubble');
+        if (!bubble || bubble.classList.contains('editing')) return;
+
+        // ▼▼▼ 修改点：如果是短击链接卡片，则模拟点击打开链接 ▼▼▼
+        if (bubble.classList.contains('is-link-message')) {
+            const link = bubble.querySelector('a');
+            if (link) {
+                window.open(link.href, '_blank');
+            }
+            return;
+        }
+        // ▲▲▲ 修改结束 ▲▲▲
         
         if (e.target.closest('.text-photo-preview-btn')) {
             return;
         }
-        
-        if (!bubble || bubble.classList.contains('editing')) return;
-        
-        // ▼▼▼ [核心修改] 区分链接卡片和其他消息的菜单触发方式 ▼▼▼
-        const isLinkCard = bubble.classList.contains('is-link-message');
 
-        // 如果是链接卡片，但不是长按 -> 阻止菜单
-        // 如果不是链接卡片，但是长按 -> 阻止菜单
-        if (isLinkCard !== isLongPress) {
-            isLongPress = false; // 重置状态
-            return;
-        }
-        // ▲▲▲ [核心修改] 结束 ▲▲▲
-
-        e.preventDefault();
-        
-        const messageGroup = bubble.closest('.message-group-container');
-        if (!messageGroup) return;
-        const index = parseInt(messageGroup.dataset.index, 10);
-        const messageRow = bubble.closest('.message-row');
-        const partIndex = messageRow && messageRow.dataset.partIndex ? parseInt(messageRow.dataset.partIndex, 10) : -1;
-        
-        showMenu(e, index, partIndex, bubble, getChatHistory, updateChatHistory, getEmojis);
+        showMenuForBubble(e, bubble, getChatHistory, updateChatHistory, getEmojis);
     });
 
     menuOverlay.addEventListener('click', (e) => {
@@ -76,9 +80,16 @@ export function initializeMessageMenu(container, getChatHistory, updateChatHisto
     });
 }
 
-/**
- * 显示操作菜单。
- */
+function showMenuForBubble(event, bubble, getChatHistory, updateChatHistory, getEmojis) {
+    const messageGroup = bubble.closest('.message-group-container');
+    if (!messageGroup) return;
+    const index = parseInt(messageGroup.dataset.index, 10);
+    const messageRow = bubble.closest('.message-row');
+    const partIndex = messageRow && messageRow.dataset.partIndex ? parseInt(messageRow.dataset.partIndex, 10) : -1;
+    
+    showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHistory, getEmojis);
+}
+
 function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHistory, getEmojis) {
     const menu = document.getElementById('message-menu');
     const menuOverlay = document.getElementById('message-menu-overlay');
@@ -110,14 +121,14 @@ function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHis
                 canCopy = false;
                 canEdit = false;
                 break;
-            // ▼▼▼ [核心修改] 禁用链接卡片的编辑和复制功能 ▼▼▼
+            // ▼▼▼ 新增：处理链接卡片的操作权限 ▼▼▼
             case 'link':
-                textToCopy = ``; // 复制内容为空
-                canCopy = false; // 禁用复制
-                canEdit = false; // 禁用编辑
+                textToCopy = `[Link: ${currentPart.url} | ${currentPart.title} | ${currentPart.description} | ${currentPart.image}]`;
+                canCopy = true;
+                canEdit = true;
                 break;
-            // ▲▲▲ [核心修改] 结束 ▲▲▲
-            default: // 兼容旧文本和表情
+            // ▲▲▲ 新增结束 ▲▲▲
+            default:
                 textToCopy = currentPart.isEmoji ? `[Emoji: ${currentPart.name}]` : currentPart.text;
                 canCopy = textToCopy.length > 0;
                 canEdit = true;
@@ -145,7 +156,6 @@ function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHis
     menu.onclick = (e) => {
         const item = e.target.closest('.message-menu-item');
         if (!item || item.classList.contains('disabled')) return;
-
         const action = item.dataset.action;
         const actionText = item.querySelector('span')?.textContent || '该功能';
 
@@ -155,18 +165,16 @@ function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHis
                 break;
             case 'delete':
                 if (confirm('确定要删除这条消息吗？')) {
-                    const newHistory = JSON.parse(JSON.stringify(chatHistory)); // 深拷贝以安全修改
+                    const newHistory = JSON.parse(JSON.stringify(chatHistory));
                     const messageGroup = newHistory[index];
 
                     if (messageGroup.sender === 'user') {
                         newHistory.splice(index, 1);
                     } else if (messageGroup.sender === 'character' && partIndex !== -1) {
                         const activeVersion = messageGroup.replyVersions[messageGroup.activeReplyIndex];
-                        
                         if (activeVersion && activeVersion.length > partIndex) {
                             activeVersion.splice(partIndex, 1);
                         }
-
                         if (activeVersion.length === 0) {
                             if (messageGroup.replyVersions.length > 1) {
                                 messageGroup.replyVersions.splice(messageGroup.activeReplyIndex, 1);
@@ -203,9 +211,6 @@ function hideMenu() {
     document.getElementById('message-menu-overlay').classList.remove('active');
 }
 
-/**
- * 将消息气泡变为可编辑状态。
- */
 function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistory, getEmojis) {
     bubble.classList.add('editing');
     
@@ -225,10 +230,12 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
             case 'text-photo':
                 originalContent = `[Photo: ${originalPart.text}]`;
                 break;
+            // ▼▼▼ 新增：准备链接卡片的编辑内容 ▼▼▼
             case 'link':
-                originalContent = `${originalPart.title}\n\n${originalPart.body}${originalPart.source ? `\n\n来源: ${originalPart.source}`: ''}`;
+                originalContent = `[Link: ${originalPart.url} | ${originalPart.title} | ${originalPart.description} | ${originalPart.image}]`;
                 break;
-            default: // 兼容旧文本和表情
+            // ▲▲▲ 新增结束 ▲▲▲
+            default:
                 originalContent = originalPart.isEmoji ? `[Emoji: ${originalPart.name}]` : originalPart.text;
                 break;
         }
@@ -266,38 +273,41 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
             } else {
                 const photoRegex = /^\[Photo:\s*(.*?)\s*\]$/;
                 const emojiRegex = /^\[Emoji:\s*(.*?)\s*\]$/;
+                const linkRegex = /^\[Link:\s*(.*?)\s*\]$/; // 新增正则
                 const photoMatch = newText.match(photoRegex);
                 const emojiMatch = newText.match(emojiRegex);
+                const linkMatch = newText.match(linkRegex); // 新增匹配
                 
                 let partToUpdate = (originalMessageGroup.sender === 'user') 
                     ? newHistory[index] 
                     : newHistory[index].replyVersions[originalMessageGroup.activeReplyIndex][partIndex];
+                
+                // 清理旧属性
+                const keysToDelete = ['isEmoji', 'name', 'data', 'text', 'url', 'title', 'description', 'image'];
+                keysToDelete.forEach(key => delete partToUpdate[key]);
 
-                if (originalPart.type === 'link') {
-                    const lines = newText.split('\n');
-                    partToUpdate.title = lines[0] || '无标题';
-                    const sourceLineIndex = lines.findIndex(line => line.toLowerCase().startsWith('来源:'));
-                    if (sourceLineIndex !== -1) {
-                        partToUpdate.source = lines[sourceLineIndex].substring(5).trim();
-                        partToUpdate.body = lines.slice(1, sourceLineIndex).filter(line => line.trim() !== '').join('\n');
-                    } else {
-                        partToUpdate.source = '';
-                        partToUpdate.body = lines.slice(1).filter(line => line.trim() !== '').join('\n');
-                    }
-                } else if (photoMatch && photoMatch[1]) {
+                if (photoMatch && photoMatch[1]) {
                     partToUpdate.type = 'text-photo';
                     partToUpdate.text = photoMatch[1];
-                    delete partToUpdate.isEmoji;
-                    delete partToUpdate.name;
-                    delete partToUpdate.data;
+                } else if (linkMatch && linkMatch[1]) {
+                    // ▼▼▼ 新增：处理链接卡片保存逻辑 ▼▼▼
+                    const parts = linkMatch[1].split('|').map(p => p.trim());
+                     if (parts.length >= 3) {
+                        partToUpdate.type = 'link';
+                        partToUpdate.url = parts[0];
+                        partToUpdate.title = parts[1];
+                        partToUpdate.description = parts[2];
+                        partToUpdate.image = parts[3] || '';
+                    } else { // 格式不正确，作为纯文本处理
+                        partToUpdate.type = undefined;
+                        partToUpdate.text = newText;
+                    }
+                    // ▲▲▲ 新增结束 ▲▲▲
                 } else if (emojiMatch && emojiMatch[1]) {
-                    // 表情逻辑不变
-                } else { // 普通文本
+                    // ... (表情逻辑)
+                } else {
                     partToUpdate.type = undefined;
-                    partToUpdate.isEmoji = false;
                     partToUpdate.text = newText;
-                    delete partToUpdate.name;
-                    delete partToUpdate.data;
                 }
                 updateChatHistory(newHistory);
                 return;
@@ -308,7 +318,7 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
              ? originalMessageGroup
              : originalMessageGroup.replyVersions[originalMessageGroup.activeReplyIndex][partIndex];
 
-        bubble.className = 'chat-bubble user';
+        bubble.className = `chat-bubble ${partToRestore.sender || messageData.sender}`;
         switch(partToRestore.type) {
              case 'text-photo':
                 bubble.classList.add('is-image-message');
@@ -322,36 +332,31 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
                 `;
                 break;
             case 'image':
-                bubble.classList.add('is-image-message');
-                bubble.innerHTML = `
-                    <a href="${partToRestore.data}" target="_blank" title="点击查看大图">
-                        <img src="${partToRestore.data}" alt="用户图片" class="message-photo-img">
+                 bubble.classList.add('is-image-message');
+                 const imageUrl = partToRestore.renderData || partToRestore.data;
+                 bubble.innerHTML = `
+                    <a href="${imageUrl}" target="_blank" title="点击查看大图">
+                        <img src="${imageUrl}" alt="用户图片" class="message-photo-img">
+                    </a>
+                 `;
+                 break;
+            // ▼▼▼ 新增：处理链接卡片取消编辑的渲染恢复 ▼▼▼
+            case 'link':
+                 bubble.classList.add('is-link-message');
+                 bubble.innerHTML = `
+                    <a href="${escapeHtml(partToRestore.url)}" target="_blank" class="link-card-container">
+                        ${partToRestore.image ? `
+                        <div class="link-card-image">
+                            <img src="${escapeHtml(partToRestore.image)}" alt="Link preview">
+                        </div>` : ''}
+                        <div class="link-card-text">
+                            <div class="link-card-title">${escapeHtml(partToRestore.title)}</div>
+                            <div class="link-card-description">${escapeHtml(partToRestore.description)}</div>
+                        </div>
                     </a>
                 `;
                 break;
-            case 'link':
-                bubble.classList.add('is-link-message');
-                const { title, body, source, image } = partToRestore;
-                let imageHtml = '';
-                if (image) {
-                     if (image.type === 'text-photo') {
-                        imageHtml = `<div class="link-card-image text-photo">${escapeHtml(image.text)}</div>`;
-                    } else if (image.type === 'image') {
-                        const imageUrl = image.renderData || image.data;
-                        imageHtml = `<img src="${imageUrl}" class="link-card-image">`;
-                    }
-                }
-                bubble.innerHTML = `
-                    <div class="link-card-container">
-                        ${imageHtml}
-                        <div class="link-card-content">
-                            <div class="link-card-title">${escapeHtml(title)}</div>
-                            <div class="link-card-body">${escapeHtml(body)}</div>
-                        </div>
-                        ${source ? `<div class="link-card-footer">${escapeHtml(source)}</div>` : ''}
-                    </div>
-                `;
-                break;
+            // ▲▲▲ 新增结束 ▲▲▲
             default:
                  if (partToRestore.isEmoji) {
                     bubble.innerHTML = `<img src="${partToRestore.data}" alt="emoji" class="message-emoji-img">`;

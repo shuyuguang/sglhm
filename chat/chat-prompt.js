@@ -3,16 +3,15 @@
 import { dbStorage } from '../common/db.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
 
-// [新增] 辅助函数，用于判断字符串是否为图片URL
 function isImageUrl(url) {
     if (typeof url !== 'string') return false;
     return url.startsWith('http') && /\.(jpeg|jpg|gif|png|webp)$/i.test(url);
 }
 
-// [核心修改] 所有 streamHandler 现在都返回一个消息对象数组
-async function defaultStreamHandler(context) {
-    const { reader, decoder, emojis } = context; // <-- [新增] 获取 emojis 列表
-    let fullReply = '';
+async function processStream(context, splitter) {
+    const { reader, decoder, emojis } = context;
+    let rawStreamBuffer = '';
+    
     try {
         while (true) {
             const { done, value } = await reader.read();
@@ -22,45 +21,58 @@ async function defaultStreamHandler(context) {
             for (const line of lines) {
                 if (line.startsWith('data: ')) {
                     const dataStr = line.substring(6);
-                    if (dataStr === '[DONE]') break;
+                    if (dataStr === '[DONE]') continue;
                     try {
                         const data = JSON.parse(dataStr);
                         const content = data.choices[0]?.delta?.content;
                         if (content) {
-                            fullReply += content;
+                            rawStreamBuffer += content;
                         }
-                    } catch (e) { /* 忽略解析错误 */ }
+                    } catch (e) { /* 忽略不完整的JSON */ }
                 }
             }
         }
-        
-        const cleanReply = fullReply.replace(/\(thought[\s\S]*?\)/g, '').trim();
-        const replyParts = cleanReply.split(/(\r\n|\n|\r)/);
+
+        const cleanFullStream = rawStreamBuffer.replace(/\(thought[\s\S]*?\)/g, '');
+        const messageParts = cleanFullStream.split(splitter); 
         const messages = [];
 
-        // ======================== [核心修改] ========================
-        const emojiRegex = /^\[Emoji:\s*(.*?)\s*\]$/; // 用于匹配 [Emoji: xxx] 格式的正则表达式
+        // ▼▼▼ 核心修改：增加链接卡片解析逻辑 ▼▼▼
+        const emojiRegex = /^\[Emoji:\s*(.*?)\s*\]$/;
+        const linkRegex = /^\[Link:\s*(.*?)\s*\]$/; 
 
-        replyParts.forEach(part => {
+        messageParts.forEach(part => {
             const trimmedPart = part.trim();
             if (!trimmedPart) return;
 
-            const match = trimmedPart.match(emojiRegex);
-            if (match && match[1]) {
-                const emojiName = match[1];
-                // 在我们传入的 emojis 列表中查找对应的表情
+            const emojiMatch = trimmedPart.match(emojiRegex);
+            const linkMatch = trimmedPart.match(linkRegex);
+
+            if (emojiMatch && emojiMatch[1]) {
+                const emojiName = emojiMatch[1];
                 const foundEmoji = emojis.find(e => e.name === emojiName);
                 if (foundEmoji) {
                     messages.push({ sender: 'character', isEmoji: true, data: foundEmoji.data, name: foundEmoji.name });
                 }
+            } else if (linkMatch && linkMatch[1]) {
+                const parts = linkMatch[1].split('|').map(p => p.trim());
+                if (parts.length >= 3) { // 至少需要 URL, Title, Description
+                    messages.push({
+                        type: 'link',
+                        sender: 'character',
+                        url: parts[0],
+                        title: parts[1],
+                        description: parts[2],
+                        image: parts[3] || '' // 图片是可选的
+                    });
+                }
             } else if (isImageUrl(trimmedPart)) {
-                // 保留对直接图片链接的兼容
                 messages.push({ sender: 'character', isEmoji: true, data: trimmedPart, name: 'AI表情' });
             } else {
                 messages.push({ sender: 'character', text: trimmedPart });
             }
         });
-        // ==========================================================
+        // ▲▲▲ 修改结束 ▲▲▲
         
         return messages;
 
