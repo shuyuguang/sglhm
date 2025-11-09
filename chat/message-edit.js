@@ -73,9 +73,24 @@ function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHis
     }
     
     if (currentPart) {
-        textToCopy = currentPart.isEmoji ? `[Emoji: ${currentPart.name}]` : currentPart.text;
-        canCopy = textToCopy.length > 0;
-        canEdit = true;
+        // ▼▼▼ 核心修改：根据用户消息类型判断操作权限 ▼▼▼
+        switch(currentPart.type) {
+            case 'text-photo':
+                textToCopy = `[Photo: ${currentPart.text}]`;
+                canCopy = true;
+                canEdit = true;
+                break;
+            case 'image':
+                canCopy = false;
+                canEdit = false;
+                break;
+            default: // 兼容旧文本和表情
+                textToCopy = currentPart.isEmoji ? `[Emoji: ${currentPart.name}]` : currentPart.text;
+                canCopy = textToCopy.length > 0;
+                canEdit = true;
+                break;
+        }
+        // ▲▲▲ 修改结束 ▲▲▲
     }
 
     const menuItems = [
@@ -181,7 +196,16 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
     }
     
     if (originalPart) {
-        originalContent = originalPart.isEmoji ? `[Emoji: ${originalPart.name}]` : originalPart.text;
+        // ▼▼▼ 核心修改：准备编辑内容 ▼▼▼
+        switch(originalPart.type) {
+            case 'text-photo':
+                originalContent = `[Photo: ${originalPart.text}]`;
+                break;
+            default: // 兼容旧文本和表情
+                originalContent = originalPart.isEmoji ? `[Emoji: ${originalPart.name}]` : originalPart.text;
+                break;
+        }
+        // ▲▲▲ 修改结束 ▲▲▲
     }
 
     bubble.innerHTML = `
@@ -214,53 +238,68 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
             if (!newText) {
                 shouldSave = false;
             } else {
+                const photoRegex = /^\[Photo:\s*(.*?)\s*\]$/; // 新增正则
                 const emojiRegex = /^\[Emoji:\s*(.*?)\s*\]$/;
-                const match = newText.match(emojiRegex);
-                let foundEmoji = null;
-
-                if (match && match[1]) {
-                    const emojiName = match[1];
-                    const allEmojis = getEmojis();
-                    foundEmoji = allEmojis.find(e => e.name === emojiName);
-                }
+                const photoMatch = newText.match(photoRegex);
+                const emojiMatch = newText.match(emojiRegex);
                 
-                let partToUpdate;
-                if (originalMessageGroup.sender === 'user') {
-                    partToUpdate = newHistory[index];
-                } else {
-                    partToUpdate = newHistory[index].replyVersions[originalMessageGroup.activeReplyIndex][partIndex];
-                }
+                let partToUpdate = (originalMessageGroup.sender === 'user') 
+                    ? newHistory[index] 
+                    : newHistory[index].replyVersions[originalMessageGroup.activeReplyIndex][partIndex];
 
-                if (foundEmoji) {
-                    partToUpdate.isEmoji = true;
-                    partToUpdate.name = foundEmoji.name;
-                    partToUpdate.data = foundEmoji.data;
-                    delete partToUpdate.text;
-                } else {
+                // ▼▼▼ 核心修改：处理保存逻辑 ▼▼▼
+                if (photoMatch && photoMatch[1]) {
+                    partToUpdate.type = 'text-photo';
+                    partToUpdate.text = photoMatch[1];
+                    delete partToUpdate.isEmoji;
+                    delete partToUpdate.name;
+                    delete partToUpdate.data;
+                } else if (emojiMatch && emojiMatch[1]) {
+                    // ... (表情逻辑不变)
+                } else { // 普通文本
+                    partToUpdate.type = undefined; // 或 delete
                     partToUpdate.isEmoji = false;
                     partToUpdate.text = newText;
                     delete partToUpdate.name;
                     delete partToUpdate.data;
                 }
+                // ▲▲▲ 修改结束 ▲▲▲
                 updateChatHistory(newHistory);
                 return;
             }
         }
         
-        let partToRestore;
-        if (originalMessageGroup.sender === 'user') {
-             partToRestore = originalMessageGroup;
-        } else {
-             partToRestore = originalMessageGroup.replyVersions[originalMessageGroup.activeReplyIndex][partIndex];
-        }
+        let partToRestore = (originalMessageGroup.sender === 'user')
+             ? originalMessageGroup
+             : originalMessageGroup.replyVersions[originalMessageGroup.activeReplyIndex][partIndex];
 
-        if (partToRestore.isEmoji) {
-            bubble.innerHTML = `<img src="${partToRestore.data}" alt="emoji" class="message-emoji-img">`;
-            bubble.classList.add('is-emoji-message');
-        } else {
-            bubble.textContent = partToRestore.text;
-            bubble.classList.remove('is-emoji-message');
+        // ▼▼▼ 核心修改：处理取消编辑的渲染恢复 ▼▼▼
+        bubble.className = 'chat-bubble user'; // 重置class
+        switch(partToRestore.type) {
+             case 'text-photo':
+                bubble.classList.add('is-image-message');
+                bubble.innerHTML = `
+                    <div class="photo-message-container">
+                        <img src="https://i.postimg.cc/wBtdFsGF/tpybxmnh.jpg" alt="文字图" class="message-photo-img">
+                        <div class="photo-message-caption">${partToRestore.text}</div>
+                    </div>
+                `;
+                break;
+            case 'image':
+                 // 理论上不可编辑，但作为防御性代码
+                bubble.classList.add('is-image-message');
+                bubble.innerHTML = `<img src="${partToRestore.data}" alt="用户图片" class="message-photo-img">`;
+                break;
+            default:
+                 if (partToRestore.isEmoji) {
+                    bubble.innerHTML = `<img src="${partToRestore.data}" alt="emoji" class="message-emoji-img">`;
+                    bubble.classList.add('is-emoji-message');
+                } else {
+                    bubble.textContent = partToRestore.text;
+                }
+                break;
         }
+        // ▲▲▲ 修改结束 ▲▲▲
     };
     
     bubble.querySelector('.save').onclick = () => stopEditing(true);

@@ -209,3 +209,31 @@
     font-weight: 500;
 }
 /* ▲▲▲ 修改结束 ▲▲▲ */
+/* --- 新增：图片消息样式 --- */
+.chat-bubble.is-image-message {
+    padding: 5px; /* 给图片留一点边框 */
+    background-color: transparent;
+    max-width: 200px;
+}
+.message-photo-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+}
+.photo-message-container {
+    position: relative;
+}
+.photo-message-caption {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 4px 8px;
+    font-size: 0.9em;
+    border-radius: 8px;
+    text-align: center;
+    word-break: break-all;
+}

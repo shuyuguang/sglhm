@@ -63,9 +63,25 @@ function formatChatHistoryForApi(history) {
     const formatted = [];
     history.forEach(msg => {
         if (msg.sender === 'user') {
-            // ▼▼▼ 核心修改：用户发送的表情也需要格式化 ▼▼▼
-            const content = msg.isEmoji ? `[Emoji: ${msg.name}]` : msg.text;
-            formatted.push({ role: 'user', content: content });
+            // ▼▼▼ 核心修改：处理多模态用户消息 ▼▼▼
+            let content;
+            switch(msg.type) {
+                case 'text-photo':
+                    content = `[Photo: ${msg.text}]`;
+                    formatted.push({ role: 'user', content: content });
+                    break;
+                case 'image':
+                    content = [
+                        { type: 'text', text: '用户发送了一张图片。' },
+                        { type: 'image_url', image_url: { url: msg.data } }
+                    ];
+                    formatted.push({ role: 'user', content: content });
+                    break;
+                default: // 兼容旧文本和表情
+                    content = msg.isEmoji ? `[Emoji: ${msg.name}]` : msg.text;
+                    formatted.push({ role: 'user', content: content });
+                    break;
+            }
             // ▲▲▲ 修改结束 ▲▲▲
         } else if (msg.sender === 'character') {
             const activeVersion = msg.replyVersions[msg.activeReplyIndex];

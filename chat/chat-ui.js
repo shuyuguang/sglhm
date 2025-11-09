@@ -85,7 +85,7 @@ export function renderChatRoomUI(character) {
  * @param {HTMLElement} chatArea - 聊天消息容器元素。
  */
 export function renderMessageGroup(messageGroup, index, user, character, chatArea) {
-    const { sender } = messageGroup;
+    const { sender, type } = messageGroup; // <-- 新增 type
     
     const messageGroupContainer = document.createElement('div');
     messageGroupContainer.className = 'message-group-container';
@@ -102,12 +102,31 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
         const bubble = document.createElement('div');
         bubble.className = `chat-bubble ${sender}`;
 
-        if (messageGroup.isEmoji) {
-            bubble.classList.add('is-emoji-message');
-            bubble.innerHTML = `<img src="${messageGroup.data}" alt="emoji" class="message-emoji-img">`;
-        } else {
-            bubble.textContent = messageGroup.text;
+        // ▼▼▼ 核心修改：根据消息类型渲染 ▼▼▼
+        switch(type) {
+            case 'text-photo':
+                bubble.classList.add('is-image-message');
+                bubble.innerHTML = `
+                    <div class="photo-message-container">
+                        <img src="https://i.postimg.cc/wBtdFsGF/tpybxmnh.jpg" alt="文字图" class="message-photo-img">
+                        <div class="photo-message-caption">${messageGroup.text}</div>
+                    </div>
+                `;
+                break;
+            case 'image':
+                bubble.classList.add('is-image-message');
+                bubble.innerHTML = `<img src="${messageGroup.data}" alt="用户图片" class="message-photo-img">`;
+                break;
+            default: // 兼容旧的文本和表情消息
+                if (messageGroup.isEmoji) {
+                    bubble.classList.add('is-emoji-message');
+                    bubble.innerHTML = `<img src="${messageGroup.data}" alt="emoji" class="message-emoji-img">`;
+                } else {
+                    bubble.textContent = messageGroup.text;
+                }
+                break;
         }
+        // ▲▲▲ 修改结束 ▲▲▲
 
         messageRow.appendChild(avatar);
         messageRow.appendChild(bubble);

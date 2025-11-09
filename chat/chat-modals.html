@@ -68,3 +68,42 @@
 <div class="message-menu-overlay" id="message-menu-overlay">
     <div class="message-menu" id="message-menu"></div>
 </div>
+<!-- ▼▼▼ 新增：图片发送面板 ▼▼▼ -->
+<div class="modal-overlay" id="image-sender-overlay">
+    <div class="modal-panel image-sender-panel">
+        <div class="modal-header">
+            <h3 class="modal-title">发送图片</h3>
+            <button class="modal-close" id="close-image-sender-btn" title="关闭">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="image-sender-tabs">
+                <button class="image-sender-tab active" data-target="text-photo">文字图</button>
+                <button class="image-sender-tab" data-target="url-photo">链接图</button>
+                <button class="image-sender-tab" data-target="local-photo">本地图</button>
+            </div>
+            <div class="image-sender-content">
+                <div id="text-photo" class="image-sender-pane active">
+                    <input type="text" id="text-photo-input" placeholder="输入你想生成的图片文字...">
+                </div>
+                <div id="url-photo" class="image-sender-pane">
+                    <input type="url" id="url-photo-input" placeholder="粘贴图片链接...">
+                </div>
+                <div id="local-photo" class="image-sender-pane">
+                    <button id="local-photo-btn" class="modal-btn-confirm">选择本地图片</button>
+                    <input type="file" id="local-photo-upload" accept="image/*" style="display: none;">
+                </div>
+            </div>
+            <div class="image-preview-area">
+                <div id="image-preview-container">
+                    <div id="image-preview-placeholder"><i class="fa-regular fa-image"></i><span>图片预览</span></div>
+                    <img id="image-preview-img" src="" alt="预览">
+                    <div class="loading-overlay"><div class="spinner"></div></div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn-confirm" id="send-image-btn" disabled>发送</button>
+        </div>
+    </div>
+</div>
+<!-- ▲▲▲ 新增结束 ▲▲▲ -->

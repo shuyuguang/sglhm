@@ -15,6 +15,9 @@ import { initializeEmojiSystem } from './chat-emoji.js';
 import { initializeHeaderMenu } from './chat-header.js';
 import { initializeThemeSystem } from './chat-theme.js';
 import { initializeInputArea } from './chat-input-handler.js';
+// ▼▼▼ 新增引入 ▼▼▼
+import { initializeImageSender, openImageSender } from './chat-image-sender.js';
+// ▲▲▲ 新增结束 ▲▲▲
 
 async function loadHtmlFragments(paths) {
     const fetchPromises = paths.map(path => fetch(path).then(res => res.text()));
@@ -85,6 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             diySwitch: document.getElementById('enable-diy-switch'),
             regenerateBtn: document.getElementById('regenerate-btn'),
             continueBtn: document.getElementById('continue-btn'),
+            imageActionBtn: document.querySelector('.action-list-item [class*="fa-image"]')?.parentElement,
         };
 
         const state = {
@@ -188,13 +192,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!elements.input || !elements.respondBtn || !elements.sendBtn) return;
             const hasText = elements.input.value.trim() !== '';
             const lastMessage = state.chatHistory[state.chatHistory.length - 1];
-            // 只有当最后一条消息是用户消息时，响应按钮才可用
             const canRespond = lastMessage && lastMessage.sender === 'user';
 
             if (isAiReplying) {
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
-                elements.respondBtn.disabled = false; // 允许点击以中断
+                elements.respondBtn.disabled = false;
                 elements.sendBtn.disabled = true;
                 return;
             }
@@ -206,9 +209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else {
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
-                // ▼▼▼ 核心修改：响应按钮的可用状态判断 ▼▼▼
                 elements.respondBtn.disabled = !canRespond;
-                // ▲▲▲ 修改结束 ▲▲▲
             }
         }
         
@@ -256,7 +257,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (shouldReRender) {
                 await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
                 await loadAndRenderHistory();
-                updateButtonStates(); // AI回复后更新按钮状态
+                updateButtonStates();
             }
         };
 
@@ -272,31 +273,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // ▼▼▼ 核心修改：新增一个独立的“用户发送”函数 ▼▼▼
+        // ▼▼▼ 核心修正：创建通用的用户消息发送函数 ▼▼▼
+        async function onSendUserMessage(message) {
+            state.chatHistory.push(message);
+            await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
+            await loadAndRenderHistory();
+            updateButtonStates();
+        }
+
         async function handleUserSend() {
             const text = elements.input.value.trim();
             if (text === '') return;
 
             const userMessage = { text, sender: 'user' };
-            state.chatHistory.push(userMessage);
-            await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
-            
-            await loadAndRenderHistory();
+            await onSendUserMessage(userMessage); // 调用通用函数
             
             elements.input.value = '';
             elements.input.style.height = 'auto';
-            updateButtonStates();
             elements.input.focus();
         }
-        // ▲▲▲ 修改结束 ▲▲▲
 
         async function onSendEmoji(emoji) {
             const emojiMessage = { sender: 'user', isEmoji: true, name: emoji.name, data: emoji.data };
-            state.chatHistory.push(emojiMessage);
-            await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
-            await loadAndRenderHistory();
-            updateButtonStates();
+            await onSendUserMessage(emojiMessage); // 调用通用函数
         }
+        // ▲▲▲ 修正结束 ▲▲▲
 
         function initializeInteractionModeAndStyle() {
             const updateInteractionModeUI = () => {
@@ -356,7 +357,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
         
-        // ▼▼▼ 核心修改：分离发送和响应的点击事件 ▼▼▼
         if (elements.sendBtn) elements.sendBtn.addEventListener('click', handleUserSend);
         if (elements.respondBtn) {
             elements.respondBtn.addEventListener('click', () => {
@@ -369,7 +369,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         if (elements.regenerateBtn) elements.regenerateBtn.addEventListener('click', () => triggerAiResponse('regenerate'));
         if (elements.continueBtn) elements.continueBtn.addEventListener('click', () => triggerAiResponse('continue'));
-        // ▲▲▲ 修改结束 ▲▲▲
 
         elements.chatArea.addEventListener('click', async (e) => {
             const pagerButton = e.target.closest('.pager-btn');
@@ -507,8 +506,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 state, 
                 onSendEmoji
             );
+        
+            initializeImageSender(elements, onSendUserMessage);
         }
         await initializeChatState();
+
+        if (elements.imageActionBtn) {
+            elements.imageActionBtn.addEventListener('click', openImageSender);
+        }
 
     } catch (error) {
         console.error("页面初始化时发生严重错误:", error);
