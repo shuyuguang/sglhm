@@ -16,6 +16,9 @@ import { initializeHeaderMenu } from './chat-header.js';
 import { initializeThemeSystem } from './chat-theme.js';
 import { initializeInputArea } from './chat-input-handler.js';
 import { initializeImageSender, openImageSender } from './chat-image-sender.js';
+// ▼▼▼ 核心新增：导入链接发送模块 ▼▼▼
+import { initializeLinkSender, openLinkSender } from './chat-link-sender.js';
+// ▲▲▲ 新增结束 ▲▲▲
 
 const blobUrlManager = {
     cache: new Map(),
@@ -113,6 +116,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             regenerateBtn: document.getElementById('regenerate-btn'),
             continueBtn: document.getElementById('continue-btn'),
             imageActionBtn: document.querySelector('.action-list-item [class*="fa-image"]')?.parentElement,
+            // ▼▼▼ 核心新增：获取链接按钮 ▼▼▼
+            linkActionBtn: document.querySelector('.action-list-item [class*="fa-link"]')?.parentElement,
+            // ▲▲▲ 新增结束 ▲▲▲
             textPreviewOverlay: document.getElementById('text-preview-overlay'),
             textPreviewContent: document.querySelector('#text-preview-overlay .text-preview-content'),
         };
@@ -574,21 +580,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             );
         
             initializeImageSender(elements, onSendUserMessage);
+            // ▼▼▼ 核心新增：初始化链接发送模块 ▼▼▼
+            initializeLinkSender(elements, onSendUserMessage);
+            // ▲▲▲ 新增结束 ▲▲▲
         }
         await initializeChatState();
 
         if (elements.imageActionBtn) {
             elements.imageActionBtn.addEventListener('click', openImageSender);
         }
+        // ▼▼▼ 核心新增：绑定链接按钮点击事件 ▼▼▼
+        if (elements.linkActionBtn) {
+            elements.linkActionBtn.addEventListener('click', openLinkSender);
+        }
+        // ▲▲▲ 新增结束 ▲▲▲
 
     } catch (error) {
         console.error("页面初始化时发生严重错误:", error);
         appContainer.innerHTML = `<p style="text-align: center;">页面加载时发生严重错误。</p>`;
     }
 
-    // ▼▼▼ 核心修复：将 'unload' 事件替换为 'pagehide' ▼▼▼
     window.addEventListener('pagehide', () => {
         blobUrlManager.cleanup();
     });
-    // ▲▲▲ 修复结束 ▲▲▲
 });

@@ -3,14 +3,10 @@
 let elements = {};
 let onSendCallback = null;
 let state = {
-    title: '',
-    body: '',
-    source: '',
-    image: null, // { type: 'text-photo'/'image', text: '...', data: '...' }
+    image: null,
     isLoading: false,
 };
 
-// 辅助函数：判断是否为有效URL
 function isValidHttpUrl(string) {
     try {
         const url = new URL(string);
@@ -18,7 +14,6 @@ function isValidHttpUrl(string) {
     } catch (_) { return false; }
 }
 
-// 辅助函数：文件转DataURL
 function fileToDataUrl(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -33,9 +28,12 @@ export function initializeLinkSender(domElements, onSend) {
         ...domElements,
         overlay: document.getElementById('link-sender-overlay'),
         closeBtn: document.getElementById('close-link-sender-btn'),
+        // ▼▼▼ 核心修改：获取新/修改的元素 ▼▼▼
+        urlInput: document.getElementById('link-url-input'),
         titleInput: document.getElementById('link-title-input'),
-        bodyInput: document.getElementById('link-body-input'),
+        descriptionInput: document.getElementById('link-description-input'),
         sourceInput: document.getElementById('link-source-input'),
+        // ▲▲▲ 修改结束 ▲▲▲
         imagePreview: document.getElementById('link-image-preview'),
         imageInput: document.getElementById('link-image-input'),
         addTextPhotoBtn: document.getElementById('add-link-text-photo-btn'),
@@ -59,17 +57,15 @@ function closeLinkSender() {
 }
 
 function resetPanel() {
-    state = { title: '', body: '', source: '', image: null, isLoading: false };
+    state = { image: null, isLoading: false };
     
-    // ▼▼▼ 核心修改：重置所有输入框的值和高度 ▼▼▼
-    const inputs = [elements.titleInput, elements.bodyInput, elements.sourceInput, elements.imageInput];
+    const inputs = [elements.urlInput, elements.titleInput, elements.descriptionInput, elements.sourceInput, elements.imageInput];
     inputs.forEach(input => {
         if (input) {
             input.value = '';
             input.style.height = 'auto';
         }
     });
-    // ▲▲▲ 修改结束 ▲▲▲
 
     elements.localPhotoInput.value = '';
     updateImagePreview();
@@ -77,7 +73,11 @@ function resetPanel() {
 }
 
 function updateSendButtonState() {
-    const canSend = elements.titleInput.value.trim() !== '' && elements.bodyInput.value.trim() !== '';
+    // ▼▼▼ 核心修改：发送条件包含URL、标题和描述 ▼▼▼
+    const canSend = elements.urlInput.value.trim() !== '' && 
+                    isValidHttpUrl(elements.urlInput.value.trim()) &&
+                    elements.titleInput.value.trim() !== '' && 
+                    elements.descriptionInput.value.trim() !== '';
     elements.sendBtn.disabled = !canSend;
 }
 
@@ -112,7 +112,6 @@ function escapeHtml(unsafe) {
     return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 
-
 async function handleAddImage(url) {
     try {
         const response = await fetch(url);
@@ -122,7 +121,7 @@ async function handleAddImage(url) {
         state.image = { type: 'image', data: dataUrl };
         updateImagePreview();
         elements.imageInput.value = '';
-        elements.imageInput.style.height = 'auto'; // 重置高度
+        elements.imageInput.style.height = 'auto';
     } catch (error) {
         alert('图片链接加载失败，请检查URL或网络。');
     }
@@ -142,13 +141,18 @@ async function handleAddLocalImage(file) {
 function handleSend() {
     if (elements.sendBtn.disabled) return;
     if (onSendCallback) {
+        // ▼▼▼ 核心修改：构建正确的消息对象 ▼▼▼
+        const sourceText = elements.sourceInput.value.trim();
+        const descriptionText = elements.descriptionInput.value.trim() + (sourceText ? ` (来源: ${sourceText})` : '');
+
         const message = {
             sender: 'user',
             type: 'link',
+            url: elements.urlInput.value.trim(),
             title: elements.titleInput.value.trim(),
-            body: elements.bodyInput.value.trim(),
-            source: elements.sourceInput.value.trim(),
-            image: state.image // 如果没有图片，这里就是 null
+            description: descriptionText,
+            image: state.image ? (state.image.type === 'image' ? state.image.data : null) : null
+            // 注意：这里简化处理，文字图不作为链接卡片的配图发送
         };
         onSendCallback(message);
     }
@@ -162,11 +166,14 @@ function bindEvents() {
     elements.closeBtn.addEventListener('click', closeLinkSender);
     elements.sendBtn.addEventListener('click', handleSend);
 
+    // ▼▼▼ 核心修改：监听所有相关输入框 ▼▼▼
+    elements.urlInput.addEventListener('input', updateSendButtonState);
     elements.titleInput.addEventListener('input', updateSendButtonState);
-    elements.bodyInput.addEventListener('input', updateSendButtonState);
+    elements.descriptionInput.addEventListener('input', updateSendButtonState);
     
-    // ▼▼▼ 核心新增：为所有 textarea 添加高度自适应逻辑 ▼▼▼
-    const autoGrowTextareas = [elements.titleInput, elements.bodyInput, elements.sourceInput, elements.imageInput];
+    const autoGrowTextareas = [elements.urlInput, elements.titleInput, elements.descriptionInput, elements.sourceInput, elements.imageInput];
+    // ▲▲▲ 修改结束 ▲▲▲
+    
     autoGrowTextareas.forEach(textarea => {
         if (textarea) {
             textarea.addEventListener('input', () => {
@@ -175,7 +182,6 @@ function bindEvents() {
             });
         }
     });
-    // ▲▲▲ 新增结束 ▲▲▲
 
     elements.addTextPhotoBtn.addEventListener('click', () => {
         const text = elements.imageInput.value.trim();
@@ -183,7 +189,7 @@ function bindEvents() {
             state.image = { type: 'text-photo', text: text };
             updateImagePreview();
             elements.imageInput.value = '';
-            elements.imageInput.style.height = 'auto'; // 重置高度
+            elements.imageInput.style.height = 'auto';
         } else {
             alert('请输入普通文本后添加。');
         }
