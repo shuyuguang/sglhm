@@ -83,11 +83,12 @@ function escapeHtml(unsafe) {
          .replace(/&/g, "&amp;")
          .replace(/</g, "&lt;")
          .replace(/>/g, "&gt;")
-         // ▼▼▼ 核心修复：补全了正则表达式 ▼▼▼
+         // ▼▼▼ 核心修复：补全了对引号的转义 ▼▼▼
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#039;");
          // ▲▲▲ 修复结束 ▲▲▲
 }
+
 
 /**
  * 在聊天区域渲染一个完整的消息组（可能包含多个气泡）。

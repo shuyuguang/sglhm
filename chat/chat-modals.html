@@ -76,31 +76,26 @@
             <button class="modal-close" id="close-image-sender-btn" title="关闭">&times;</button>
         </div>
         <div class="modal-body">
-            <!-- 选项列表 -->
-            <div class="image-sender-options">
-                <div class="option-row active" data-option="text-photo">
-                    <div class="radio-control"><i class="fa-regular fa-circle"></i><i class="fa-solid fa-circle-check"></i></div>
-                    <label>文字</label>
-                    <input type="text" id="text-photo-input" class="option-input" placeholder="输入图片文字">
+            <!-- 新的输入区域 -->
+            <div class="image-input-area">
+                <div class="input-area-header">
+                    <label for="multi-purpose-image-input">输入文本或链接</label>
+                    <button class="help-icon-btn" id="image-sender-help-btn" title="帮助"><i class="fa-solid fa-question-circle"></i></button>
                 </div>
-                <div class="option-row" data-option="url-photo">
-                    <div class="radio-control"><i class="fa-regular fa-circle"></i><i class="fa-solid fa-circle-check"></i></div>
-                    <label>链接</label>
-                    <input type="url" id="url-photo-input" class="option-input" placeholder="粘贴图片链接">
-                </div>
-                <div class="option-row" data-option="local-photo">
-                    <div class="radio-control"><i class="fa-regular fa-circle"></i><i class="fa-solid fa-circle-check"></i></div>
-                    <label>上传</label>
-                    <button id="local-photo-btn" class="option-input">选择本地图片</button>
-                    <input type="file" id="local-photo-upload" accept="image/*" style="display: none;">
+                <textarea id="multi-purpose-image-input" rows="3" placeholder="在这里输入..."></textarea>
+                <div class="input-help-tooltip" id="image-sender-help-tooltip">
+                    <p>文字图请直接输入文本并点击“文字图+”，链接图请输入单个图片链接并点击“链接图+”，上传本地直接点“本地图+”，文字图可多个，链接图和本地图越少越好</p>
                 </div>
             </div>
+            
             <!-- 添加按钮 -->
             <div class="add-buttons-container">
                 <button class="add-btn" id="add-text-photo-btn" title="添加文字图"><i class="fa-solid fa-plus"></i> 文字图</button>
                 <button class="add-btn" id="add-url-photo-btn" title="添加链接图"><i class="fa-solid fa-plus"></i> 链接图</button>
                 <button class="add-btn" id="add-local-photo-btn" title="添加本地图"><i class="fa-solid fa-plus"></i> 本地图</button>
+                <input type="file" id="local-photo-upload" accept="image/*" style="display: none;">
             </div>
+
             <!-- 多图预览区域 -->
             <div class="image-multi-preview-area">
                 <div id="image-multi-preview-container">
@@ -112,7 +107,7 @@
                 </div>
             </div>
         </div>
-        <div class="modal-footer" style="justify-content: center;">
+        <div class="modal-footer footer-center">
             <button class="modal-btn-confirm" id="send-image-btn" disabled>发送图片</button>
         </div>
     </div>

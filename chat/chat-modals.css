@@ -332,55 +332,66 @@
     gap: 16px;
 }
 
-.image-sender-options {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.option-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.radio-control {
-    font-size: 1.2rem;
-    color: #ccc;
-    cursor: pointer;
-    width: 20px;
-    height: 20px;
+.image-input-area {
     position: relative;
 }
-.radio-control .fa-circle-check {
-    display: none;
-    color: var(--send-btn-bg);
+.input-area-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 0 4px;
 }
-.option-row.active .radio-control .fa-circle { display: none; }
-.option-row.active .radio-control .fa-circle-check { display: inline-block; }
-
-.option-row label {
+.input-area-header label {
     font-weight: 500;
     color: #555;
+    font-size: 0.9em;
 }
-
-.option-input {
-    flex-grow: 1;
-    padding: 8px 12px;
+.help-icon-btn {
+    background: none;
+    border: none;
+    color: #7290B2;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 2px;
+}
+#multi-purpose-image-input {
+    width: 100%;
+    padding: 10px;
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    font-size: 0.95em;
+    font-size: 1em;
     box-sizing: border-box;
     background-color: #f8f9fa;
+    resize: none;
+    line-height: 1.5;
+    outline: none;
+    transition: border-color 0.2s;
 }
-#local-photo-btn {
-    text-align: center;
+#multi-purpose-image-input:focus {
+    border-color: var(--send-btn-bg);
+}
+.input-help-tooltip {
     background-color: #f1f3f5;
-    color: #495057;
-    cursor: pointer;
-    transition: background-color 0.2s;
+    border-radius: 6px;
+    padding: 0 12px;
+    margin-top: 8px;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
 }
-#local-photo-btn:hover { background-color: #e9ecef; }
+.input-help-tooltip.active {
+    max-height: 150px;
+    opacity: 1;
+    padding: 12px;
+}
+.input-help-tooltip p {
+    margin: 0;
+    font-size: 0.85em;
+    color: #6c757d;
+    line-height: 1.5;
+}
 
 
 .add-buttons-container {
@@ -483,6 +494,10 @@
     opacity: 1;
 }
 
+/* 修复：将发送按钮居中 */
+.modal-footer.footer-center {
+    justify-content: center;
+}
 /* --- ▲▲▲ 重构结束 ▲▲▲ --- */
 
 /* --- ▼▼▼ 新增：文字图预览模态框样式 ▼▼▼ --- */

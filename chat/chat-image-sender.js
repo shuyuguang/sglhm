@@ -3,12 +3,20 @@
 let elements = {};
 let onSendCallback = null;
 let state = {
-    // ▼▼▼ 核心重构：从单个状态变为队列和当前选项 ▼▼▼
-    activeOption: 'text-photo',
-    imagesToSend: [], // { type: 'text-photo'/'image', content: '...' }
+    imagesToSend: [], // 队列保持不变
     isLoading: false
-    // ▲▲▲ 重构结束 ▲▲▲
 };
+
+// 新增辅助函数：判断是否为有效URL
+function isValidHttpUrl(string) {
+    let url;
+    try {
+        url = new URL(string);
+    } catch (_) {
+        return false;
+    }
+    return url.protocol === "http:" || url.protocol === "https:";
+}
 
 export function initializeImageSender(domElements, onSend) {
     elements = {
@@ -16,10 +24,9 @@ export function initializeImageSender(domElements, onSend) {
         overlay: document.getElementById('image-sender-overlay'),
         closeBtn: document.getElementById('close-image-sender-btn'),
         // ▼▼▼ 核心重构：获取新UI元素 ▼▼▼
-        optionRows: document.querySelectorAll('.option-row'),
-        textPhotoInput: document.getElementById('text-photo-input'),
-        urlPhotoInput: document.getElementById('url-photo-input'),
-        localPhotoBtn: document.getElementById('local-photo-btn'),
+        multiPurposeInput: document.getElementById('multi-purpose-image-input'),
+        helpBtn: document.getElementById('image-sender-help-btn'),
+        helpTooltip: document.getElementById('image-sender-help-tooltip'),
         localPhotoInput: document.getElementById('local-photo-upload'),
         addTextBtn: document.getElementById('add-text-photo-btn'),
         addUrlBtn: document.getElementById('add-url-photo-btn'),
@@ -37,7 +44,6 @@ export function openImageSender() {
     if (!elements.overlay) return;
     resetPanel();
     elements.overlay.classList.add('active');
-    switchOption('text-photo');
 }
 
 function closeImageSender() {
@@ -47,28 +53,19 @@ function closeImageSender() {
 function resetPanel() {
     state.imagesToSend = [];
     state.isLoading = false;
-    elements.textPhotoInput.value = '';
-    elements.urlPhotoInput.value = '';
+    elements.multiPurposeInput.value = '';
+    elements.multiPurposeInput.style.height = 'auto'; // 重置高度
     elements.localPhotoInput.value = '';
+    elements.helpTooltip.classList.remove('active'); // 关闭帮助
     updatePreview();
     updateSendButtonState();
 }
-
-// ▼▼▼ 核心重构：新的选项切换逻辑 ▼▼▼
-function switchOption(optionId) {
-    state.activeOption = optionId;
-    elements.optionRows.forEach(row => {
-        row.classList.toggle('active', row.dataset.option === optionId);
-    });
-}
-// ▲▲▲ 重构结束 ▲▲▲
 
 function setLoading(isLoading) {
     state.isLoading = isLoading;
     // 未来可以添加全局加载指示器
 }
 
-// ▼▼▼ 核心重构：渲染多图预览 ▼▼▼
 function updatePreview() {
     elements.multiPreviewContainer.innerHTML = '';
     if (state.imagesToSend.length > 0) {
@@ -98,7 +95,6 @@ function updatePreview() {
         elements.multiPreviewPlaceholder.style.display = 'flex';
     }
 }
-// ▲▲▲ 重构结束 ▲▲▲
 
 function updateSendButtonState() {
     const canSend = state.imagesToSend.length > 0;
@@ -114,20 +110,28 @@ function fileToDataUrl(file) {
     });
 }
 
-// ▼▼▼ 核心重构：处理添加图片的逻辑 ▼▼▼
-function handleAddText() {
-    const text = elements.textPhotoInput.value.trim();
+function handleAddFromInput() {
+    const text = elements.multiPurposeInput.value.trim();
     if (!text) return;
+
+    if (isValidHttpUrl(text)) {
+        // 作为URL处理
+        handleAddUrl(text);
+    } else {
+        // 作为普通文本处理
+        handleAddText(text);
+    }
+}
+
+function handleAddText(text) {
     state.imagesToSend.push({ type: 'text-photo', text: text });
-    elements.textPhotoInput.value = '';
+    elements.multiPurposeInput.value = '';
+    elements.multiPurposeInput.style.height = 'auto'; // 重置高度
     updatePreview();
     updateSendButtonState();
 }
 
-async function handleAddUrl() {
-    const url = elements.urlPhotoInput.value.trim();
-    if (!url || !url.startsWith('http')) return;
-
+async function handleAddUrl(url) {
     setLoading(true);
     try {
         const response = await fetch(url);
@@ -135,7 +139,8 @@ async function handleAddUrl() {
         const blob = await response.blob();
         const dataUrl = await fileToDataUrl(blob);
         state.imagesToSend.push({ type: 'image', data: dataUrl });
-        elements.urlPhotoInput.value = '';
+        elements.multiPurposeInput.value = '';
+        elements.multiPurposeInput.style.height = 'auto'; // 重置高度
         updatePreview();
         updateSendButtonState();
     } catch (error) {
@@ -161,7 +166,6 @@ async function handleAddLocal(file) {
         setLoading(false);
     }
 }
-// ▲▲▲ 重构结束 ▲▲▲
 
 function handleSend() {
     if (state.imagesToSend.length === 0) return;
@@ -181,20 +185,33 @@ function bindEvents() {
     });
     elements.closeBtn.addEventListener('click', closeImageSender);
     elements.sendImageBtn.addEventListener('click', handleSend);
-
+    
     // ▼▼▼ 核心重构：新的事件绑定 ▼▼▼
-    elements.optionRows.forEach(row => {
-        const optionId = row.dataset.option;
-        // 点击整行或单选框切换
-        row.querySelector('.radio-control').addEventListener('click', () => switchOption(optionId));
-        // 点击输入框或按钮时，自动切换到该选项
-        row.querySelector('.option-input').addEventListener('focus', () => switchOption(optionId));
-        row.querySelector('.option-input').addEventListener('click', () => switchOption(optionId));
+    elements.multiPurposeInput.addEventListener('input', () => {
+        const el = elements.multiPurposeInput;
+        el.style.height = 'auto';
+        el.style.height = `${el.scrollHeight}px`;
     });
 
-    elements.addTextBtn.addEventListener('click', handleAddText);
-    elements.addUrlBtn.addEventListener('click', handleAddUrl);
+    elements.helpBtn.addEventListener('click', () => {
+        elements.helpTooltip.classList.toggle('active');
+    });
+
+    elements.addTextBtn.addEventListener('click', () => {
+        const text = elements.multiPurposeInput.value.trim();
+        if(text && !isValidHttpUrl(text)) handleAddText(text);
+        else alert('请输入普通文本后添加。');
+    });
+
+    elements.addUrlBtn.addEventListener('click', () => {
+        const text = elements.multiPurposeInput.value.trim();
+        if(text && isValidHttpUrl(text)) handleAddUrl(text);
+        else alert('请输入有效的图片链接后添加。');
+    });
+
     elements.addLocalBtn.addEventListener('click', () => elements.localPhotoInput.click());
-    elements.localPhotoInput.addEventListener('change', e => handleAddLocal(e.target.files[0]));
+    elements.localPhotoInput.addEventListener('change', e => {
+        if (e.target.files.length > 0) handleAddLocal(e.target.files[0]);
+    });
     // ▲▲▲ 重构结束 ▲▲▲
 }
