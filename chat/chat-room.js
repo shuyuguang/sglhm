@@ -188,7 +188,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elements.userProfileEditAvatar) elements.userProfileEditAvatar.src = user.avatar;
         if (elements.userProfileEditName) elements.userProfileEditName.textContent = user.name;
         
-        // ▼▼▼ [修改] 替换整个函数 ▼▼▼
         async function loadAndRenderHistory(loadMore = false) {
             const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle) || 'dialogue';
             const settings = state.styleSettings[currentStyleKey] || STYLE_DEFAULT_SETTINGS[currentStyleKey];
@@ -202,11 +201,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             const messagesToRender = state.chatHistory.slice(state.visualHistoryStartIndex);
             
-            // 核心修改：异步预处理消息，将图片的 dataURL 转为 blobURL
             const processedMessages = await Promise.all(messagesToRender.map(async (msg) => {
                 if (msg.sender === 'user' && msg.type === 'image' && msg.data.startsWith('data:')) {
                     const blobUrl = await blobUrlManager.dataUrlToBlobUrl(msg.data);
-                    // 使用一个新属性来存储渲染用的URL，不修改原始数据
                     return { ...msg, renderData: blobUrl };
                 }
                 return msg;
@@ -231,32 +228,46 @@ document.addEventListener('DOMContentLoaded', async () => {
                 setTimeout(() => elements.chatArea.scrollTop = elements.chatArea.scrollHeight, 0);
             }
         }
-        // ▲▲▲ [修改] 结束 ▲▲▲
         
+        // ▼▼▼ 核心修改：重写按钮状态更新逻辑 ▼▼▼
         function updateButtonStates() {
             if (!elements.input || !elements.respondBtn || !elements.sendBtn) return;
-            const hasText = elements.input.value.trim() !== '';
-            const lastMessage = state.chatHistory[state.chatHistory.length - 1];
-            const canRespond = lastMessage && lastMessage.sender === 'user';
-
+        
+            const respondBtnIcon = elements.respondBtn.querySelector('i');
+        
+            // 最高优先级：检查AI是否正在回复
             if (isAiReplying) {
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
-                elements.respondBtn.disabled = false;
-                elements.sendBtn.disabled = true;
-                return;
+                elements.respondBtn.disabled = false; // 允许点击以中断
+                if (respondBtnIcon) {
+                    respondBtnIcon.className = 'fa-solid fa-stop'; // 改为停止图标
+                }
+                return; // 结束函数
             }
-
+        
+            // 如果AI未回复，恢复响应按钮的默认图标
+            if (respondBtnIcon) {
+                respondBtnIcon.className = 'fa-regular fa-paper-plane';
+            }
+        
+            // 核心规则：根据输入框是否有文本来决定显示哪个按钮
+            const hasText = elements.input.value.trim() !== '';
+        
             if (hasText) {
+                // 有文本，显示“发送”按钮
                 elements.respondBtn.style.display = 'none';
                 elements.sendBtn.style.display = 'flex';
                 elements.sendBtn.disabled = false;
             } else {
+                // 无文本，显示“响应”按钮
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
-                elements.respondBtn.disabled = !canRespond;
+                // 仅在完全没有聊天记录时禁用“响应”按钮
+                elements.respondBtn.disabled = state.chatHistory.length === 0;
             }
         }
+        // ▲▲▲ 修改结束 ▲▲▲
         
         const onAiReply = async (action) => {
             const { mode, data: replyMessages } = action;
