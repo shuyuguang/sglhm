@@ -84,7 +84,7 @@
                 </div>
                 <textarea id="multi-purpose-image-input" rows="3" placeholder="在这里输入..."></textarea>
                 <div class="input-help-tooltip" id="image-sender-help-tooltip">
-                    <p>文字图请直接输入文本并点击“文字图+”，链接图请输入单个图片链接并点击“链接图+”，上传本地直接点“本地图+”，文字图可多个，链接图和本地图越少越好</p>
+                    <p>文字图请输入文本并点击“+文字图”，链接图请输入单个图片链接并点击“+链接图”，上传本地图片请点击“+本地图”，文字图可多个，链接图/本地图不宜多</p>
                 </div>
             </div>
             
@@ -93,6 +93,9 @@
                 <button class="add-btn" id="add-text-photo-btn" title="添加文字图"><i class="fa-solid fa-plus"></i> 文字图</button>
                 <button class="add-btn" id="add-url-photo-btn" title="添加链接图"><i class="fa-solid fa-plus"></i> 链接图</button>
                 <button class="add-btn" id="add-local-photo-btn" title="添加本地图"><i class="fa-solid fa-plus"></i> 本地图</button>
+                <!-- ▼▼▼ 核心修改：发送按钮移动到此处 ▼▼▼ -->
+                <button class="modal-btn-confirm" id="send-image-btn" disabled title="发送"><i class="fa-solid fa-location-arrow"></i></button>
+                <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                 <input type="file" id="local-photo-upload" accept="image/*" style="display: none;">
             </div>
 
@@ -107,9 +110,7 @@
                 </div>
             </div>
         </div>
-        <div class="modal-footer footer-center">
-            <button class="modal-btn-confirm" id="send-image-btn" disabled>发送图片</button>
-        </div>
+        <!-- ▼▼▼ 核心修改：移除了原来的底部发送按钮 ▼▼▼ -->
     </div>
 </div>
 <!-- ▲▲▲ 重构结束 ▲▲▲ -->
