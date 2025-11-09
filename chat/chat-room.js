@@ -16,6 +16,8 @@ import { initializeHeaderMenu } from './chat-header.js';
 import { initializeThemeSystem } from './chat-theme.js';
 import { initializeInputArea } from './chat-input-handler.js';
 import { initializeImageSender, openImageSender } from './chat-image-sender.js';
+import { initializeLinkSender, openLinkSender } from './chat-link-sender.js';
+
 
 // ▼▼▼ [新增] Blob URL 管理器，解决Base64超长链接问题 ▼▼▼
 const blobUrlManager = {
@@ -119,6 +121,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             regenerateBtn: document.getElementById('regenerate-btn'),
             continueBtn: document.getElementById('continue-btn'),
             imageActionBtn: document.querySelector('.action-list-item [class*="fa-image"]')?.parentElement,
+            linkActionBtn: document.querySelector('.action-list-item [class*="fa-link"]')?.parentElement,
             textPreviewOverlay: document.getElementById('text-preview-overlay'),
             textPreviewContent: document.querySelector('#text-preview-overlay .text-preview-content'),
         };
@@ -206,6 +209,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const blobUrl = await blobUrlManager.dataUrlToBlobUrl(msg.data);
                     return { ...msg, renderData: blobUrl };
                 }
+                // ▼▼▼ 核心修正：添加对link类型消息中图片的Blob URL转换 ▼▼▼
+                if (msg.sender === 'user' && msg.type === 'link' && msg.image?.type === 'image' && msg.image.data.startsWith('data:')) {
+                    const blobUrl = await blobUrlManager.dataUrlToBlobUrl(msg.image.data);
+                    const newMsg = JSON.parse(JSON.stringify(msg)); // 深拷贝以避免修改原始历史记录
+                    newMsg.image.renderData = blobUrl;
+                    return newMsg;
+                }
+                // ▲▲▲ 修正结束 ▲▲▲
                 return msg;
             }));
 
@@ -229,45 +240,37 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         
-        // ▼▼▼ 核心修改：重写按钮状态更新逻辑 ▼▼▼
         function updateButtonStates() {
             if (!elements.input || !elements.respondBtn || !elements.sendBtn) return;
         
             const respondBtnIcon = elements.respondBtn.querySelector('i');
         
-            // 最高优先级：检查AI是否正在回复
             if (isAiReplying) {
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
-                elements.respondBtn.disabled = false; // 允许点击以中断
+                elements.respondBtn.disabled = false;
                 if (respondBtnIcon) {
-                    respondBtnIcon.className = 'fa-solid fa-stop'; // 改为停止图标
+                    respondBtnIcon.className = 'fa-solid fa-stop';
                 }
-                return; // 结束函数
+                return;
             }
         
-            // 如果AI未回复，恢复响应按钮的默认图标
             if (respondBtnIcon) {
                 respondBtnIcon.className = 'fa-regular fa-paper-plane';
             }
         
-            // 核心规则：根据输入框是否有文本来决定显示哪个按钮
             const hasText = elements.input.value.trim() !== '';
         
             if (hasText) {
-                // 有文本，显示“发送”按钮
                 elements.respondBtn.style.display = 'none';
                 elements.sendBtn.style.display = 'flex';
                 elements.sendBtn.disabled = false;
             } else {
-                // 无文本，显示“响应”按钮
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
-                // 仅在完全没有聊天记录时禁用“响应”按钮
                 elements.respondBtn.disabled = state.chatHistory.length === 0;
             }
         }
-        // ▲▲▲ 修改结束 ▲▲▲
         
         const onAiReply = async (action) => {
             const { mode, data: replyMessages } = action;
@@ -581,11 +584,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             );
         
             initializeImageSender(elements, onSendUserMessage);
+            initializeLinkSender(elements, onSendUserMessage);
         }
         await initializeChatState();
 
         if (elements.imageActionBtn) {
             elements.imageActionBtn.addEventListener('click', openImageSender);
+        }
+        if (elements.linkActionBtn) {
+            elements.linkActionBtn.addEventListener('click', openLinkSender);
         }
 
     } catch (error) {
@@ -593,9 +600,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         appContainer.innerHTML = `<p style="text-align: center;">页面加载时发生严重错误。</p>`;
     }
 
-    // ▼▼▼ [新增] 页面卸载时清理 Blob URL ▼▼▼
     window.addEventListener('unload', () => {
         blobUrlManager.cleanup();
     });
-    // ▲▲▲ [新增] 结束 ▲▲▲
 });

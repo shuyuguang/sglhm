@@ -120,3 +120,59 @@
     <div class="text-preview-content"></div>
 </div>
 <!-- ▲▲▲ 新增结束 ▲▲▲ -->
+
+<!-- ▼▼▼ 新增：发送链接模态框 ▼▼▼ -->
+<div class="modal-overlay" id="link-sender-overlay">
+    <div class="modal-panel link-sender-panel">
+        <div class="modal-header">
+            <h3 class="modal-title">发送链接</h3>
+            <button class="modal-close" id="close-link-sender-btn" title="关闭">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="link-title-input">标题</label>
+                <input type="text" id="link-title-input" placeholder="输入链接标题">
+            </div>
+            <div class="form-group">
+                <label for="link-body-input">正文</label>
+                <textarea id="link-body-input" rows="3" placeholder="输入链接正文内容"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="link-source-input">来源</label>
+                <input type="text" id="link-source-input" placeholder="（选填）输入来源，如网站名">
+            </div>
+            
+            <div class="form-group checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="link-add-image-checkbox">
+                    <span>配图</span>
+                </label>
+            </div>
+
+            <div class="link-image-section" id="link-image-section">
+                <div class="link-image-preview" id="link-image-preview">
+                    <!-- 图片预览将显示在这里 -->
+                    <div class="placeholder">
+                        <i class="fa-regular fa-image"></i>
+                        <span>选择一张图片</span>
+                    </div>
+                </div>
+                <div class="link-image-controls">
+                    <input type="text" id="link-image-input" placeholder="输入文本或图片URL">
+                    <div class="image-add-buttons">
+                        <button class="add-btn small" id="add-link-text-photo-btn" title="添加文字图"><i class="fa-solid fa-font"></i></button>
+                        <button class="add-btn small" id="add-link-url-photo-btn" title="添加链接图"><i class="fa-solid fa-link"></i></button>
+                        <button class="add-btn small" id="add-link-local-photo-btn" title="添加本地图"><i class="fa-solid fa-upload"></i></button>
+                        <input type="file" id="link-local-photo-upload" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn-cancel" id="cancel-link-send-btn">取消</button>
+            <button class="modal-btn-confirm" id="confirm-link-send-btn" disabled>发送</button>
+        </div>
+    </div>
+</div>
+<!-- ▲▲▲ 新增结束 ▲▲▲ -->

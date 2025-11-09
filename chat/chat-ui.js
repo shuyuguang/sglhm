@@ -128,10 +128,8 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
                     </div>
                 `;
                 break;
-            // ▼▼▼ [修改] 替换 case 'image' 的内容 ▼▼▼
             case 'image':
                 bubble.classList.add('is-image-message');
-                // 核心修改：优先使用预处理过的 renderData (Blob URL)，否则使用原始 data
                 const imageUrl = messageGroup.renderData || messageGroup.data;
                 bubble.innerHTML = `
                     <a href="${imageUrl}" target="_blank" title="点击查看大图">
@@ -139,7 +137,31 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
                     </a>
                 `;
                 break;
-            // ▲▲▲ [修改] 结束 ▲▲▲
+            case 'link':
+                bubble.classList.add('is-link-message');
+                const { title, body, source, image } = messageGroup;
+                
+                let imageHtml = '';
+                if (image) {
+                    if (image.type === 'text-photo') {
+                        imageHtml = `<div class="link-card-image text-photo">${escapeHtml(image.text)}</div>`;
+                    } else if (image.type === 'image') {
+                        const linkImageUrl = image.renderData || image.data;
+                        imageHtml = `<img src="${linkImageUrl}" class="link-card-image">`;
+                    }
+                }
+
+                bubble.innerHTML = `
+                    <div class="link-card-container">
+                        ${imageHtml}
+                        <div class="link-card-content">
+                            <div class="link-card-title">${escapeHtml(title)}</div>
+                            <div class="link-card-body">${escapeHtml(body)}</div>
+                        </div>
+                        ${source ? `<div class="link-card-footer">${escapeHtml(source)}</div>` : ''}
+                    </div>
+                `;
+                break;
             default: // 兼容旧的文本和表情消息
                 if (messageGroup.isEmoji) {
                     bubble.classList.add('is-emoji-message');

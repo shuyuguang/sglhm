@@ -44,11 +44,9 @@ export function initializeMessageMenu(container, getChatHistory, updateChatHisto
         clearTimeout(longPressTimer);
         const bubble = e.target.closest('.chat-bubble');
         
-        // ▼▼▼ 修改点：如果点击目标是预览按钮，则直接返回，不显示菜单 ▼▼▼
         if (e.target.closest('.text-photo-preview-btn')) {
             return;
         }
-        // ▲▲▲ 修改结束 ▲▲▲
         
         if (!bubble || isLongPress || bubble.classList.contains('editing')) return;
 
@@ -92,7 +90,6 @@ function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHis
     }
     
     if (currentPart) {
-        // ▼▼▼ 核心修改：根据用户消息类型判断操作权限 ▼▼▼
         switch(currentPart.type) {
             case 'text-photo':
                 textToCopy = `[Photo: ${currentPart.text}]`;
@@ -103,13 +100,17 @@ function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHis
                 canCopy = false;
                 canEdit = false;
                 break;
+            case 'link':
+                textToCopy = `[链接] ${currentPart.title}\n${currentPart.body}`;
+                canCopy = true;
+                canEdit = true;
+                break;
             default: // 兼容旧文本和表情
                 textToCopy = currentPart.isEmoji ? `[Emoji: ${currentPart.name}]` : currentPart.text;
                 canCopy = textToCopy.length > 0;
                 canEdit = true;
                 break;
         }
-        // ▲▲▲ 修改结束 ▲▲▲
     }
 
     const menuItems = [
@@ -140,31 +141,25 @@ function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHis
             case 'copy':
                 navigator.clipboard.writeText(textToCopy).catch(err => console.error('复制失败:', err));
                 break;
-            // ▼▼▼ 核心修复：重写删除逻辑以正确处理分页 ▼▼▼
             case 'delete':
                 if (confirm('确定要删除这条消息吗？')) {
                     const newHistory = JSON.parse(JSON.stringify(chatHistory)); // 深拷贝以安全修改
                     const messageGroup = newHistory[index];
 
                     if (messageGroup.sender === 'user') {
-                        // 用户消息，直接删除整个条目
                         newHistory.splice(index, 1);
                     } else if (messageGroup.sender === 'character' && partIndex !== -1) {
                         const activeVersion = messageGroup.replyVersions[messageGroup.activeReplyIndex];
                         
-                        // 从当前页面(version)删除指定的气泡(part)
                         if (activeVersion && activeVersion.length > partIndex) {
                             activeVersion.splice(partIndex, 1);
                         }
 
-                        // 检查当前页面是否因此变空
                         if (activeVersion.length === 0) {
-                            // 如果还有其他页面，则只删除当前空页面，并切换到前一页
                             if (messageGroup.replyVersions.length > 1) {
                                 messageGroup.replyVersions.splice(messageGroup.activeReplyIndex, 1);
                                 messageGroup.activeReplyIndex = Math.max(0, messageGroup.activeReplyIndex - 1);
                             } else {
-                                // 如果这是唯一的页面，那么删除整个消息组
                                 newHistory.splice(index, 1);
                             }
                         }
@@ -172,7 +167,6 @@ function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHis
                     updateChatHistory(newHistory);
                 }
                 break;
-            // ▲▲▲ 修复结束 ▲▲▲
             case 'edit':
                 startEditing(bubble, index, partIndex, getChatHistory, updateChatHistory, getEmojis);
                 break;
@@ -215,16 +209,17 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
     }
     
     if (originalPart) {
-        // ▼▼▼ 核心修改：准备编辑内容 ▼▼▼
         switch(originalPart.type) {
             case 'text-photo':
                 originalContent = `[Photo: ${originalPart.text}]`;
+                break;
+            case 'link':
+                originalContent = `${originalPart.title}\n\n${originalPart.body}${originalPart.source ? `\n\n来源: ${originalPart.source}`: ''}`;
                 break;
             default: // 兼容旧文本和表情
                 originalContent = originalPart.isEmoji ? `[Emoji: ${originalPart.name}]` : originalPart.text;
                 break;
         }
-        // ▲▲▲ 修改结束 ▲▲▲
     }
 
     bubble.innerHTML = `
@@ -257,7 +252,7 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
             if (!newText) {
                 shouldSave = false;
             } else {
-                const photoRegex = /^\[Photo:\s*(.*?)\s*\]$/; // 新增正则
+                const photoRegex = /^\[Photo:\s*(.*?)\s*\]$/;
                 const emojiRegex = /^\[Emoji:\s*(.*?)\s*\]$/;
                 const photoMatch = newText.match(photoRegex);
                 const emojiMatch = newText.match(emojiRegex);
@@ -266,23 +261,32 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
                     ? newHistory[index] 
                     : newHistory[index].replyVersions[originalMessageGroup.activeReplyIndex][partIndex];
 
-                // ▼▼▼ 核心修改：处理保存逻辑 ▼▼▼
-                if (photoMatch && photoMatch[1]) {
+                if (originalPart.type === 'link') {
+                    const lines = newText.split('\n');
+                    partToUpdate.title = lines[0] || '无标题';
+                    const sourceLineIndex = lines.findIndex(line => line.toLowerCase().startsWith('来源:'));
+                    if (sourceLineIndex !== -1) {
+                        partToUpdate.source = lines[sourceLineIndex].substring(5).trim();
+                        partToUpdate.body = lines.slice(1, sourceLineIndex).filter(line => line.trim() !== '').join('\n');
+                    } else {
+                        partToUpdate.source = '';
+                        partToUpdate.body = lines.slice(1).filter(line => line.trim() !== '').join('\n');
+                    }
+                } else if (photoMatch && photoMatch[1]) {
                     partToUpdate.type = 'text-photo';
                     partToUpdate.text = photoMatch[1];
                     delete partToUpdate.isEmoji;
                     delete partToUpdate.name;
                     delete partToUpdate.data;
                 } else if (emojiMatch && emojiMatch[1]) {
-                    // ... (表情逻辑不变)
+                    // 表情逻辑不变
                 } else { // 普通文本
-                    partToUpdate.type = undefined; // 或 delete
+                    partToUpdate.type = undefined;
                     partToUpdate.isEmoji = false;
                     partToUpdate.text = newText;
                     delete partToUpdate.name;
                     delete partToUpdate.data;
                 }
-                // ▲▲▲ 修改结束 ▲▲▲
                 updateChatHistory(newHistory);
                 return;
             }
@@ -292,12 +296,10 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
              ? originalMessageGroup
              : originalMessageGroup.replyVersions[originalMessageGroup.activeReplyIndex][partIndex];
 
-        // ▼▼▼ 核心修改：处理取消编辑的渲染恢复 ▼▼▼
-        bubble.className = 'chat-bubble user'; // 重置class
+        bubble.className = 'chat-bubble user';
         switch(partToRestore.type) {
              case 'text-photo':
                 bubble.classList.add('is-image-message');
-                // ▼▼▼ 核心修改：与 chat-ui.js 的渲染保持一致 ▼▼▼
                 bubble.innerHTML = `
                     <div class="photo-message-container">
                         <img src="https://i.postimg.cc/wBtdFsGF/tpybxmnh.jpg" alt="文字图" class="message-photo-img">
@@ -306,18 +308,38 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
                         </button>
                     </div>
                 `;
-                // ▲▲▲ 修改结束 ▲▲▲
                 break;
             case 'image':
-     // 理论上不可编辑，但作为防御性代码
-    bubble.classList.add('is-image-message');
-    // 核心修改：与 chat-ui.js 的渲染保持一致，添加 a 标签
-    bubble.innerHTML = `
-        <a href="${partToRestore.data}" target="_blank" title="点击查看大图">
-            <img src="${partToRestore.data}" alt="用户图片" class="message-photo-img">
-        </a>
-    `;
-    break;
+                bubble.classList.add('is-image-message');
+                bubble.innerHTML = `
+                    <a href="${partToRestore.data}" target="_blank" title="点击查看大图">
+                        <img src="${partToRestore.data}" alt="用户图片" class="message-photo-img">
+                    </a>
+                `;
+                break;
+            case 'link':
+                bubble.classList.add('is-link-message');
+                const { title, body, source, image } = partToRestore;
+                let imageHtml = '';
+                if (image) {
+                     if (image.type === 'text-photo') {
+                        imageHtml = `<div class="link-card-image text-photo">${escapeHtml(image.text)}</div>`;
+                    } else if (image.type === 'image') {
+                        const imageUrl = image.renderData || image.data;
+                        imageHtml = `<img src="${imageUrl}" class="link-card-image">`;
+                    }
+                }
+                bubble.innerHTML = `
+                    <div class="link-card-container">
+                        ${imageHtml}
+                        <div class="link-card-content">
+                            <div class="link-card-title">${escapeHtml(title)}</div>
+                            <div class="link-card-body">${escapeHtml(body)}</div>
+                        </div>
+                        ${source ? `<div class="link-card-footer">${escapeHtml(source)}</div>` : ''}
+                    </div>
+                `;
+                break;
             default:
                  if (partToRestore.isEmoji) {
                     bubble.innerHTML = `<img src="${partToRestore.data}" alt="emoji" class="message-emoji-img">`;
@@ -327,7 +349,6 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
                 }
                 break;
         }
-        // ▲▲▲ 修改结束 ▲▲▲
     };
     
     bubble.querySelector('.save').onclick = () => stopEditing(true);

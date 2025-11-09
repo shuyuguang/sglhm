@@ -77,7 +77,6 @@ async function constructSystemPrompt(charProfile, userProfile, currentChatStyle,
     return prompt;
 }
 
-// ▼▼▼ [修改] 替换整个函数 ▼▼▼
 async function formatChatHistoryForApi(history) {
     const formattedPromises = history.map(async (msg) => {
         if (msg.sender === 'user') {
@@ -88,7 +87,6 @@ async function formatChatHistoryForApi(history) {
                     return { role: 'user', content: content };
                 case 'image':
                     let imageUrlForApi = msg.data;
-                    // 核心修改：如果数据是 blob URL，则转换回 data URL
                     if (imageUrlForApi.startsWith('blob:')) {
                         imageUrlForApi = await blobUrlToDataUrl(imageUrlForApi);
                     }
@@ -97,6 +95,30 @@ async function formatChatHistoryForApi(history) {
                         { type: 'image_url', image_url: { url: imageUrlForApi } }
                     ];
                     return { role: 'user', content: content };
+                case 'link':
+                    let linkContent = `用户发送了一个链接卡片：\n标题：${msg.title}\n正文：${msg.body}`;
+                    if (msg.source) {
+                        linkContent += `\n来源：${msg.source}`;
+                    }
+
+                    if (msg.image?.type === 'text-photo') {
+                        linkContent += `\n（附带的文字图内容为：“${msg.image.text}”）`;
+                        return { role: 'user', content: linkContent };
+                    } else if (msg.image?.type === 'image') {
+                        let linkImageUrlForApi = msg.image.data;
+                        if (linkImageUrlForApi.startsWith('blob:')) {
+                            linkImageUrlForApi = await blobUrlToDataUrl(linkImageUrlForApi);
+                        }
+                        return {
+                            role: 'user',
+                            content: [
+                                { type: 'text', text: linkContent },
+                                { type: 'image_url', image_url: { url: linkImageUrlForApi } }
+                            ]
+                        };
+                    } else {
+                        return { role: 'user', content: linkContent };
+                    }
                 default: // 兼容旧文本和表情
                     content = msg.isEmoji ? `[Emoji: ${msg.name}]` : msg.text;
                     return { role: 'user', content: content };
@@ -111,14 +133,12 @@ async function formatChatHistoryForApi(history) {
             }).join('\n');
             return { role: 'assistant', content };
         }
-        return null; // 对于不应格式化的消息返回null
+        return null;
     });
 
-    // 等待所有转换完成，并过滤掉null值
     const formatted = (await Promise.all(formattedPromises)).filter(Boolean);
     return formatted;
 }
-// ▲▲▲ [修改] 结束 ▲▲▲
 
 export function createApiHandler(context) {
     const {
@@ -181,9 +201,7 @@ export function createApiHandler(context) {
             } else if (mode === 'continue') {
                 if (lastMessage.sender !== 'character') throw new Error("最后一条消息不是AI的回复，无法继续。");
                 historyForApi = state.chatHistory;
-                 // ▼▼▼ [修改] 添加 await ▼▼▼
                  messagesForApi.push(...await formatChatHistoryForApi(historyForApi));
-                 // ▲▲▲ [修改] 结束 ▲▲▲
                  messagesForApi.push({ role: 'user', content: '[继续]' });
                  historyForApi = [];
 
@@ -192,9 +210,7 @@ export function createApiHandler(context) {
             }
 
             const recentHistory = historyForApi.slice(-memoryInMsgCount);
-            // ▼▼▼ [修改] 添加 await ▼▼▼
             messagesForApi.push(...await formatChatHistoryForApi(recentHistory));
-            // ▲▲▲ [修改] 结束 ▲▲▲
 
             const endpoint = (state.currentChatApi.baseUrl.replace(/\/$/, '')) + (state.currentChatApi.path || '/v1/chat/completions');
             const payload = { model: state.currentChatApi.model, messages: messagesForApi, stream: true };
