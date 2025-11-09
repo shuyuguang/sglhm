@@ -5,7 +5,7 @@ const LONG_PRESS_THRESHOLD = 400; // 长按阈值，单位：毫秒
 let longPressTimer = null;
 let isLongPress = false;
 
-// ▼▼▼ 新增：HTML转义函数，确保安全 ▼▼▼
+// HTML转义函数，确保安全
 function escapeHtml(unsafe) {
     if (!unsafe) return '';
     return unsafe
@@ -15,7 +15,6 @@ function escapeHtml(unsafe) {
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#039;");
 }
-// ▲▲▲ 新增结束 ▲▲▲
 
 /**
  * 初始化消息长按和单击事件处理。
@@ -48,7 +47,18 @@ export function initializeMessageMenu(container, getChatHistory, updateChatHisto
             return;
         }
         
-        if (!bubble || isLongPress || bubble.classList.contains('editing')) return;
+        if (!bubble || bubble.classList.contains('editing')) return;
+        
+        // ▼▼▼ [核心修改] 区分链接卡片和其他消息的菜单触发方式 ▼▼▼
+        const isLinkCard = bubble.classList.contains('is-link-message');
+
+        // 如果是链接卡片，但不是长按 -> 阻止菜单
+        // 如果不是链接卡片，但是长按 -> 阻止菜单
+        if (isLinkCard !== isLongPress) {
+            isLongPress = false; // 重置状态
+            return;
+        }
+        // ▲▲▲ [核心修改] 结束 ▲▲▲
 
         e.preventDefault();
         
@@ -100,11 +110,13 @@ function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHis
                 canCopy = false;
                 canEdit = false;
                 break;
+            // ▼▼▼ [核心修改] 禁用链接卡片的编辑和复制功能 ▼▼▼
             case 'link':
-                textToCopy = `[链接] ${currentPart.title}\n${currentPart.body}`;
-                canCopy = true;
-                canEdit = true;
+                textToCopy = ``; // 复制内容为空
+                canCopy = false; // 禁用复制
+                canEdit = false; // 禁用编辑
                 break;
+            // ▲▲▲ [核心修改] 结束 ▲▲▲
             default: // 兼容旧文本和表情
                 textToCopy = currentPart.isEmoji ? `[Emoji: ${currentPart.name}]` : currentPart.text;
                 canCopy = textToCopy.length > 0;

@@ -76,7 +76,7 @@ export function renderChatRoomUI(character) {
     `;
 }
 
-// [新增] 一个简单的HTML转义函数，防止XSS攻击
+// 一个简单的HTML转义函数，防止XSS攻击
 function escapeHtml(unsafe) {
     if (!unsafe) return '';
     return unsafe
@@ -137,6 +137,7 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
                     </a>
                 `;
                 break;
+            // ▼▼▼ [核心修改] 使用新的HTML结构渲染链接卡片 ▼▼▼
             case 'link':
                 bubble.classList.add('is-link-message');
                 const { title, body, source, image } = messageGroup;
@@ -153,15 +154,18 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
 
                 bubble.innerHTML = `
                     <div class="link-card-container">
-                        ${imageHtml}
-                        <div class="link-card-content">
+                        <div class="link-card-header">
                             <div class="link-card-title">${escapeHtml(title)}</div>
+                        </div>
+                        <div class="link-card-main">
                             <div class="link-card-body">${escapeHtml(body)}</div>
+                            ${imageHtml ? `<div class="link-card-image-wrapper">${imageHtml}</div>` : ''}
                         </div>
                         ${source ? `<div class="link-card-footer">${escapeHtml(source)}</div>` : ''}
                     </div>
                 `;
                 break;
+            // ▲▲▲ [核心修改] 结束 ▲▲▲
             default: // 兼容旧的文本和表情消息
                 if (messageGroup.isEmoji) {
                     bubble.classList.add('is-emoji-message');

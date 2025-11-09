@@ -3,13 +3,13 @@
 import { dbStorage } from '../common/db.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
 
-// [新增] 辅助函数，用于判断字符串是否为图片URL
+// 辅助函数，用于判断字符串是否为图片URL
 function isImageUrl(url) {
     if (typeof url !== 'string') return false;
     return url.toLowerCase().startsWith('http') && /\.(jpeg|jpg|gif|png|webp)$/i.test(url);
 }
 
-// ▼▼▼ [新增] Blob URL 转 Data URL 的辅助函数 ▼▼▼
+// Blob URL 转 Data URL 的辅助函数
 function blobUrlToDataUrl(blobUrl) {
     return new Promise((resolve, reject) => {
         fetch(blobUrl)
@@ -25,7 +25,6 @@ function blobUrlToDataUrl(blobUrl) {
             .catch(reject);
     });
 }
-// ▲▲▲ [新增] 结束 ▲▲▲
 
 async function constructSystemPrompt(charProfile, userProfile, currentChatStyle, styleSettings) {
     let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
@@ -95,30 +94,29 @@ async function formatChatHistoryForApi(history) {
                         { type: 'image_url', image_url: { url: imageUrlForApi } }
                     ];
                     return { role: 'user', content: content };
+                
+                // ▼▼▼ [核心修改] 重写link类型的格式化逻辑 ▼▼▼
                 case 'link':
-                    let linkContent = `用户发送了一个链接卡片：\n标题：${msg.title}\n正文：${msg.body}`;
+                    let linkContent = `[Title: ${msg.title}\nBody text: ${msg.body}`;
                     if (msg.source) {
-                        linkContent += `\n来源：${msg.source}`;
+                        linkContent += `\nSource: ${msg.source}`;
                     }
 
+                    let illustrationContent = '无';
                     if (msg.image?.type === 'text-photo') {
-                        linkContent += `\n（附带的文字图内容为：“${msg.image.text}”）`;
-                        return { role: 'user', content: linkContent };
+                        illustrationContent = msg.image.text;
                     } else if (msg.image?.type === 'image') {
                         let linkImageUrlForApi = msg.image.data;
                         if (linkImageUrlForApi.startsWith('blob:')) {
-                            linkImageUrlForApi = await blobUrlToDataUrl(linkImageUrlForApi);
+                           linkImageUrlForApi = await blobUrlToDataUrl(linkImageUrlForApi);
                         }
-                        return {
-                            role: 'user',
-                            content: [
-                                { type: 'text', text: linkContent },
-                                { type: 'image_url', image_url: { url: linkImageUrlForApi } }
-                            ]
-                        };
-                    } else {
-                        return { role: 'user', content: linkContent };
+                        illustrationContent = linkImageUrlForApi; // 直接赋值base64
                     }
+                    
+                    linkContent += `\nIllustration: ${illustrationContent}]`;
+                    return { role: 'user', content: linkContent };
+                // ▲▲▲ [核心修改] 结束 ▲▲▲
+
                 default: // 兼容旧文本和表情
                     content = msg.isEmoji ? `[Emoji: ${msg.name}]` : msg.text;
                     return { role: 'user', content: content };
