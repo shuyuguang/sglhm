@@ -5,7 +5,7 @@
  * @param {object} character - 角色对象。
  * @returns {string} - 聊天室的innerHTML字符串。
  */
-// ▼▼▼ 核心修复：添加 export 关键字 ▼▼▼
+// ▼▼▼ 核心修复：重新添加 export 关键字 ▼▼▼
 export function renderChatRoomUI(character) {
 // ▲▲▲ 修复结束 ▲▲▲
     return `

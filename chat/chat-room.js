@@ -327,28 +327,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             await loadAndRenderHistory();
             updateButtonStates();
             
-            if (message.type === 'image' || message.type === 'link' || message.type === 'text-photo') {
-                triggerAiResponse('new');
-            }
+            // 只有用户发送了消息，才触发AI响应
+            triggerAiResponse('new');
         }
 
         async function handleUserSend() {
             const text = elements.input.value.trim();
             if (text === '') return;
             const userMessage = { text, sender: 'user' };
-            await onSendUserMessage(userMessage);
+            // 只调用 onSendUserMessage，它内部会处理后续流程
+            await onSendUserMessage(userMessage); 
             elements.input.value = '';
             elements.input.style.height = 'auto';
             elements.input.focus();
-            
-            triggerAiResponse('new');
+            // 此处不再需要 triggerAiResponse('new');
         }
 
         async function onSendEmoji(emoji) {
             const emojiMessage = { sender: 'user', isEmoji: true, name: emoji.name, data: emoji.data };
-            await onSendUserMessage(emojiMessage);
-            triggerAiResponse('new');
+            // 只调用 onSendUserMessage
+            await onSendUserMessage(emojiMessage); 
+             // 此处不再需要 triggerAiResponse('new');
         }
+// ▲▲▲ 修改结束 ▲▲▲
 
         function initializeInteractionModeAndStyle() {
             const updateInteractionModeUI = () => {
