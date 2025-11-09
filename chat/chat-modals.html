@@ -68,7 +68,7 @@
 <div class="message-menu-overlay" id="message-menu-overlay">
     <div class="message-menu" id="message-menu"></div>
 </div>
-<!-- ▼▼▼ 核心重构：图片发送面板 ▼▼▼ -->
+<!-- ▼▼▼ 图片发送面板 ▼▼▼ -->
 <div class="modal-overlay" id="image-sender-overlay">
     <div class="modal-panel image-sender-panel">
         <div class="modal-header">
@@ -76,7 +76,7 @@
             <button class="modal-close" id="close-image-sender-btn" title="关闭">&times;</button>
         </div>
         <div class="modal-body">
-            <!-- 新的输入区域 -->
+            <!-- 输入区域 -->
             <div class="image-input-area">
                 <div class="input-area-header">
                     <label for="multi-purpose-image-input">输入文本或链接</label>
@@ -88,40 +88,37 @@
                 </div>
             </div>
             
-            <!-- 添加按钮 -->
+            <!-- ▼▼▼ 核心修改：按钮区域重构 ▼▼▼ -->
             <div class="add-buttons-container">
-                <button class="add-btn" id="add-text-photo-btn" title="添加文字图"><i class="fa-solid fa-plus"></i> 文字图</button>
-                <button class="add-btn" id="add-url-photo-btn" title="添加链接图"><i class="fa-solid fa-plus"></i> 链接图</button>
-                <button class="add-btn" id="add-local-photo-btn" title="添加本地图"><i class="fa-solid fa-plus"></i> 本地图</button>
-                <!-- ▼▼▼ 核心修改：发送按钮移动到此处 ▼▼▼ -->
+                <div class="image-add-buttons">
+                    <button class="add-btn small" id="add-text-photo-btn" title="添加文字图"><i class="fa-solid fa-font"></i></button>
+                    <button class="add-btn small" id="add-url-photo-btn" title="添加链接图"><i class="fa-solid fa-link"></i></button>
+                    <button class="add-btn small" id="add-local-photo-btn" title="添加本地图"><i class="fa-solid fa-upload"></i></button>
+                </div>
                 <button class="modal-btn-confirm" id="send-image-btn" disabled title="发送"><i class="fa-solid fa-location-arrow"></i></button>
-                <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                 <input type="file" id="local-photo-upload" accept="image/*" style="display: none;">
             </div>
+            <!-- ▲▲▲ 修改结束 ▲▲▲ -->
 
             <!-- 多图预览区域 -->
             <div class="image-multi-preview-area">
-                <div id="image-multi-preview-container">
-                    <!-- 预览缩略图将动态添加到这里 -->
-                </div>
+                <div id="image-multi-preview-container"></div>
                  <div id="image-multi-preview-placeholder">
                     <i class="fa-regular fa-images"></i>
                     <span>待发送的图片将在这里预览</span>
                 </div>
             </div>
         </div>
-        <!-- ▼▼▼ 核心修改：移除了原来的底部发送按钮 ▼▼▼ -->
     </div>
 </div>
-<!-- ▲▲▲ 重构结束 ▲▲▲ -->
+<!-- ▲▲▲ 图片发送面板结束 ▲▲▲ -->
 
-<!-- ▼▼▼ 新增：文字图预览模态框 ▼▼▼ -->
+<!-- 文字图预览模态框 -->
 <div class="modal-overlay simple-text-overlay" id="text-preview-overlay">
     <div class="text-preview-content"></div>
 </div>
-<!-- ▲▲▲ 新增结束 ▲▲▲ -->
 
-<!-- ▼▼▼ 新增：发送链接模态框 (重构后) ▼▼▼ -->
+<!-- ▼▼▼ 发送链接模态框 ▼▼▼ -->
 <div class="modal-overlay" id="link-sender-overlay">
     <div class="modal-panel link-sender-panel">
         <div class="modal-header">
@@ -129,7 +126,6 @@
             <button class="modal-close" id="close-link-sender-btn" title="关闭">&times;</button>
         </div>
         <div class="modal-body">
-            <!-- ▼▼▼ 核心重构：统一所有输入框为 textarea 并使用 form-group 包裹 ▼▼▼ -->
             <!-- 标题 -->
             <div class="form-group">
                 <div class="form-group-header">
@@ -157,13 +153,17 @@
             <div class="link-image-section">
                 <div class="form-group">
                     <label>配图</label>
-                    <textarea id="link-image-input" rows="1" placeholder="（选填）输入文本或图片URL"></textarea>
-                    <div class="image-add-buttons">
-                        <button class="add-btn small" id="add-link-text-photo-btn" title="添加文字图"><i class="fa-solid fa-font"></i></button>
-                        <button class="add-btn small" id="add-link-url-photo-btn" title="添加链接图"><i class="fa-solid fa-link"></i></button>
-                        <button class="add-btn small" id="add-link-local-photo-btn" title="添加本地图"><i class="fa-solid fa-upload"></i></button>
-                        <input type="file" id="link-local-photo-upload" accept="image/*" style="display: none;">
+                    <!-- ▼▼▼ 核心修改：新的输入框与按钮布局 ▼▼▼ -->
+                    <div class="link-image-controls">
+                        <textarea id="link-image-input" rows="1" placeholder="（选填）输入文本或图片URL"></textarea>
+                        <div class="image-add-buttons">
+                            <button class="add-btn small" id="add-link-text-photo-btn" title="添加文字图"><i class="fa-solid fa-font"></i></button>
+                            <button class="add-btn small" id="add-link-url-photo-btn" title="添加链接图"><i class="fa-solid fa-link"></i></button>
+                            <button class="add-btn small" id="add-link-local-photo-btn" title="添加本地图"><i class="fa-solid fa-upload"></i></button>
+                            <input type="file" id="link-local-photo-upload" accept="image/*" style="display: none;">
+                        </div>
                     </div>
+                    <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                 </div>
                 <div class="link-image-preview" id="link-image-preview">
                     <div class="placeholder">
@@ -172,8 +172,7 @@
                     </div>
                 </div>
             </div>
-            <!-- ▲▲▲ 核心重构结束 ▲▲▲ -->
         </div>
     </div>
 </div>
-<!-- ▲▲▲ 新增结束 ▲▲▲ -->
+<!-- ▲▲▲ 发送链接模态框结束 ▲▲▲ -->

@@ -34,11 +34,9 @@
 }
 
 /* --- 模型选择面板 --- */
-/* ▼▼▼ 新增：提升模型选择器层级 ▼▼▼ */
 #model-selector-overlay {
     z-index: 210;
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */
 
 .model-selector-panel {
     width: 90%;
@@ -234,7 +232,6 @@
 #user-edit-modal-overlay {
     z-index: 300;
 }
-/* ▼▼▼ 修改：明确背景URL输入框层级 ▼▼▼ */
 #cropper-overlay,
 #user-cropper-overlay,
 .prompt-overlay,
@@ -244,60 +241,49 @@
 #bg-url-prompt-overlay {
     z-index: 401; /* 确保在所有其他遮罩之上 */
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
-
-/* relia-chat/chat-modals.css -> 在文件末尾添加 */
 
 /* --- 网络表情添加模态框 --- */
 #web-emoji-modal {
-    z-index: 260; /* 比记忆编辑器高 */
+    z-index: 260; 
 }
-
-/* ▼▼▼ 修改：调整网络表情面板布局 ▼▼▼ */
 .web-emoji-panel {
     width: 90%;
     max-width: 380px;
-    height: 50vh; /* 给面板一个灵活的高度 */
+    height: 50vh; 
     background-color: #fff;
     border-radius: 16px;
     overflow: hidden;
-    display: flex; /* 启用flex布局 */
-    flex-direction: column; /* 垂直排列子元素 */
+    display: flex; 
+    flex-direction: column; 
 }
-
 .web-emoji-panel .modal-body {
     padding: 16px;
-    flex-grow: 1; /* 让body区域填满剩余空间 */
-    display: flex; /* 启用flex布局 */
-    flex-direction: column; /* 垂直排列内部元素 */
-    min-height: 0; /* 防止内容溢出 */
+    flex-grow: 1; 
+    display: flex; 
+    flex-direction: column;
+    min-height: 0; 
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
-
 .modal-description {
     font-size: 0.9em;
     color: #6c757d;
     margin: 0 0 10px 0;
     line-height: 1.5;
-    flex-shrink: 0; /* 防止说明文字被压缩 */
+    flex-shrink: 0;
 }
-
-/* ▼▼▼ 修改：调整输入区以填满空间 ▼▼▼ */
 #web-emoji-url-input {
     width: 100%;
-    height: 100%; /* 高度占满父容器 */
-    flex-grow: 1; /* 确保它能填满flex容器的剩余空间 */
+    height: 100%; 
+    flex-grow: 1; 
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 10px;
     font-size: 0.9em;
     line-height: 1.5;
-    resize: none; /* 禁用手动调整大小 */
+    resize: none; 
     outline: none;
     box-sizing: border-box;
     background-color: #f8f9fa;
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
 
 #web-emoji-url-input:focus {
     border-color: var(--send-btn-bg);
@@ -309,9 +295,9 @@
     gap: 10px;
     padding: 12px 16px;
     border-top: 1px solid var(--border-color);
-    flex-shrink: 0; /* 防止底部按钮被压缩 */
+    flex-shrink: 0; 
 }
-/* --- ▼▼▼ 核心重构：图片发送面板样式 ▼▼▼ --- */
+/* --- ▼▼▼ 图片发送面板样式 ▼▼▼ --- */
 #image-sender-overlay { z-index: 270; }
 
 .image-sender-panel {
@@ -330,9 +316,7 @@
     flex-direction: column;
     min-height: 0;
     gap: 16px;
-    /* ▼▼▼ 核心修复：添加 overflow-y: auto 使其可滚动 ▼▼▼ */
     overflow-y: auto;
-    /* ▲▲▲ 修复结束 ▲▲▲ */
 }
 
 .image-input-area {
@@ -396,40 +380,26 @@
     line-height: 1.5;
 }
 
-
+/* ▼▼▼ 核心修改：调整按钮容器布局 ▼▼▼ */
 .add-buttons-container {
     display: flex;
-    gap: 10px;
-    justify-content: center;
-    /* ▼▼▼ 核心修改：垂直居中所有按钮 ▼▼▼ */
+    justify-content: space-between;
     align-items: center;
-    /* ▼▼▼ 新增：确保这部分不被压缩 ▼▼▼ */
     flex-shrink: 0;
-    /* ▲▲▲ 新增结束 ▲▲▲ */
 }
-.add-btn {
-    padding: 6px 12px;
-    border: none;
-    background-color: #e9ecef;
-    color: #495057;
-    border-radius: 20px;
-    font-size: 0.85em;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-.add-btn:hover { background-color: #dee2e6; }
-.add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
-/* ▼▼▼ 核心修改：为新的发送按钮添加样式 ▼▼▼ */
+/* ▼▼▼ 核心修改：删除旧的 .add-btn 样式 ▼▼▼ */
+/* .add-btn { ... } */
+/* ▲▲▲ 修改结束 ▲▲▲ */
+
 #send-image-btn {
     width: 32px;
     height: 32px;
     border-radius: 50%;
     border: none;
     cursor: pointer;
-    /* ▼▼▼ 修改点：背景色与帮助按钮统一 ▼▼▼ */
     background-color: #7290B2;
-    /* ▲▲▲ 修改结束 ▲▲▲ */
     color: var(--text-light);
     font-size: 1.3rem;
     transform: rotate(45deg);
@@ -437,28 +407,21 @@
     align-items: center;
     justify-content: center;
     transition: filter 0.2s, opacity 0.2s;
-    padding: 0; /* 覆盖 modal-btn-confirm 的默认 padding */
-    flex-shrink: 0; /* 防止按钮被压缩 */
+    padding: 0; 
+    flex-shrink: 0; 
 }
-
-/* ▼▼▼ 新增：微调发送按钮内图标的位置 ▼▼▼ */
 #send-image-btn > i {
     position: relative;
     left: -1px;
     top: 1px;
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */
-
 #send-image-btn:hover:not(:disabled) {
     filter: brightness(1.1);
 }
-
 #send-image-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
-
 
 .image-multi-preview-area {
     flex-grow: 1;
@@ -468,9 +431,7 @@
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 8px;
-    /* ▼▼▼ 新增：确保预览区有最小高度 ▼▼▼ */
     min-height: 150px;
-    /* ▲▲▲ 新增结束 ▲▲▲ */
 }
 #image-multi-preview-container {
     height: 100%;
@@ -545,19 +506,14 @@
     opacity: 1;
 }
 
-/* ▼▼▼ 核心修改：移除原底部栏样式 ▼▼▼ */
-/* .modal-footer.footer-center { ... } */
-/* --- ▲▲▲ 重构结束 ▲▲▲ --- */
-
-/* --- ▼▼▼ 核心修改：调整文字图预览模态框样式 ▼▼▼ --- */
+/* --- 文字图预览模态框样式 --- */
 .simple-text-overlay {
     z-index: 300;
-    background-color: transparent; /* 确保背景是透明的，移除深色遮罩 */
-    backdrop-filter: none; /* 确保没有任何模糊效果 */
+    background-color: transparent; 
+    backdrop-filter: none; 
     padding: 20px;
-    align-items: center; /* 垂直居中 */
+    align-items: center;
 }
-
 .text-preview-content {
     background-color: #fff;
     padding: 20px;
@@ -570,11 +526,10 @@
     line-height: 1.6;
     white-space: pre-wrap;
     word-wrap: break-word;
-    box-shadow: none; /* 移除了阴影效果，使面板更干净 */
-    border: 1px solid var(--border-color); /* 添加一个细边框以区分边界 */
+    box-shadow: none; 
+    border: 1px solid var(--border-color); 
 }
-/* --- ▲▲▲ 修改结束 ▲▲▲ --- */
-/* --- ▼▼▼ 新增：发送链接模态框样式 (重构后) ▼▼▼ --- */
+/* --- ▼▼▼ 发送链接模态框样式 ▼▼▼ --- */
 #link-sender-overlay { z-index: 280; }
 
 .link-sender-panel {
@@ -582,31 +537,25 @@
     max-width: 380px;
     display: flex;
     flex-direction: column;
-    /* ▼▼▼ 核心修复：限制面板高度 ▼▼▼ */
     height: 85vh;
     max-height: 700px;
-    /* ▲▲▲ 修复结束 ▲▲▲ */
 }
 
 .link-sender-panel .modal-body {
     padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 16px; /* 增大组间距 */
-    /* ▼▼▼ 核心修复：添加 overflow-y: auto 使其可滚动 ▼▼▼ */
+    gap: 16px; 
     flex-grow: 1;
     min-height: 0;
     overflow-y: auto;
-    /* ▲▲▲ 修复结束 ▲▲▲ */
 }
 
 .link-sender-panel .form-group {
     display: flex;
     flex-direction: column;
-    gap: 8px; /* 调整标签和输入框的间距 */
-    /* ▼▼▼ 新增：确保这部分不被压缩 ▼▼▼ */
+    gap: 8px;
     flex-shrink: 0;
-    /* ▲▲▲ 新增结束 ▲▲▲ */
 }
 
 .link-sender-panel .form-group-header {
@@ -631,10 +580,8 @@
     font-size: 1em;
     box-sizing: border-box;
     background-color: #f8f9fa;
-    /* ▼▼▼ 核心修改：统一为 resize: none 并调整行高 ▼▼▼ */
     resize: none;
     line-height: 1.5;
-    /* ▲▲▲ 修改结束 ▲▲▲ */
     outline: none;
     transition: border-color 0.2s;
 }
@@ -662,9 +609,9 @@
     top: 1px;
 }
 .send-inline-btn:disabled {
-    background-color: #e9ecef !important; /* 覆盖 :hover */
+    background-color: #e9ecef !important;
     color: #adb5bd !important;
-    opacity: 1; /* 使用颜色来表示禁用 */
+    opacity: 1;
     cursor: not-allowed;
 }
 
@@ -674,9 +621,7 @@
     gap: 8px;
     border-top: 1px solid var(--border-color);
     padding-top: 16px;
-    /* ▼▼▼ 新增：确保这部分不被压缩 ▼▼▼ */
     flex-shrink: 0;
-    /* ▲▲▲ 新增结束 ▲▲▲ */
 }
 
 .link-image-preview {
@@ -690,9 +635,7 @@
     align-items: center;
     justify-content: center;
     border: 1px dashed #ced4da;
-    /* ▼▼▼ 新增：确保这部分不被压缩 ▼▼▼ */
     flex-shrink: 0;
-    /* ▲▲▲ 新增结束 ▲▲▲ */
 }
 
 .link-image-preview .placeholder { text-align: center; color: #adb5bd; }
@@ -718,20 +661,45 @@
     align-items: center; justify-content: center;
 }
 
+/* ▼▼▼ 核心修改：调整输入框和按钮组的布局 ▼▼▼ */
 .link-image-controls {
-    display: flex; gap: 8px; align-items: center;
+    display: flex;
+    gap: 8px;
+    align-items: flex-end; /* 底部对齐 */
 }
-.link-image-controls input {
-    flex-grow: 1; padding: 8px; font-size: 0.9em;
-    border-radius: 6px; border: 1px solid var(--border-color);
+.link-image-controls textarea {
+    flex-grow: 1;
 }
-/* ▼▼▼ 核心修改：删除，因为图片输入框现在是 textarea 了 ▼▼▼ */
-/* .image-add-buttons { display: flex; gap: 5px; } */
 /* ▲▲▲ 修改结束 ▲▲▲ */
 
-.add-btn.small {
-    width: 32px; height: 32px; border-radius: 8px;
-    font-size: 1rem; padding: 0; display: flex;
-    align-items: center; justify-content: center;
+/* ▼▼▼ 核心新增：统一的水平按钮组样式 ▼▼▼ */
+.image-add-buttons {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
 }
-/* --- ▲▲▲ 新增结束 ▲▲▲ --- */
+/* ▲▲▲ 新增结束 ▲▲▲ */
+
+/* ▼▼▼ 核心修改：统一图标按钮样式 ▼▼▼ */
+.add-btn.small {
+    width: 36px; 
+    height: 36px;
+    border: 1px solid var(--border-color);
+    background-color: #f8f9fa;
+    color: #555;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.add-btn.small:hover {
+    background-color: #f1f3f5;
+    border-color: #ced4da;
+}
+/* ▲▲▲ 修改结束 ▲▲▲ */
+/* --- ▲▲▲ 发送链接模态框样式结束 ▲▲▲ --- */
