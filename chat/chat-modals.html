@@ -121,7 +121,7 @@
 </div>
 <!-- ▲▲▲ 新增结束 ▲▲▲ -->
 
-<!-- ▼▼▼ 新增：发送链接模态框 ▼▼▼ -->
+<!-- ▼▼▼ 新增：发送链接模态框 (重构后) ▼▼▼ -->
 <div class="modal-overlay" id="link-sender-overlay">
     <div class="modal-panel link-sender-panel">
         <div class="modal-header">
@@ -129,36 +129,34 @@
             <button class="modal-close" id="close-link-sender-btn" title="关闭">&times;</button>
         </div>
         <div class="modal-body">
+            <!-- 标题 -->
             <div class="form-group">
                 <label for="link-title-input">标题</label>
-                <input type="text" id="link-title-input" placeholder="输入链接标题">
+                <input type="text" id="link-title-input" placeholder="输入链接标题（必填）">
             </div>
+
+            <!-- 正文 (带发送按钮的特殊头部) -->
             <div class="form-group">
-                <label for="link-body-input">正文</label>
-                <textarea id="link-body-input" rows="3" placeholder="输入链接正文内容"></textarea>
+                <div class="form-group-header">
+                    <label for="link-body-input">正文</label>
+                    <button class="modal-btn-confirm send-inline-btn" id="confirm-link-send-btn" disabled title="发送">
+                        <i class="fa-solid fa-location-arrow"></i>
+                    </button>
+                </div>
+                <textarea id="link-body-input" rows="3" placeholder="输入正文内容（必填）"></textarea>
             </div>
+
+            <!-- 来源 -->
             <div class="form-group">
                 <label for="link-source-input">来源</label>
                 <input type="text" id="link-source-input" placeholder="（选填）输入来源，如网站名">
             </div>
-            
-            <div class="form-group checkbox-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="link-add-image-checkbox">
-                    <span>配图</span>
-                </label>
-            </div>
 
-            <div class="link-image-section" id="link-image-section">
-                <div class="link-image-preview" id="link-image-preview">
-                    <!-- 图片预览将显示在这里 -->
-                    <div class="placeholder">
-                        <i class="fa-regular fa-image"></i>
-                        <span>选择一张图片</span>
-                    </div>
-                </div>
+            <!-- 配图区域 -->
+            <div class="link-image-section">
+                <label>配图</label>
                 <div class="link-image-controls">
-                    <input type="text" id="link-image-input" placeholder="输入文本或图片URL">
+                    <input type="text" id="link-image-input" placeholder="（选填）输入文本或图片URL">
                     <div class="image-add-buttons">
                         <button class="add-btn small" id="add-link-text-photo-btn" title="添加文字图"><i class="fa-solid fa-font"></i></button>
                         <button class="add-btn small" id="add-link-url-photo-btn" title="添加链接图"><i class="fa-solid fa-link"></i></button>
@@ -166,13 +164,17 @@
                         <input type="file" id="link-local-photo-upload" accept="image/*" style="display: none;">
                     </div>
                 </div>
+                <div class="link-image-preview" id="link-image-preview">
+                    <!-- 图片预览将显示在这里 -->
+                    <div class="placeholder">
+                        <i class="fa-regular fa-image"></i>
+                        <span>图片预览区</span>
+                    </div>
+                </div>
             </div>
 
         </div>
-        <div class="modal-footer">
-            <button class="modal-btn-cancel" id="cancel-link-send-btn">取消</button>
-            <button class="modal-btn-confirm" id="confirm-link-send-btn" disabled>发送</button>
-        </div>
+        <!-- 移除了 modal-footer，因为发送和取消按钮已重新布局 -->
     </div>
 </div>
 <!-- ▲▲▲ 新增结束 ▲▲▲ -->

@@ -36,15 +36,12 @@ export function initializeLinkSender(domElements, onSend) {
         titleInput: document.getElementById('link-title-input'),
         bodyInput: document.getElementById('link-body-input'),
         sourceInput: document.getElementById('link-source-input'),
-        addImageCheckbox: document.getElementById('link-add-image-checkbox'),
-        imageSection: document.getElementById('link-image-section'),
         imagePreview: document.getElementById('link-image-preview'),
         imageInput: document.getElementById('link-image-input'),
         addTextPhotoBtn: document.getElementById('add-link-text-photo-btn'),
         addUrlPhotoBtn: document.getElementById('add-link-url-photo-btn'),
         addLocalPhotoBtn: document.getElementById('add-link-local-photo-btn'),
         localPhotoInput: document.getElementById('link-local-photo-upload'),
-        cancelBtn: document.getElementById('cancel-link-send-btn'),
         sendBtn: document.getElementById('confirm-link-send-btn'),
     };
     onSendCallback = onSend;
@@ -66,8 +63,6 @@ function resetPanel() {
     elements.titleInput.value = '';
     elements.bodyInput.value = '';
     elements.sourceInput.value = '';
-    elements.addImageCheckbox.checked = false;
-    elements.imageSection.classList.remove('active');
     elements.imageInput.value = '';
     elements.localPhotoInput.value = '';
     updateImagePreview();
@@ -75,7 +70,7 @@ function resetPanel() {
 }
 
 function updateSendButtonState() {
-    const canSend = state.title.trim() !== '' && state.body.trim() !== '';
+    const canSend = elements.titleInput.value.trim() !== '' && elements.bodyInput.value.trim() !== '';
     elements.sendBtn.disabled = !canSend;
 }
 
@@ -99,7 +94,7 @@ function updateImagePreview() {
         elements.imagePreview.innerHTML = `
             <div class="placeholder">
                 <i class="fa-regular fa-image"></i>
-                <span>选择一张图片</span>
+                <span>图片预览区</span>
             </div>
         `;
     }
@@ -111,28 +106,17 @@ function escapeHtml(unsafe) {
 }
 
 
-async function handleAddImage() {
-    const input = elements.imageInput.value.trim();
-    if (!input) return;
-
-    if (isValidHttpUrl(input)) {
-        // 作为URL处理
-        try {
-            const response = await fetch(input);
-            if (!response.ok) throw new Error('无法加载图片');
-            const blob = await response.blob();
-            const dataUrl = await fileToDataUrl(blob);
-            state.image = { type: 'image', data: dataUrl };
-            updateImagePreview();
-            elements.imageInput.value = '';
-        } catch (error) {
-            alert('图片链接加载失败，请检查URL或网络。');
-        }
-    } else {
-        // 作为文本处理
-        state.image = { type: 'text-photo', text: input };
+async function handleAddImage(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('无法加载图片');
+        const blob = await response.blob();
+        const dataUrl = await fileToDataUrl(blob);
+        state.image = { type: 'image', data: dataUrl };
         updateImagePreview();
         elements.imageInput.value = '';
+    } catch (error) {
+        alert('图片链接加载失败，请检查URL或网络。');
     }
 }
 
@@ -153,11 +137,10 @@ function handleSend() {
         const message = {
             sender: 'user',
             type: 'link',
-            title: state.title,
-            body: state.body,
-            source: state.source,
-            // 只有当勾选了配图时才附带图片
-            image: elements.addImageCheckbox.checked ? state.image : null
+            title: elements.titleInput.value.trim(),
+            body: elements.bodyInput.value.trim(),
+            source: elements.sourceInput.value.trim(),
+            image: state.image // 如果没有图片，这里就是 null
         };
         onSendCallback(message);
     }
@@ -169,22 +152,10 @@ function bindEvents() {
         if (e.target === elements.overlay) closeLinkSender();
     });
     elements.closeBtn.addEventListener('click', closeLinkSender);
-    elements.cancelBtn.addEventListener('click', closeLinkSender);
     elements.sendBtn.addEventListener('click', handleSend);
 
-    elements.titleInput.addEventListener('input', e => {
-        state.title = e.target.value;
-        updateSendButtonState();
-    });
-    elements.bodyInput.addEventListener('input', e => {
-        state.body = e.target.value;
-        updateSendButtonState();
-    });
-    elements.sourceInput.addEventListener('input', e => { state.source = e.target.value; });
-
-    elements.addImageCheckbox.addEventListener('change', e => {
-        elements.imageSection.classList.toggle('active', e.target.checked);
-    });
+    elements.titleInput.addEventListener('input', updateSendButtonState);
+    elements.bodyInput.addEventListener('input', updateSendButtonState);
     
     elements.addTextPhotoBtn.addEventListener('click', () => {
         const text = elements.imageInput.value.trim();
@@ -199,7 +170,7 @@ function bindEvents() {
 
     elements.addUrlPhotoBtn.addEventListener('click', () => {
         const text = elements.imageInput.value.trim();
-        if(text && isValidHttpUrl(text)) handleAddImage();
+        if(text && isValidHttpUrl(text)) handleAddImage(text);
         else alert('请输入有效的图片链接后添加。');
     });
 

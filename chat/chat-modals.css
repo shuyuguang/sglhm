@@ -565,3 +565,141 @@
     border: 1px solid var(--border-color); /* 添加一个细边框以区分边界 */
 }
 /* --- ▲▲▲ 修改结束 ▲▲▲ --- */
+/* --- ▼▼▼ 新增：发送链接模态框样式 (重构后) ▼▼▼ --- */
+#link-sender-overlay { z-index: 280; }
+
+.link-sender-panel {
+    width: 90%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+}
+
+.link-sender-panel .modal-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px; /* 增大组间距 */
+}
+
+.link-sender-panel .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* 调整标签和输入框的间距 */
+}
+
+.link-sender-panel .form-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 4px;
+}
+
+.link-sender-panel .form-group label {
+    font-weight: 500;
+    font-size: 0.9em;
+    color: #555;
+}
+
+.link-sender-panel input[type="text"],
+.link-sender-panel textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1em;
+    box-sizing: border-box;
+    background-color: #f8f9fa;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.link-sender-panel input[type="text"]:focus,
+.link-sender-panel textarea:focus {
+    border-color: var(--send-btn-bg);
+}
+
+.send-inline-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 1.3rem;
+    transform: rotate(45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
+}
+.send-inline-btn > i {
+    position: relative;
+    left: -1px;
+    top: 1px;
+}
+.send-inline-btn:disabled {
+    background-color: #e9ecef !important; /* 覆盖 :hover */
+    color: #adb5bd !important;
+    opacity: 1; /* 使用颜色来表示禁用 */
+    cursor: not-allowed;
+}
+
+.link-image-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 16px;
+}
+
+.link-image-preview {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-color: #f0f3f6;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed #ced4da;
+}
+
+.link-image-preview .placeholder { text-align: center; color: #adb5bd; }
+.link-image-preview .placeholder i { font-size: 2rem; margin-bottom: 8px; }
+
+.link-image-preview img,
+.link-image-preview .text-photo-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.link-image-preview .text-photo-preview {
+    display: flex; align-items: center; justify-content: center;
+    padding: 10px; font-size: 1em; color: #333;
+    text-align: center; overflow: hidden;
+}
+
+.link-image-preview .remove-image-btn {
+    position: absolute; top: 5px; right: 5px;
+    width: 22px; height: 22px; border-radius: 50%;
+    border: none; background-color: rgba(0,0,0,0.6);
+    color: white; cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+}
+
+.link-image-controls {
+    display: flex; gap: 8px; align-items: center;
+}
+.link-image-controls input {
+    flex-grow: 1; padding: 8px; font-size: 0.9em;
+    border-radius: 6px; border: 1px solid var(--border-color);
+}
+
+.image-add-buttons { display: flex; gap: 5px; }
+.add-btn.small {
+    width: 32px; height: 32px; border-radius: 8px;
+    font-size: 1rem; padding: 0; display: flex;
+    align-items: center; justify-content: center;
+}
+/* --- ▲▲▲ 新增结束 ▲▲▲ --- */
