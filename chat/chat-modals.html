@@ -68,7 +68,7 @@
 <div class="message-menu-overlay" id="message-menu-overlay">
     <div class="message-menu" id="message-menu"></div>
 </div>
-<!-- ▼▼▼ 新增：图片发送面板 ▼▼▼ -->
+<!-- ▼▼▼ 核心重构：图片发送面板 ▼▼▼ -->
 <div class="modal-overlay" id="image-sender-overlay">
     <div class="modal-panel image-sender-panel">
         <div class="modal-header">
@@ -76,34 +76,51 @@
             <button class="modal-close" id="close-image-sender-btn" title="关闭">&times;</button>
         </div>
         <div class="modal-body">
-            <div class="image-sender-tabs">
-                <button class="image-sender-tab active" data-target="text-photo">文字图</button>
-                <button class="image-sender-tab" data-target="url-photo">链接图</button>
-                <button class="image-sender-tab" data-target="local-photo">本地图</button>
-            </div>
-            <div class="image-sender-content">
-                <div id="text-photo" class="image-sender-pane active">
-                    <input type="text" id="text-photo-input" placeholder="输入你想生成的图片文字...">
+            <!-- 选项列表 -->
+            <div class="image-sender-options">
+                <div class="option-row active" data-option="text-photo">
+                    <div class="radio-control"><i class="fa-regular fa-circle"></i><i class="fa-solid fa-circle-check"></i></div>
+                    <label>文字</label>
+                    <input type="text" id="text-photo-input" class="option-input" placeholder="输入图片文字">
                 </div>
-                <div id="url-photo" class="image-sender-pane">
-                    <input type="url" id="url-photo-input" placeholder="粘贴图片链接...">
+                <div class="option-row" data-option="url-photo">
+                    <div class="radio-control"><i class="fa-regular fa-circle"></i><i class="fa-solid fa-circle-check"></i></div>
+                    <label>链接</label>
+                    <input type="url" id="url-photo-input" class="option-input" placeholder="粘贴图片链接">
                 </div>
-                <div id="local-photo" class="image-sender-pane">
-                    <button id="local-photo-btn" class="modal-btn-confirm">选择本地图片</button>
+                <div class="option-row" data-option="local-photo">
+                    <div class="radio-control"><i class="fa-regular fa-circle"></i><i class="fa-solid fa-circle-check"></i></div>
+                    <label>上传</label>
+                    <button id="local-photo-btn" class="option-input">选择本地图片</button>
                     <input type="file" id="local-photo-upload" accept="image/*" style="display: none;">
                 </div>
             </div>
-            <div class="image-preview-area">
-                <div id="image-preview-container">
-                    <div id="image-preview-placeholder"><i class="fa-regular fa-image"></i><span>图片预览</span></div>
-                    <img id="image-preview-img" src="" alt="预览">
-                    <div class="loading-overlay"><div class="spinner"></div></div>
+            <!-- 添加按钮 -->
+            <div class="add-buttons-container">
+                <button class="add-btn" id="add-text-photo-btn" title="添加文字图"><i class="fa-solid fa-plus"></i> 文字图</button>
+                <button class="add-btn" id="add-url-photo-btn" title="添加链接图"><i class="fa-solid fa-plus"></i> 链接图</button>
+                <button class="add-btn" id="add-local-photo-btn" title="添加本地图"><i class="fa-solid fa-plus"></i> 本地图</button>
+            </div>
+            <!-- 多图预览区域 -->
+            <div class="image-multi-preview-area">
+                <div id="image-multi-preview-container">
+                    <!-- 预览缩略图将动态添加到这里 -->
+                </div>
+                 <div id="image-multi-preview-placeholder">
+                    <i class="fa-regular fa-images"></i>
+                    <span>待发送的图片将在这里预览</span>
                 </div>
             </div>
         </div>
-        <div class="modal-footer">
-            <button class="modal-btn-confirm" id="send-image-btn" disabled>发送</button>
+        <div class="modal-footer" style="justify-content: center;">
+            <button class="modal-btn-confirm" id="send-image-btn" disabled>发送图片</button>
         </div>
     </div>
+</div>
+<!-- ▲▲▲ 重构结束 ▲▲▲ -->
+
+<!-- ▼▼▼ 新增：文字图预览模态框 ▼▼▼ -->
+<div class="modal-overlay simple-text-overlay" id="text-preview-overlay">
+    <div class="text-preview-content"></div>
 </div>
 <!-- ▲▲▲ 新增结束 ▲▲▲ -->

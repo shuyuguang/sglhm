@@ -236,4 +236,32 @@
     border-radius: 8px;
     text-align: center;
     word-break: break-all;
+    /* ▼▼▼ 修改：给预览按钮留出空间 ▼▼▼ */
+    padding-right: 30px; 
+    /* ▲▲▲ 修改结束 ▲▲▲ */
 }
+
+/* ▼▼▼ 新增：文字图预览按钮样式 ▼▼▼ */
+.text-photo-preview-btn {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 24px;
+    height: 24px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8em;
+    padding: 0;
+    transition: background-color 0.2s;
+}
+
+.text-photo-preview-btn:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */

@@ -76,6 +76,17 @@ export function renderChatRoomUI(character) {
     `;
 }
 
+// [新增] 一个简单的HTML转义函数，防止XSS攻击
+function escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
+
 /**
  * 在聊天区域渲染一个完整的消息组（可能包含多个气泡）。
  * @param {object} messageGroup - 消息组对象。
@@ -109,7 +120,12 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
                 bubble.innerHTML = `
                     <div class="photo-message-container">
                         <img src="https://i.postimg.cc/wBtdFsGF/tpybxmnh.jpg" alt="文字图" class="message-photo-img">
-                        <div class="photo-message-caption">${messageGroup.text}</div>
+                        <div class="photo-message-caption">${escapeHtml(messageGroup.text)}</div>
+                        <!-- ▼▼▼ 新增：预览按钮 ▼▼▼ -->
+                        <button class="text-photo-preview-btn" data-text="${escapeHtml(messageGroup.text)}" title="预览文字">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                        <!-- ▲▲▲ 新增结束 ▲▲▲ -->
                     </div>
                 `;
                 break;

@@ -3,34 +3,33 @@
 let elements = {};
 let onSendCallback = null;
 let state = {
-    activeTab: 'text-photo',
-    previewData: null,
+    // ▼▼▼ 核心重构：从单个状态变为队列和当前选项 ▼▼▼
+    activeOption: 'text-photo',
+    imagesToSend: [], // { type: 'text-photo'/'image', content: '...' }
     isLoading: false
+    // ▲▲▲ 重构结束 ▲▲▲
 };
 
-/**
- * 初始化图片发送面板
- * @param {object} domElements - 全局DOM元素引用
- * @param {function} onSend - 发送消息的回调函数
- */
 export function initializeImageSender(domElements, onSend) {
     elements = {
         ...domElements,
         overlay: document.getElementById('image-sender-overlay'),
         closeBtn: document.getElementById('close-image-sender-btn'),
-        tabs: document.querySelectorAll('.image-sender-tab'),
-        panes: document.querySelectorAll('.image-sender-pane'),
+        // ▼▼▼ 核心重构：获取新UI元素 ▼▼▼
+        optionRows: document.querySelectorAll('.option-row'),
         textPhotoInput: document.getElementById('text-photo-input'),
         urlPhotoInput: document.getElementById('url-photo-input'),
         localPhotoBtn: document.getElementById('local-photo-btn'),
         localPhotoInput: document.getElementById('local-photo-upload'),
-        previewContainer: document.getElementById('image-preview-container'),
-        previewImage: document.getElementById('image-preview-img'),
-        previewPlaceholder: document.getElementById('image-preview-placeholder'),
+        addTextBtn: document.getElementById('add-text-photo-btn'),
+        addUrlBtn: document.getElementById('add-url-photo-btn'),
+        addLocalBtn: document.getElementById('add-local-photo-btn'),
+        multiPreviewContainer: document.getElementById('image-multi-preview-container'),
+        multiPreviewPlaceholder: document.getElementById('image-multi-preview-placeholder'),
         sendImageBtn: document.getElementById('send-image-btn')
+        // ▲▲▲ 重构结束 ▲▲▲
     };
     onSendCallback = onSend;
-
     bindEvents();
 }
 
@@ -38,7 +37,7 @@ export function openImageSender() {
     if (!elements.overlay) return;
     resetPanel();
     elements.overlay.classList.add('active');
-    switchTab('text-photo');
+    switchOption('text-photo');
 }
 
 function closeImageSender() {
@@ -46,7 +45,7 @@ function closeImageSender() {
 }
 
 function resetPanel() {
-    state.previewData = null;
+    state.imagesToSend = [];
     state.isLoading = false;
     elements.textPhotoInput.value = '';
     elements.urlPhotoInput.value = '';
@@ -55,45 +54,54 @@ function resetPanel() {
     updateSendButtonState();
 }
 
-function switchTab(tabId) {
-    state.activeTab = tabId;
-    elements.tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.target === tabId));
-    elements.panes.forEach(pane => pane.classList.toggle('active', pane.id === tabId));
-    resetPanel();
+// ▼▼▼ 核心重构：新的选项切换逻辑 ▼▼▼
+function switchOption(optionId) {
+    state.activeOption = optionId;
+    elements.optionRows.forEach(row => {
+        row.classList.toggle('active', row.dataset.option === optionId);
+    });
 }
+// ▲▲▲ 重构结束 ▲▲▲
 
 function setLoading(isLoading) {
     state.isLoading = isLoading;
-    elements.previewContainer.classList.toggle('loading', isLoading);
-    updateSendButtonState();
+    // 未来可以添加全局加载指示器
 }
 
+// ▼▼▼ 核心重构：渲染多图预览 ▼▼▼
 function updatePreview() {
-    if (state.previewData) {
-        elements.previewImage.src = state.previewData;
-        elements.previewPlaceholder.style.display = 'none';
-        elements.previewImage.style.display = 'block';
+    elements.multiPreviewContainer.innerHTML = '';
+    if (state.imagesToSend.length > 0) {
+        elements.multiPreviewPlaceholder.style.display = 'none';
+        state.imagesToSend.forEach((item, index) => {
+            const thumb = document.createElement('div');
+            thumb.className = 'preview-thumbnail';
+
+            if (item.type === 'text-photo') {
+                thumb.innerHTML = `<span class="preview-thumbnail-text">${item.text}</span>`;
+            } else if (item.type === 'image') {
+                thumb.innerHTML = `<img src="${item.data}" alt="预览">`;
+            }
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'preview-thumbnail-remove-btn';
+            removeBtn.innerHTML = '&times;';
+            removeBtn.onclick = () => {
+                state.imagesToSend.splice(index, 1);
+                updatePreview();
+                updateSendButtonState();
+            };
+            thumb.appendChild(removeBtn);
+            elements.multiPreviewContainer.appendChild(thumb);
+        });
     } else {
-        elements.previewPlaceholder.style.display = 'flex';
-        elements.previewImage.style.display = 'none';
+        elements.multiPreviewPlaceholder.style.display = 'flex';
     }
 }
+// ▲▲▲ 重构结束 ▲▲▲
 
 function updateSendButtonState() {
-    let canSend = false;
-    if (state.isLoading) {
-        canSend = false;
-    } else {
-        switch (state.activeTab) {
-            case 'text-photo':
-                canSend = elements.textPhotoInput.value.trim().length > 0;
-                break;
-            case 'url-photo':
-            case 'local-photo':
-                canSend = state.previewData !== null;
-                break;
-        }
-    }
+    const canSend = state.imagesToSend.length > 0;
     elements.sendImageBtn.disabled = !canSend;
 }
 
@@ -106,70 +114,63 @@ function fileToDataUrl(file) {
     });
 }
 
-async function handleUrlInput() {
+// ▼▼▼ 核心重构：处理添加图片的逻辑 ▼▼▼
+function handleAddText() {
+    const text = elements.textPhotoInput.value.trim();
+    if (!text) return;
+    state.imagesToSend.push({ type: 'text-photo', text: text });
+    elements.textPhotoInput.value = '';
+    updatePreview();
+    updateSendButtonState();
+}
+
+async function handleAddUrl() {
     const url = elements.urlPhotoInput.value.trim();
-    if (!url || !url.startsWith('http')) {
-        state.previewData = null;
-        updatePreview();
-        updateSendButtonState();
-        return;
-    }
+    if (!url || !url.startsWith('http')) return;
 
     setLoading(true);
-    state.previewData = null;
-    updatePreview();
-
     try {
-        // 使用代理或更安全的方式获取图片以避免CORS问题，这里简化处理
         const response = await fetch(url);
         if (!response.ok) throw new Error('无法加载图片');
         const blob = await response.blob();
-        state.previewData = await fileToDataUrl(blob);
+        const dataUrl = await fileToDataUrl(blob);
+        state.imagesToSend.push({ type: 'image', data: dataUrl });
+        elements.urlPhotoInput.value = '';
+        updatePreview();
+        updateSendButtonState();
     } catch (error) {
         console.error("加载URL图片失败:", error);
-        state.previewData = null;
         alert('图片链接加载失败，请检查URL或网络连接。');
     } finally {
         setLoading(false);
-        updatePreview();
     }
 }
 
-async function handleLocalFileSelect(e) {
-    const file = e.target.files[0];
+async function handleAddLocal(file) {
     if (!file) return;
-
     setLoading(true);
     try {
-        state.previewData = await fileToDataUrl(file);
+        const dataUrl = await fileToDataUrl(file);
+        state.imagesToSend.push({ type: 'image', data: dataUrl });
+        updatePreview();
+        updateSendButtonState();
     } catch (error) {
         console.error("加载本地图片失败:", error);
-        state.previewData = null;
         alert('本地图片加载失败。');
     } finally {
         setLoading(false);
-        updatePreview();
     }
 }
+// ▲▲▲ 重构结束 ▲▲▲
 
 function handleSend() {
-    if (state.isLoading) return;
+    if (state.imagesToSend.length === 0) return;
 
-    let message = { sender: 'user' };
-    switch (state.activeTab) {
-        case 'text-photo':
-            message.type = 'text-photo';
-            message.text = elements.textPhotoInput.value.trim();
-            break;
-        case 'url-photo':
-        case 'local-photo':
-            message.type = 'image';
-            message.data = state.previewData;
-            break;
-    }
-    
     if (onSendCallback) {
-        onSendCallback(message);
+        state.imagesToSend.forEach(item => {
+            const message = { sender: 'user', ...item };
+            onSendCallback(message);
+        });
     }
     closeImageSender();
 }
@@ -179,13 +180,21 @@ function bindEvents() {
         if (e.target === elements.overlay) closeImageSender();
     });
     elements.closeBtn.addEventListener('click', closeImageSender);
-    elements.tabs.forEach(tab => {
-        tab.addEventListener('click', () => switchTab(tab.dataset.target));
+    elements.sendImageBtn.addEventListener('click', handleSend);
+
+    // ▼▼▼ 核心重构：新的事件绑定 ▼▼▼
+    elements.optionRows.forEach(row => {
+        const optionId = row.dataset.option;
+        // 点击整行或单选框切换
+        row.querySelector('.radio-control').addEventListener('click', () => switchOption(optionId));
+        // 点击输入框或按钮时，自动切换到该选项
+        row.querySelector('.option-input').addEventListener('focus', () => switchOption(optionId));
+        row.querySelector('.option-input').addEventListener('click', () => switchOption(optionId));
     });
 
-    elements.textPhotoInput.addEventListener('input', updateSendButtonState);
-    elements.urlPhotoInput.addEventListener('input', handleUrlInput);
-    elements.localPhotoBtn.addEventListener('click', () => elements.localPhotoInput.click());
-    elements.localPhotoInput.addEventListener('change', handleLocalFileSelect);
-    elements.sendImageBtn.addEventListener('click', handleSend);
+    elements.addTextBtn.addEventListener('click', handleAddText);
+    elements.addUrlBtn.addEventListener('click', handleAddUrl);
+    elements.addLocalBtn.addEventListener('click', () => elements.localPhotoInput.click());
+    elements.localPhotoInput.addEventListener('change', e => handleAddLocal(e.target.files[0]));
+    // ▲▲▲ 重构结束 ▲▲▲
 }

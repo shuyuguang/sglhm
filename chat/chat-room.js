@@ -15,9 +15,7 @@ import { initializeEmojiSystem } from './chat-emoji.js';
 import { initializeHeaderMenu } from './chat-header.js';
 import { initializeThemeSystem } from './chat-theme.js';
 import { initializeInputArea } from './chat-input-handler.js';
-// ▼▼▼ 新增引入 ▼▼▼
 import { initializeImageSender, openImageSender } from './chat-image-sender.js';
-// ▲▲▲ 新增结束 ▲▲▲
 
 async function loadHtmlFragments(paths) {
     const fetchPromises = paths.map(path => fetch(path).then(res => res.text()));
@@ -89,6 +87,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             regenerateBtn: document.getElementById('regenerate-btn'),
             continueBtn: document.getElementById('continue-btn'),
             imageActionBtn: document.querySelector('.action-list-item [class*="fa-image"]')?.parentElement,
+            // ▼▼▼ 新增 ▼▼▼
+            textPreviewOverlay: document.getElementById('text-preview-overlay'),
+            textPreviewContent: document.querySelector('#text-preview-overlay .text-preview-content'),
+            // ▲▲▲ 新增结束 ▲▲▲
         };
 
         const state = {
@@ -273,7 +275,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // ▼▼▼ 核心修正：创建通用的用户消息发送函数 ▼▼▼
         async function onSendUserMessage(message) {
             state.chatHistory.push(message);
             await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
@@ -284,10 +285,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         async function handleUserSend() {
             const text = elements.input.value.trim();
             if (text === '') return;
-
             const userMessage = { text, sender: 'user' };
-            await onSendUserMessage(userMessage); // 调用通用函数
-            
+            await onSendUserMessage(userMessage);
             elements.input.value = '';
             elements.input.style.height = 'auto';
             elements.input.focus();
@@ -295,9 +294,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         async function onSendEmoji(emoji) {
             const emojiMessage = { sender: 'user', isEmoji: true, name: emoji.name, data: emoji.data };
-            await onSendUserMessage(emojiMessage); // 调用通用函数
+            await onSendUserMessage(emojiMessage);
         }
-        // ▲▲▲ 修正结束 ▲▲▲
 
         function initializeInteractionModeAndStyle() {
             const updateInteractionModeUI = () => {
@@ -371,6 +369,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elements.continueBtn) elements.continueBtn.addEventListener('click', () => triggerAiResponse('continue'));
 
         elements.chatArea.addEventListener('click', async (e) => {
+            // ▼▼▼ 新增：处理文字图预览点击 ▼▼▼
+            const previewBtn = e.target.closest('.text-photo-preview-btn');
+            if (previewBtn) {
+                const text = previewBtn.dataset.text;
+                elements.textPreviewContent.textContent = text;
+                elements.textPreviewOverlay.classList.add('active');
+                return; // 处理完后直接返回
+            }
+            // ▲▲▲ 新增结束 ▲▲▲
+
             const pagerButton = e.target.closest('.pager-btn');
             if (!pagerButton) return;
 
@@ -390,6 +398,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
             await loadAndRenderHistory();
         });
+        
+        // ▼▼▼ 新增：为文本预览模态框添加关闭事件 ▼▼▼
+        if (elements.textPreviewOverlay) {
+            elements.textPreviewOverlay.addEventListener('click', (e) => {
+                if (e.target === elements.textPreviewOverlay) {
+                    elements.textPreviewOverlay.classList.remove('active');
+                }
+            });
+        }
+        // ▲▲▲ 新增结束 ▲▲▲
 
         const { renderMemoryCards } = initializeMemorySystem(
             { ...elements, ...{
