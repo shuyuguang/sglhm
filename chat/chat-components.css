@@ -224,22 +224,9 @@
 .photo-message-container {
     position: relative;
 }
-.photo-message-caption {
-    position: absolute;
-    bottom: 8px;
-    left: 8px;
-    right: 8px;
-    background-color: rgba(0, 0, 0, 0.5);
-    color: white;
-    padding: 4px 8px;
-    font-size: 0.9em;
-    border-radius: 8px;
-    text-align: center;
-    word-break: break-all;
-    /* ▼▼▼ 修改：给预览按钮留出空间 ▼▼▼ */
-    padding-right: 30px; 
-    /* ▲▲▲ 修改结束 ▲▲▲ */
-}
+
+/* ▼▼▼ 核心修改：删除了 .photo-message-caption 样式 ▼▼▼ */
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
 /* ▼▼▼ 新增：文字图预览按钮样式 ▼▼▼ */
 .text-photo-preview-btn {

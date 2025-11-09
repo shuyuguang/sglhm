@@ -123,12 +123,11 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
                 bubble.innerHTML = `
                     <div class="photo-message-container">
                         <img src="https://i.postimg.cc/wBtdFsGF/tpybxmnh.jpg" alt="文字图" class="message-photo-img">
-                        // ▼▼▼ 修改点：将显示完整文本改为显示占位符 ▼▼▼
-                        <div class="photo-message-caption">文字图</div>
-                        // ▲▲▲ 修改结束 ▲▲▲
+                        {/* ▼▼▼ 核心修改：移除了文字图的文本底栏 ▼▼▼ */}
                         <button class="text-photo-preview-btn" data-text="${escapeHtml(messageGroup.text)}" title="预览文字">
                             <i class="fa-solid fa-eye"></i>
                         </button>
+                        {/* ▲▲▲ 修改结束 ▲▲▲ */}
                     </div>
                 `;
                 break;

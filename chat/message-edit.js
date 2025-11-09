@@ -5,6 +5,18 @@ const LONG_PRESS_THRESHOLD = 400; // 长按阈值，单位：毫秒
 let longPressTimer = null;
 let isLongPress = false;
 
+// ▼▼▼ 新增：HTML转义函数，确保安全 ▼▼▼
+function escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
+// ▲▲▲ 新增结束 ▲▲▲
+
 /**
  * 初始化消息长按和单击事件处理。
  * @param {HTMLElement} container - 消息列表的容器元素 (chatArea)。
@@ -285,12 +297,16 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
         switch(partToRestore.type) {
              case 'text-photo':
                 bubble.classList.add('is-image-message');
+                // ▼▼▼ 核心修改：与 chat-ui.js 的渲染保持一致 ▼▼▼
                 bubble.innerHTML = `
                     <div class="photo-message-container">
                         <img src="https://i.postimg.cc/wBtdFsGF/tpybxmnh.jpg" alt="文字图" class="message-photo-img">
-                        <div class="photo-message-caption">文字图</div>
+                        <button class="text-photo-preview-btn" data-text="${escapeHtml(partToRestore.text)}" title="预览文字">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
                     </div>
                 `;
+                // ▲▲▲ 修改结束 ▲▲▲
                 break;
             case 'image':
                  // 理论上不可编辑，但作为防御性代码
