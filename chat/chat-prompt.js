@@ -1,4 +1,4 @@
-// relia-chat/chat-prompt.js
+// 文件名: relia-chat/chat-prompt.js
 
 import { dbStorage } from '../common/db.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
@@ -8,6 +8,7 @@ function isImageUrl(url) {
     return url.startsWith('http') && /\.(jpeg|jpg|gif|png|webp)$/i.test(url);
 }
 
+// ▼▼▼ 核心修复：整合为一个通用的流处理函数，并恢复正确的函数定义 ▼▼▼
 async function processStream(context, splitter) {
     const { reader, decoder, emojis } = context;
     let rawStreamBuffer = '';
@@ -37,7 +38,6 @@ async function processStream(context, splitter) {
         const messageParts = cleanFullStream.split(splitter); 
         const messages = [];
 
-        // ▼▼▼ 核心修改：增加链接卡片解析逻辑 ▼▼▼
         const emojiRegex = /^\[Emoji:\s*(.*?)\s*\]$/;
         const linkRegex = /^\[Link:\s*(.*?)\s*\]$/; 
 
@@ -56,14 +56,14 @@ async function processStream(context, splitter) {
                 }
             } else if (linkMatch && linkMatch[1]) {
                 const parts = linkMatch[1].split('|').map(p => p.trim());
-                if (parts.length >= 3) { // 至少需要 URL, Title, Description
+                if (parts.length >= 3) {
                     messages.push({
                         type: 'link',
                         sender: 'character',
                         url: parts[0],
                         title: parts[1],
                         description: parts[2],
-                        image: parts[3] || '' // 图片是可选的
+                        image: parts[3] || ''
                     });
                 }
             } else if (isImageUrl(trimmedPart)) {
@@ -72,7 +72,6 @@ async function processStream(context, splitter) {
                 messages.push({ sender: 'character', text: trimmedPart });
             }
         });
-        // ▲▲▲ 修改结束 ▲▲▲
         
         return messages;
 
@@ -82,67 +81,16 @@ async function processStream(context, splitter) {
     }
 }
 
-async function dialogueStreamHandler(context) {
-    const { reader, decoder, emojis } = context; // <-- [新增] 获取 emojis 列表
-    let rawStreamBuffer = '';
-    
-    try {
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n\n');
-            for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const dataStr = line.substring(6);
-                    if (dataStr === '[DONE]') continue;
-                    try {
-                        const data = JSON.parse(dataStr);
-                        const content = data.choices[0]?.delta?.content;
-                        if (content) {
-                            rawStreamBuffer += content;
-                        }
-                    } catch (e) { /* 忽略不完整的JSON */ }
-                }
-            }
-        }
-
-        const cleanFullStream = rawStreamBuffer.replace(/\(thought[\s\S]*?\)/g, '');
-        // [核心修改] 这里是你提到的关键点，把 [split] 改成换行符
-        const messageParts = cleanFullStream.split(/(\r\n|\n|\r)/); 
-        const messages = [];
-
-        // ======================== [核心修改] ========================
-        const emojiRegex = /^\[Emoji:\s*(.*?)\s*\]$/; // 同样的正则表达式
-
-        messageParts.forEach(part => {
-            const trimmedPart = part.trim();
-            if (!trimmedPart) return;
-
-            const match = trimmedPart.match(emojiRegex);
-            if (match && match[1]) {
-                const emojiName = match[1];
-                const foundEmoji = emojis.find(e => e.name === emojiName);
-                if (foundEmoji) {
-                    messages.push({ sender: 'character', isEmoji: true, data: foundEmoji.data, name: foundEmoji.name });
-                }
-            } else if (isImageUrl(trimmedPart)) {
-                messages.push({ sender: 'character', isEmoji: true, data: trimmedPart, name: 'AI表情' });
-            } else {
-                messages.push({ sender: 'character', text: trimmedPart });
-            }
-        });
-        // ==========================================================
-        
-        return messages;
-
-    } catch (error) {
-        console.error("Dialogue stream handling error:", error);
-        return [{ sender: 'character', text: `抱歉，处理对话时出错: ${error.message}` }];
-    }
+async function defaultStreamHandler(context) {
+    // 默认使用换行符作为分隔
+    return processStream(context, /(\r\n|\n|\r)/);
 }
 
-
+async function dialogueStreamHandler(context) {
+    // 对话体也使用换行符分隔
+    return processStream(context, /(\r\n|\n|\r)/);
+}
+// ▲▲▲ 修复结束 ▲▲▲
 
 export const CHAT_STYLES = {
     'dialogue': {
@@ -171,7 +119,6 @@ export const CHAT_STYLES = {
     }
 };
 
-// ▼▼▼ 核心修改：导出默认设置，以便全局使用 ▼▼▼
 export const STYLE_DEFAULT_SETTINGS = {
     'dialogue': {
         outputMin: '2',
@@ -198,7 +145,7 @@ export const STYLE_DEFAULT_SETTINGS = {
         memoryLimit: '15'
     }
 };
-// ▲▲▲ 修改结束 ▲▲▲
+
 
 export function createChatPromptPanel({ triggerElement, container, onSave, charId }) {
 
