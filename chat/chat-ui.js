@@ -89,14 +89,15 @@ function escapeHtml(unsafe) {
 
 
 /**
- * 在聊天区域渲染一个完整的消息组（可能包含多个气泡）。
+ * 根据消息数据创建一个消息组的DOM元素。
  * @param {object} messageGroup - 消息组对象。
  * @param {number} index - 消息组在历史记录中的索引。
  * @param {object} user - 当前用户对象。
  * @param {object} character - 当前角色对象。
- * @param {HTMLElement} chatArea - 聊天消息容器元素。
+ * @returns {HTMLElement} - 创建的消息组容器元素。
  */
-export function renderMessageGroup(messageGroup, index, user, character, chatArea) {
+export function renderMessageGroup(messageGroup, index, user, character) {
+    // ▼▼▼ 核心修改 ①：移除 chatArea 参数 ▼▼▼
     const { sender, type } = messageGroup; 
     
     const messageGroupContainer = document.createElement('div');
@@ -251,7 +252,9 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
         }
     }
     
-    chatArea.appendChild(messageGroupContainer);
+    // ▼▼▼ 核心修改 ②：返回创建的元素，而不是直接添加 ▼▼▼
+    return messageGroupContainer;
+    // ▲▲▲ 修改结束 ▲▲▲
 }
 
 

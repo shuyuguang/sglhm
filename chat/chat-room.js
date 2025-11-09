@@ -226,7 +226,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             processedMessages.forEach((messageGroup, index) => {
                 const originalIndex = state.visualHistoryStartIndex + index;
-                renderMessageGroup(messageGroup, originalIndex, user, character, elements.chatArea);
+                // ▼▼▼ 核心修改 ①：调用修改后的 renderMessageGroup 并手动 append ▼▼▼
+                const messageGroupElement = renderMessageGroup(messageGroup, originalIndex, user, character);
+                elements.chatArea.appendChild(messageGroupElement);
+                // ▲▲▲ 修改结束 ▲▲▲
             });
 
             if (!loadMore) {
@@ -234,39 +237,33 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         
-        // ▼▼▼ 【核心修改 ①】重写按钮状态控制函数 ▼▼▼
         function updateButtonStates() {
             if (!elements.input || !elements.respondBtn || !elements.sendBtn) return;
         
             const respondBtnIcon = elements.respondBtn.querySelector('i');
         
-            // 最高优先级：如果AI正在回复，显示“停止”按钮
             if (isAiReplying) {
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
-                if (respondBtnIcon) respondBtnIcon.className = 'fa-solid fa-stop'; // 变成停止图标
-                elements.respondBtn.classList.add('blinking'); // 保持闪烁
-                return; // 结束函数
+                if (respondBtnIcon) respondBtnIcon.className = 'fa-solid fa-stop';
+                elements.respondBtn.classList.add('blinking');
+                return;
             }
         
-            // AI未回复时，移除闪烁和停止图标
             if (respondBtnIcon) respondBtnIcon.className = 'fa-regular fa-paper-plane';
             elements.respondBtn.classList.remove('blinking');
         
             const hasText = elements.input.value.trim() !== '';
         
-            // 第二优先级：如果输入框有文本，显示“发送”按钮
             if (hasText) {
                 elements.respondBtn.style.display = 'none';
                 elements.sendBtn.style.display = 'flex';
             } 
-            // 最低优先级：如果输入框为空，显示“响应”按钮
             else {
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
             }
         }
-        // ▲▲▲ 修改结束 ▲▲▲
         
         const onAiReply = async (action) => {
             const { mode, data: replyMessages } = action;
@@ -322,7 +319,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             getIsAiReplying: () => isAiReplying,
             setIsAiReplying: (value) => { 
                 isAiReplying = value; 
-                updateButtonStates(); // isAiReplying 变化时立即更新按钮
+                updateButtonStates();
             },
             setAbortController: (controller) => { currentAbortController = controller; },
             getStyleSettings: () => {
@@ -345,7 +342,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             await onSendUserMessage(userMessage);
             elements.input.value = '';
             elements.input.style.height = 'auto';
-            updateButtonStates(); // 手动更新一次，确保文本清空后按钮状态正确
+            updateButtonStates();
             elements.input.focus();
         }
 
@@ -426,39 +423,55 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elements.regenerateBtn) elements.regenerateBtn.addEventListener('click', () => triggerAiResponse('regenerate'));
         if (elements.continueBtn) elements.continueBtn.addEventListener('click', () => triggerAiResponse('continue'));
 
+        // ▼▼▼ 核心修改 ②：重写 chatArea 的 click 监听器 ▼▼▼
         elements.chatArea.addEventListener('click', async (e) => {
+            // 处理图片链接点击
             const imageLink = e.target.closest('.is-image-message a');
             if (imageLink) {
                 e.preventDefault(); 
             }
 
+            // 处理文字图预览按钮
             const previewBtn = e.target.closest('.text-photo-preview-btn');
             if (previewBtn) {
                 const text = previewBtn.dataset.text;
                 elements.textPreviewContent.textContent = text;
                 elements.textPreviewOverlay.classList.add('active');
-                return; 
+                return; // 结束，不处理其他逻辑
             }
 
+            // 处理分页器按钮
             const pagerButton = e.target.closest('.pager-btn');
-            if (!pagerButton) return;
+            if (pagerButton) {
+                const messageGroupContainer = pagerButton.closest('.message-group-container');
+                const index = parseInt(messageGroupContainer.dataset.index, 10);
+                const action = pagerButton.dataset.action;
+                const messageData = state.chatHistory[index];
 
-            const messageGroup = pagerButton.closest('.message-group-container');
-            const index = parseInt(messageGroup.dataset.index, 10);
-            const action = pagerButton.dataset.action;
-            
-            const messageData = state.chatHistory[index];
-            if (!messageData) return;
+                if (!messageData) return;
 
-            if (action === 'prev' && messageData.activeReplyIndex > 0) {
-                messageData.activeReplyIndex--;
-            } else if (action === 'next' && messageData.activeReplyIndex < messageData.replyVersions.length - 1) {
-                messageData.activeReplyIndex++;
+                let changed = false;
+                if (action === 'prev' && messageData.activeReplyIndex > 0) {
+                    messageData.activeReplyIndex--;
+                    changed = true;
+                } else if (action === 'next' && messageData.activeReplyIndex < messageData.replyVersions.length - 1) {
+                    messageData.activeReplyIndex++;
+                    changed = true;
+                }
+
+                if (changed) {
+                    await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
+                    
+                    // 精准DOM更新，而不是全量刷新
+                    const oldGroup = elements.chatArea.querySelector(`.message-group-container[data-index="${index}"]`);
+                    if (oldGroup) {
+                        const newGroup = renderMessageGroup(messageData, index, user, character);
+                        oldGroup.replaceWith(newGroup);
+                    }
+                }
             }
-
-            await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
-            await loadAndRenderHistory();
         });
+        // ▲▲▲ 修改结束 ▲▲▲
         
         if (elements.textPreviewOverlay) {
             elements.textPreviewOverlay.addEventListener('click', (e) => {
@@ -601,7 +614,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         appContainer.innerHTML = `<p style="text-align: center;">页面加载时发生严重错误。</p>`;
     }
 
-    window.addEventListener('unload', () => {
+    // ▼▼▼ 核心修改 ③：修复 unload 弃用警告 ▼▼▼
+    // 使用 'pagehide' 事件替代 'unload' 来清理资源
+    window.addEventListener('pagehide', () => {
         blobUrlManager.cleanup();
     });
+    // ▲▲▲ 修改结束 ▲▲▲
 });
