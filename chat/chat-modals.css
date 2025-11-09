@@ -540,12 +540,11 @@
 /* .modal-footer.footer-center { ... } */
 /* --- ▲▲▲ 重构结束 ▲▲▲ --- */
 
-/* --- ▼▼▼ 新增：文字图预览模态框样式 ▼▼▼ --- */
+/* --- ▼▼▼ 核心修改：调整文字图预览模态框样式 ▼▼▼ --- */
 .simple-text-overlay {
     z-index: 300;
-    /* ▼▼▼ 修改点：移除了黑色背景 ▼▼▼ */
-    background-color: transparent;
-    /* ▲▲▲ 修改结束 ▲▲▲ */
+    background-color: transparent; /* 确保背景是透明的，移除深色遮罩 */
+    backdrop-filter: none; /* 确保没有任何模糊效果 */
     padding: 20px;
     align-items: center; /* 垂直居中 */
 }
@@ -562,8 +561,7 @@
     line-height: 1.6;
     white-space: pre-wrap;
     word-wrap: break-word;
-    /* ▼▼▼ 新增：添加阴影以在透明背景下突出内容 ▼▼▼ */
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
-    /* ▲▲▲ 新增结束 ▲▲▲ */
+    box-shadow: none; /* 移除了阴影效果，使面板更干净 */
+    border: 1px solid var(--border-color); /* 添加一个细边框以区分边界 */
 }
-/* --- ▲▲▲ 新增结束 ▲▲▲ --- */
+/* --- ▲▲▲ 修改结束 ▲▲▲ --- */
