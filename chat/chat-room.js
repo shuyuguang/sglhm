@@ -17,6 +17,38 @@ import { initializeThemeSystem } from './chat-theme.js';
 import { initializeInputArea } from './chat-input-handler.js';
 import { initializeImageSender, openImageSender } from './chat-image-sender.js';
 
+// ▼▼▼ [新增] Blob URL 管理器，解决Base64超长链接问题 ▼▼▼
+const blobUrlManager = {
+    cache: new Map(), // 使用 Map 来缓存 Data URL -> Blob URL 的转换结果
+    
+    // 将 Data URL 转换为 Blob URL
+    async dataUrlToBlobUrl(dataUrl) {
+        if (this.cache.has(dataUrl)) {
+            return this.cache.get(dataUrl);
+        }
+        try {
+            const response = await fetch(dataUrl);
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            this.cache.set(dataUrl, blobUrl); // 缓存结果
+            return blobUrl;
+        } catch (error) {
+            console.error("Data URL to Blob URL conversion failed:", error);
+            return dataUrl; // 转换失败则返回原始URL
+        }
+    },
+    
+    // 清理所有创建的 Blob URL，防止内存泄漏
+    cleanup() {
+        for (const blobUrl of this.cache.values()) {
+            URL.revokeObjectURL(blobUrl);
+        }
+        this.cache.clear();
+        console.log("Blob URLs cleaned up.");
+    }
+};
+// ▲▲▲ [新增] 结束 ▲▲▲
+
 async function loadHtmlFragments(paths) {
     const fetchPromises = paths.map(path => fetch(path).then(res => res.text()));
     const htmlStrings = await Promise.all(fetchPromises);
@@ -87,10 +119,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             regenerateBtn: document.getElementById('regenerate-btn'),
             continueBtn: document.getElementById('continue-btn'),
             imageActionBtn: document.querySelector('.action-list-item [class*="fa-image"]')?.parentElement,
-            // ▼▼▼ 新增 ▼▼▼
             textPreviewOverlay: document.getElementById('text-preview-overlay'),
             textPreviewContent: document.querySelector('#text-preview-overlay .text-preview-content'),
-            // ▲▲▲ 新增结束 ▲▲▲
         };
 
         const state = {
@@ -158,6 +188,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elements.userProfileEditAvatar) elements.userProfileEditAvatar.src = user.avatar;
         if (elements.userProfileEditName) elements.userProfileEditName.textContent = user.name;
         
+        // ▼▼▼ [修改] 替换整个函数 ▼▼▼
         async function loadAndRenderHistory(loadMore = false) {
             const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle) || 'dialogue';
             const settings = state.styleSettings[currentStyleKey] || STYLE_DEFAULT_SETTINGS[currentStyleKey];
@@ -171,6 +202,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             const messagesToRender = state.chatHistory.slice(state.visualHistoryStartIndex);
             
+            // 核心修改：异步预处理消息，将图片的 dataURL 转为 blobURL
+            const processedMessages = await Promise.all(messagesToRender.map(async (msg) => {
+                if (msg.sender === 'user' && msg.type === 'image' && msg.data.startsWith('data:')) {
+                    const blobUrl = await blobUrlManager.dataUrlToBlobUrl(msg.data);
+                    // 使用一个新属性来存储渲染用的URL，不修改原始数据
+                    return { ...msg, renderData: blobUrl };
+                }
+                return msg;
+            }));
+
             elements.chatArea.innerHTML = '';
 
             if (state.visualHistoryStartIndex > 0) {
@@ -180,7 +221,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 loadMoreBtn.onclick = () => loadAndRenderHistory(true);
                 elements.chatArea.appendChild(loadMoreBtn);
             }
-            messagesToRender.forEach((messageGroup, index) => {
+
+            processedMessages.forEach((messageGroup, index) => {
                 const originalIndex = state.visualHistoryStartIndex + index;
                 renderMessageGroup(messageGroup, originalIndex, user, character, elements.chatArea);
             });
@@ -189,6 +231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 setTimeout(() => elements.chatArea.scrollTop = elements.chatArea.scrollHeight, 0);
             }
         }
+        // ▲▲▲ [修改] 结束 ▲▲▲
         
         function updateButtonStates() {
             if (!elements.input || !elements.respondBtn || !elements.sendBtn) return;
@@ -369,23 +412,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elements.continueBtn) elements.continueBtn.addEventListener('click', () => triggerAiResponse('continue'));
 
         elements.chatArea.addEventListener('click', async (e) => {
-            // ▼▼▼ 核心修复：阻止图片链接的默认跳转行为 ▼▼▼
             const imageLink = e.target.closest('.is-image-message a');
             if (imageLink) {
-                // 只阻止默认跳转，不停止事件冒泡，这样 message-edit.js 才能接收到点击
                 e.preventDefault(); 
             }
-            // ▲▲▲ 修复结束 ▲▲▲
 
-            // ▼▼▼ 新增：处理文字图预览点击 ▼▼▼
             const previewBtn = e.target.closest('.text-photo-preview-btn');
             if (previewBtn) {
                 const text = previewBtn.dataset.text;
                 elements.textPreviewContent.textContent = text;
                 elements.textPreviewOverlay.classList.add('active');
-                return; // 处理完后直接返回
+                return; 
             }
-            // ▲▲▲ 新增结束 ▲▲▲
 
             const pagerButton = e.target.closest('.pager-btn');
             if (!pagerButton) return;
@@ -407,7 +445,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             await loadAndRenderHistory();
         });
         
-        // ▼▼▼ 新增：为文本预览模态框添加关闭事件 ▼▼▼
         if (elements.textPreviewOverlay) {
             elements.textPreviewOverlay.addEventListener('click', (e) => {
                 if (e.target === elements.textPreviewOverlay) {
@@ -415,7 +452,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
-        // ▲▲▲ 新增结束 ▲▲▲
 
         const { renderMemoryCards } = initializeMemorySystem(
             { ...elements, ...{
@@ -545,4 +581,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error("页面初始化时发生严重错误:", error);
         appContainer.innerHTML = `<p style="text-align: center;">页面加载时发生严重错误。</p>`;
     }
+
+    // ▼▼▼ [新增] 页面卸载时清理 Blob URL ▼▼▼
+    window.addEventListener('unload', () => {
+        blobUrlManager.cleanup();
+    });
+    // ▲▲▲ [新增] 结束 ▲▲▲
 });

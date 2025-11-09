@@ -9,6 +9,24 @@ function isImageUrl(url) {
     return url.toLowerCase().startsWith('http') && /\.(jpeg|jpg|gif|png|webp)$/i.test(url);
 }
 
+// ▼▼▼ [新增] Blob URL 转 Data URL 的辅助函数 ▼▼▼
+function blobUrlToDataUrl(blobUrl) {
+    return new Promise((resolve, reject) => {
+        fetch(blobUrl)
+            .then(res => res.blob())
+            .then(blob => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    resolve(reader.result);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            })
+            .catch(reject);
+    });
+}
+// ▲▲▲ [新增] 结束 ▲▲▲
+
 async function constructSystemPrompt(charProfile, userProfile, currentChatStyle, styleSettings) {
     let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
     prompt += `### 角色设定\n`;
@@ -59,30 +77,30 @@ async function constructSystemPrompt(charProfile, userProfile, currentChatStyle,
     return prompt;
 }
 
-function formatChatHistoryForApi(history) {
-    const formatted = [];
-    history.forEach(msg => {
+// ▼▼▼ [修改] 替换整个函数 ▼▼▼
+async function formatChatHistoryForApi(history) {
+    const formattedPromises = history.map(async (msg) => {
         if (msg.sender === 'user') {
-            // ▼▼▼ 核心修改：处理多模态用户消息 ▼▼▼
             let content;
             switch(msg.type) {
                 case 'text-photo':
                     content = `[Photo: ${msg.text}]`;
-                    formatted.push({ role: 'user', content: content });
-                    break;
+                    return { role: 'user', content: content };
                 case 'image':
+                    let imageUrlForApi = msg.data;
+                    // 核心修改：如果数据是 blob URL，则转换回 data URL
+                    if (imageUrlForApi.startsWith('blob:')) {
+                        imageUrlForApi = await blobUrlToDataUrl(imageUrlForApi);
+                    }
                     content = [
                         { type: 'text', text: '用户发送了一张图片。' },
-                        { type: 'image_url', image_url: { url: msg.data } }
+                        { type: 'image_url', image_url: { url: imageUrlForApi } }
                     ];
-                    formatted.push({ role: 'user', content: content });
-                    break;
+                    return { role: 'user', content: content };
                 default: // 兼容旧文本和表情
                     content = msg.isEmoji ? `[Emoji: ${msg.name}]` : msg.text;
-                    formatted.push({ role: 'user', content: content });
-                    break;
+                    return { role: 'user', content: content };
             }
-            // ▲▲▲ 修改结束 ▲▲▲
         } else if (msg.sender === 'character') {
             const activeVersion = msg.replyVersions[msg.activeReplyIndex];
             const content = activeVersion.map(part => {
@@ -91,11 +109,16 @@ function formatChatHistoryForApi(history) {
                 }
                 return part.text;
             }).join('\n');
-            formatted.push({ role: 'assistant', content });
+            return { role: 'assistant', content };
         }
+        return null; // 对于不应格式化的消息返回null
     });
+
+    // 等待所有转换完成，并过滤掉null值
+    const formatted = (await Promise.all(formattedPromises)).filter(Boolean);
     return formatted;
 }
+// ▲▲▲ [修改] 结束 ▲▲▲
 
 export function createApiHandler(context) {
     const {
@@ -115,8 +138,6 @@ export function createApiHandler(context) {
         const memoryLimit = parseInt(currentStyleSettings.memoryLimit, 10) || 15;
         const memoryInMsgCount = memoryLimit * 2;
         
-        // ▼▼▼ 核心修改：移除了在此处添加用户消息的逻辑 ▼▼▼
-        // 检查是否可以触发AI
         const lastMessage = state.chatHistory[state.chatHistory.length - 1];
         if (!state.currentChatApi) {
             alert('请先点击“选择模型”按钮选择一个牵引仪模型！');
@@ -126,12 +147,10 @@ export function createApiHandler(context) {
             alert('还没有聊天记录，无法触发AI。');
             return;
         }
-         // 在'new'模式下，AI必须在用户发言后才能响应
         if (mode === 'new' && lastMessage.sender !== 'user') {
             console.log("AI can only respond after a user message.");
             return;
         }
-        // ▲▲▲ 修改结束 ▲▲▲
 
         setIsAiReplying(true);
         elements.respondBtn.classList.add('blinking');
@@ -162,7 +181,9 @@ export function createApiHandler(context) {
             } else if (mode === 'continue') {
                 if (lastMessage.sender !== 'character') throw new Error("最后一条消息不是AI的回复，无法继续。");
                 historyForApi = state.chatHistory;
-                 messagesForApi.push(...formatChatHistoryForApi(historyForApi));
+                 // ▼▼▼ [修改] 添加 await ▼▼▼
+                 messagesForApi.push(...await formatChatHistoryForApi(historyForApi));
+                 // ▲▲▲ [修改] 结束 ▲▲▲
                  messagesForApi.push({ role: 'user', content: '[继续]' });
                  historyForApi = [];
 
@@ -171,7 +192,9 @@ export function createApiHandler(context) {
             }
 
             const recentHistory = historyForApi.slice(-memoryInMsgCount);
-            messagesForApi.push(...formatChatHistoryForApi(recentHistory));
+            // ▼▼▼ [修改] 添加 await ▼▼▼
+            messagesForApi.push(...await formatChatHistoryForApi(recentHistory));
+            // ▲▲▲ [修改] 结束 ▲▲▲
 
             const endpoint = (state.currentChatApi.baseUrl.replace(/\/$/, '')) + (state.currentChatApi.path || '/v1/chat/completions');
             const payload = { model: state.currentChatApi.model, messages: messagesForApi, stream: true };

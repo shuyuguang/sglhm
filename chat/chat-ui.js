@@ -83,10 +83,8 @@ function escapeHtml(unsafe) {
          .replace(/&/g, "&amp;")
          .replace(/</g, "&lt;")
          .replace(/>/g, "&gt;")
-         // ▼▼▼ 核心修复：补全了对引号的转义 ▼▼▼
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#039;");
-         // ▲▲▲ 修复结束 ▲▲▲
 }
 
 
@@ -99,7 +97,7 @@ function escapeHtml(unsafe) {
  * @param {HTMLElement} chatArea - 聊天消息容器元素。
  */
 export function renderMessageGroup(messageGroup, index, user, character, chatArea) {
-    const { sender, type } = messageGroup; // <-- 新增 type
+    const { sender, type } = messageGroup; 
     
     const messageGroupContainer = document.createElement('div');
     messageGroupContainer.className = 'message-group-container';
@@ -116,7 +114,6 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
         const bubble = document.createElement('div');
         bubble.className = `chat-bubble ${sender}`;
 
-        // ▼▼▼ 核心修改：根据消息类型渲染 ▼▼▼
         switch(type) {
             case 'text-photo':
                 bubble.classList.add('is-image-message');
@@ -131,15 +128,18 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
                     </div>
                 `;
                 break;
+            // ▼▼▼ [修改] 替换 case 'image' 的内容 ▼▼▼
             case 'image':
-    bubble.classList.add('is-image-message');
-    // 核心修改：将图片用 a 标签包裹，点击可查看原图
-    bubble.innerHTML = `
-        <a href="${messageGroup.data}" target="_blank" title="点击查看大图">
-            <img src="${messageGroup.data}" alt="用户图片" class="message-photo-img">
-        </a>
-    `;
-    break;
+                bubble.classList.add('is-image-message');
+                // 核心修改：优先使用预处理过的 renderData (Blob URL)，否则使用原始 data
+                const imageUrl = messageGroup.renderData || messageGroup.data;
+                bubble.innerHTML = `
+                    <a href="${imageUrl}" target="_blank" title="点击查看大图">
+                        <img src="${imageUrl}" alt="用户图片" class="message-photo-img">
+                    </a>
+                `;
+                break;
+            // ▲▲▲ [修改] 结束 ▲▲▲
             default: // 兼容旧的文本和表情消息
                 if (messageGroup.isEmoji) {
                     bubble.classList.add('is-emoji-message');
@@ -149,7 +149,6 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
                 }
                 break;
         }
-        // ▲▲▲ 修改结束 ▲▲▲
 
         messageRow.appendChild(avatar);
         messageRow.appendChild(bubble);
@@ -159,12 +158,11 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
         const activeReplyIndex = messageGroup.activeReplyIndex || 0;
         const currentReplyVersion = messageGroup.replyVersions[activeReplyIndex];
 
-        // ▼▼▼ 核心修改：为AI的每个消息气泡添加 partIndex ▼▼▼
         currentReplyVersion.forEach((messagePart, partIndex) => {
             const { isEmoji, data, text } = messagePart;
             const messageRow = document.createElement('div');
             messageRow.className = `message-row ${sender}`;
-            messageRow.dataset.partIndex = partIndex; // 添加部分索引
+            messageRow.dataset.partIndex = partIndex; 
             
             const avatar = document.createElement('img');
             avatar.className = 'message-avatar';
@@ -184,7 +182,6 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
             messageRow.appendChild(bubble);
             messageGroupContainer.appendChild(messageRow);
         });
-        // ▲▲▲ 修改结束 ▲▲▲
 
         if (messageGroup.replyVersions.length > 1) {
             const pager = document.createElement('div');
