@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const state = {
             chatHistory: [],
             memories: [],
-            emojis: [], // ▼▼▼ 核心修改：新增emojis状态 ▼▼▼
+            emojis: [],
             backgrounds: [],
             activeBackground: null,
             isBgMultiSelectMode: false,
@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             selectedApiKey: `${CHAT_DB_KEYS.CHAT_SELECTED_API}_${charId}`,
             styleDbKey: `${CHAT_DB_KEYS.CHAT_HISTORY}_style_${charId}`,
             memoryDbKey: `relia-chat-memory_${charId}`,
-            emojiDbKey: CHAT_DB_KEYS.EMOJIS, // ▼▼▼ 核心修改：添加emoji的DB Key ▼▼▼
+            emojiDbKey: CHAT_DB_KEYS.EMOJIS,
             diyDbKey: `relia-chat-diy-enabled_${charId}`,
             bgDbKey: `relia-chat-global-backgrounds`,
             activeBgDbKey: `relia-chat-active-background_${charId}`,
@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.querySelector('.char-info-avatar').src = character.avatar;
             if (elements.charProfileEditAvatar) elements.charProfileEditAvatar.src = character.avatar;
             if (elements.charProfileEditName) elements.charProfileEditName.textContent = character.name;
-            await loadAndRenderHistory(); // Re-render to update avatars
+            await loadAndRenderHistory();
             chatEditor?.updateProfile(character);
         };
 
@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             await dbStorage.setItem(PROFILE_DB_KEYS.USER_PROFILES, allUsers);
             if (elements.userProfileEditAvatar) elements.userProfileEditAvatar.src = user.avatar;
             if (elements.userProfileEditName) elements.userProfileEditName.textContent = user.name;
-            await loadAndRenderHistory(); // Re-render to update avatars
+            await loadAndRenderHistory();
             userEditor?.updateProfile(user);
         };
         
@@ -187,11 +187,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         function updateButtonStates() {
             if (!elements.input || !elements.respondBtn || !elements.sendBtn) return;
             const hasText = elements.input.value.trim() !== '';
+            const lastMessage = state.chatHistory[state.chatHistory.length - 1];
+            // 只有当最后一条消息是用户消息时，响应按钮才可用
+            const canRespond = lastMessage && lastMessage.sender === 'user';
 
             if (isAiReplying) {
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
-                elements.respondBtn.disabled = false;
+                elements.respondBtn.disabled = false; // 允许点击以中断
                 elements.sendBtn.disabled = true;
                 return;
             }
@@ -203,7 +206,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else {
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
-                elements.respondBtn.disabled = false;
+                // ▼▼▼ 核心修改：响应按钮的可用状态判断 ▼▼▼
+                elements.respondBtn.disabled = !canRespond;
+                // ▲▲▲ 修改结束 ▲▲▲
             }
         }
         
@@ -251,11 +256,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (shouldReRender) {
                 await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
                 await loadAndRenderHistory();
+                updateButtonStates(); // AI回复后更新按钮状态
             }
         };
-        
-        const handleSendMessage = createApiHandler({
-            state, elements, character, user, historyKey: dbKeys.historyKey, dbStorage,
+
+        const triggerAiResponse = createApiHandler({
+            state, elements, character, user,
             renderSystemMessage, updateButtonStates, onAiReply,
             getIsAiReplying: () => isAiReplying,
             setIsAiReplying: (value) => { isAiReplying = value; },
@@ -265,6 +271,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return state.styleSettings[currentStyleKey];
             }
         });
+
+        // ▼▼▼ 核心修改：新增一个独立的“用户发送”函数 ▼▼▼
+        async function handleUserSend() {
+            const text = elements.input.value.trim();
+            if (text === '') return;
+
+            const userMessage = { text, sender: 'user' };
+            state.chatHistory.push(userMessage);
+            await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
+            
+            await loadAndRenderHistory();
+            
+            elements.input.value = '';
+            elements.input.style.height = 'auto';
+            updateButtonStates();
+            elements.input.focus();
+        }
+        // ▲▲▲ 修改结束 ▲▲▲
 
         async function onSendEmoji(emoji) {
             const emojiMessage = { sender: 'user', isEmoji: true, name: emoji.name, data: emoji.data };
@@ -332,15 +356,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
         
-        if (elements.sendBtn) elements.sendBtn.addEventListener('click', () => handleSendMessage('new'));
+        // ▼▼▼ 核心修改：分离发送和响应的点击事件 ▼▼▼
+        if (elements.sendBtn) elements.sendBtn.addEventListener('click', handleUserSend);
         if (elements.respondBtn) {
             elements.respondBtn.addEventListener('click', () => {
-                if (isAiReplying) currentAbortController?.abort();
-                else handleSendMessage('new');
+                if (isAiReplying) {
+                    currentAbortController?.abort();
+                } else {
+                    triggerAiResponse('new');
+                }
             });
         }
-        if (elements.regenerateBtn) elements.regenerateBtn.addEventListener('click', () => handleSendMessage('regenerate'));
-        if (elements.continueBtn) elements.continueBtn.addEventListener('click', () => handleSendMessage('continue'));
+        if (elements.regenerateBtn) elements.regenerateBtn.addEventListener('click', () => triggerAiResponse('regenerate'));
+        if (elements.continueBtn) elements.continueBtn.addEventListener('click', () => triggerAiResponse('continue'));
+        // ▲▲▲ 修改结束 ▲▲▲
 
         elements.chatArea.addEventListener('click', async (e) => {
             const pagerButton = e.target.closest('.pager-btn');
@@ -414,7 +443,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         initializeInputArea(elements, updateButtonStates, state, dbKeys.diyDbKey, dbStorage);
         
         async function initializeChatState() {
-            // ▼▼▼ 核心修改：在Promise.all中增加emojis的读取 ▼▼▼
             const [savedHistory, savedStyleKey, savedApi, savedDiyEnabled, savedBackgrounds, savedActiveBg, savedStyleSettings, savedEmojis] = await Promise.all([
                 dbStorage.getItem(dbKeys.historyKey),
                 dbStorage.getItem(dbKeys.styleDbKey),
@@ -432,7 +460,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             state.isDiyEnabled = savedDiyEnabled || false;
             if (elements.diySwitch) elements.diySwitch.checked = state.isDiyEnabled;
             state.backgrounds = savedBackgrounds || [];
-            state.emojis = savedEmojis || []; // ▼▼▼ 核心修改：将读取到的emojis存入state ▼▼▼
+            state.emojis = savedEmojis || [];
             
             const finalSettings = {};
             const savedSettings = savedStyleSettings || {};
@@ -456,7 +484,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             initializeInteractionModeAndStyle();
 
             const getChatHistory = () => state.chatHistory;
-            const getEmojis = () => state.emojis; // ▼▼▼ 核心修改：创建获取emojis的函数 ▼▼▼
+            const getEmojis = () => state.emojis;
             const updateChatHistory = async (newHistory) => {
                 state.chatHistory = newHistory;
                 await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
@@ -464,7 +492,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 updateButtonStates();
             };
             
-            // ▼▼▼ 核心修改：将getEmojis函数传递给菜单初始化函数 ▼▼▼
             initializeMessageMenu(elements.chatArea, getChatHistory, updateChatHistory, getEmojis);
             
             initializeEmojiSystem(

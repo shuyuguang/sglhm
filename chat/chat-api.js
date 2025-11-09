@@ -59,19 +59,19 @@ async function constructSystemPrompt(charProfile, userProfile, currentChatStyle,
     return prompt;
 }
 
-/**
- * ▼▼▼ 核心修改：更新此函数以处理新的复杂历史记录结构 ▼▼▼
- */
 function formatChatHistoryForApi(history) {
     const formatted = [];
     history.forEach(msg => {
         if (msg.sender === 'user') {
-            formatted.push({ role: 'user', content: msg.text });
+            // ▼▼▼ 核心修改：用户发送的表情也需要格式化 ▼▼▼
+            const content = msg.isEmoji ? `[Emoji: ${msg.name}]` : msg.text;
+            formatted.push({ role: 'user', content: content });
+            // ▲▲▲ 修改结束 ▲▲▲
         } else if (msg.sender === 'character') {
             const activeVersion = msg.replyVersions[msg.activeReplyIndex];
             const content = activeVersion.map(part => {
                 if (part.isEmoji) {
-                    return `[发送了表情: ${part.name || '未命名表情'}]`;
+                    return `[Emoji: ${part.name}]`;
                 }
                 return part.text;
             }).join('\n');
@@ -81,23 +81,13 @@ function formatChatHistoryForApi(history) {
     return formatted;
 }
 
-
-/**
- * 创建一个处理消息发送和API响应的处理器。
- * @param {object} context - 包含所需状态、元素和函数的上下文对象。
- * @returns {function} - 返回 handleSendMessage 函数。
- */
 export function createApiHandler(context) {
     const {
-        state, elements, character, user, historyKey, dbStorage,
+        state, elements, character, user,
         renderSystemMessage, updateButtonStates, onAiReply,
         getIsAiReplying, setIsAiReplying, setAbortController, getStyleSettings
     } = context;
 
-    /**
-     * ▼▼▼ 核心修改：重构 handleSendMessage 以支持不同模式 ▼▼▼
-     * @param {string} mode - 'new', 'regenerate', 'continue'
-     */
     async function handleSendMessage(mode = 'new') {
         if (getIsAiReplying()) {
             console.log("AI is already replying. New request blocked.");
@@ -109,25 +99,7 @@ export function createApiHandler(context) {
         const memoryLimit = parseInt(currentStyleSettings.memoryLimit, 10) || 15;
         const memoryInMsgCount = memoryLimit * 2;
         
-        // --- 准备阶段：根据不同模式处理输入和历史记录 ---
-        if (mode === 'new') {
-            const text = elements.input.value.trim();
-            if (text !== '') {
-                const userMessage = { text, sender: 'user' };
-                state.chatHistory.push(userMessage);
-                await dbStorage.setItem(historyKey, state.chatHistory);
-                await onAiReply({ mode: 'ui_update' }); // 仅更新UI
-                
-                elements.input.value = '';
-                elements.input.style.height = '';
-                updateButtonStates();
-                elements.input.focus();
-            } else {
-                 // 如果是空输入，只有 "继续" 模式可以触发
-                 if (mode !== 'continue') return;
-            }
-        }
-
+        // ▼▼▼ 核心修改：移除了在此处添加用户消息的逻辑 ▼▼▼
         // 检查是否可以触发AI
         const lastMessage = state.chatHistory[state.chatHistory.length - 1];
         if (!state.currentChatApi) {
@@ -138,15 +110,18 @@ export function createApiHandler(context) {
             alert('还没有聊天记录，无法触发AI。');
             return;
         }
+         // 在'new'模式下，AI必须在用户发言后才能响应
+        if (mode === 'new' && lastMessage.sender !== 'user') {
+            console.log("AI can only respond after a user message.");
+            return;
+        }
+        // ▲▲▲ 修改结束 ▲▲▲
 
-        // --- API请求阶段 ---
         setIsAiReplying(true);
         elements.respondBtn.classList.add('blinking');
         updateButtonStates();
         
-        let thinkingMessageIndex = -1;
         if (mode === 'new') {
-            thinkingMessageIndex = state.chatHistory.length;
             renderSystemMessage('...', 'loading', elements.chatArea);
         }
 
@@ -166,16 +141,13 @@ export function createApiHandler(context) {
                     }
                 }
                 if (lastUserMessageIndex === -1) throw new Error("找不到可供重新生成的用户消息。");
-                // 截取到最后一条用户消息（包含）
                 historyForApi = state.chatHistory.slice(0, lastUserMessageIndex + 1);
 
             } else if (mode === 'continue') {
                 if (lastMessage.sender !== 'character') throw new Error("最后一条消息不是AI的回复，无法继续。");
                 historyForApi = state.chatHistory;
-                // 添加一个特殊指令让AI知道要继续
                  messagesForApi.push(...formatChatHistoryForApi(historyForApi));
                  messagesForApi.push({ role: 'user', content: '[继续]' });
-                 // 将 historyForApi 设为空数组，避免下面重复添加
                  historyForApi = [];
 
             } else { // 'new' mode
