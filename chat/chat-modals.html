@@ -129,34 +129,35 @@
             <button class="modal-close" id="close-link-sender-btn" title="关闭">&times;</button>
         </div>
         <div class="modal-body">
+            <!-- ▼▼▼ 核心重构：统一所有输入框为 textarea 并使用 form-group 包裹 ▼▼▼ -->
             <!-- 标题 -->
             <div class="form-group">
-                <label for="link-title-input">标题</label>
-                <input type="text" id="link-title-input" placeholder="输入链接标题（必填）">
-            </div>
-
-            <!-- 正文 (带发送按钮的特殊头部) -->
-            <div class="form-group">
                 <div class="form-group-header">
-                    <label for="link-body-input">正文</label>
+                    <label for="link-title-input">标题</label>
                     <button class="modal-btn-confirm send-inline-btn" id="confirm-link-send-btn" disabled title="发送">
                         <i class="fa-solid fa-location-arrow"></i>
                     </button>
                 </div>
+                <textarea id="link-title-input" rows="1" placeholder="输入链接标题（必填）"></textarea>
+            </div>
+
+            <!-- 正文 -->
+            <div class="form-group">
+                <label for="link-body-input">正文</label>
                 <textarea id="link-body-input" rows="3" placeholder="输入正文内容（必填）"></textarea>
             </div>
 
             <!-- 来源 -->
             <div class="form-group">
                 <label for="link-source-input">来源</label>
-                <input type="text" id="link-source-input" placeholder="（选填）输入来源，如网站名">
+                <textarea id="link-source-input" rows="1" placeholder="（选填）输入来源，如网站名"></textarea>
             </div>
-
+            
             <!-- 配图区域 -->
             <div class="link-image-section">
-                <label>配图</label>
-                <div class="link-image-controls">
-                    <input type="text" id="link-image-input" placeholder="（选填）输入文本或图片URL">
+                <div class="form-group">
+                    <label>配图</label>
+                    <textarea id="link-image-input" rows="1" placeholder="（选填）输入文本或图片URL"></textarea>
                     <div class="image-add-buttons">
                         <button class="add-btn small" id="add-link-text-photo-btn" title="添加文字图"><i class="fa-solid fa-font"></i></button>
                         <button class="add-btn small" id="add-link-url-photo-btn" title="添加链接图"><i class="fa-solid fa-link"></i></button>
@@ -165,16 +166,14 @@
                     </div>
                 </div>
                 <div class="link-image-preview" id="link-image-preview">
-                    <!-- 图片预览将显示在这里 -->
                     <div class="placeholder">
                         <i class="fa-regular fa-image"></i>
                         <span>图片预览区</span>
                     </div>
                 </div>
             </div>
-
+            <!-- ▲▲▲ 核心重构结束 ▲▲▲ -->
         </div>
-        <!-- 移除了 modal-footer，因为发送和取消按钮已重新布局 -->
     </div>
 </div>
 <!-- ▲▲▲ 新增结束 ▲▲▲ -->

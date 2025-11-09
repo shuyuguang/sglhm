@@ -60,10 +60,17 @@ function closeLinkSender() {
 
 function resetPanel() {
     state = { title: '', body: '', source: '', image: null, isLoading: false };
-    elements.titleInput.value = '';
-    elements.bodyInput.value = '';
-    elements.sourceInput.value = '';
-    elements.imageInput.value = '';
+    
+    // ▼▼▼ 核心修改：重置所有输入框的值和高度 ▼▼▼
+    const inputs = [elements.titleInput, elements.bodyInput, elements.sourceInput, elements.imageInput];
+    inputs.forEach(input => {
+        if (input) {
+            input.value = '';
+            input.style.height = 'auto';
+        }
+    });
+    // ▲▲▲ 修改结束 ▲▲▲
+
     elements.localPhotoInput.value = '';
     updateImagePreview();
     updateSendButtonState();
@@ -115,6 +122,7 @@ async function handleAddImage(url) {
         state.image = { type: 'image', data: dataUrl };
         updateImagePreview();
         elements.imageInput.value = '';
+        elements.imageInput.style.height = 'auto'; // 重置高度
     } catch (error) {
         alert('图片链接加载失败，请检查URL或网络。');
     }
@@ -157,12 +165,25 @@ function bindEvents() {
     elements.titleInput.addEventListener('input', updateSendButtonState);
     elements.bodyInput.addEventListener('input', updateSendButtonState);
     
+    // ▼▼▼ 核心新增：为所有 textarea 添加高度自适应逻辑 ▼▼▼
+    const autoGrowTextareas = [elements.titleInput, elements.bodyInput, elements.sourceInput, elements.imageInput];
+    autoGrowTextareas.forEach(textarea => {
+        if (textarea) {
+            textarea.addEventListener('input', () => {
+                textarea.style.height = 'auto';
+                textarea.style.height = `${textarea.scrollHeight}px`;
+            });
+        }
+    });
+    // ▲▲▲ 新增结束 ▲▲▲
+
     elements.addTextPhotoBtn.addEventListener('click', () => {
         const text = elements.imageInput.value.trim();
         if(text && !isValidHttpUrl(text)) {
             state.image = { type: 'text-photo', text: text };
             updateImagePreview();
             elements.imageInput.value = '';
+            elements.imageInput.style.height = 'auto'; // 重置高度
         } else {
             alert('请输入普通文本后添加。');
         }

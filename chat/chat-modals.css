@@ -330,6 +330,9 @@
     flex-direction: column;
     min-height: 0;
     gap: 16px;
+    /* ▼▼▼ 核心修复：添加 overflow-y: auto 使其可滚动 ▼▼▼ */
+    overflow-y: auto;
+    /* ▲▲▲ 修复结束 ▲▲▲ */
 }
 
 .image-input-area {
@@ -400,6 +403,9 @@
     justify-content: center;
     /* ▼▼▼ 核心修改：垂直居中所有按钮 ▼▼▼ */
     align-items: center;
+    /* ▼▼▼ 新增：确保这部分不被压缩 ▼▼▼ */
+    flex-shrink: 0;
+    /* ▲▲▲ 新增结束 ▲▲▲ */
 }
 .add-btn {
     padding: 6px 12px;
@@ -462,6 +468,9 @@
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 8px;
+    /* ▼▼▼ 新增：确保预览区有最小高度 ▼▼▼ */
+    min-height: 150px;
+    /* ▲▲▲ 新增结束 ▲▲▲ */
 }
 #image-multi-preview-container {
     height: 100%;
@@ -573,6 +582,10 @@
     max-width: 380px;
     display: flex;
     flex-direction: column;
+    /* ▼▼▼ 核心修复：限制面板高度 ▼▼▼ */
+    height: 85vh;
+    max-height: 700px;
+    /* ▲▲▲ 修复结束 ▲▲▲ */
 }
 
 .link-sender-panel .modal-body {
@@ -580,12 +593,20 @@
     display: flex;
     flex-direction: column;
     gap: 16px; /* 增大组间距 */
+    /* ▼▼▼ 核心修复：添加 overflow-y: auto 使其可滚动 ▼▼▼ */
+    flex-grow: 1;
+    min-height: 0;
+    overflow-y: auto;
+    /* ▲▲▲ 修复结束 ▲▲▲ */
 }
 
 .link-sender-panel .form-group {
     display: flex;
     flex-direction: column;
     gap: 8px; /* 调整标签和输入框的间距 */
+    /* ▼▼▼ 新增：确保这部分不被压缩 ▼▼▼ */
+    flex-shrink: 0;
+    /* ▲▲▲ 新增结束 ▲▲▲ */
 }
 
 .link-sender-panel .form-group-header {
@@ -610,7 +631,10 @@
     font-size: 1em;
     box-sizing: border-box;
     background-color: #f8f9fa;
-    resize: vertical;
+    /* ▼▼▼ 核心修改：统一为 resize: none 并调整行高 ▼▼▼ */
+    resize: none;
+    line-height: 1.5;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
     outline: none;
     transition: border-color 0.2s;
 }
@@ -650,6 +674,9 @@
     gap: 8px;
     border-top: 1px solid var(--border-color);
     padding-top: 16px;
+    /* ▼▼▼ 新增：确保这部分不被压缩 ▼▼▼ */
+    flex-shrink: 0;
+    /* ▲▲▲ 新增结束 ▲▲▲ */
 }
 
 .link-image-preview {
@@ -663,6 +690,9 @@
     align-items: center;
     justify-content: center;
     border: 1px dashed #ced4da;
+    /* ▼▼▼ 新增：确保这部分不被压缩 ▼▼▼ */
+    flex-shrink: 0;
+    /* ▲▲▲ 新增结束 ▲▲▲ */
 }
 
 .link-image-preview .placeholder { text-align: center; color: #adb5bd; }
@@ -695,8 +725,10 @@
     flex-grow: 1; padding: 8px; font-size: 0.9em;
     border-radius: 6px; border: 1px solid var(--border-color);
 }
+/* ▼▼▼ 核心修改：删除，因为图片输入框现在是 textarea 了 ▼▼▼ */
+/* .image-add-buttons { display: flex; gap: 5px; } */
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
-.image-add-buttons { display: flex; gap: 5px; }
 .add-btn.small {
     width: 32px; height: 32px; border-radius: 8px;
     font-size: 1rem; padding: 0; display: flex;
