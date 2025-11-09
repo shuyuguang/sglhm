@@ -61,25 +61,22 @@ function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHis
     if (!messageData) return;
 
     let canCopy = false;
-    let canEdit = false; // 默认所有消息都可以编辑
+    let canEdit = false;
     let textToCopy = '';
     let currentPart = null;
 
     if (messageData.sender === 'user') {
         currentPart = messageData;
-        textToCopy = messageData.isEmoji ? messageData.name : messageData.text;
     } else if (messageData.sender === 'character' && partIndex !== -1) {
         const activeVersion = messageData.replyVersions[messageData.activeReplyIndex];
-        currentPart = activeVersion[partIndex];
-        if (currentPart) {
-            textToCopy = currentPart.isEmoji ? currentPart.name : currentPart.text;
-        }
+        currentPart = activeVersion ? activeVersion[partIndex] : null;
     }
-
-    // ▼▼▼ 核心修改：简化判断逻辑 ▼▼▼
-    canCopy = !!currentPart && textToCopy.length > 0;
-    canEdit = !!currentPart; // 只要有内容部分，就可以编辑
-    // ▲▲▲ 修改结束 ▲▲▲
+    
+    if (currentPart) {
+        textToCopy = currentPart.isEmoji ? `[Emoji: ${currentPart.name}]` : currentPart.text;
+        canCopy = textToCopy.length > 0;
+        canEdit = true;
+    }
 
     const menuItems = [
         { action: 'edit', icon: 'fa-regular fa-pen-to-square', text: '编辑', disabled: !canEdit },
@@ -109,27 +106,39 @@ function showMenu(event, index, partIndex, bubble, getChatHistory, updateChatHis
             case 'copy':
                 navigator.clipboard.writeText(textToCopy).catch(err => console.error('复制失败:', err));
                 break;
-            // ▼▼▼ 核心修改：重写删除逻辑 ▼▼▼
+            // ▼▼▼ 核心修复：重写删除逻辑以正确处理分页 ▼▼▼
             case 'delete':
                 if (confirm('确定要删除这条消息吗？')) {
-                    const newHistory = [...chatHistory];
-                    const messageToDelete = newHistory[index];
+                    const newHistory = JSON.parse(JSON.stringify(chatHistory)); // 深拷贝以安全修改
+                    const messageGroup = newHistory[index];
 
-                    if (messageToDelete.sender === 'user') {
+                    if (messageGroup.sender === 'user') {
+                        // 用户消息，直接删除整个条目
                         newHistory.splice(index, 1);
-                    } else if (messageToDelete.sender === 'character' && partIndex !== -1) {
-                        const activeVersion = messageToDelete.replyVersions[messageToDelete.activeReplyIndex];
-                        activeVersion.splice(partIndex, 1); // 从当前版本中删除该部分
+                    } else if (messageGroup.sender === 'character' && partIndex !== -1) {
+                        const activeVersion = messageGroup.replyVersions[messageGroup.activeReplyIndex];
+                        
+                        // 从当前页面(version)删除指定的气泡(part)
+                        if (activeVersion && activeVersion.length > partIndex) {
+                            activeVersion.splice(partIndex, 1);
+                        }
 
-                        // 如果删除后当前版本为空，则删除整个消息组
+                        // 检查当前页面是否因此变空
                         if (activeVersion.length === 0) {
-                            newHistory.splice(index, 1);
+                            // 如果还有其他页面，则只删除当前空页面，并切换到前一页
+                            if (messageGroup.replyVersions.length > 1) {
+                                messageGroup.replyVersions.splice(messageGroup.activeReplyIndex, 1);
+                                messageGroup.activeReplyIndex = Math.max(0, messageGroup.activeReplyIndex - 1);
+                            } else {
+                                // 如果这是唯一的页面，那么删除整个消息组
+                                newHistory.splice(index, 1);
+                            }
                         }
                     }
                     updateChatHistory(newHistory);
                 }
                 break;
-            // ▲▲▲ 修改结束 ▲▲▲
+            // ▲▲▲ 修复结束 ▲▲▲
             case 'edit':
                 startEditing(bubble, index, partIndex, getChatHistory, updateChatHistory, getEmojis);
                 break;
@@ -171,11 +180,9 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
         originalPart = activeVersion[partIndex];
     }
     
-    // ▼▼▼ 核心修改：根据内容类型决定编辑框的初始文本 ▼▼▼
     if (originalPart) {
-        originalContent = originalPart.isEmoji ? originalPart.name : originalPart.text;
+        originalContent = originalPart.isEmoji ? `[Emoji: ${originalPart.name}]` : originalPart.text;
     }
-    // ▲▲▲ 修改结束 ▲▲▲
 
     bubble.innerHTML = `
         <div class="message-edit-container">
@@ -204,11 +211,18 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
         
         if (shouldSave) {
             const newText = textarea.value.trim();
-            if (!newText) { // 不允许保存为空
+            if (!newText) {
                 shouldSave = false;
             } else {
-                const allEmojis = getEmojis();
-                const foundEmoji = allEmojis.find(e => e.name === newText);
+                const emojiRegex = /^\[Emoji:\s*(.*?)\s*\]$/;
+                const match = newText.match(emojiRegex);
+                let foundEmoji = null;
+
+                if (match && match[1]) {
+                    const emojiName = match[1];
+                    const allEmojis = getEmojis();
+                    foundEmoji = allEmojis.find(e => e.name === emojiName);
+                }
                 
                 let partToUpdate;
                 if (originalMessageGroup.sender === 'user') {
@@ -217,27 +231,22 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
                     partToUpdate = newHistory[index].replyVersions[originalMessageGroup.activeReplyIndex][partIndex];
                 }
 
-                // ▼▼▼ 核心修改：实现文本与表情的智能转换和保存 ▼▼▼
                 if (foundEmoji) {
-                    // 如果输入内容匹配到一个表情，则更新为表情消息
                     partToUpdate.isEmoji = true;
                     partToUpdate.name = foundEmoji.name;
                     partToUpdate.data = foundEmoji.data;
-                    delete partToUpdate.text; // 删除旧的text属性
+                    delete partToUpdate.text;
                 } else {
-                    // 否则，更新为纯文本消息
                     partToUpdate.isEmoji = false;
                     partToUpdate.text = newText;
-                    delete partToUpdate.name; // 删除旧的表情属性
+                    delete partToUpdate.name;
                     delete partToUpdate.data;
                 }
                 updateChatHistory(newHistory);
-                // ▲▲▲ 修改结束 ▲▲▲
-                return; // 直接返回，因为UI会由updateChatHistory刷新
+                return;
             }
         }
         
-        // 如果是取消编辑或保存失败，则恢复原始气泡内容
         let partToRestore;
         if (originalMessageGroup.sender === 'user') {
              partToRestore = originalMessageGroup;
@@ -245,7 +254,6 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
              partToRestore = originalMessageGroup.replyVersions[originalMessageGroup.activeReplyIndex][partIndex];
         }
 
-        // ▼▼▼ 核心修改：恢复时也需要区分表情和文本 ▼▼▼
         if (partToRestore.isEmoji) {
             bubble.innerHTML = `<img src="${partToRestore.data}" alt="emoji" class="message-emoji-img">`;
             bubble.classList.add('is-emoji-message');
@@ -253,7 +261,6 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
             bubble.textContent = partToRestore.text;
             bubble.classList.remove('is-emoji-message');
         }
-        // ▲▲▲ 修改结束 ▲▲▲
     };
     
     bubble.querySelector('.save').onclick = () => stopEditing(true);
