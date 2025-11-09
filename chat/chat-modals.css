@@ -543,7 +543,9 @@
 /* --- ▼▼▼ 新增：文字图预览模态框样式 ▼▼▼ --- */
 .simple-text-overlay {
     z-index: 300;
-    background-color: rgba(0, 0, 0, 0.6);
+    /* ▼▼▼ 修改点：移除了黑色背景 ▼▼▼ */
+    background-color: transparent;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
     padding: 20px;
     align-items: center; /* 垂直居中 */
 }
@@ -560,5 +562,8 @@
     line-height: 1.6;
     white-space: pre-wrap;
     word-wrap: break-word;
+    /* ▼▼▼ 新增：添加阴影以在透明背景下突出内容 ▼▼▼ */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    /* ▲▲▲ 新增结束 ▲▲▲ */
 }
 /* --- ▲▲▲ 新增结束 ▲▲▲ --- */

@@ -31,6 +31,13 @@ export function initializeMessageMenu(container, getChatHistory, updateChatHisto
     container.addEventListener('mouseup', (e) => {
         clearTimeout(longPressTimer);
         const bubble = e.target.closest('.chat-bubble');
+        
+        // ▼▼▼ 修改点：如果点击目标是预览按钮，则直接返回，不显示菜单 ▼▼▼
+        if (e.target.closest('.text-photo-preview-btn')) {
+            return;
+        }
+        // ▲▲▲ 修改结束 ▲▲▲
+        
         if (!bubble || isLongPress || bubble.classList.contains('editing')) return;
 
         e.preventDefault();
@@ -281,7 +288,7 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
                 bubble.innerHTML = `
                     <div class="photo-message-container">
                         <img src="https://i.postimg.cc/wBtdFsGF/tpybxmnh.jpg" alt="文字图" class="message-photo-img">
-                        <div class="photo-message-caption">${partToRestore.text}</div>
+                        <div class="photo-message-caption">文字图</div>
                     </div>
                 `;
                 break;
