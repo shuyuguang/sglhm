@@ -309,10 +309,15 @@ function startEditing(bubble, index, partIndex, getChatHistory, updateChatHistor
                 // ▲▲▲ 修改结束 ▲▲▲
                 break;
             case 'image':
-                 // 理论上不可编辑，但作为防御性代码
-                bubble.classList.add('is-image-message');
-                bubble.innerHTML = `<img src="${partToRestore.data}" alt="用户图片" class="message-photo-img">`;
-                break;
+     // 理论上不可编辑，但作为防御性代码
+    bubble.classList.add('is-image-message');
+    // 核心修改：与 chat-ui.js 的渲染保持一致，添加 a 标签
+    bubble.innerHTML = `
+        <a href="${partToRestore.data}" target="_blank" title="点击查看大图">
+            <img src="${partToRestore.data}" alt="用户图片" class="message-photo-img">
+        </a>
+    `;
+    break;
             default:
                  if (partToRestore.isEmoji) {
                     bubble.innerHTML = `<img src="${partToRestore.data}" alt="emoji" class="message-emoji-img">`;

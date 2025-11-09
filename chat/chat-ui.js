@@ -132,9 +132,14 @@ export function renderMessageGroup(messageGroup, index, user, character, chatAre
                 `;
                 break;
             case 'image':
-                bubble.classList.add('is-image-message');
-                bubble.innerHTML = `<img src="${messageGroup.data}" alt="用户图片" class="message-photo-img">`;
-                break;
+    bubble.classList.add('is-image-message');
+    // 核心修改：将图片用 a 标签包裹，点击可查看原图
+    bubble.innerHTML = `
+        <a href="${messageGroup.data}" target="_blank" title="点击查看大图">
+            <img src="${messageGroup.data}" alt="用户图片" class="message-photo-img">
+        </a>
+    `;
+    break;
             default: // 兼容旧的文本和表情消息
                 if (messageGroup.isEmoji) {
                     bubble.classList.add('is-emoji-message');
