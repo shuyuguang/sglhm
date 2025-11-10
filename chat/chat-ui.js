@@ -6,6 +6,7 @@
  * @returns {string} - 聊天室的innerHTML字符串。
  */
 export function renderChatRoomUI(character) {
+    // ... (此函数保持不变) ...
     return `
         <div class="chat-container">
             <header class="chat-header">
@@ -76,7 +77,7 @@ export function renderChatRoomUI(character) {
     `;
 }
 
-// [新增] 一个简单的HTML转义函数，防止XSS攻击
+// ... (escapeHtml 函数保持不变) ...
 function escapeHtml(unsafe) {
     if (!unsafe) return '';
     return unsafe
@@ -88,16 +89,8 @@ function escapeHtml(unsafe) {
 }
 
 
-/**
- * 根据消息数据创建一个消息组的DOM元素。
- * @param {object} messageGroup - 消息组对象。
- * @param {number} index - 消息组在历史记录中的索引。
- * @param {object} user - 当前用户对象。
- * @param {object} character - 当前角色对象。
- * @returns {HTMLElement} - 创建的消息组容器元素。
- */
 export function renderMessageGroup(messageGroup, index, user, character) {
-    // ▼▼▼ 核心修改 ①：移除 chatArea 参数 ▼▼▼
+    // ... (前面的代码保持不变, 直到 bubble.innerHTML) ...
     const { sender, type } = messageGroup; 
     
     const messageGroupContainer = document.createElement('div');
@@ -121,19 +114,15 @@ export function renderMessageGroup(messageGroup, index, user, character) {
                 bubble.innerHTML = `
                     <div class="photo-message-container">
                         <img src="https://i.postimg.cc/wBtdFsGF/tpybxmnh.jpg" alt="文字图" class="message-photo-img">
-                       
                         <button class="text-photo-preview-btn" data-text="${escapeHtml(messageGroup.text)}" title="预览文字">
                             <i class="fa-solid fa-eye"></i>
                         </button>
-                        
                     </div>
                 `;
                 break;
             case 'image':
                 bubble.classList.add('is-image-message');
-                const imageUrl = messageGroup.renderData; // 从预处理步骤获取
-                
-                // ▼▼▼ 修改：使用更具体的 alt 和 title ▼▼▼
+                const imageUrl = messageGroup.renderData;
                 const imageTitle = messageGroup.source === 'local' ? `本地图片: ${messageGroup.filename}` : `网络图片: ${messageGroup.url}`;
                 const imageAlt = messageGroup.filename || '用户图片';
                 
@@ -142,7 +131,6 @@ export function renderMessageGroup(messageGroup, index, user, character) {
                         <img src="${imageUrl}" alt="${imageAlt}" class="message-photo-img">
                     </a>
                 `;
-                // ▲▲▲ 修改结束 ▲▲▲
                 break;
             case 'link':
                 bubble.classList.add('is-link-message');
@@ -154,10 +142,10 @@ export function renderMessageGroup(messageGroup, index, user, character) {
                      if (image.type === 'text-photo') {
                         imageContent = `<div class="link-card-image text-photo">${escapeHtml(image.text)}</div>`;
                     } else if (image.type === 'image') {
-                        // ▼▼▼ 修改：使用 renderData 优先 ▼▼▼
-                        const imageUrl = image.renderData || (image.source === 'url' ? image.url : '');
-                        imageContent = `<img src="${imageUrl}" class="link-card-image">`;
-                        // ▲▲▲ 修改结束 ▲▲▲
+                        // ▼▼▼ 核心修复：确保这里优先使用 renderData ▼▼▼
+                        const linkImageUrl = image.renderData || (image.source === 'url' ? image.url : '');
+                        imageContent = `<img src="${linkImageUrl}" class="link-card-image">`;
+                        // ▲▲▲ 修复结束 ▲▲▲
                     }
                     imageHtml = `<div class="link-card-image-wrapper">${imageContent}</div>`;
                 }
@@ -172,7 +160,6 @@ export function renderMessageGroup(messageGroup, index, user, character) {
                         ${source ? `<div class="link-card-footer">${escapeHtml(source)}</div>` : ''}
                     </div>
                 `;
-                // ▲▲▲ 修改结束 ▲▲▲
                 break;
             default: // 兼容旧的文本和表情消息
                 if (messageGroup.isEmoji) {
@@ -203,7 +190,8 @@ export function renderMessageGroup(messageGroup, index, user, character) {
 
             const bubble = document.createElement('div');
             bubble.className = `chat-bubble ${sender}`;
-
+            
+            // ▼▼▼ 核心修复：确保AI回复的链接卡片也能正确显示图片 ▼▼▼
             if (messagePart.type === 'link') {
                 bubble.classList.add('is-link-message');
                 const { title, body, source, image } = messagePart;
@@ -214,6 +202,7 @@ export function renderMessageGroup(messageGroup, index, user, character) {
                      if (image.type === 'text-photo') {
                         imageContent = `<div class="link-card-image text-photo">${escapeHtml(image.text)}</div>`;
                     } else if (image.type === 'image') {
+                        // AI生成的图片总是 base64 data URL
                         imageContent = `<img src="${image.data}" class="link-card-image">`;
                     }
                     imageHtml = `<div class="link-card-image-wrapper">${imageContent}</div>`;
@@ -235,7 +224,7 @@ export function renderMessageGroup(messageGroup, index, user, character) {
             } else {
                 bubble.textContent = messagePart.text;
             }
-            // ▲▲▲ 修改结束 ▲▲▲
+            // ▲▲▲ 修复结束 ▲▲▲
 
             messageRow.appendChild(avatar);
             messageRow.appendChild(bubble);
@@ -259,19 +248,10 @@ export function renderMessageGroup(messageGroup, index, user, character) {
         }
     }
     
-    // ▼▼▼ 核心修改 ②：返回创建的元素，而不是直接添加 ▼▼▼
     return messageGroupContainer;
-    // ▲▲▲ 修改结束 ▲▲▲
 }
 
-
-/**
- * 在聊天区域渲染一条系统消息（如加载中、错误提示）。
- * @param {string} text - 消息文本。
- * @param {string} type - 消息类型 ('loading', 'error', etc.)。
- * @param {HTMLElement} chatArea - 聊天消息容器元素。
- * @returns {HTMLElement} - 创建的消息行元素。
- */
+// ... (renderSystemMessage 函数保持不变) ...
 export function renderSystemMessage(text, type = 'loading', chatArea) {
     const messageRow = document.createElement('div');
     messageRow.className = `message-row system ${type}`;
