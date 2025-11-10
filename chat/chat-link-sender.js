@@ -1,4 +1,4 @@
-// relia-chat/chat-link-sender.js
+// 文件名: relia-chat/chat-link-sender.js
 
 let elements = {};
 let onSendCallback = null;
@@ -33,9 +33,7 @@ export function initializeLinkSender(domElements, onSend) {
         titleInput: document.getElementById('link-title-input'),
         bodyInput: document.getElementById('link-body-input'),
         sourceInput: document.getElementById('link-source-input'),
-        // ▼▼▼ 核心修改：目标预览容器ID改变 ▼▼▼
         cardPreview: document.getElementById('link-card-preview'),
-        // ▲▲▲ 修改结束 ▲▲▲
         imageInput: document.getElementById('link-image-input'),
         addTextPhotoBtn: document.getElementById('add-link-text-photo-btn'),
         addUrlPhotoBtn: document.getElementById('add-link-url-photo-btn'),
@@ -78,7 +76,6 @@ function updateSendButtonState() {
     elements.sendBtn.disabled = !canSend;
 }
 
-// ▼▼▼ 核心修改：重写整个预览更新逻辑 ▼▼▼
 function updatePreview() {
     const title = escapeHtml(elements.titleInput.value.trim()) || '标题';
     const body = escapeHtml(elements.bodyInput.value.trim()) || '正文内容...';
@@ -118,27 +115,36 @@ function updatePreview() {
         };
     }
 }
-// ▲▲▲ 修改结束 ▲▲▲
 
 function escapeHtml(unsafe) {
     if (!unsafe) return '';
-    return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"g, "&quot;").replace(/'/g, "&#039;");
 }
 
+// ▼▼▼ 核心修复：替换为更健壮的图片获取逻辑 ▼▼▼
 async function handleAddImage(url) {
+    // 采用与 chat-image-sender.js 相同的健壮实现
     try {
         const response = await fetch(url);
-        if (!response.ok) throw new Error('无法加载图片');
+        if (!response.ok) {
+            throw new Error(`图片加载失败，HTTP状态码: ${response.status}`);
+        }
         const blob = await response.blob();
         const dataUrl = await fileToDataUrl(blob);
+        
+        // 注意：这里是给 state.image 赋值，而不是 push 到数组
         state.image = { type: 'image', data: dataUrl };
+        
         updatePreview();
         elements.imageInput.value = '';
         elements.imageInput.style.height = 'auto';
     } catch (error) {
-        alert('图片链接加载失败，请检查URL或网络。');
+        // 关键：添加 console.error 方便未来调试
+        console.error("在“发送链接”模态框中加载图片URL失败:", error);
+        alert('图片链接加载失败，请检查URL、网络或浏览器控制台获取详细错误。');
     }
 }
+// ▲▲▲ 修复结束 ▲▲▲
 
 async function handleAddLocalImage(file) {
     if (!file) return;
@@ -206,8 +212,11 @@ function bindEvents() {
 
     elements.addUrlPhotoBtn.addEventListener('click', () => {
         const text = elements.imageInput.value.trim();
-        if(text && isValidHttpUrl(text)) handleAddImage(text);
-        else alert('请输入有效的图片链接后添加。');
+        if(text && isValidHttpUrl(text)) {
+            handleAddImage(text); // 调用修复后的函数
+        } else {
+            alert('请输入有效的图片链接后添加。');
+        }
     });
 
     elements.addLocalPhotoBtn.addEventListener('click', () => elements.localPhotoInput.click());
