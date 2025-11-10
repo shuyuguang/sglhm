@@ -107,7 +107,7 @@ body.tab-bar-is-hidden {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: #ffffff;
+    color: rgba(255, 255, 255, 0.5);
     font-size: 14px;
     z-index: 11; /* 确保在 tab-bar 之上 */
     transition: bottom 0.3s ease-in-out; /* 为位置变化添加动画 */
