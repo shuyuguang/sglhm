@@ -4,62 +4,188 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>星绪</title>
-    <!-- 引入 Font Awesome 图标库 -->
+    <!-- 引入 Font Awesome 图标库 (v6) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- 引入 Google Fonts 字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
-    <!-- 引入外部样式表 -->
-    <link rel="stylesheet" href="xingxu.css">
+    
+    <style>
+        /* --- CSS 样式 V3 --- */
+
+        :root {
+            --bg-color: #1a1a2e; /* 深蓝紫背景 */
+            --header-bg: #23233c; /* 稍亮的头部背景 */
+            --tab-bar-bg: #23233c; /* Tab栏背景 */
+            --text-color: #e0e0e0; /* 主要文字颜色 */
+            --text-inactive: #7f7f9a; /* 未激活文字/图标颜色 */
+            --accent-gradient: linear-gradient(45deg, #9f62ff, #62aeff); /* 激活状态的渐变色 */
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding-bottom: 70px;
+        }
+
+        /* 顶部标题栏 */
+        .header {
+            background-color: var(--header-bg);
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: 500;
+            letter-spacing: 2px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        /* 页面内容容器 */
+        .content-container {
+            padding-top: 60px;
+        }
+        
+        .page {
+            display: none;
+            padding: 40px 20px;
+            text-align: center;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .page h1 {
+            font-weight: 300;
+            font-size: 2.5em;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 底部 Tab 栏 */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background-color: var(--tab-bar-bg);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            color: var(--text-inactive); /* 图标和文字默认都是未激活颜色 */
+            text-decoration: none;
+            transition: color 0.3s, transform 0.2s;
+        }
+        
+        .tab-item:active {
+            transform: scale(0.95);
+        }
+        
+        .tab-item .icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        
+        .tab-item .label {
+            font-size: 11px;
+            font-weight: 400;
+        }
+
+        /* --- 激活状态的 Tab --- */
+        .tab-item.active .label {
+            /* 激活时文字应用渐变色 */
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 500;
+        }
+        
+        .tab-item.active .icon {
+            /* 激活时图标应用渐变色 */
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+    </style>
 </head>
 <body>
 
-    <!-- ▼▼▼ 顶部 Header 已被移除 ▼▼▼ -->
+    <!-- --- HTML 结构 V3 --- -->
+
+    <header class="header">星绪</header>
 
     <main class="content-container">
         <div id="chat-page" class="page active">
             <h1>聊天区</h1>
-            <p>这里是聊天内容...</p>
         </div>
 
         <div id="moments-page" class="page">
             <h1>动态区</h1>
-            <p>这里是动态内容...</p>
         </div>
 
         <div id="game-page" class="page">
-            <iframe id="game-iframe" src="./app.html" frameborder="0"></iframe>
+            <h1>游戏区</h1>
         </div>
     </main>
 
     <nav class="tab-bar">
-        <!-- ▼▼▼ 核心改造：移除了文字标签 span ▼▼▼ -->
+        <!-- 聊天 Tab (默认激活) -->
         <a href="#" class="tab-item active" data-page="chat-page">
-            <i class="fa-solid fa-comment-dots icon"></i>
+            <i class="fa-solid fa-comment-dots icon"></i> <!-- 新的聊天图标 -->
+            <span class="label">聊天</span>
         </a>
+
+        <!-- 动态 Tab -->
         <a href="#" class="tab-item" data-page="moments-page">
-            <i class="fa-solid fa-compass icon"></i>
+            <i class="fa-solid fa-compass icon"></i> <!-- 新的动态图标 -->
+            <span class="label">动态</span>
         </a>
+
+        <!-- 游戏 Tab -->
         <a href="#" class="tab-item" data-page="game-page">
-            <i class="fa-solid fa-gamepad icon"></i>
+            <i class="fa-solid fa-gamepad icon"></i> <!-- 新的游戏图标 -->
+            <span class="label">游戏</span>
         </a>
     </nav>
 
-    <!-- 【新增】Tab栏切换显示/隐藏的按钮 -->
-    <div id="tab-toggle-btn" class="tab-toggle-button">
-        <i id="hide-tab-icon" class="fa-solid fa-chevron-down"></i>
-        <i id="show-tab-icon" class="fa-solid fa-chevron-up hidden"></i>
-    </div>
-
-
     <script>
+        // --- JavaScript 功能 (无需改动) ---
+
         document.addEventListener('DOMContentLoaded', function() {
-            // --- 原有 Tab 切换功能 ---
             const tabItems = document.querySelectorAll('.tab-item');
             const pages = document.querySelectorAll('.page');
 
             tabItems.forEach(tab => {
                 tab.addEventListener('click', function(event) {
                     event.preventDefault(); 
+
                     const currentActiveTab = document.querySelector('.tab-item.active');
                     if (currentActiveTab === this) return; 
 
@@ -72,26 +198,6 @@
                     document.getElementById(targetPageId).classList.add('active');
                 });
             });
-
-            // --- 【新增】Tab栏显示/隐藏功能 ---
-            const body = document.body;
-            const tabBar = document.querySelector('.tab-bar');
-            const toggleBtn = document.getElementById('tab-toggle-btn');
-            const hideIcon = document.getElementById('hide-tab-icon');
-            const showIcon = document.getElementById('show-tab-icon');
-
-            if (toggleBtn) {
-                toggleBtn.addEventListener('click', () => {
-                    // 切换body和tab-bar上的隐藏状态类
-                    body.classList.toggle('tab-bar-hidden');
-                    tabBar.classList.toggle('hidden');
-
-                    // 根据tab-bar是否隐藏来切换按钮内的图标
-                    const isHidden = tabBar.classList.contains('hidden');
-                    hideIcon.classList.toggle('hidden', isHidden);
-                    showIcon.classList.toggle('hidden', !isHidden);
-                });
-            }
         });
     </script>
 
