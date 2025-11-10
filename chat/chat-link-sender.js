@@ -1,16 +1,9 @@
 // relia-chat/chat-link-sender.js
 
-// ▼▼▼ 新增：从公共模块导入db和配置 ▼▼▼
-import { dbStorage } from '../common/db.js';
-const CHAT_PHOTO_PREFIX = 'chat-photo/';
-// ▲▲▲ 新增结束 ▲▲▲
-
 let elements = {};
 let onSendCallback = null;
 let state = {
-    // ▼▼▼ 修改：image 对象的结构改变 ▼▼▼
-    image: null, // { type: 'text-photo'/'image', source: 'local'/'url', text: '...', url: '...', filename: '...' }
-    // ▲▲▲ 修改结束 ▲▲▲
+    image: null, // { type: 'text-photo'/'image', text: '...', data: '...' }
     isLoading: false,
 };
 
@@ -95,9 +88,8 @@ function updatePreview() {
     if (state.image) {
         if (state.image.type === 'text-photo') {
             imageHtml = `<div class="link-card-image text-photo">${escapeHtml(state.image.text)}</div>`;
-        } else if (state.image.type === 'image') {
-            const imageUrl = state.image.source === 'local' ? state.image.previewUrl : state.image.url;
-            imageHtml = `<img src="${imageUrl}" class="link-card-image">`;
+        } else {
+            imageHtml = `<img src="${state.image.data}" class="link-card-image">`;
         }
         imageHtml = `
             <div class="link-card-image-wrapper">
@@ -120,7 +112,6 @@ function updatePreview() {
 
     if (state.image) {
         elements.cardPreview.querySelector('.remove-image-btn').onclick = () => {
-            if (state.image.previewUrl) URL.revokeObjectURL(state.image.previewUrl);
             state.image = null;
             elements.imageInput.value = '';
             updatePreview();
@@ -134,22 +125,26 @@ function escapeHtml(unsafe) {
     return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 
-function handleAddImageUrl(url) {
-    state.image = { type: 'image', source: 'url', url: url };
-    updatePreview();
-    elements.imageInput.value = '';
-    elements.imageInput.style.height = 'auto';
+async function handleAddImage(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('无法加载图片');
+        const blob = await response.blob();
+        const dataUrl = await fileToDataUrl(blob);
+        state.image = { type: 'image', data: dataUrl };
+        updatePreview();
+        elements.imageInput.value = '';
+        elements.imageInput.style.height = 'auto';
+    } catch (error) {
+        alert('图片链接加载失败，请检查URL或网络。');
+    }
 }
 
 async function handleAddLocalImage(file) {
     if (!file) return;
     try {
         const dataUrl = await fileToDataUrl(file);
-        await dbStorage.setItem(`${CHAT_PHOTO_PREFIX}${file.name}`, dataUrl);
-
-        const previewUrl = URL.createObjectURL(file);
-        state.image = { type: 'image', source: 'local', filename: file.name, previewUrl: previewUrl };
-
+        state.image = { type: 'image', data: dataUrl };
         updatePreview();
     } catch (error) {
         alert('本地图片加载失败。');
@@ -159,16 +154,13 @@ async function handleAddLocalImage(file) {
 function handleSend() {
     if (elements.sendBtn.disabled) return;
     if (onSendCallback) {
-        const finalImage = { ...state.image };
-        delete finalImage.previewUrl; // 清理临时预览URL
-
         const message = {
             sender: 'user',
             type: 'link',
             title: elements.titleInput.value.trim(),
             body: elements.bodyInput.value.trim(),
             source: elements.sourceInput.value.trim(),
-            image: Object.keys(finalImage).length > 0 ? finalImage : null,
+            image: state.image
         };
         onSendCallback(message);
     }
@@ -214,9 +206,7 @@ function bindEvents() {
 
     elements.addUrlPhotoBtn.addEventListener('click', () => {
         const text = elements.imageInput.value.trim();
-        // ▼▼▼ 核心修复：修正函数调用错误 ▼▼▼
-        if(text && isValidHttpUrl(text)) handleAddImageUrl(text);
-        // ▲▲▲ 修复结束 ▲▲▲
+        if(text && isValidHttpUrl(text)) handleAddImage(text);
         else alert('请输入有效的图片链接后添加。');
     });
 

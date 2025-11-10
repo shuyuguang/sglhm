@@ -5,8 +5,6 @@ import { CHAT_DB_KEYS } from '../config/chat.config.js';
 
 // --- Helper Functions (部分从 chat-prompt.js 移动而来) ---
 
-const CHAT_PHOTO_PREFIX = 'chat-photo/';
-
 function isImageUrl(url) {
     if (typeof url !== 'string') return false;
     return url.toLowerCase().startsWith('http') && /\.(jpeg|jpg|gif|png|webp)$/i.test(url);
@@ -176,7 +174,6 @@ async function constructSystemPrompt(charProfile, userProfile) {
     return prompt;
 }
 
-// ▼▼▼ 核心修改：重写 formatChatHistoryForApi ▼▼▼
 async function formatChatHistoryForApi(history) {
     const formattedPromises = history.map(async (msg) => {
         if (msg.sender === 'user') {
@@ -186,55 +183,45 @@ async function formatChatHistoryForApi(history) {
                     content = `[Photo: ${msg.text}]`;
                     return { role: 'user', content: content };
                 case 'image':
-                    let imageUrlForApi;
-                    if (msg.source === 'local' && msg.filename) {
-                        // 从数据库加载本地图片数据
-                        imageUrlForApi = await dbStorage.getItem(`${CHAT_PHOTO_PREFIX}${msg.filename}`);
-                    } else if (msg.source === 'url' && msg.url) {
-                        // 直接使用网络图片URL
-                        imageUrlForApi = msg.url;
+                    let imageUrlForApi = msg.data;
+                    if (imageUrlForApi.startsWith('blob:')) {
+                        imageUrlForApi = await blobUrlToDataUrl(imageUrlForApi);
+                    }
+                    content = [
+                        { type: 'text', text: '用户发送了一张图片。' },
+                        { type: 'image_url', image_url: { url: imageUrlForApi } }
+                    ];
+                    return { role: 'user', content: content };
+                case 'link':
+                    content = `[Title: ${msg.title}\nBody text: ${msg.body}`;
+                    if (msg.source) {
+                        content += `\nSource: ${msg.source}`;
                     }
 
-                    if (imageUrlForApi) {
-                        content = [
-                            { type: 'text', text: '用户发送了一张图片。' },
-                            { type: 'image_url', image_url: { url: imageUrlForApi } }
-                        ];
-                        return { role: 'user', content: content };
-                    }
-                    return null; // 如果图片加载失败，则忽略此消息
-                case 'link':
-                    // (链接卡片发送给AI的逻辑需要同步调整)
-                    content = `[Title: ${msg.title}\nBody text: ${msg.body}`;
-                    if (msg.source) content += `\nSource: ${msg.source}`;
-                    
                     if (msg.image) {
                         if (msg.image.type === 'text-photo') {
                             content += `\nIllustration: ${msg.image.text}`;
                         } else if (msg.image.type === 'image') {
-                             if (msg.image.source === 'local' && msg.image.filename) {
-                                const imageData = await dbStorage.getItem(`${CHAT_PHOTO_PREFIX}${msg.image.filename}`);
-                                if (imageData) {
-                                    const base64String = imageData.substring(imageData.indexOf(',') + 1);
-                                    content += `\nIllustration: ${base64String}`;
-                                }
-                             } else if (msg.image.source === 'url' && msg.image.url) {
-                                // 注意：直接将URL作为文字描述发送给AI，因为多模态输入通常只支持顶级图片
-                                content += `\nIllustration: [Image at ${msg.image.url}]`;
-                             }
+                            let imageData = msg.image.data;
+                            if (imageData.startsWith('blob:')) {
+                                imageData = await blobUrlToDataUrl(imageData);
+                            }
+                            const base64String = imageData.substring(imageData.indexOf(',') + 1);
+                            content += `\nIllustration: ${base64String}`;
                         }
                     }
                     content += ']';
                     return { role: 'user', content: content };
-                default:
+                default: // 兼容旧文本和表情
                     content = msg.isEmoji ? `[Emoji: ${msg.name}]` : msg.text;
                     return { role: 'user', content: content };
             }
         } else if (msg.sender === 'character') {
-             // (此部分逻辑保持不变)
             const activeVersion = msg.replyVersions[msg.activeReplyIndex];
             const content = activeVersion.map(part => {
-                if (part.isEmoji) return `[Emoji: ${part.name}]`;
+                if (part.isEmoji) {
+                    return `[Emoji: ${part.name}]`;
+                }
                 if (part.type === 'link') {
                     let linkContent = `[Title: ${part.title}\nBody text: ${part.body}`;
                     if (part.source) linkContent += `\nSource: ${part.source}`;
@@ -259,7 +246,6 @@ async function formatChatHistoryForApi(history) {
     const formatted = (await Promise.all(formattedPromises)).filter(Boolean);
     return formatted;
 }
-// ▲▲▲ 修改结束 ▲▲▲
 
 export function createApiHandler(context) {
     const {

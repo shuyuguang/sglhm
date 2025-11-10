@@ -17,9 +17,6 @@ import { initializeInputArea } from './chat-input-handler.js';
 import { initializeImageSender, openImageSender } from './chat-image-sender.js';
 import { initializeLinkSender, openLinkSender } from './chat-link-sender.js';
 
-// ▼▼▼ 新增：定义图片存储前缀 ▼▼▼
-const CHAT_PHOTO_PREFIX = 'chat-photo/';
-// ▲▲▲ 新增结束 ▲▲▲
 
 const blobUrlManager = {
     cache: new Map(),
@@ -136,7 +133,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             memoryDbKey: `relia-chat-memory_${charId}`,
             emojiDbKey: CHAT_DB_KEYS.EMOJIS,
             diyDbKey: `relia-chat-diy-enabled_${charId}`,
-            bgDbKey: CHAT_DB_KEYS.GLOBAL_BACKGROUNDS,
+            bgDbKey: `relia-chat-global-backgrounds`,
             activeBgDbKey: `relia-chat-active-background_${charId}`,
         };
 
@@ -175,49 +172,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elements.userProfileEditAvatar) elements.userProfileEditAvatar.src = user.avatar;
         if (elements.userProfileEditName) elements.userProfileEditName.textContent = user.name;
         
-        // ▼▼▼ 核心修改：重写 loadAndRenderHistory 以处理新的图片格式 ▼▼▼
         async function loadAndRenderHistory() {
-            // 预处理消息，为UI渲染准备好数据
             const processedMessages = await Promise.all(state.chatHistory.map(async (msg) => {
-                const newMsg = JSON.parse(JSON.stringify(msg)); // 深拷贝以避免修改原始state
-
-                // 处理用户发送的图片
-                if (msg.sender === 'user' && msg.type === 'image') {
-                    if (msg.source === 'local' && msg.filename) {
-                        const imageData = await dbStorage.getItem(`${CHAT_PHOTO_PREFIX}${msg.filename}`);
-                        if (imageData) {
-                            newMsg.renderData = await blobUrlManager.dataUrlToBlobUrl(imageData);
-                        } else {
-                            newMsg.renderData = ''; // Or a placeholder image
-                            console.warn(`本地图片 ${msg.filename} 未在数据库中找到。`);
-                        }
-                    } else if (msg.source === 'url' && msg.url) {
-                        newMsg.renderData = msg.url;
-                    }
+                if (msg.sender === 'user' && msg.type === 'image' && msg.data.startsWith('data:')) {
+                    const blobUrl = await blobUrlManager.dataUrlToBlobUrl(msg.data);
+                    return { ...msg, renderData: blobUrl };
                 }
-                
-                // 处理用户发送的链接卡片中的图片
-                if (msg.sender === 'user' && msg.type === 'link' && msg.image?.type === 'image') {
-                    if (msg.image.source === 'local' && msg.image.filename) {
-                         const imageData = await dbStorage.getItem(`${CHAT_PHOTO_PREFIX}${msg.image.filename}`);
-                         if (imageData) {
-                            newMsg.image.renderData = await blobUrlManager.dataUrlToBlobUrl(imageData);
-                         }
-                    } else if (msg.image.source === 'url' && msg.image.url) {
-                        newMsg.image.renderData = msg.image.url;
-                    }
+                if (msg.sender === 'user' && msg.type === 'link' && msg.image?.type === 'image' && msg.image.data.startsWith('data:')) {
+                    const blobUrl = await blobUrlManager.dataUrlToBlobUrl(msg.image.data);
+                    const newMsg = JSON.parse(JSON.stringify(msg));
+                    newMsg.image.renderData = blobUrl;
+                    return newMsg;
                 }
-
-                // AI回复中的图片（通常是base64），直接转为blob URL
-                if (msg.sender === 'character') {
-                     // (此部分逻辑保持不变，因为AI返回的总是data URL)
-                }
-
-                return newMsg;
+                return msg;
             }));
 
             elements.chatArea.innerHTML = '';
-            blobUrlManager.cleanup(); // 清理旧的 blob URL
 
             processedMessages.forEach((messageGroup, index) => {
                 const messageGroupElement = renderMessageGroup(messageGroup, index, user, character);
@@ -226,7 +196,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             setTimeout(() => elements.chatArea.scrollTop = elements.chatArea.scrollHeight, 0);
         }
-        // ▲▲▲ 修改结束 ▲▲▲
         
         function updateButtonStates() {
             if (!elements.input || !elements.respondBtn || !elements.sendBtn) return;
@@ -315,10 +284,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             setAbortController: (controller) => { currentAbortController = controller; }
         });
 
-        async function onSendUserMessages(messages) {
-            if (!Array.isArray(messages) || messages.length === 0) return;
-            
-            state.chatHistory.push(...messages);
+        async function onSendUserMessage(message) {
+            state.chatHistory.push(message);
             await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
             await loadAndRenderHistory();
             updateButtonStates();
@@ -506,9 +473,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 onSendEmoji
             );
         
-            // ▼▼▼ 核心修改：将处理数组的函数传递给 ImageSender ▼▼▼
-            initializeImageSender(elements, onSendUserMessages);
-            // ▲▲▲ 修改结束 ▲▲▲
+            initializeImageSender(elements, onSendUserMessage);
             initializeLinkSender(elements, onSendUserMessage);
         }
         await initializeChatState();
