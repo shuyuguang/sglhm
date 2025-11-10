@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>你我之间</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="../common/template.css">
+
+</head>
+<body>
+    <!-- ▼▼▼ 核心修改 ▼▼▼ -->
+    <script type="module">
+        // 1. 从模块中导入函数
+        import { createPageLayout } from '../common/template.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const pageContent = `
+                <p>这里是你我之间页面</p>
+            `;
+
+            const handleFeatherClick = () => {
+                console.log('你我之间页面的羽毛笔被点击，但当前无功能。');
+            };
+
+            // 2. 调用函数
+            createPageLayout({
+                title: '你我之间',
+                contentHtml: pageContent,
+                onFeatherClick: handleFeatherClick
+            });
+        });
+    </script>
+</body>
+</html>
