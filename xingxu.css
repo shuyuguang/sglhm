@@ -118,11 +118,9 @@ body.tab-bar-hidden {
 .tab-toggle-button {
     position: fixed;
     right: 20px;
-    bottom: 70px; /* 初始位置在 Tab 栏上方 */
-    width: 36px;
-    height: 36px;
-    background-color: rgba(35, 35, 60, 0.7);
-    backdrop-filter: blur(5px);
+    bottom: 57px; /* 初始位置在 Tab 栏上方 */
+    width: 18px;
+    height: 12px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -135,13 +133,12 @@ body.tab-bar-hidden {
 }
 
 .tab-toggle-button:hover {
-    background-color: rgba(60, 60, 90, 0.9);
-    color: #fff;
+    color: rgba(255, 255, 255, 0.5);;
 }
 
 /* 当 Tab 栏隐藏时，按钮移动到底部 */
 body.tab-bar-hidden .tab-toggle-button {
-    bottom: 20px;
+    bottom: 1px;
 }
 
 /* 【新增】通用的隐藏类 */
