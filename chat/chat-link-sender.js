@@ -11,7 +11,9 @@ let state = {
 function isValidHttpUrl(string) {
     try {
         const url = new URL(string);
-        return url.protocol === "http:" || url.protocol === "https;
+        // ▼▼▼ 核心修复：修正了此处的拼写错误 ▼▼▼
+        return url.protocol === "http:" || url.protocol === "https:";
+        // ▲▲▲ 修复结束 ▲▲▲
     } catch (_) { return false; }
 }
 
@@ -116,16 +118,14 @@ function updatePreview() {
     }
 }
 
-// ▼▼▼ 核心修复：已修正此函数的语法错误 ▼▼▼
 function escapeHtml(unsafe) {
     if (!unsafe) return '';
     return unsafe.replace(/&/g, "&amp;")
                  .replace(/</g, "&lt;")
                  .replace(/>/g, "&gt;")
-                 .replace(/"/g, "&quot;") // 已修正
+                 .replace(/"/g, "&quot;")
                  .replace(/'/g, "&#039;");
 }
-// ▲▲▲ 修复结束 ▲▲▲
 
 async function handleAddImage(url) {
     try {
@@ -175,6 +175,11 @@ function handleSend() {
 }
 
 function bindEvents() {
+    if (!elements.overlay) {
+        console.error("Link sender elements not found, cannot bind events.");
+        return;
+    }
+    
     elements.overlay.addEventListener('click', e => {
         if (e.target === elements.overlay) closeLinkSender();
     });
