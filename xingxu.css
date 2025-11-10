@@ -1,4 +1,4 @@
-/* --- CSS 样式 --- */
+/* --- CSS 样式 for xingxu.html (V3) --- */
 
 :root {
     --bg-color: #1a1a2e;
@@ -17,11 +17,6 @@ body {
     height: 100vh;
     overflow: hidden;
     box-sizing: border-box;
-    transition: padding-bottom 0.3s ease-in-out;
-}
-
-body.tab-bar-is-hidden {
-    padding-bottom: 0;
 }
 
 /* 页面内容容器 */
@@ -54,7 +49,7 @@ body.tab-bar-is-hidden {
 
 /* 底部 Tab 栏 */
 .tab-bar {
-    position: fixed; /* 【修改】改回 fixed 定位 */
+    position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
@@ -63,12 +58,14 @@ body.tab-bar-is-hidden {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    z-index: 10;
+    z-index: 1000;
+    /* 【新增】为 transform 属性添加过渡效果 */
     transition: transform 0.3s ease-in-out;
 }
 
-.tab-bar.tab-bar-hidden {
-    transform: translateY(100%);
+/* 【新增】用于隐藏 Tab 栏的样式 */
+.tab-bar.hidden {
+    transform: translateY(100%); /* 向上移动自身高度，实现隐藏 */
 }
 
 .tab-item {
@@ -94,42 +91,6 @@ body.tab-bar-is-hidden {
     background-clip: text;
     color: transparent;
 }
-
-/* 【修改】切换按钮样式调整 */
-.tab-toggle-btn {
-    position: fixed; /* 使用 fixed 定位，使其独立于 tab-bar */
-    right: 15px;
-    bottom: 57px; /* 默认位置在 tab-bar 上方 */
-    width: 18px;
-    height: 12px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 14px;
-    z-index: 11; /* 确保在 tab-bar 之上 */
-    transition: bottom 0.3s ease-in-out; /* 为位置变化添加动画 */
-}
-
-/* 当 Tab 栏隐藏时，按钮移动到屏幕底部 */
-body.tab-bar-is-hidden .tab-toggle-btn {
-    bottom: 1px;
-}
-
-.toggle-icon.icon-down {
-    display: none;
-}
-
-/* 【修改】根据 body 的 class 来切换图标 */
-body.tab-bar-is-hidden .toggle-icon.icon-up {
-    display: none;
-}
-body.tab-bar-is-hidden .toggle-icon.icon-down {
-    display: block;
-}
-
 
 /* iframe 容器页面的样式 */
 #game-page {
