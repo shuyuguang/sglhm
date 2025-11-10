@@ -42,7 +42,6 @@
             </div>
         </div>
     </div>
-    <!-- ▼▼▼ 核心修改：风格面板已被删除 ▼▼▼ -->
     <!-- 模式 -->
     <div id="menu-content-model" class="secondary-content-pane">
         <div class="model-selection-group">
@@ -53,22 +52,6 @@
             <span class="mode-panel-item-title">是否开启DIY</span>
             <label class="switch-control"><input type="checkbox" id="enable-diy-switch"><span class="slider round"></span></label>
         </div>
-        <div class="interaction-mode-group">
-            <h4 class="panel-section-title">当前互动模式</h4>
-            <button id="interaction-mode-capsule" class="interaction-mode-capsule"><span id="selected-interaction-mode-name"></span><i class="fa-solid fa-chevron-right"></i></button>
-        </div>
-        <!-- ▼▼▼ 核心修改：从风格面板移动过来的设置项 ▼▼▼ -->
-        <div class="style-settings-wrapper">
-            <div class="style-setting-group">
-                <label>输出条数限制</label>
-                <div class="min-max-input-container">
-                    <input type="number" id="style-output-min" min="1" max="99"><span>-</span><input type="number" id="style-output-max" min="1" max="99">
-                </div>
-            </div>
-            <div class="style-setting-group"><label for="style-visual-limit">视觉上下文限制</label><input type="number" id="style-visual-limit" min="30" max="99"></div>
-            <div class="style-setting-group"><label for="style-memory-limit">记忆轮数限制</label><input type="number" id="style-memory-limit" min="10" max="99"></div>
-        </div>
-        <!-- ▲▲▲ 修改结束 ▲▲▲ -->
     </div>
     <!-- 表情 -->
     <div id="menu-content-emoji" class="secondary-content-pane">
@@ -103,7 +86,6 @@
     <ul class="header-menu-list">
         <li class="header-menu-item"><a href="#" class="active" data-target="menu-content-memory"><span>记忆</span></a></li>
         <li class="header-menu-item"><a href="#" data-target="menu-content-edit"><span>设定</span></a></li>
-        <!-- ▼▼▼ 核心修改：风格标签已被删除 ▼▼▼ -->
         <li class="header-menu-item"><a href="#" data-target="menu-content-model"><span>模式</span></a></li>
         <li class="header-menu-item"><a href="#" data-target="menu-content-emoji"><span>表情</span></a></li>
         <li class="header-menu-item"><a href="#" data-target="menu-content-inspiration"><span>灵感</span></a></li>

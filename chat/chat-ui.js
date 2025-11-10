@@ -131,12 +131,18 @@ export function renderMessageGroup(messageGroup, index, user, character) {
                 break;
             case 'image':
                 bubble.classList.add('is-image-message');
-                const imageUrl = messageGroup.renderData || messageGroup.data;
+                const imageUrl = messageGroup.renderData; // 从预处理步骤获取
+                
+                // ▼▼▼ 修改：使用更具体的 alt 和 title ▼▼▼
+                const imageTitle = messageGroup.source === 'local' ? `本地图片: ${messageGroup.filename}` : `网络图片: ${messageGroup.url}`;
+                const imageAlt = messageGroup.filename || '用户图片';
+                
                 bubble.innerHTML = `
-                    <a href="${imageUrl}" target="_blank" title="点击查看大图">
-                        <img src="${imageUrl}" alt="用户图片" class="message-photo-img">
+                    <a href="${imageUrl}" target="_blank" title="${imageTitle} (点击查看大图)">
+                        <img src="${imageUrl}" alt="${imageAlt}" class="message-photo-img">
                     </a>
                 `;
+                // ▲▲▲ 修改结束 ▲▲▲
                 break;
             case 'link':
                 bubble.classList.add('is-link-message');
@@ -148,9 +154,10 @@ export function renderMessageGroup(messageGroup, index, user, character) {
                      if (image.type === 'text-photo') {
                         imageContent = `<div class="link-card-image text-photo">${escapeHtml(image.text)}</div>`;
                     } else if (image.type === 'image') {
-                        // 使用 renderData (blob URL) 优先，否则用 data (base64)
-                        const imageUrl = image.renderData || image.data;
+                        // ▼▼▼ 修改：使用 renderData 优先 ▼▼▼
+                        const imageUrl = image.renderData || (image.source === 'url' ? image.url : '');
                         imageContent = `<img src="${imageUrl}" class="link-card-image">`;
+                        // ▲▲▲ 修改结束 ▲▲▲
                     }
                     imageHtml = `<div class="link-card-image-wrapper">${imageContent}</div>`;
                 }

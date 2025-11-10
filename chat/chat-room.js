@@ -5,7 +5,6 @@ import { PROFILE_DB_KEYS } from '../config/profile.config.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
 import { createChatEditor } from './chat-editor-bridge.js';
 import { initializeMessageMenu } from './message-edit.js';
-import { CHAT_STYLES, STYLE_DEFAULT_SETTINGS } from './chat-prompt.js';
 
 import { renderChatRoomUI, renderMessageGroup, renderSystemMessage } from './chat-ui.js';
 import { initializeMemorySystem } from './chat-memory.js';
@@ -18,6 +17,9 @@ import { initializeInputArea } from './chat-input-handler.js';
 import { initializeImageSender, openImageSender } from './chat-image-sender.js';
 import { initializeLinkSender, openLinkSender } from './chat-link-sender.js';
 
+// ▼▼▼ 新增：定义图片存储前缀 ▼▼▼
+const CHAT_PHOTO_PREFIX = 'chat-photo/';
+// ▲▲▲ 新增结束 ▲▲▲
 
 const blobUrlManager = {
     cache: new Map(),
@@ -104,15 +106,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             userProfileEditName: document.getElementById('user-profile-edit-name'),
             charProfileEditAvatar: document.getElementById('char-profile-edit-avatar'),
             charProfileEditName: document.getElementById('char-profile-edit-name'),
-            styleOutputMin: document.getElementById('style-output-min'),
-            styleOutputMax: document.getElementById('style-output-max'),
-            styleVisualLimit: document.getElementById('style-visual-limit'),
-            styleMemoryLimit: document.getElementById('style-memory-limit'),
-            interactionModeCapsule: document.getElementById('interaction-mode-capsule'),
-            interactionModeSheetOverlay: document.getElementById('interaction-mode-sheet-overlay'),
-            interactionModeList: document.getElementById('interaction-mode-list'),
-            interactionModeCancelBtn: document.getElementById('interaction-mode-cancel-btn'),
-            selectedInteractionModeName: document.getElementById('selected-interaction-mode-name'),
             diySwitch: document.getElementById('enable-diy-switch'),
             regenerateBtn: document.getElementById('regenerate-btn'),
             continueBtn: document.getElementById('continue-btn'),
@@ -131,10 +124,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             isBgMultiSelectMode: false,
             selectedBgIndices: new Set(),
             currentChatApi: null,
-            currentChatStyle: CHAT_STYLES['dialogue'],
             isDiyEnabled: false,
-            styleSettings: {},
-            visualHistoryStartIndex: 0,
         };
         
         let isAiReplying = false;
@@ -143,13 +133,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const dbKeys = {
             historyKey: `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`,
             selectedApiKey: `${CHAT_DB_KEYS.CHAT_SELECTED_API}_${charId}`,
-            styleDbKey: `${CHAT_DB_KEYS.CHAT_HISTORY}_style_${charId}`,
             memoryDbKey: `relia-chat-memory_${charId}`,
             emojiDbKey: CHAT_DB_KEYS.EMOJIS,
             diyDbKey: `relia-chat-diy-enabled_${charId}`,
-            bgDbKey: `relia-chat-global-backgrounds`,
+            bgDbKey: CHAT_DB_KEYS.GLOBAL_BACKGROUNDS,
             activeBgDbKey: `relia-chat-active-background_${charId}`,
-            styleSettingsDbKey: `relia-chat-style-settings_${charId}`,
         };
 
         let chatEditor = null;
@@ -187,55 +175,58 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elements.userProfileEditAvatar) elements.userProfileEditAvatar.src = user.avatar;
         if (elements.userProfileEditName) elements.userProfileEditName.textContent = user.name;
         
-        async function loadAndRenderHistory(loadMore = false) {
-            const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle) || 'dialogue';
-            const settings = state.styleSettings[currentStyleKey] || STYLE_DEFAULT_SETTINGS[currentStyleKey];
-            const visualLimit = parseInt(settings.visualLimit, 10) || 50;
+        // ▼▼▼ 核心修改：重写 loadAndRenderHistory 以处理新的图片格式 ▼▼▼
+        async function loadAndRenderHistory() {
+            // 预处理消息，为UI渲染准备好数据
+            const processedMessages = await Promise.all(state.chatHistory.map(async (msg) => {
+                const newMsg = JSON.parse(JSON.stringify(msg)); // 深拷贝以避免修改原始state
 
-            if (!loadMore) {
-                state.visualHistoryStartIndex = Math.max(0, state.chatHistory.length - visualLimit);
-            } else {
-                state.visualHistoryStartIndex = Math.max(0, state.visualHistoryStartIndex - visualLimit);
-            }
-            
-            const messagesToRender = state.chatHistory.slice(state.visualHistoryStartIndex);
-            
-            const processedMessages = await Promise.all(messagesToRender.map(async (msg) => {
-                if (msg.sender === 'user' && msg.type === 'image' && msg.data.startsWith('data:')) {
-                    const blobUrl = await blobUrlManager.dataUrlToBlobUrl(msg.data);
-                    return { ...msg, renderData: blobUrl };
+                // 处理用户发送的图片
+                if (msg.sender === 'user' && msg.type === 'image') {
+                    if (msg.source === 'local' && msg.filename) {
+                        const imageData = await dbStorage.getItem(`${CHAT_PHOTO_PREFIX}${msg.filename}`);
+                        if (imageData) {
+                            newMsg.renderData = await blobUrlManager.dataUrlToBlobUrl(imageData);
+                        } else {
+                            newMsg.renderData = ''; // Or a placeholder image
+                            console.warn(`本地图片 ${msg.filename} 未在数据库中找到。`);
+                        }
+                    } else if (msg.source === 'url' && msg.url) {
+                        newMsg.renderData = msg.url;
+                    }
                 }
-                if (msg.sender === 'user' && msg.type === 'link' && msg.image?.type === 'image' && msg.image.data.startsWith('data:')) {
-                    const blobUrl = await blobUrlManager.dataUrlToBlobUrl(msg.image.data);
-                    const newMsg = JSON.parse(JSON.stringify(msg));
-                    newMsg.image.renderData = blobUrl;
-                    return newMsg;
+                
+                // 处理用户发送的链接卡片中的图片
+                if (msg.sender === 'user' && msg.type === 'link' && msg.image?.type === 'image') {
+                    if (msg.image.source === 'local' && msg.image.filename) {
+                         const imageData = await dbStorage.getItem(`${CHAT_PHOTO_PREFIX}${msg.image.filename}`);
+                         if (imageData) {
+                            newMsg.image.renderData = await blobUrlManager.dataUrlToBlobUrl(imageData);
+                         }
+                    } else if (msg.image.source === 'url' && msg.image.url) {
+                        newMsg.image.renderData = msg.image.url;
+                    }
                 }
-                return msg;
+
+                // AI回复中的图片（通常是base64），直接转为blob URL
+                if (msg.sender === 'character') {
+                     // (此部分逻辑保持不变，因为AI返回的总是data URL)
+                }
+
+                return newMsg;
             }));
 
             elements.chatArea.innerHTML = '';
-
-            if (state.visualHistoryStartIndex > 0) {
-                const loadMoreBtn = document.createElement('button');
-                loadMoreBtn.textContent = '加载历史消息';
-                loadMoreBtn.className = 'load-more-btn';
-                loadMoreBtn.onclick = () => loadAndRenderHistory(true);
-                elements.chatArea.appendChild(loadMoreBtn);
-            }
+            blobUrlManager.cleanup(); // 清理旧的 blob URL
 
             processedMessages.forEach((messageGroup, index) => {
-                const originalIndex = state.visualHistoryStartIndex + index;
-                // ▼▼▼ 核心修改 ①：调用修改后的 renderMessageGroup 并手动 append ▼▼▼
-                const messageGroupElement = renderMessageGroup(messageGroup, originalIndex, user, character);
+                const messageGroupElement = renderMessageGroup(messageGroup, index, user, character);
                 elements.chatArea.appendChild(messageGroupElement);
-                // ▲▲▲ 修改结束 ▲▲▲
             });
 
-            if (!loadMore) {
-                setTimeout(() => elements.chatArea.scrollTop = elements.chatArea.scrollHeight, 0);
-            }
+            setTimeout(() => elements.chatArea.scrollTop = elements.chatArea.scrollHeight, 0);
         }
+        // ▲▲▲ 修改结束 ▲▲▲
         
         function updateButtonStates() {
             if (!elements.input || !elements.respondBtn || !elements.sendBtn) return;
@@ -321,11 +312,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 isAiReplying = value; 
                 updateButtonStates();
             },
-            setAbortController: (controller) => { currentAbortController = controller; },
-            getStyleSettings: () => {
-                const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle) || 'dialogue';
-                return state.styleSettings[currentStyleKey];
-            }
+            setAbortController: (controller) => { currentAbortController = controller; }
         });
 
         async function onSendUserMessage(message) {
@@ -350,65 +337,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const emojiMessage = { sender: 'user', isEmoji: true, name: emoji.name, data: emoji.data };
             await onSendUserMessage(emojiMessage);
         }
-
-        
-        function initializeInteractionModeAndStyle() {
-            const updateInteractionModeUI = () => {
-                const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle);
-                if (currentStyleKey && elements.selectedInteractionModeName && elements.interactionModeList) {
-                    elements.selectedInteractionModeName.textContent = CHAT_STYLES[currentStyleKey].name;
-                    elements.interactionModeList.querySelectorAll('.action-button').forEach(btn => {
-                        btn.classList.toggle('active', btn.dataset.style === currentStyleKey);
-                    });
-                }
-            };
-
-            const updateStyleSettingsPanelUI = () => {
-                const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle);
-                if (currentStyleKey && state.styleSettings[currentStyleKey]) {
-                    const settings = state.styleSettings[currentStyleKey];
-                    elements.styleOutputMin.value = settings.outputMin;
-                    elements.styleOutputMax.value = settings.outputMax;
-                    elements.styleVisualLimit.value = settings.visualLimit;
-                    elements.styleMemoryLimit.value = settings.memoryLimit;
-                }
-            };
-            
-            updateInteractionModeUI();
-            updateStyleSettingsPanelUI();
-
-            elements.interactionModeCapsule?.addEventListener('click', () => elements.interactionModeSheetOverlay.classList.add('active'));
-            elements.interactionModeCancelBtn?.addEventListener('click', () => elements.interactionModeSheetOverlay.classList.remove('active'));
-            elements.interactionModeSheetOverlay?.addEventListener('click', (e) => {
-                if (e.target === elements.interactionModeSheetOverlay) elements.interactionModeSheetOverlay.classList.remove('active');
-            });
-            elements.interactionModeList?.addEventListener('click', async (e) => {
-                const button = e.target.closest('.action-button');
-                if (!button) return;
-                const newStyleKey = button.dataset.style;
-                if (newStyleKey && CHAT_STYLES[newStyleKey]) {
-                    state.currentChatStyle = CHAT_STYLES[newStyleKey];
-                    await dbStorage.setItem(dbKeys.styleDbKey, newStyleKey);
-                    updateInteractionModeUI();
-                    updateStyleSettingsPanelUI();
-                    await loadAndRenderHistory();
-                    elements.interactionModeSheetOverlay.classList.remove('active');
-                }
-            });
-
-            [elements.styleOutputMin, elements.styleOutputMax, elements.styleVisualLimit, elements.styleMemoryLimit].forEach(input => {
-                input?.addEventListener('input', async (e) => {
-                    const key = e.target.id.replace('style-', '');
-                    const value = e.target.value;
-                    const currentStyleKey = Object.keys(CHAT_STYLES).find(k => CHAT_STYLES[k] === state.currentChatStyle);
-                    if (currentStyleKey && state.styleSettings[currentStyleKey]) {
-                        state.styleSettings[currentStyleKey][key] = value;
-                        await dbStorage.setItem(dbKeys.styleSettingsDbKey, state.styleSettings);
-                        if (key === 'visualLimit') await loadAndRenderHistory();
-                    }
-                });
-            });
-        }
         
         if (elements.sendBtn) elements.sendBtn.addEventListener('click', handleUserSend);
         if (elements.respondBtn) {
@@ -423,24 +351,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elements.regenerateBtn) elements.regenerateBtn.addEventListener('click', () => triggerAiResponse('regenerate'));
         if (elements.continueBtn) elements.continueBtn.addEventListener('click', () => triggerAiResponse('continue'));
 
-        // ▼▼▼ 核心修改 ②：重写 chatArea 的 click 监听器 ▼▼▼
         elements.chatArea.addEventListener('click', async (e) => {
-            // 处理图片链接点击
             const imageLink = e.target.closest('.is-image-message a');
             if (imageLink) {
                 e.preventDefault(); 
             }
 
-            // 处理文字图预览按钮
             const previewBtn = e.target.closest('.text-photo-preview-btn');
             if (previewBtn) {
                 const text = previewBtn.dataset.text;
                 elements.textPreviewContent.textContent = text;
                 elements.textPreviewOverlay.classList.add('active');
-                return; // 结束，不处理其他逻辑
+                return;
             }
 
-            // 处理分页器按钮
             const pagerButton = e.target.closest('.pager-btn');
             if (pagerButton) {
                 const messageGroupContainer = pagerButton.closest('.message-group-container');
@@ -462,7 +386,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (changed) {
                     await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
                     
-                    // 精准DOM更新，而不是全量刷新
                     const oldGroup = elements.chatArea.querySelector(`.message-group-container[data-index="${index}"]`);
                     if (oldGroup) {
                         const newGroup = renderMessageGroup(messageData, index, user, character);
@@ -471,7 +394,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         });
-        // ▲▲▲ 修改结束 ▲▲▲
         
         if (elements.textPreviewOverlay) {
             elements.textPreviewOverlay.addEventListener('click', (e) => {
@@ -532,34 +454,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         initializeInputArea(elements, updateButtonStates, state, dbKeys.diyDbKey, dbStorage);
         
         async function initializeChatState() {
-            const [savedHistory, savedStyleKey, savedApi, savedDiyEnabled, savedBackgrounds, savedActiveBg, savedStyleSettings, savedEmojis] = await Promise.all([
+            const [savedHistory, savedApi, savedDiyEnabled, savedBackgrounds, savedActiveBg, savedEmojis] = await Promise.all([
                 dbStorage.getItem(dbKeys.historyKey),
-                dbStorage.getItem(dbKeys.styleDbKey),
                 dbStorage.getItem(dbKeys.selectedApiKey),
                 dbStorage.getItem(dbKeys.diyDbKey),
                 dbStorage.getItem(dbKeys.bgDbKey),
                 dbStorage.getItem(dbKeys.activeBgDbKey),
-                dbStorage.getItem(dbKeys.styleSettingsDbKey),
                 dbStorage.getItem(dbKeys.emojiDbKey),
             ]);
             
             state.chatHistory = (savedHistory && Array.isArray(savedHistory)) ? savedHistory : [];
-            state.currentChatStyle = (savedStyleKey && CHAT_STYLES[savedStyleKey]) ? CHAT_STYLES[savedStyleKey] : CHAT_STYLES['short-chat'];
             if (savedApi) state.currentChatApi = savedApi;
             state.isDiyEnabled = savedDiyEnabled || false;
             if (elements.diySwitch) elements.diySwitch.checked = state.isDiyEnabled;
             state.backgrounds = savedBackgrounds || [];
             state.emojis = savedEmojis || [];
-            
-            const finalSettings = {};
-            const savedSettings = savedStyleSettings || {};
-            Object.keys(STYLE_DEFAULT_SETTINGS).forEach(key => {
-                finalSettings[key] = {
-                    ...STYLE_DEFAULT_SETTINGS[key],
-                    ...(savedSettings[key] || {})
-                };
-            });
-            state.styleSettings = finalSettings;
 
             const defaultBgColor = '#F8F9FB';
             await setActiveBackground(savedActiveBg || defaultBgColor);
@@ -570,8 +479,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             updateButtonStates();
             updateModelButtonText();
             
-            initializeInteractionModeAndStyle();
-
             const getChatHistory = () => state.chatHistory;
             const getEmojis = () => state.emojis;
             const updateChatHistory = async (newHistory) => {
@@ -614,10 +521,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         appContainer.innerHTML = `<p style="text-align: center;">页面加载时发生严重错误。</p>`;
     }
 
-    // ▼▼▼ 核心修改 ③：修复 unload 弃用警告 ▼▼▼
-    // 使用 'pagehide' 事件替代 'unload' 来清理资源
     window.addEventListener('pagehide', () => {
         blobUrlManager.cleanup();
     });
-    // ▲▲▲ 修改结束 ▲▲▲
 });

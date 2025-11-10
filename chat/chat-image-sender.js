@@ -1,5 +1,10 @@
 // relia-chat/chat-image-sender.js
 
+// ▼▼▼ 新增：从公共模块导入db和配置 ▼▼▼
+import { dbStorage } from '../common/db.js';
+const CHAT_PHOTO_PREFIX = 'chat-photo/';
+// ▲▲▲ 新增结束 ▲▲▲
+
 let elements = {};
 let onSendCallback = null;
 let state = {
@@ -77,7 +82,10 @@ function updatePreview() {
             if (item.type === 'text-photo') {
                 thumb.innerHTML = `<span class="preview-thumbnail-text">${item.text}</span>`;
             } else if (item.type === 'image') {
-                thumb.innerHTML = `<img src="${item.data}" alt="预览">`;
+                // ▼▼▼ 修改：根据图片来源决定预览图的src ▼▼▼
+                const previewSrc = item.source === 'local' ? item.previewUrl : item.url;
+                thumb.innerHTML = `<img src="${previewSrc}" alt="预览">`;
+                // ▲▲▲ 修改结束 ▲▲▲
             }
 
             const removeBtn = document.createElement('button');
@@ -110,19 +118,6 @@ function fileToDataUrl(file) {
     });
 }
 
-function handleAddFromInput() {
-    const text = elements.multiPurposeInput.value.trim();
-    if (!text) return;
-
-    if (isValidHttpUrl(text)) {
-        // 作为URL处理
-        handleAddUrl(text);
-    } else {
-        // 作为普通文本处理
-        handleAddText(text);
-    }
-}
-
 function handleAddText(text) {
     state.imagesToSend.push({ type: 'text-photo', text: text });
     elements.multiPurposeInput.value = '';
@@ -131,24 +126,14 @@ function handleAddText(text) {
     updateSendButtonState();
 }
 
-async function handleAddUrl(url) {
-    setLoading(true);
-    try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('无法加载图片');
-        const blob = await response.blob();
-        const dataUrl = await fileToDataUrl(blob);
-        state.imagesToSend.push({ type: 'image', data: dataUrl });
-        elements.multiPurposeInput.value = '';
-        elements.multiPurposeInput.style.height = 'auto'; // 重置高度
-        updatePreview();
-        updateSendButtonState();
-    } catch (error) {
-        console.error("加载URL图片失败:", error);
-        alert('图片链接加载失败，请检查URL或网络连接。');
-    } finally {
-        setLoading(false);
-    }
+// ▼▼▼ 核心修改：处理URL图片和本地图片 ▼▼▼
+function handleAddUrl(url) {
+    // 对于URL图片，只存储URL本身
+    state.imagesToSend.push({ type: 'image', source: 'url', url: url });
+    elements.multiPurposeInput.value = '';
+    elements.multiPurposeInput.style.height = 'auto';
+    updatePreview();
+    updateSendButtonState();
 }
 
 async function handleAddLocal(file) {
@@ -156,7 +141,20 @@ async function handleAddLocal(file) {
     setLoading(true);
     try {
         const dataUrl = await fileToDataUrl(file);
-        state.imagesToSend.push({ type: 'image', data: dataUrl });
+        // 1. 将图片数据存入 IndexedDB
+        await dbStorage.setItem(`${CHAT_PHOTO_PREFIX}${file.name}`, dataUrl);
+
+        // 2. 创建一个临时的 blob URL 用于本地预览
+        const previewUrl = URL.createObjectURL(file);
+
+        // 3. 在待发送队列中只存储文件名和预览URL
+        state.imagesToSend.push({
+            type: 'image',
+            source: 'local',
+            filename: file.name,
+            previewUrl: previewUrl // 仅用于本次会话的UI预览
+        });
+
         updatePreview();
         updateSendButtonState();
     } catch (error) {
@@ -172,12 +170,15 @@ function handleSend() {
 
     if (onSendCallback) {
         state.imagesToSend.forEach(item => {
-            const message = { sender: 'user', ...item };
+            // 清理掉临时的预览URL，不存入数据库
+            const message = { ...item };
+            delete message.previewUrl;
             onSendCallback(message);
         });
     }
     closeImageSender();
 }
+// ▲▲▲ 修改结束 ▲▲▲
 
 function bindEvents() {
     elements.overlay.addEventListener('click', e => {
