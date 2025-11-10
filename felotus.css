@@ -139,7 +139,6 @@ html, body {
 /* --- 星图面板特定样式 (v5 - 横向缩短) --- */
 #stellar-totem-panel .panel-wrapper {
     height: auto;
-    /* 【修改】面板最大宽度进一步缩小以适应更窄的按钮 */
     max-width: 340px;
 }
 
@@ -148,7 +147,6 @@ html, body {
     flex-wrap: wrap;
     justify-content: center;
     gap: 20px;
-    /* 【修改】根据新的按钮宽度(130px)重新计算容器宽度 */
     width: calc(130px * 2 + 20px);
 }
 
@@ -159,7 +157,6 @@ html, body {
     color: #e0e0e0;
     cursor: pointer;
     padding: 20px;
-    /* 【修改】减小按钮的宽度 */
     width: 130px;
     height: 140px;
     transition: all 0.3s ease;
@@ -202,10 +199,6 @@ html, body {
     text-align: center;
 }
 
-
-/* --- [删除] 公告面板特定样式已被移除，并迁移至 announcements.css --- */
-
-
 /* --- 侧边菜单面板样式 --- */
 .side-panel-overlay {
     position: fixed;
@@ -238,22 +231,18 @@ html, body {
     transition: transform 0.25s ease-in-out;
     border-top-left-radius: 16px;
     border-bottom-left-radius: 16px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
 }
 
 .side-panel.visible {
     transform: translateX(0);
 }
 
-/* --- [新增] 侧边菜单面板内容样式 --- */
-.side-panel {
-    padding: 18px 20px; /* 增加内边距给内容留出空间 */
-    display: flex;
-    flex-direction: column;
-}
-
 .side-panel-header {
-    margin-bottom: 20px; /* 标题和未来内容之间的间距 */
-    flex-shrink: 0; /* 防止头部在内容过多时被压缩 */
+    margin-bottom: 20px;
+    flex-shrink: 0;
 }
 
 .side-panel-title {
@@ -264,19 +253,48 @@ html, body {
 }
 
 .side-panel-content {
-    flex-grow: 1; /* 让内容区域占据剩余空间 */
+    flex-grow: 1;
     /* 如果未来内容很多，可以加上 overflow-y: auto; */
 }
 
-/* --- [新增] 抉择铃面板内的导航按钮样式 --- */
-.side-panel-content .nav-button {
-    width: 100%; /* 宽度占满容器 */
-    height: auto; /* 高度由内容自动决定 */
-    padding: 25px 15px; /* 优化垂直内边距 */
+/* --- [新增] 抉择铃面板项目样式 --- */
+.side-panel-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
 }
 
-.side-panel-content .nav-button .button-description {
-    font-size: 14px; /* 描述文字稍大，更易读 */
-    max-width: 95%; /* 防止文字过长时换行效果不佳 */
-    line-height: 1.4;
+.capsule-nav-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 28px;
+    background-color: rgba(40, 45, 60, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50px; /* 关键：胶囊形状 */
+    color: #e0e0e0;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.capsule-nav-button:hover {
+    background-color: rgba(60, 65, 80, 0.9);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+.capsule-nav-button i {
+    font-size: 16px;
+}
+
+.item-description {
+    margin-top: 10px; /* 按钮与描述的间距 */
+    font-size: 13px;
+    color: #a0a8b4;
+    text-align: center;
 }
