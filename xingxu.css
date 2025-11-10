@@ -63,7 +63,7 @@ body.tab-bar-is-hidden {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    z-index: 1000;
+    z-index: 10;
     transition: transform 0.3s ease-in-out;
 }
 
@@ -99,7 +99,7 @@ body.tab-bar-is-hidden {
 .tab-toggle-btn {
     position: fixed; /* 使用 fixed 定位，使其独立于 tab-bar */
     right: 15px;
-    bottom: 65px; /* 默认位置在 tab-bar 上方 */
+    bottom: 55px; /* 默认位置在 tab-bar 上方 */
     width: 36px;
     height: 24px;
     background-color: rgba(35, 35, 60, 0.7);
@@ -111,13 +111,13 @@ body.tab-bar-is-hidden {
     cursor: pointer;
     color: var(--text-inactive);
     font-size: 14px;
-    z-index: 1001; /* 确保在 tab-bar 之上 */
+    z-index: 11; /* 确保在 tab-bar 之上 */
     transition: bottom 0.3s ease-in-out; /* 为位置变化添加动画 */
 }
 
 /* 当 Tab 栏隐藏时，按钮移动到屏幕底部 */
 body.tab-bar-is-hidden .tab-toggle-btn {
-    bottom: 15px;
+    bottom: 5px;
 }
 
 .toggle-icon.icon-down {
