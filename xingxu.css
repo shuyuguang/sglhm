@@ -85,7 +85,7 @@ body.tab-bar-hidden {
     height: 100%;
     color: var(--text-inactive);
     text-decoration: none;
-    transition: color 0.3s, transform 0.3s;
+    transition: color 0.2s, transform 0.2s;
 }
 
 .tab-item:active { transform: scale(0.92); }
