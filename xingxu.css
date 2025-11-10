@@ -1,0 +1,325 @@
+/* xingxu.css */
+
+/* --- 基础布局和Tab栏样式 (来自 xingxu.html) --- */
+:root {
+    --bg-color: #f4f7f9;
+    --header-bg: #ffffff;
+    --tab-bar-bg: #ffffff;
+    --text-color: #333;
+    --text-inactive: #868e96;
+    --accent-color: #7290B2;
+    --border-color: #e9ecef;
+}
+
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    padding-top: 55px; /* 为固定的 header 留出空间 */
+    padding-bottom: 70px; /* 为固定的 tab-bar 留出空间 */
+}
+
+/* [!] 修改：顶部标题栏样式 */
+.header {
+    background-color: var(--header-bg);
+    padding: 0 20px;
+    height: 55px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1em;
+    font-weight: 500;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--border-color);
+}
+.header span {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.header-action-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--accent-color);
+    cursor: pointer;
+    padding: 8px;
+    z-index: 2;
+}
+
+.content-container {
+    padding-top: 0;
+}
+
+.page {
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+.page.active {
+    display: block;
+}
+.page h1 {
+    font-weight: 300;
+    font-size: 2.5em;
+    color: var(--accent-color);
+    text-align: center;
+    margin-top: 40px;
+}
+.page p {
+    text-align: center;
+    color: var(--text-inactive);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: var(--tab-bar-bg);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-top: 1px solid var(--border-color);
+}
+.tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    color: var(--text-inactive);
+    text-decoration: none;
+    transition: color 0.3s, transform 0.2s;
+}
+.tab-item:active {
+    transform: scale(0.95);
+}
+.tab-item .icon {
+    font-size: 22px;
+    margin-bottom: 4px;
+}
+.tab-item .label {
+    font-size: 11px;
+    font-weight: 400;
+}
+.tab-item.active .label,
+.tab-item.active .icon {
+    color: var(--accent-color);
+}
+
+/* --- 聊天列表和卡片样式 (来自 relia-chat.css) --- */
+#chat-list-area {
+    padding: 10px 15px;
+}
+.chat-card {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 12px;
+    background-color: #fff;
+    border-radius: 12px;
+    cursor: pointer;
+    border: 1px solid #e0e6ec;
+}
+.chat-card-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+.chat-card-main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.chat-card-name {
+    font-size: 1.1em;
+    font-weight: 500;
+    color: #394950;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.chat-card-preview {
+    font-size: 0.9em;
+    color: #868e96;
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.chat-card-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-left: 12px;
+    flex-shrink: 0;
+}
+.chat-card-time {
+    font-size: 0.8em;
+    color: #adb5bd;
+    position: relative;
+    top: -2px;
+}
+.unread-badge {
+    margin-top: 10px;
+    background-color: var(--accent-color);
+    color: white;
+    font-size: 0.75em;
+    font-weight: bold;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 6px;
+}
+
+/* --- 模态框/面板样式 (来自 relia-chat.css) --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+.modal-overlay.active {
+    display: flex;
+}
+.modal-panel {
+    background-color: #ffffff;
+    width: 90vw;
+    max-width: 500px;
+    max-height: 80vh;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    animation: zoomIn 0.3s ease-out;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    overflow: hidden;
+}
+@keyframes zoomIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+.modal-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+.modal-tab {
+    flex: 1;
+    padding: 14px 10px;
+    border: none;
+    background-color: transparent;
+    font-size: 1em;
+    font-weight: 500;
+    color: #868e96;
+    cursor: pointer;
+    transition: color 0.2s;
+    position: relative;
+}
+.modal-tab.active {
+    color: var(--accent-color);
+}
+.modal-tab.disabled {
+    color: #ced4da;
+    cursor: not-allowed;
+}
+.modal-content-container {
+    flex-grow: 1;
+    position: relative;
+    overflow-y: auto;
+}
+.modal-tab-content {
+    display: none;
+}
+.modal-tab-content.active {
+    display: block;
+}
+.sheet-body-list {
+    padding: 8px 16px;
+}
+.char-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    cursor: pointer;
+}
+.char-item .avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
+}
+.char-item .name {
+    flex-grow: 1;
+    font-size: 1em;
+    color: #495057;
+    pointer-events: none;
+}
+.char-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--accent-color);
+    flex-shrink: 0;
+    pointer-events: none;
+}
+.sheet-footer {
+    padding: 16px;
+    display: flex;
+    gap: 10px;
+    border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+.sheet-btn {
+    flex-grow: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.sheet-btn-cancel {
+    background-color: #f1f3f5;
+    color: #495057;
+}
+.sheet-btn-cancel:hover {
+    background-color: #e9ecef;
+}
+.sheet-btn-confirm {
+    background-color: var(--accent-color);
+    color: white;
+}
+.sheet-btn-confirm:hover {
+    background-color: #627ca0;
+}
+.no-char-message {
+    text-align: center;
+    color: #868e96;
+    padding: 30px 16px;
+}
