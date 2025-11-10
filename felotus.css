@@ -298,3 +298,16 @@ html, body {
     color: #a0a8b4;
     text-align: center;
 }
+
+/* --- [修正] 自定义“星绪”组合图标样式 --- */
+.xingxu-icon.fa-stack {
+    /* 调整 font-size 使底层气泡视觉上与其他图标（如手机）大小一致。
+       fa-stack-2x 的大小约等于 font-size 的 2 倍，所以 11px -> 22px */
+    font-size: 11px;
+    line-height: inherit; /* 继承按钮的行高设置 */
+}
+
+.xingxu-icon .fa-star {
+    transform: translate(0%, 50%);    /* 调整星星大小，使其在气泡中更协调 */
+    font-size: 0.9em;
+}
