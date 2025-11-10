@@ -54,7 +54,8 @@ body {
     left: 0;
     right: 0;
     height: 60px;
-    background-color: var(--tab-bar-bg);
+    /* 【修改】将背景色设置为透明 */
+    background-color: transparent;
     display: flex;
     justify-content: space-around;
     align-items: center;
