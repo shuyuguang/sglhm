@@ -15,30 +15,52 @@
     <link rel="stylesheet" href="chat-header-menu.css">
     <link rel="stylesheet" href="chat-modals.css">
     <link rel="stylesheet" href="chat-components.css">
+
+    <!-- 引入 profile 面板所需的全部 CSS -->
+    <link rel="stylesheet" href="../profile/base.css">
+    <link rel="stylesheet" href="../profile/components.css">
+    <link rel="stylesheet" href="../profile/modals.css">
 </head>
 <body>
     <!-- 应用的主容器，JS会将聊天界面动态生成到这里 -->
     <div id="app-container">
         <!-- 聊天室UI将由JS动态生成到这里 -->
     </div>
+
+    <!-- 
+      ▼▼▼ 核心修改 ▼▼▼
+      所有静态的HTML面板都已移出，将由 chat-room.js 动态载入。
+      这样主HTML文件就非常干净了。
+    -->
     
     <!-- JS 库 -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     
+    <!-- profile 模块 -->
+    <script src="../config/profile.config.js" type="module"></script>
+    <script src="../profile/profile.ui.js" type="module"></script>
+    <script src="../profile/profile.events.js" type="module"></script>
+    
     <!-- 引入本页面的专属 JS 逻辑 -->
+    <script src="chat-editor-bridge.js" type="module"></script>
+    <script src="message-edit.js" type="module"></script>
     <script src="chat-prompt.js" type="module"></script>
     
     <!-- 引入拆分后的模块 -->
     <script src="chat-ui.js" type="module"></script>
+    <script src="chat-memory.js" type="module"></script>
     <script src="chat-model-selector.js" type="module"></script>
     <script src="chat-api.js" type="module"></script>
     <script src="chat-emoji.js" type="module"></script>
     <script src="chat-header.js" type="module"></script>
     <script src="chat-theme.js" type="module"></script>
     <script src="chat-input-handler.js" type="module"></script>
+    <!-- ▼▼▼ 新增引入的模块 ▼▼▼ -->
     <script src="chat-image-sender.js" type="module"></script>
+    <script src="chat-link-sender.js" type="module"></script>
+    <!-- ▲▲▲ 新增结束 ▲▲▲ -->
 
     <script src="chat-room.js" type="module"></script> <!-- 主文件最后加载 -->
 </body>

@@ -2,8 +2,12 @@
 
 import { dbStorage } from '../common/db.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
-// ▼▼▼ 核心新增：直接导入唯一的流处理器 ▼▼▼
-import { universalStreamHandler } from './chat-prompt.js';
+
+// ... (isImageUrl and blobUrlToDataUrl functions remain unchanged)
+function isImageUrl(url) {
+    if (typeof url !== 'string') return false;
+    return url.toLowerCase().startsWith('http') && /\.(jpeg|jpg|gif|png|webp)$/i.test(url);
+}
 
 function blobUrlToDataUrl(blobUrl) {
     return new Promise((resolve, reject) => {
@@ -21,7 +25,8 @@ function blobUrlToDataUrl(blobUrl) {
     });
 }
 
-async function constructSystemPrompt(charProfile, userProfile) {
+
+async function constructSystemPrompt(charProfile, userProfile, currentChatStyle, styleSettings) {
     let prompt = `你正在扮演一个角色，你需要严格按照以下设定进行对话。\n\n`;
     prompt += `### 角色设定\n`;
     prompt += `- 名字: ${charProfile.name || '未命名'}\n`;
@@ -52,14 +57,34 @@ async function constructSystemPrompt(charProfile, userProfile) {
         prompt += `- **使用规则 (非常重要)**: 当你想发送表情时，必须使用格式 **[Emoji: 表情名称]**，并确保它**单独占据一行**。不要添加任何多余的文字或符号。\n`;
     }
 
+    // ▼▼▼ 【核心新增】明确告知AI如何使用链接卡片 ▼▼▼
+    prompt += `\n### 工具：发送链接卡片\n`;
+    prompt += `- 你还可以发送链接卡片来分享结构化的信息，例如分享文章、推荐地点等。\n`;
+    prompt += `- **使用规则 (非常重要)**: 当你想发送链接卡片时，必须严格使用以下格式，并确保它**单独占据一段**:\n`;
+    prompt += "```\n[Title: 卡片标题\nBody text: 卡片正文内容\nSource: 卡片来源 (可选)\nIllustration: 对配图的文字描述 (可选，例如 '一只正在打哈欠的猫')]\n```\n";
+    prompt += `- **注意**: \`Title\` 和 \`Body text\` 是必填项。\`Source\` 和 \`Illustration\` 是可选项。\`Illustration\` 字段应该是一段简短的**文字描述**，而不是图片数据或链接。\n`;
+    // ▲▲▲ 新增结束 ▲▲▲
+
     prompt += `\n### 扮演要求\n`;
     prompt += `- 你必须完全沉浸在 **${charProfile.name}** 的角色中，用TA的身份、口吻、性格和知识进行回复。\n`;
     prompt += `- 不要暴露你是AI模型或程序，不要提及“扮演”或“角色设定”。\n`;
     
+    prompt += `\n### 对话风格与限制\n`;
+    prompt += `- 你的回复应该遵循 **${currentChatStyle.name}** 风格。\n`;
+    if (styleSettings && styleSettings.outputMin && styleSettings.outputMax) {
+        prompt += `- 你的回复应该包含最少 **${styleSettings.outputMin}** 条、最多 **${styleSettings.outputMax}** 条消息，每条消息单独占一行。\n`;
+    }
+
+    if (currentChatStyle && typeof currentChatStyle.getPromptAddition === 'function') {
+        const stylePrompt = currentChatStyle.getPromptAddition();
+        if (stylePrompt) {
+            prompt += stylePrompt;
+        }
+    }
     return prompt;
 }
-// ▲▲▲ 修改结束 ▲▲▲
 
+// ... (formatChatHistoryForApi and createApiHandler functions remain unchanged)
 async function formatChatHistoryForApi(history) {
     const formattedPromises = history.map(async (msg) => {
         if (msg.sender === 'user') {
@@ -78,7 +103,27 @@ async function formatChatHistoryForApi(history) {
                         { type: 'image_url', image_url: { url: imageUrlForApi } }
                     ];
                     return { role: 'user', content: content };
-                default:
+                case 'link':
+                    content = `[Title: ${msg.title}\nBody text: ${msg.body}`;
+                    if (msg.source) {
+                        content += `\nSource: ${msg.source}`;
+                    }
+
+                    if (msg.image) {
+                        if (msg.image.type === 'text-photo') {
+                            content += `\nIllustration: ${msg.image.text}`;
+                        } else if (msg.image.type === 'image') {
+                            let imageData = msg.image.data;
+                            if (imageData.startsWith('blob:')) {
+                                imageData = await blobUrlToDataUrl(imageData);
+                            }
+                            const base64String = imageData.substring(imageData.indexOf(',') + 1);
+                            content += `\nIllustration: ${base64String}`;
+                        }
+                    }
+                    content += ']';
+                    return { role: 'user', content: content };
+                default: // 兼容旧文本和表情
                     content = msg.isEmoji ? `[Emoji: ${msg.name}]` : msg.text;
                     return { role: 'user', content: content };
             }
@@ -87,6 +132,20 @@ async function formatChatHistoryForApi(history) {
             const content = activeVersion.map(part => {
                 if (part.isEmoji) {
                     return `[Emoji: ${part.name}]`;
+                }
+                if (part.type === 'link') {
+                    let linkContent = `[Title: ${part.title}\nBody text: ${part.body}`;
+                    if (part.source) linkContent += `\nSource: ${part.source}`;
+                    if (part.image) {
+                        if (part.image.type === 'text-photo') {
+                            linkContent += `\nIllustration: ${part.image.text}`;
+                        } else if (part.image.type === 'image' && part.image.data) {
+                             const base64String = part.image.data.substring(part.image.data.indexOf(',') + 1);
+                             linkContent += `\nIllustration: ${base64String}`;
+                        }
+                    }
+                    linkContent += ']';
+                    return linkContent;
                 }
                 return part.text;
             }).join('\n');
@@ -102,8 +161,8 @@ async function formatChatHistoryForApi(history) {
 export function createApiHandler(context) {
     const {
         state, elements, character, user,
-        renderSystemMessage, onAiReply,
-        getIsAiReplying, setIsAiReplying, setAbortController
+        renderSystemMessage, updateButtonStates, onAiReply,
+        getIsAiReplying, setIsAiReplying, setAbortController, getStyleSettings
     } = context;
 
     async function handleSendMessage(mode = 'new') {
@@ -112,7 +171,9 @@ export function createApiHandler(context) {
             return;
         }
 
-        const memoryLimit = 15; 
+        let historyForApi;
+        const currentStyleSettings = getStyleSettings();
+        const memoryLimit = parseInt(currentStyleSettings.memoryLimit, 10) || 15;
         const memoryInMsgCount = memoryLimit * 2;
         
         const lastMessage = state.chatHistory[state.chatHistory.length - 1];
@@ -129,8 +190,10 @@ export function createApiHandler(context) {
             return;
         }
 
+
         setIsAiReplying(true);
         elements.respondBtn.classList.add('blinking');
+        updateButtonStates();
         
         if (mode === 'new') {
             renderSystemMessage('...', 'loading', elements.chatArea);
@@ -140,9 +203,8 @@ export function createApiHandler(context) {
         setAbortController(controller);
 
         try {
-            const systemPrompt = await constructSystemPrompt(character, user);
+            const systemPrompt = await constructSystemPrompt(character, user, state.currentChatStyle, currentStyleSettings);
             let messagesForApi = [{ role: 'system', content: systemPrompt }];
-            let historyForApi;
 
             if (mode === 'regenerate') {
                 let lastUserMessageIndex = -1;
@@ -190,10 +252,8 @@ export function createApiHandler(context) {
                 decoder: new TextDecoder('utf-8'),
                 emojis: emojis
             };
-            
-            // ▼▼▼ 核心修改：直接调用 universalStreamHandler ▼▼▼
-            const replyMessages = await universalStreamHandler(handlerContext);
-            // ▲▲▲ 修改结束 ▲▲▲
+
+            const replyMessages = await state.currentChatStyle.streamHandler(handlerContext);
 
             if (replyMessages.length > 0) {
                 await onAiReply({ mode, data: replyMessages });
@@ -218,6 +278,7 @@ export function createApiHandler(context) {
             setIsAiReplying(false);
             setAbortController(null);
             elements.respondBtn.classList.remove('blinking');
+            updateButtonStates();
             elements.input.focus();
         }
     }

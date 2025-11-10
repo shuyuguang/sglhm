@@ -3,9 +3,9 @@
 /**
  * 初始化顶部菜单系统
  * @param {object} elements - 共享的DOM元素引用
+ * @param {object} editors - 包含 { chatEditor, userEditor } 的对象
  */
-// ▼▼▼ 核心修改：移除 editors 参数 ▼▼▼
-export function initializeHeaderMenu(elements) {
+export function initializeHeaderMenu(elements, editors) {
     const toggleMenu = () => {
         elements.headerContentPanel.classList.toggle('active');
         elements.headerTabsPanel.classList.toggle('active');
@@ -36,6 +36,28 @@ export function initializeHeaderMenu(elements) {
 
             elements.headerContentPanel.querySelectorAll('.secondary-content-pane.active').forEach(p => p.classList.remove('active'));
             document.getElementById(targetId)?.classList.add('active');
+        });
+    }
+
+    if (elements.editUserProfileTrigger) {
+        elements.editUserProfileTrigger.addEventListener('click', () => {
+            if (editors.userEditor) {
+                editors.userEditor.open();
+                toggleMenu();
+            } else {
+                alert('用户编辑器初始化失败！');
+            }
+        });
+    }
+    
+    if (elements.editCharProfileTrigger) {
+        elements.editCharProfileTrigger.addEventListener('click', () => {
+            if (editors.chatEditor) {
+                editors.chatEditor.open();
+                toggleMenu();
+            } else {
+                alert('角色编辑器初始化失败！');
+            }
         });
     }
 }

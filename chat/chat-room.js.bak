@@ -19,9 +19,11 @@ import { initializeImageSender, openImageSender } from './chat-image-sender.js';
 import { initializeLinkSender, openLinkSender } from './chat-link-sender.js';
 
 
+// ▼▼▼ [新增] Blob URL 管理器，解决Base64超长链接问题 ▼▼▼
 const blobUrlManager = {
-    cache: new Map(),
+    cache: new Map(), // 使用 Map 来缓存 Data URL -> Blob URL 的转换结果
     
+    // 将 Data URL 转换为 Blob URL
     async dataUrlToBlobUrl(dataUrl) {
         if (this.cache.has(dataUrl)) {
             return this.cache.get(dataUrl);
@@ -30,14 +32,15 @@ const blobUrlManager = {
             const response = await fetch(dataUrl);
             const blob = await response.blob();
             const blobUrl = URL.createObjectURL(blob);
-            this.cache.set(dataUrl, blobUrl);
+            this.cache.set(dataUrl, blobUrl); // 缓存结果
             return blobUrl;
         } catch (error) {
             console.error("Data URL to Blob URL conversion failed:", error);
-            return dataUrl;
+            return dataUrl; // 转换失败则返回原始URL
         }
     },
     
+    // 清理所有创建的 Blob URL，防止内存泄漏
     cleanup() {
         for (const blobUrl of this.cache.values()) {
             URL.revokeObjectURL(blobUrl);
@@ -46,6 +49,7 @@ const blobUrlManager = {
         console.log("Blob URLs cleaned up.");
     }
 };
+// ▲▲▲ [新增] 结束 ▲▲▲
 
 async function loadHtmlFragments(paths) {
     const fetchPromises = paths.map(path => fetch(path).then(res => res.text()));
@@ -205,12 +209,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const blobUrl = await blobUrlManager.dataUrlToBlobUrl(msg.data);
                     return { ...msg, renderData: blobUrl };
                 }
+                // ▼▼▼ 核心修正：添加对link类型消息中图片的Blob URL转换 ▼▼▼
                 if (msg.sender === 'user' && msg.type === 'link' && msg.image?.type === 'image' && msg.image.data.startsWith('data:')) {
                     const blobUrl = await blobUrlManager.dataUrlToBlobUrl(msg.image.data);
-                    const newMsg = JSON.parse(JSON.stringify(msg));
+                    const newMsg = JSON.parse(JSON.stringify(msg)); // 深拷贝以避免修改原始历史记录
                     newMsg.image.renderData = blobUrl;
                     return newMsg;
                 }
+                // ▲▲▲ 修正结束 ▲▲▲
                 return msg;
             }));
 
@@ -226,10 +232,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             processedMessages.forEach((messageGroup, index) => {
                 const originalIndex = state.visualHistoryStartIndex + index;
-                // ▼▼▼ 核心修改 ①：调用修改后的 renderMessageGroup 并手动 append ▼▼▼
-                const messageGroupElement = renderMessageGroup(messageGroup, originalIndex, user, character);
-                elements.chatArea.appendChild(messageGroupElement);
-                // ▲▲▲ 修改结束 ▲▲▲
+                renderMessageGroup(messageGroup, originalIndex, user, character, elements.chatArea);
             });
 
             if (!loadMore) {
@@ -245,23 +248,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (isAiReplying) {
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
-                if (respondBtnIcon) respondBtnIcon.className = 'fa-solid fa-stop';
-                elements.respondBtn.classList.add('blinking');
+                elements.respondBtn.disabled = false;
+                if (respondBtnIcon) {
+                    respondBtnIcon.className = 'fa-solid fa-stop';
+                }
                 return;
             }
         
-            if (respondBtnIcon) respondBtnIcon.className = 'fa-regular fa-paper-plane';
-            elements.respondBtn.classList.remove('blinking');
+            if (respondBtnIcon) {
+                respondBtnIcon.className = 'fa-regular fa-paper-plane';
+            }
         
             const hasText = elements.input.value.trim() !== '';
         
             if (hasText) {
                 elements.respondBtn.style.display = 'none';
                 elements.sendBtn.style.display = 'flex';
-            } 
-            else {
+                elements.sendBtn.disabled = false;
+            } else {
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
+                elements.respondBtn.disabled = state.chatHistory.length === 0;
             }
         }
         
@@ -317,10 +324,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             state, elements, character, user,
             renderSystemMessage, updateButtonStates, onAiReply,
             getIsAiReplying: () => isAiReplying,
-            setIsAiReplying: (value) => { 
-                isAiReplying = value; 
-                updateButtonStates();
-            },
+            setIsAiReplying: (value) => { isAiReplying = value; },
             setAbortController: (controller) => { currentAbortController = controller; },
             getStyleSettings: () => {
                 const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle) || 'dialogue';
@@ -342,7 +346,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             await onSendUserMessage(userMessage);
             elements.input.value = '';
             elements.input.style.height = 'auto';
-            updateButtonStates();
             elements.input.focus();
         }
 
@@ -351,7 +354,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             await onSendUserMessage(emojiMessage);
         }
 
-        
         function initializeInteractionModeAndStyle() {
             const updateInteractionModeUI = () => {
                 const currentStyleKey = Object.keys(CHAT_STYLES).find(key => CHAT_STYLES[key] === state.currentChatStyle);
@@ -423,55 +425,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elements.regenerateBtn) elements.regenerateBtn.addEventListener('click', () => triggerAiResponse('regenerate'));
         if (elements.continueBtn) elements.continueBtn.addEventListener('click', () => triggerAiResponse('continue'));
 
-        // ▼▼▼ 核心修改 ②：重写 chatArea 的 click 监听器 ▼▼▼
         elements.chatArea.addEventListener('click', async (e) => {
-            // 处理图片链接点击
             const imageLink = e.target.closest('.is-image-message a');
             if (imageLink) {
                 e.preventDefault(); 
             }
 
-            // 处理文字图预览按钮
             const previewBtn = e.target.closest('.text-photo-preview-btn');
             if (previewBtn) {
                 const text = previewBtn.dataset.text;
                 elements.textPreviewContent.textContent = text;
                 elements.textPreviewOverlay.classList.add('active');
-                return; // 结束，不处理其他逻辑
+                return; 
             }
 
-            // 处理分页器按钮
             const pagerButton = e.target.closest('.pager-btn');
-            if (pagerButton) {
-                const messageGroupContainer = pagerButton.closest('.message-group-container');
-                const index = parseInt(messageGroupContainer.dataset.index, 10);
-                const action = pagerButton.dataset.action;
-                const messageData = state.chatHistory[index];
+            if (!pagerButton) return;
 
-                if (!messageData) return;
+            const messageGroup = pagerButton.closest('.message-group-container');
+            const index = parseInt(messageGroup.dataset.index, 10);
+            const action = pagerButton.dataset.action;
+            
+            const messageData = state.chatHistory[index];
+            if (!messageData) return;
 
-                let changed = false;
-                if (action === 'prev' && messageData.activeReplyIndex > 0) {
-                    messageData.activeReplyIndex--;
-                    changed = true;
-                } else if (action === 'next' && messageData.activeReplyIndex < messageData.replyVersions.length - 1) {
-                    messageData.activeReplyIndex++;
-                    changed = true;
-                }
-
-                if (changed) {
-                    await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
-                    
-                    // 精准DOM更新，而不是全量刷新
-                    const oldGroup = elements.chatArea.querySelector(`.message-group-container[data-index="${index}"]`);
-                    if (oldGroup) {
-                        const newGroup = renderMessageGroup(messageData, index, user, character);
-                        oldGroup.replaceWith(newGroup);
-                    }
-                }
+            if (action === 'prev' && messageData.activeReplyIndex > 0) {
+                messageData.activeReplyIndex--;
+            } else if (action === 'next' && messageData.activeReplyIndex < messageData.replyVersions.length - 1) {
+                messageData.activeReplyIndex++;
             }
+
+            await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
+            await loadAndRenderHistory();
         });
-        // ▲▲▲ 修改结束 ▲▲▲
         
         if (elements.textPreviewOverlay) {
             elements.textPreviewOverlay.addEventListener('click', (e) => {
@@ -614,10 +600,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         appContainer.innerHTML = `<p style="text-align: center;">页面加载时发生严重错误。</p>`;
     }
 
-    // ▼▼▼ 核心修改 ③：修复 unload 弃用警告 ▼▼▼
-    // 使用 'pagehide' 事件替代 'unload' 来清理资源
-    window.addEventListener('pagehide', () => {
+    window.addEventListener('unload', () => {
         blobUrlManager.cleanup();
     });
-    // ▲▲▲ 修改结束 ▲▲▲
 });

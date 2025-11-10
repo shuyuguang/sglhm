@@ -118,6 +118,41 @@
     transform: scale(1);
 }
 
+/* --- 聊天风格选择面板 --- */
+#chat-prompt-panel .modal-header { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid var(--border-color); }
+#chat-prompt-panel .modal-header .modal-title { font-size: 1.1em; font-weight: 600; margin: 0; }
+.style-header-icon { color: var(--send-btn-bg); margin-right: 10px; font-size: 1.1em; }
+#chat-prompt-panel { width: 90%; max-width: 340px; height: auto; }
+.style-buttons-container { display: flex; justify-content: center; gap: 12px; margin: 10px 0 10px 0; }
+.style-button { padding: 7px; border-radius: 20px; border: 1px solid #dee2e6; background-color: #f8f9fa; color: #495057; font-size: 0.9em; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+.style-button:hover { background-color: #f1f3f5; }
+.style-button.active { background-color: #f0f3f6; color: var(--send-btn-bg); border-color: var(--send-btn-bg); }
+#chat-prompt-panel .modal-content-container { padding: 10px; }
+#chat-prompt-panel .sheet-footer { padding: 10px; display: flex; gap: 10px; border-top: 1px solid var(--border-color); flex-shrink: 0; }
+#chat-prompt-panel .sheet-btn { flex-grow: 1; padding: 12px; border: none; border-radius: 8px; font-size: 1em; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
+#chat-prompt-panel .sheet-btn-cancel { background-color: #f1f3f5; color: #495057; }
+#chat-prompt-panel .sheet-btn-cancel:hover { background-color: #e9ecef; }
+#chat-prompt-panel .sheet-btn-confirm { background-color: var(--send-btn-bg); color: white; }
+#chat-prompt-panel .sheet-btn-confirm:hover { filter: brightness(1.1); }
+.style-details-container { padding: 0 5px; }
+.style-card { border: 1px solid var(--border-color); border-radius: 8px; background-color: #f8f9fa; margin-top: 10px; overflow: hidden; }
+.style-card-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; cursor: pointer; user-select: none; }
+.style-card-title { font-weight: 500; color: #495057; }
+.style-card-header i { color: #adb5bd; transition: transform 0.3s ease; }
+.style-card-content { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease; padding: 0 15px; }
+.style-card.expanded .style-card-header i { transform: rotate(180deg); }
+.style-card.expanded .style-card-content { max-height: 300px; opacity: 1; padding: 0 15px 15px; overflow-y: auto; }
+#chat-prompt-panel .prompt-description { font-size: 0.9em; color: #666; line-height: 1.5; margin: 0; }
+.style-settings-container { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; padding: 0 5px; }
+.style-setting-item { display: flex; justify-content: space-between; align-items: center; }
+.style-setting-item label { font-size: 0.9em; color: #333; }
+.style-setting-item input[type="number"] { width: 60px; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 6px; text-align: center; font-size: 0.9em; background-color: #ffffff; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); }
+.style-setting-item input[type="number"]::-webkit-inner-spin-button, .style-setting-item input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.style-setting-item input[type="number"] { -moz-appearance: textfield; }
+.min-max-input-container { display: flex; align-items: center; gap: 5px; }
+.min-max-input-container input[type="number"] { width: 50px; }
+.min-max-input-container span { color: #868e96; font-weight: 500; }
+
 /* --- 记忆编辑器模态框 --- */
 #memory-editor-overlay {
     z-index: 250;
@@ -345,12 +380,18 @@
     line-height: 1.5;
 }
 
+/* ▼▼▼ 核心修改：调整按钮容器布局 ▼▼▼ */
 .add-buttons-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-shrink: 0;
 }
+/* ▲▲▲ 修改结束 ▲▲▲ */
+
+/* ▼▼▼ 核心修改：删除旧的 .add-btn 样式 ▼▼▼ */
+/* .add-btn { ... } */
+/* ▲▲▲ 修改结束 ▲▲▲ */
 
 #send-image-btn {
     width: 32px;
@@ -488,6 +529,139 @@
     box-shadow: none; 
     border: 1px solid var(--border-color); 
 }
+/* --- ▼▼▼ 发送链接模态框样式 ▼▼▼ --- */
+#link-sender-overlay { z-index: 280; }
+
+.link-sender-panel {
+    width: 90%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    height: 85vh;
+    max-height: 700px;
+}
+
+.link-sender-panel .modal-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px; 
+    flex-grow: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.link-sender-panel .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.link-sender-panel .form-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 4px;
+}
+
+.link-sender-panel .form-group label {
+    font-weight: 500;
+    font-size: 0.9em;
+    color: #555;
+}
+
+.link-sender-panel input[type="text"],
+.link-sender-panel textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1em;
+    box-sizing: border-box;
+    background-color: #f8f9fa;
+    resize: none;
+    line-height: 1.5;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.link-sender-panel input[type="text"]:focus,
+.link-sender-panel textarea:focus {
+    border-color: var(--send-btn-bg);
+}
+
+.send-inline-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 1.3rem;
+    transform: rotate(45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-shrink: 0;
+}
+.send-inline-btn > i {
+    position: relative;
+    left: -1px;
+    top: 1px;
+}
+.send-inline-btn:disabled {
+    background-color: #e9ecef !important;
+    color: #adb5bd !important;
+    opacity: 1;
+    cursor: not-allowed;
+}
+
+.link-image-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* ▼▼▼ 核心修改：预览区域样式 ▼▼▼ */
+.link-card-preview-area {
+    position: relative;
+    width: 100%;
+    min-height: 120px;
+    background-color: #f8f9fa;
+    border: 1px dashed #ced4da;
+    border-radius: 12px;
+    padding: 10px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+/* 预览区域内的卡片，强制宽度并缩放以适应容器 */
+.link-card-preview-area .link-card-container {
+    width: 280px;
+    transform-origin: center;
+    /* 动态计算缩放比例，使其能容纳在预览区内 */
+    transform: scale(calc((100% - 20px) / 280px)); 
+}
+.link-card-preview-area .remove-image-btn {
+    position: absolute; top: 15px; right: 15px; /* 调整位置 */
+    width: 22px; height: 22px; border-radius: 50%;
+    border: none; background-color: rgba(0,0,0,0.6);
+    color: white; cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    z-index: 10;
+}
+/* ▲▲▲ 修改结束 ▲▲▲ */
+
+.link-image-controls {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+}
+.link-image-controls textarea {
+    flex-grow: 1;
+}
+
 .image-add-buttons {
     display: flex;
     gap: 5px;
@@ -514,3 +688,4 @@
     background-color: #f1f3f5;
     border-color: #ced4da;
 }
+/* --- ▲▲▲ 发送链接模态框样式结束 ▲▲▲ --- */
