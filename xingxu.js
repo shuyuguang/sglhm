@@ -214,8 +214,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (card) {
                 const charId = card.dataset.charId;
                 if (charId) {
-                    // [!] 核心改动：路径指向新的 chat/ 文件夹
-                    window.location.href = `./chat/chat-room.html?id=${charId}`;
+                    // ▼▼▼ 核心改动：路径指向新的 achat/ 文件夹 ▼▼▼
+                    window.location.href = `./achat/chat-room.html?id=${charId}`;
+                    // ▲▲▲ 修改结束 ▲▲▲
                 }
             }
         });
