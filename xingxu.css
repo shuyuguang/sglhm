@@ -48,7 +48,7 @@ body.tab-bar-hidden {
 
 .page h1 {
     font-weight: 300;
-    font-size: 2.5em;
+    font-size: 2em;
     background: var(--accent-gradient);
     -webkit-background-clip: text;
     background-clip: text;
@@ -61,7 +61,7 @@ body.tab-bar-hidden {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 60px;
+    height: 50px;
     /* 【修改】将背景色设置为透明 */
     background-color: transparent;
     display: flex;
@@ -118,14 +118,14 @@ body.tab-bar-hidden {
 .tab-toggle-button {
     position: fixed;
     right: 20px;
-    bottom: 57px; /* 初始位置在 Tab 栏上方 */
+    bottom: 52px; /* 初始位置在 Tab 栏上方 */
     width: 18px;
     height: 12px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-inactive);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 16px;
     cursor: pointer;
     z-index: 1001; /* 确保在 Tab 栏之上 */
