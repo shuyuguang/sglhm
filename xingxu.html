@@ -18,14 +18,12 @@
     <main class="content-container">
         <div id="chat-page" class="page active">
             <h1>聊天区</h1>
-            <!-- 增加一些内容以确保可以滚动 -->
-            <p style="margin-bottom: 200vh;">这里是聊天内容...</p>
+            <p>这里是聊天内容...</p>
         </div>
 
         <div id="moments-page" class="page">
             <h1>动态区</h1>
-            <!-- 增加一些内容以确保可以滚动 -->
-            <p style="margin-bottom: 200vh;">这里是动态内容...</p>
+            <p>这里是动态内容...</p>
         </div>
 
         <div id="game-page" class="page">
@@ -34,7 +32,6 @@
     </main>
 
     <nav class="tab-bar">
-        <!-- ▼▼▼ 核心改造：移除了文字标签 span ▼▼▼ -->
         <a href="#" class="tab-item active" data-page="chat-page">
             <i class="fa-solid fa-comment-dots icon"></i>
         </a>
@@ -46,13 +43,19 @@
         </a>
     </nav>
 
+    <!-- 【修改】将Tab栏切换按钮移到 nav 外部，使其独立定位 -->
+    <div id="toggle-tab-bar" class="tab-toggle-btn">
+        <i class="fa-solid fa-chevron-up toggle-icon icon-up"></i>
+        <i class="fa-solid fa-chevron-down toggle-icon icon-down"></i>
+    </div>
+
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const tabItems = document.querySelectorAll('.tab-item');
             const pages = document.querySelectorAll('.page');
-            const tabBar = document.querySelector('.tab-bar'); // 【新增】获取 tab 栏
 
-            // --- Tab 切换逻辑 (保持不变) ---
+            // 原有的Tab切换功能
             tabItems.forEach(tab => {
                 tab.addEventListener('click', function(event) {
                     event.preventDefault(); 
@@ -69,31 +72,18 @@
                 });
             });
 
-            // --- 【新增】滚动隐藏/显示 Tab 栏的逻辑 ---
-            let lastScrollY = 0;
+            // Tab栏隐藏/显示功能 (无需修改)
+            const toggleBtn = document.getElementById('toggle-tab-bar');
+            const tabBar = document.querySelector('.tab-bar');
+            const body = document.body;
 
-            // 为每个可滚动的页面添加事件监听
-            // 注意：game-page 是 iframe，本身不可滚动，所以这个逻辑对它无效
-            pages.forEach(page => {
-                // 排除 game-page，因为它不应该有滚动监听
-                if (page.id !== 'game-page') {
-                    page.addEventListener('scroll', () => {
-                        const currentScrollY = page.scrollTop;
-
-                        // 当滚动超过一个阈值（例如10px）时才开始判断
-                        if (currentScrollY > 10 && currentScrollY > lastScrollY) {
-                            // 向下滚动，隐藏 tab 栏
-                            tabBar.classList.add('hidden');
-                        } else {
-                            // 向上滚动或滚动到顶部，显示 tab 栏
-                            tabBar.classList.remove('hidden');
-                        }
-                        
-                        // 更新上一次滚动位置
-                        lastScrollY = currentScrollY <= 0 ? 0 : currentScrollY;
-                    });
-                }
-            });
+            if (toggleBtn && tabBar) {
+                toggleBtn.addEventListener('click', () => {
+                    // 切换tab栏和body上的CSS类
+                    tabBar.classList.toggle('tab-bar-hidden');
+                    body.classList.toggle('tab-bar-is-hidden');
+                });
+            }
         });
     </script>
 
