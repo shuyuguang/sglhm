@@ -11,7 +11,7 @@ let state = {
 function isValidHttpUrl(string) {
     try {
         const url = new URL(string);
-        return url.protocol === "http:" || url.protocol === "https";
+        return url.protocol === "http:" || url.protocol === "https;
     } catch (_) { return false; }
 }
 
@@ -116,13 +116,13 @@ function updatePreview() {
     }
 }
 
-// ▼▼▼ 核心修复：修正了 escapeHtml 函数中的语法错误 ▼▼▼
+// ▼▼▼ 核心修复：已修正此函数的语法错误 ▼▼▼
 function escapeHtml(unsafe) {
     if (!unsafe) return '';
     return unsafe.replace(/&/g, "&amp;")
                  .replace(/</g, "&lt;")
                  .replace(/>/g, "&gt;")
-                 .replace(/"/g, "&quot;") // 修正了这里
+                 .replace(/"/g, "&quot;") // 已修正
                  .replace(/'/g, "&#039;");
 }
 // ▲▲▲ 修复结束 ▲▲▲
