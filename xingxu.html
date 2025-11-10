@@ -42,14 +42,20 @@
         <a href="#" class="tab-item" data-page="game-page">
             <i class="fa-solid fa-gamepad icon"></i>
         </a>
+
+        <!-- 【新增】Tab栏隐藏/显示切换按钮 -->
+        <div id="toggle-tab-bar" class="tab-toggle-btn">
+            <i class="fa-solid fa-chevron-up toggle-icon icon-up"></i>
+            <i class="fa-solid fa-chevron-down toggle-icon icon-down"></i>
+        </div>
     </nav>
 
     <script>
-        // JavaScript 功能保持不变
         document.addEventListener('DOMContentLoaded', function() {
             const tabItems = document.querySelectorAll('.tab-item');
             const pages = document.querySelectorAll('.page');
 
+            // 原有的Tab切换功能
             tabItems.forEach(tab => {
                 tab.addEventListener('click', function(event) {
                     event.preventDefault(); 
@@ -65,6 +71,19 @@
                     document.getElementById(targetPageId).classList.add('active');
                 });
             });
+
+            // 【新增】Tab栏隐藏/显示功能
+            const toggleBtn = document.getElementById('toggle-tab-bar');
+            const tabBar = document.querySelector('.tab-bar');
+            const body = document.body;
+
+            if (toggleBtn && tabBar) {
+                toggleBtn.addEventListener('click', () => {
+                    // 切换tab栏和body上的CSS类
+                    tabBar.classList.toggle('tab-bar-hidden');
+                    body.classList.toggle('tab-bar-is-hidden');
+                });
+            }
         });
     </script>
 

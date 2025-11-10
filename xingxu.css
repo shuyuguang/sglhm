@@ -17,6 +17,13 @@ body {
     height: 100vh;
     overflow: hidden;
     box-sizing: border-box;
+    /* 【修改】为padding变化添加过渡效果 */
+    transition: padding-bottom 0.3s ease-in-out;
+}
+
+/* 【新增】当Tab栏隐藏时，移除body的底部内边距 */
+body.tab-bar-is-hidden {
+    padding-bottom: 0;
 }
 
 /* 页面内容容器 */
@@ -54,12 +61,19 @@ body {
     left: 0;
     right: 0;
     height: 60px;
-    /* 【修改】将背景色设置为透明 */
     background-color: transparent;
     display: flex;
     justify-content: space-around;
     align-items: center;
     z-index: 1000;
+    /* 【修改】为绝对定位的子元素提供定位上下文，并添加过渡效果 */
+    position: relative; 
+    transition: transform 0.3s ease-in-out;
+}
+
+/* 【新增】Tab栏隐藏时的状态 */
+.tab-bar.tab-bar-hidden {
+    transform: translateY(100%);
 }
 
 .tab-item {
@@ -84,6 +98,38 @@ body {
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+}
+
+/* 【新增】切换按钮样式 */
+.tab-toggle-btn {
+    position: absolute;
+    top: 0;
+    right: 15px;
+    transform: translateY(-100%); /* 将按钮定位到Tab栏的上方 */
+    width: 36px;
+    height: 24px;
+    background-color: rgba(35, 35, 60, 0.7); /* 半透明背景 */
+    backdrop-filter: blur(5px);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-inactive);
+    font-size: 14px;
+}
+
+.toggle-icon.icon-down {
+    display: none; /* 默认隐藏向下的箭头 */
+}
+
+/* 当Tab栏隐藏时，显示向下的箭头，隐藏向上的箭头 */
+.tab-bar.tab-bar-hidden .toggle-icon.icon-up {
+    display: none;
+}
+.tab-bar.tab-bar-hidden .toggle-icon.icon-down {
+    display: block;
 }
 
 /* iframe 容器页面的样式 */
