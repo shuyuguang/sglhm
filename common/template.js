@@ -14,13 +14,13 @@ export function createPageLayout({ title, contentHtml, modalsHtml = '', onFeathe
     const pageHtml = `
         <header class="page-header">
             <div class="page-title-container">
-                <a href="../app.html" class="btn-back-left" title="返回"><i class="fa-solid fa-chevron-left"></i></a>
+                <a href="../felotus.html" class="btn-back-left" title="返回"><i class="fa-solid fa-chevron-left"></i></a>
                 <h1 class="page-title">${title}</h1>
             </div>
             <div class="header-actions">
                 <button class="btn-help" id="help-btn" title="帮助"><i class="fa-solid fa-question"></i></button>
                 <button class="btn-add" id="add-btn" title="新增"><i class="fa-solid fa-feather-pointed"></i></button>
-                <a href="../app.html" class="btn-back" title="关闭"><i class="fa-solid fa-xmark"></i></a>
+                <a href="../felotus.html" class="btn-back" title="关闭"><i class="fa-solid fa-xmark"></i></a>
             </div>
         </header>
 
