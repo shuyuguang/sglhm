@@ -9,7 +9,8 @@ export function renderChatRoomUI(character) {
     return `
         <div class="chat-container">
             <header class="chat-header">
-                <a href="./relia-chat.html" class="chat-header-btn back-btn"><i class="fa-solid fa-chevron-left"></i></a>
+                <!-- [!] 核心改动：修改返回按钮的链接 -->
+                <a href="../xingxu.html" class="chat-header-btn back-btn"><i class="fa-solid fa-chevron-left"></i></a>
                 <div class="chat-header-center">
                     <div class="char-info">
                         <img src="${character.avatar}" alt="${character.name}" class="char-info-avatar">
@@ -76,6 +77,7 @@ export function renderChatRoomUI(character) {
     `;
 }
 
+// ... 文件其余部分保持不变 ...
 // [新增] 一个简单的HTML转义函数，防止XSS攻击
 function escapeHtml(unsafe) {
     if (!unsafe) return '';
