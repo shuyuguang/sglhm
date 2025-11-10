@@ -1,0 +1,358 @@
+/* relia-chat/chat-header-menu.css */
+
+/* --- 顶部菜单样式 --- */
+.header-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    display: none;
+}
+.header-menu-overlay.active {
+    display: block;
+}
+
+.header-panel {
+    position: absolute;
+    top: 50px;
+    height: 92vh; 
+    max-height: 700px;
+    background-color: #fff;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    z-index: 101;
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+.header-panel.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+#header-content-panel {
+    left: 5px;
+    right: 59px;
+    padding: 12px;
+    overflow-y: auto; /* 让整个内容面板可以滚动 */
+}
+
+#header-tabs-panel {
+    right: 5px;
+    width: 55px;
+    padding: 3px;
+}
+
+.header-menu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    height: 68vh; 
+}
+.header-menu-item a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 4px;
+    text-decoration: none;
+    color: var(--text-dark);
+    font-size: 1rem;
+    border-radius: 12px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+.header-menu-item a:hover {
+    background-color: #f1f3f5;
+}
+.header-menu-item a.active {
+    background-color: #6A91B5;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.secondary-content-pane {
+    display: none;
+    font-size: 0.9em;
+    color: #495057;
+}
+.secondary-content-pane.active {
+    display: block; /* 改回 block，让内容自然撑开 */
+}
+
+/* --- 顶部菜单 - 模式面板样式 --- */
+.model-selection-group {
+    padding: 8px;
+}
+.panel-section-title {
+    font-size: 1em;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0 0 8px 0;
+    text-transform: none;
+}
+#menu-content-model .model-select-btn {
+    width: 100%;
+    max-width: none;
+    padding: 12px 16px;
+    font-size: 1.05em;
+    font-weight: 600;
+    border-radius: 10px;
+    text-align: center;
+    box-sizing: border-box;
+    background-color: #f8f9fa;
+    border: 1px solid var(--border-color);
+    color: #212529;
+}
+#menu-content-model .model-select-btn:hover {
+    background-color: #f1f3f5;
+}
+#menu-content-model .model-select-btn.active {
+    background-color: #e0e9f2;
+    color: #212529;
+    border-color: transparent;
+}
+
+.mode-panel-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 8px 8px;
+}
+.mode-panel-item-title {
+    font-size: 1em;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+/* ▼▼▼ 核心修改：已删除 .interaction-mode-group 和 .style-settings-wrapper 的所有样式 ▼▼▼ */
+
+
+/* --- 顶部菜单 - 主题面板样式 --- */
+.theme-section {
+    padding: 8px;
+}
+
+.theme-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.theme-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.theme-action-btn {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    color: #868e96;
+    cursor: pointer;
+    padding: 5px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.theme-action-btn:hover {
+    background-color: #f1f3f5;
+    color: var(--text-dark);
+}
+
+.bg-thumbnails-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 10px;
+}
+
+.bg-thumbnail-item {
+    position: relative;
+    aspect-ratio: 9 / 16;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.bg-thumbnail-item.active {
+    border-color: var(--send-btn-bg);
+}
+
+.bg-thumbnail-item:hover {
+    border-color: #adb5bd;
+}
+
+.bg-thumbnail-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.bg-default-preview {
+    width: 100%;
+    height: 100%;
+}
+.bg-thumbnail-item.disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* 主题面板多选模式样式 */
+.theme-section.placeholder-section {
+    padding: 8px;
+    opacity: 0.5;
+    pointer-events: none;
+    user-select: none;
+    border-bottom: 1px dashed var(--border-color);
+    margin-bottom: 8px;
+}
+
+#menu-content-theme.multi-select-mode .bg-thumbnail-item {
+    border-color: #adb5bd;
+}
+#menu-content-theme.multi-select-mode .bg-thumbnail-item.active {
+    border-color: var(--send-btn-bg);
+}
+
+.bg-thumbnail-item .selection-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    color: var(--send-btn-bg);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.bg-thumbnail-item.selected .selection-overlay {
+    opacity: 1;
+}
+
+#delete-selected-bg-btn {
+    color: #ced4da;
+    pointer-events: none;
+}
+
+#menu-content-theme.multi-select-mode #multi-select-bg-btn {
+    color: var(--send-btn-bg);
+    background-color: #e0e9f2;
+}
+
+#menu-content-theme.multi-select-mode #delete-selected-bg-btn {
+    color: var(--danger-color);
+    pointer-events: auto;
+}
+
+/* --- 顶部菜单 - 表情包管理面板样式 --- */
+#emoji-management-container {
+    padding: 8px;
+}
+
+.emoji-management-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.emoji-management-title {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #495057;
+    margin: 0;
+}
+
+.emoji-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.emoji-action-btn {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    color: #868e96;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.emoji-action-btn:hover {
+    background-color: #f1f3f5;
+    color: var(--text-dark);
+}
+
+.emoji-management-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 5px;
+}
+
+.emoji-management-grid .emoji-item {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+}
+
+.emoji-management-grid .emoji-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 选择模式样式 */
+#emoji-management-container.selection-mode #emoji-select-btn {
+    color: var(--send-btn-bg);
+    background-color: #e0e9f2;
+}
+#emoji-delete-btn {
+    color: #ced4da;
+    pointer-events: none;
+}
+#emoji-delete-btn.active {
+    color: var(--danger-color);
+    pointer-events: auto;
+}
+
+.emoji-item .selection-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(255, 255, 255, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    color: var(--send-btn-bg);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+#emoji-management-container.selection-mode .emoji-item.selected .selection-overlay {
+    opacity: 1;
+}

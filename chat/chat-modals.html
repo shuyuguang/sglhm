@@ -1,0 +1,97 @@
+<!-- relia-chat/chat-modals.html -->
+
+<!-- 模型选择模态框 -->
+<div class="modal-overlay" id="model-selector-overlay">
+    <div class="modal-panel model-selector-panel">
+        <div class="modal-header"><h3 class="modal-title">选择牵引仪模型</h3><button class="modal-close" id="close-model-selector-btn" title="关闭">&times;</button></div>
+        <div class="modal-body"><div class="model-list-container" id="model-list-container"></div></div>
+    </div>
+</div>
+
+<!-- 记忆编辑器模态框 (保留，虽然未激活) -->
+<div class="modal-overlay" id="memory-editor-overlay">
+    <div class="modal-panel memory-editor-panel">
+        <div class="modal-header"><h3 class="modal-title" id="memory-editor-title">管理记忆</h3><button class="modal-close" id="memory-editor-close-btn" title="关闭">&times;</button></div>
+        <div class="modal-body"><textarea id="memory-editor-textarea" placeholder="在此输入记忆内容..."></textarea></div>
+        <div class="modal-footer">
+            <button class="modal-btn-delete" id="memory-editor-delete-btn">删除</button>
+            <button class="modal-btn-cancel" id="memory-editor-cancel-btn">取消</button>
+            <button class="modal-btn-confirm" id="memory-editor-confirm-btn">确认</button>
+        </div>
+    </div>
+</div>
+
+<!-- ▼▼▼ 核心修改：已删除互动模式选择的底部操作表 (interaction-mode-sheet-overlay) ▼▼▼ -->
+
+<!-- 背景URL输入框 -->
+<div class="prompt-overlay" id="bg-url-prompt-overlay">
+    <div class="prompt-box">
+        <h4>添加图片URL作为背景</h4>
+        <input type="text" id="bg-url-input" placeholder="https://example.com/image.png">
+        <div class="prompt-actions">
+            <button id="cancel-bg-url-btn" class="prompt-btn">取消</button>
+            <button id="confirm-bg-url-btn" class="prompt-btn">确认</button>
+        </div>
+    </div>
+</div>
+
+<!-- 添加网络表情模态框 -->
+<div class="modal-overlay" id="web-emoji-modal">
+    <div class="modal-panel web-emoji-panel">
+        <div class="modal-header"><h3 class="modal-title">批量添加网络表情</h3></div>
+        <div class="modal-body">
+            <p class="modal-description">请按 <strong>链接+名称</strong> 的格式粘贴，每行一个。</p>
+            <textarea id="web-emoji-url-input" placeholder="例如:&#10;https://.../cat.png 猫猫&#10;https://.../dog.gif 狗狗"></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn-cancel" id="cancel-web-emoji-btn">取消</button>
+            <button class="modal-btn-confirm" id="confirm-web-emoji-btn">确认</button>
+        </div>
+    </div>
+</div>
+
+<!-- 隐藏的文件上传输入框 (表情包) -->
+<input type="file" id="emoji-upload-input" accept="image/*,image/gif" multiple style="display: none;">
+
+<!-- 图片发送面板 -->
+<div class="modal-overlay" id="image-sender-overlay">
+    <div class="modal-panel image-sender-panel">
+        <div class="modal-header">
+            <h3 class="modal-title">发送图片</h3>
+            <button class="modal-close" id="close-image-sender-btn" title="关闭">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="image-input-area">
+                <div class="input-area-header">
+                    <label for="multi-purpose-image-input">输入文本或链接</label>
+                    <button class="help-icon-btn" id="image-sender-help-btn" title="帮助"><i class="fa-solid fa-question-circle"></i></button>
+                </div>
+                <textarea id="multi-purpose-image-input" rows="3" placeholder="在这里输入..."></textarea>
+                <div class="input-help-tooltip" id="image-sender-help-tooltip">
+                    <p>文字图请输入文本并点击“A字键”，链接图请输入单个图片链接并点击“链接键”，上传本地图片请点击“上传键”，文字图可多个，链接图/本地图不宜多</p>
+                </div>
+            </div>
+            <div class="add-buttons-container">
+                <div class="image-add-buttons">
+                    <button class="add-btn small" id="add-text-photo-btn" title="添加文字图"><i class="fa-solid fa-font"></i></button>
+                    <button class="add-btn small" id="add-url-photo-btn" title="添加链接图"><i class="fa-solid fa-link"></i></button>
+                    <button class="add-btn small" id="add-local-photo-btn" title="添加本地图"><i class="fa-solid fa-upload"></i></button>
+                </div>
+                <button class="modal-btn-confirm" id="send-image-btn" disabled title="发送"><i class="fa-solid fa-location-arrow"></i></button>
+                <input type="file" id="local-photo-upload" accept="image/*" style="display: none;">
+            </div>
+            <div class="image-multi-preview-area">
+                <div id="image-multi-preview-container"></div>
+                 <div id="image-multi-preview-placeholder">
+                    <i class="fa-regular fa-images"></i>
+                    <span>待发送的图片将在这里预览</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 文字图预览模态框 -->
+<div class="modal-overlay simple-text-overlay" id="text-preview-overlay">
+    <div class="text-preview-content"></div>
+</div>

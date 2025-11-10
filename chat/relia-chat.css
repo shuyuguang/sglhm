@@ -1,0 +1,262 @@
+/* relia-chat.css */
+
+/* --- 模态框/面板样式 (这部分保持不变) --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-panel {
+    background-color: #ffffff;
+    width: 90vw;
+    max-width: 500px;
+    max-height: 80vh;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    animation: zoomIn 0.3s ease-out;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    overflow: hidden;
+}
+
+@keyframes zoomIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* --- Tabs 样式 (这部分保持不变) --- */
+.modal-tabs {
+    display: flex;
+    border-bottom: 1px solid #e9ecef;
+    flex-shrink: 0;
+}
+
+.modal-tab {
+    flex: 1;
+    padding: 14px 10px;
+    border: none;
+    background-color: transparent;
+    font-size: 1em;
+    font-weight: 500;
+    color: #868e96;
+    cursor: pointer;
+    transition: color 0.2s;
+    position: relative;
+}
+
+.modal-tab.active {
+    color: #7290B2;
+}
+
+.modal-tab::after {
+    content: '\f004';
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    color: #7290B2;
+    font-size: 12px;
+    position: absolute;
+    left: 50%;
+    bottom: -2px;
+    transform: translateX(-50%) scale(0);
+    transition: transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.modal-tab.active::after {
+    transform: translateX(-50%) scale(1);
+}
+
+.modal-tab.disabled {
+    color: #ced4da;
+    cursor: not-allowed;
+}
+
+.modal-content-container {
+    flex-grow: 1;
+    position: relative;
+    overflow-y: auto; 
+}
+
+.modal-tab-content {
+    display: none;
+}
+
+.modal-tab-content.active {
+    display: block;
+}
+
+.sheet-body-list {
+    padding: 8px 16px;
+}
+
+.char-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    cursor: pointer;
+}
+.char-item:last-child {
+    border-bottom: none;
+}
+
+.char-item .avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
+}
+
+.char-item .name {
+    flex-grow: 1;
+    font-size: 1em;
+    color: #495057;
+    pointer-events: none;
+}
+
+.char-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #7290B2;
+    flex-shrink: 0;
+    pointer-events: none;
+}
+
+.sheet-footer {
+    padding: 16px;
+    display: flex;
+    gap: 10px;
+    border-top: 1px solid #e9ecef;
+    flex-shrink: 0;
+}
+
+.sheet-btn {
+    flex-grow: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.sheet-btn-cancel {
+    background-color: #f1f3f5;
+    color: #495057;
+}
+.sheet-btn-cancel:hover {
+    background-color: #e9ecef;
+}
+
+.sheet-btn-confirm {
+    background-color: #7290B2;
+    color: white;
+}
+.sheet-btn-confirm:hover {
+    background-color: #627ca0;
+}
+
+.no-char-message {
+    text-align: center;
+    color: #868e96;
+    padding: 30px 16px;
+}
+
+
+/* ▼▼▼ 聊天列表和卡片样式 (已按要求修改) ▼▼▼ */
+#chat-list-area {
+    padding: 0px;
+}
+
+.chat-card {
+    display: flex;
+    align-items: center;
+    padding: 12px 13px;
+    margin-bottom: 12px;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: none; /* 修改点: 移除了卡片阴影 */
+    cursor: pointer;
+    border: 1px solid #C9D0D8; /* 新增：为卡片添加外框 */
+    /* transition 属性已移除，因为不再有悬浮动画 */
+}
+
+/* 修改点: 整个 .chat-card:hover 规则已被删除，以移除悬浮时的抬起和阴影效果 */
+
+.chat-card-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.chat-card-main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* 防止文本过长撑开布局 */
+}
+
+.chat-card-name {
+    font-size: 1.1em;
+    font-weight: 500;
+    color: #394950;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-card-preview {
+    font-size: 0.9em;
+    color: #868e96;
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-card-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-left: 12px;
+    flex-shrink: 0;
+}
+
+.chat-card-time {
+    font-size: 0.8em;
+    color: #adb5bd;
+    position: relative;
+    top: -2px;
+}
+
+.unread-badge {
+    margin-top: 10px;
+    background-color: #7290B2;
+    color: white;
+    font-size: 0.75em;
+    font-weight: bold;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 6px;
+}
+/* ▲▲▲ 修改结束 ▲▲▲ */

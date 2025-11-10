@@ -1,0 +1,52 @@
+<!-- relia-chat/chat-header.html -->
+
+<!-- 顶部菜单遮罩 -->
+<div class="header-menu-overlay" id="header-menu-overlay"></div>
+
+<!-- 左侧内容面板 -->
+<div class="header-panel" id="header-content-panel">
+
+    <!-- 模式 (设为新的默认活动面板) -->
+    <div id="menu-content-model" class="secondary-content-pane active">
+        <div class="model-selection-group">
+            <h4 class="panel-section-title">当前模型</h4>
+            <button id="select-model-btn" class="send-action-btn model-select-btn"><span id="selected-model-name">选择模型</span></button>
+        </div>
+        <div class="mode-panel-item">
+            <span class="mode-panel-item-title">是否开启DIY</span>
+            <label class="switch-control"><input type="checkbox" id="enable-diy-switch"><span class="slider round"></span></label>
+        </div>
+        <!-- ▼▼▼ 核心修改：已删除 “当前互动模式” 和 “风格设置” 的整个 div ▼▼▼ -->
+    </div>
+    <!-- 表情 -->
+    <div id="menu-content-emoji" class="secondary-content-pane">
+        <div id="emoji-management-container"></div>
+    </div>
+    <!-- 主题 -->
+    <div id="menu-content-theme" class="secondary-content-pane">
+        <div class="theme-section placeholder-section"><h4 class="panel-section-title">聊天气泡</h4></div>
+        <div class="theme-section placeholder-section"><h4 class="panel-section-title">头像挂件</h4></div>
+        <div class="theme-section">
+            <div class="theme-section-header">
+                <h4 class="panel-section-title">聊天背景</h4>
+                <div class="theme-actions">
+                    <button class="theme-action-btn" id="multi-select-bg-btn" title="多选"><i class="fa-solid fa-check-double"></i></button>
+                    <button class="theme-action-btn" id="delete-selected-bg-btn" title="删除选中"><i class="fa-solid fa-trash-can"></i></button>
+                    <button class="theme-action-btn" id="add-bg-from-url-btn" title="添加网络图片"><i class="fa-solid fa-link"></i></button>
+                    <button class="theme-action-btn" id="add-bg-from-local-btn" title="上传本地图片"><i class="fa-solid fa-plus"></i></button>
+                    <input type="file" id="bg-upload-input" accept="image/*" style="display: none;">
+                </div>
+            </div>
+            <div class="bg-thumbnails-container" id="bg-thumbnails-container"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 右侧选项卡面板 -->
+<div class="header-panel" id="header-tabs-panel">
+    <ul class="header-menu-list">
+        <li class="header-menu-item"><a href="#" class="active" data-target="menu-content-model"><span>模式</span></a></li>
+        <li class="header-menu-item"><a href="#" data-target="menu-content-emoji"><span>表情</span></a></li>
+        <li class="header-menu-item"><a href="#" data-target="menu-content-theme"><span>主题</span></a></li>
+    </ul>
+</div>
