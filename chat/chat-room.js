@@ -315,8 +315,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             setAbortController: (controller) => { currentAbortController = controller; }
         });
 
-        async function onSendUserMessage(message) {
-            state.chatHistory.push(message);
+        async function onSendUserMessages(messages) {
+            if (!Array.isArray(messages) || messages.length === 0) return;
+            
+            state.chatHistory.push(...messages);
             await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
             await loadAndRenderHistory();
             updateButtonStates();
@@ -504,7 +506,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 onSendEmoji
             );
         
-            initializeImageSender(elements, onSendUserMessage);
+            // ▼▼▼ 核心修改：将处理数组的函数传递给 ImageSender ▼▼▼
+            initializeImageSender(elements, onSendUserMessages);
+            // ▲▲▲ 修改结束 ▲▲▲
             initializeLinkSender(elements, onSendUserMessage);
         }
         await initializeChatState();

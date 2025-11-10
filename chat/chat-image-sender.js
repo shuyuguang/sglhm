@@ -165,29 +165,33 @@ async function handleAddLocal(file) {
     }
 }
 
+// ▼▼▼ 核心修改：一次性发送所有图片消息 ▼▼▼
 function handleSend() {
-    if (state.imagesToSend.length === 0) return;
+    if (state.imagesToSend.length === 0 || !onSendCallback) return;
 
-    if (onSendCallback) {
-        state.imagesToSend.forEach(item => {
-            // 清理掉临时的预览URL，不存入数据库
-            const message = { ...item };
-            delete message.previewUrl;
-            onSendCallback(message);
-        });
-    }
+    // 1. 创建一个包含所有消息的数组
+    const messagesToSend = state.imagesToSend.map(item => {
+        const message = { sender: 'user', ...item };
+        // 清理掉临时的预览URL，不存入数据库
+        delete message.previewUrl;
+        return message;
+    });
+
+    // 2. 一次性调用回调函数，传入整个数组
+    onSendCallback(messagesToSend);
+    
     closeImageSender();
 }
 // ▲▲▲ 修改结束 ▲▲▲
 
 function bindEvents() {
+    // ... (bindEvents 函数的其他部分保持不变) ...
     elements.overlay.addEventListener('click', e => {
         if (e.target === elements.overlay) closeImageSender();
     });
     elements.closeBtn.addEventListener('click', closeImageSender);
-    elements.sendImageBtn.addEventListener('click', handleSend);
+    elements.sendImageBtn.addEventListener('click', handleSend); // 这个现在会调用我们修改后的 handleSend
     
-    // ▼▼▼ 核心重构：新的事件绑定 ▼▼▼
     elements.multiPurposeInput.addEventListener('input', () => {
         const el = elements.multiPurposeInput;
         el.style.height = 'auto';
@@ -214,5 +218,4 @@ function bindEvents() {
     elements.localPhotoInput.addEventListener('change', e => {
         if (e.target.files.length > 0) handleAddLocal(e.target.files[0]);
     });
-    // ▲▲▲ 重构结束 ▲▲▲
 }

@@ -1,18 +1,37 @@
 // relia-chat/chat-link-sender.js
 
+// ▼▼▼ 新增：从公共模块导入db和配置 ▼▼▼
 import { dbStorage } from '../common/db.js';
 const CHAT_PHOTO_PREFIX = 'chat-photo/';
+// ▲▲▲ 新增结束 ▲▲▲
 
 let elements = {};
 let onSendCallback = null;
 let state = {
-    image: null,
+    // ▼▼▼ 修改：image 对象的结构改变 ▼▼▼
+    image: null, // { type: 'text-photo'/'image', source: 'local'/'url', text: '...', url: '...', filename: '...' }
+    // ▲▲▲ 修改结束 ▲▲▲
     isLoading: false,
 };
 
-// ... (isValidHttpUrl, fileToDataUrl, initializeLinkSender, openLinkSender, closeLinkSender, resetPanel, updateSendButtonState, escapeHtml 函数保持不变) ...
-function isValidHttpUrl(string) { try { const url = new URL(string); return url.protocol === "http:" || url.protocol === "https"; } catch (_) { return false; } }
-function fileToDataUrl(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = e => resolve(e.target.result); reader.onerror = reject; reader.readAsDataURL(file); }); }
+// 辅助函数：判断是否为有效URL
+function isValidHttpUrl(string) {
+    try {
+        const url = new URL(string);
+        return url.protocol === "http:" || url.protocol === "https";
+    } catch (_) { return false; }
+}
+
+// 辅助函数：文件转DataURL
+function fileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
 export function initializeLinkSender(domElements, onSend) {
     elements = {
         ...domElements,
@@ -21,7 +40,9 @@ export function initializeLinkSender(domElements, onSend) {
         titleInput: document.getElementById('link-title-input'),
         bodyInput: document.getElementById('link-body-input'),
         sourceInput: document.getElementById('link-source-input'),
+        // ▼▼▼ 核心修改：目标预览容器ID改变 ▼▼▼
         cardPreview: document.getElementById('link-card-preview'),
+        // ▲▲▲ 修改结束 ▲▲▲
         imageInput: document.getElementById('link-image-input'),
         addTextPhotoBtn: document.getElementById('add-link-text-photo-btn'),
         addUrlPhotoBtn: document.getElementById('add-link-url-photo-btn'),
@@ -32,22 +53,40 @@ export function initializeLinkSender(domElements, onSend) {
     onSendCallback = onSend;
     bindEvents();
 }
-export function openLinkSender() { if (!elements.overlay) return; resetPanel(); elements.overlay.classList.add('active'); }
-function closeLinkSender() { elements.overlay.classList.remove('active'); }
+
+export function openLinkSender() {
+    if (!elements.overlay) return;
+    resetPanel();
+    elements.overlay.classList.add('active');
+}
+
+function closeLinkSender() {
+    elements.overlay.classList.remove('active');
+}
+
 function resetPanel() {
     state = { image: null, isLoading: false };
+    
     const inputs = [elements.titleInput, elements.bodyInput, elements.sourceInput, elements.imageInput];
-    inputs.forEach(input => { if (input) { input.value = ''; input.style.height = 'auto'; } });
+    inputs.forEach(input => {
+        if (input) {
+            input.value = '';
+            input.style.height = 'auto';
+        }
+    });
+
     elements.localPhotoInput.value = '';
     updatePreview();
     updateSendButtonState();
 }
-function updateSendButtonState() { const canSend = elements.titleInput.value.trim() !== '' && elements.bodyInput.value.trim() !== ''; elements.sendBtn.disabled = !canSend; }
-function escapeHtml(unsafe) { if (!unsafe) return ''; return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 
+function updateSendButtonState() {
+    const canSend = elements.titleInput.value.trim() !== '' && elements.bodyInput.value.trim() !== '';
+    elements.sendBtn.disabled = !canSend;
+}
 
+// ▼▼▼ 核心修改：重写整个预览更新逻辑 ▼▼▼
 function updatePreview() {
-    // ... (此函数保持不变) ...
     const title = escapeHtml(elements.titleInput.value.trim()) || '标题';
     const body = escapeHtml(elements.bodyInput.value.trim()) || '正文内容...';
     const source = escapeHtml(elements.sourceInput.value.trim());
@@ -88,8 +127,13 @@ function updatePreview() {
         };
     }
 }
+// ▲▲▲ 修改结束 ▲▲▲
 
-// ▼▼▼ 核心修复：简化网络图片处理逻辑，移除 fetch ▼▼▼
+function escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
 function handleAddImageUrl(url) {
     state.image = { type: 'image', source: 'url', url: url };
     updatePreview();
@@ -111,14 +155,12 @@ async function handleAddLocalImage(file) {
         alert('本地图片加载失败。');
     }
 }
-// ▲▲▲ 修复结束 ▲▲▲
 
 function handleSend() {
-    // ... (此函数保持不变) ...
     if (elements.sendBtn.disabled) return;
     if (onSendCallback) {
         const finalImage = { ...state.image };
-        delete finalImage.previewUrl;
+        delete finalImage.previewUrl; // 清理临时预览URL
 
         const message = {
             sender: 'user',
@@ -134,14 +176,29 @@ function handleSend() {
 }
 
 function bindEvents() {
-    // ... (其他事件绑定保持不变) ...
-    elements.overlay.addEventListener('click', e => { if (e.target === elements.overlay) closeLinkSender(); });
+    elements.overlay.addEventListener('click', e => {
+        if (e.target === elements.overlay) closeLinkSender();
+    });
     elements.closeBtn.addEventListener('click', closeLinkSender);
     elements.sendBtn.addEventListener('click', handleSend);
+
     const inputsForPreview = [elements.titleInput, elements.bodyInput, elements.sourceInput];
-    inputsForPreview.forEach(input => { input.addEventListener('input', () => { updateSendButtonState(); updatePreview(); }); });
+    inputsForPreview.forEach(input => {
+        input.addEventListener('input', () => {
+            updateSendButtonState();
+            updatePreview();
+        });
+    });
+    
     const autoGrowTextareas = [elements.titleInput, elements.bodyInput, elements.sourceInput, elements.imageInput];
-    autoGrowTextareas.forEach(textarea => { if (textarea) { textarea.addEventListener('input', () => { textarea.style.height = 'auto'; textarea.style.height = `${textarea.scrollHeight}px`; }); } });
+    autoGrowTextareas.forEach(textarea => {
+        if (textarea) {
+            textarea.addEventListener('input', () => {
+                textarea.style.height = 'auto';
+                textarea.style.height = `${textarea.scrollHeight}px`;
+            });
+        }
+    });
 
     elements.addTextPhotoBtn.addEventListener('click', () => {
         const text = elements.imageInput.value.trim();
@@ -155,17 +212,13 @@ function bindEvents() {
         }
     });
 
-    // ▼▼▼ 核心修复：确保点击按钮时调用的是简化后的 handleAddImageUrl 函数 ▼▼▼
     elements.addUrlPhotoBtn.addEventListener('click', () => {
         const text = elements.imageInput.value.trim();
-        if(text && isValidHttpUrl(text)) {
-            handleAddImageUrl(text); // <-- 调用这个，而不是带fetch的旧函数
-        }
-        else {
-             alert('请输入有效的图片链接后添加。');
-        }
+        // ▼▼▼ 核心修复：修正函数调用错误 ▼▼▼
+        if(text && isValidHttpUrl(text)) handleAddImageUrl(text);
+        // ▲▲▲ 修复结束 ▲▲▲
+        else alert('请输入有效的图片链接后添加。');
     });
-    // ▲▲▲ 修复结束 ▲▲▲
 
     elements.addLocalPhotoBtn.addEventListener('click', () => elements.localPhotoInput.click());
     elements.localPhotoInput.addEventListener('change', e => {
