@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星绪</title>
+    <!-- 引入 Font Awesome 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- 引入 Google Fonts 字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+    <!-- 引入外部样式表 -->
+    <link rel="stylesheet" href="xingxu.css">
+</head>
+<body>
+
+    <!-- ▼▼▼ 顶部 Header 已被移除 ▼▼▼ -->
+
+    <main class="content-container">
+        <div id="chat-page" class="page active">
+            <h1>聊天区</h1>
+            <p>这里是聊天内容...</p>
+        </div>
+
+        <div id="moments-page" class="page">
+            <h1>动态区</h1>
+            <p>这里是动态内容...</p>
+        </div>
+
+        <div id="game-page" class="page">
+            <iframe id="game-iframe" src="./app.html" frameborder="0"></iframe>
+        </div>
+    </main>
+
+    <nav class="tab-bar">
+        <!-- ▼▼▼ 核心改造：移除了文字标签 span ▼▼▼ -->
+        <a href="#" class="tab-item active" data-page="chat-page">
+            <i class="fa-solid fa-comment-dots icon"></i>
+        </a>
+        <a href="#" class="tab-item" data-page="moments-page">
+            <i class="fa-solid fa-compass icon"></i>
+        </a>
+        <a href="#" class="tab-item" data-page="game-page">
+            <i class="fa-solid fa-gamepad icon"></i>
+        </a>
+    </nav>
+
+    <script>
+        // JavaScript 功能保持不变
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabItems = document.querySelectorAll('.tab-item');
+            const pages = document.querySelectorAll('.page');
+
+            tabItems.forEach(tab => {
+                tab.addEventListener('click', function(event) {
+                    event.preventDefault(); 
+                    const currentActiveTab = document.querySelector('.tab-item.active');
+                    if (currentActiveTab === this) return; 
+
+                    const targetPageId = this.getAttribute('data-page');
+
+                    tabItems.forEach(item => item.classList.remove('active'));
+                    this.classList.add('active');
+
+                    pages.forEach(page => page.classList.remove('active'));
+                    document.getElementById(targetPageId).classList.add('active');
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
