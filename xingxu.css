@@ -13,11 +13,19 @@ body {
     font-family: 'Poppins', sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
-    padding-bottom: 60px;
+    padding-bottom: 60px; /* 为 Tab 栏预留空间 */
     height: 100vh;
     overflow: hidden;
     box-sizing: border-box;
+    /* 【新增】为 padding-bottom 添加过渡效果 */
+    transition: padding-bottom 0.3s ease-in-out;
 }
+
+/* 【新增】当 Tab 栏隐藏时，移除 body 的底部内边距 */
+body.tab-bar-hidden {
+    padding-bottom: 0;
+}
+
 
 /* 页面内容容器 */
 .content-container {
@@ -54,18 +62,19 @@ body {
     left: 0;
     right: 0;
     height: 60px;
+    /* 【修改】将背景色设置为透明 */
     background-color: transparent;
     display: flex;
     justify-content: space-around;
     align-items: center;
     z-index: 1000;
-    /* 【新增】为 transform 属性添加过渡效果 */
+    /* 【新增】为隐藏/显示添加过渡动画 */
     transition: transform 0.3s ease-in-out;
 }
 
-/* 【新增】用于隐藏 Tab 栏的样式 */
+/* 【新增】Tab 栏隐藏时的状态 */
 .tab-bar.hidden {
-    transform: translateY(100%); /* 向上移动自身高度，实现隐藏 */
+    transform: translateY(100%); /* 向下移出屏幕 */
 }
 
 .tab-item {
@@ -103,4 +112,39 @@ body {
     width: 100%;
     height: 100%;
     border: none;
+}
+
+/* --- 【新增】切换按钮样式 --- */
+.tab-toggle-button {
+    position: fixed;
+    right: 20px;
+    bottom: 70px; /* 初始位置在 Tab 栏上方 */
+    width: 36px;
+    height: 36px;
+    background-color: rgba(35, 35, 60, 0.7);
+    backdrop-filter: blur(5px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-inactive);
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 1001; /* 确保在 Tab 栏之上 */
+    transition: bottom 0.3s ease-in-out, background-color 0.3s;
+}
+
+.tab-toggle-button:hover {
+    background-color: rgba(60, 60, 90, 0.9);
+    color: #fff;
+}
+
+/* 当 Tab 栏隐藏时，按钮移动到底部 */
+body.tab-bar-hidden .tab-toggle-button {
+    bottom: 20px;
+}
+
+/* 【新增】通用的隐藏类 */
+.hidden {
+    display: none !important;
 }
