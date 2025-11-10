@@ -32,7 +32,6 @@
     </main>
 
     <nav class="tab-bar">
-        <!-- ▼▼▼ 核心改造：移除了文字标签 span ▼▼▼ -->
         <a href="#" class="tab-item active" data-page="chat-page">
             <i class="fa-solid fa-comment-dots icon"></i>
         </a>
@@ -42,13 +41,14 @@
         <a href="#" class="tab-item" data-page="game-page">
             <i class="fa-solid fa-gamepad icon"></i>
         </a>
-
-        <!-- 【新增】Tab栏隐藏/显示切换按钮 -->
-        <div id="toggle-tab-bar" class="tab-toggle-btn">
-            <i class="fa-solid fa-chevron-up toggle-icon icon-up"></i>
-            <i class="fa-solid fa-chevron-down toggle-icon icon-down"></i>
-        </div>
     </nav>
+
+    <!-- 【修改】将Tab栏切换按钮移到 nav 外部，使其独立定位 -->
+    <div id="toggle-tab-bar" class="tab-toggle-btn">
+        <i class="fa-solid fa-chevron-up toggle-icon icon-up"></i>
+        <i class="fa-solid fa-chevron-down toggle-icon icon-down"></i>
+    </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -72,7 +72,7 @@
                 });
             });
 
-            // 【新增】Tab栏隐藏/显示功能
+            // Tab栏隐藏/显示功能 (无需修改)
             const toggleBtn = document.getElementById('toggle-tab-bar');
             const tabBar = document.querySelector('.tab-bar');
             const body = document.body;
