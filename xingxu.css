@@ -100,16 +100,15 @@ body.tab-bar-is-hidden {
     position: fixed; /* 使用 fixed 定位，使其独立于 tab-bar */
     right: 15px;
     bottom: 55px; /* 默认位置在 tab-bar 上方 */
-    width: 36px;
-    height: 24px;
-    background-color: rgba(35, 35, 60, 0.7);
+    width: 18px;
+    height: 12px;
     backdrop-filter: blur(5px);
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: var(--text-inactive);
+    color: #ffffff;
     font-size: 14px;
     z-index: 11; /* 确保在 tab-bar 之上 */
     transition: bottom 0.3s ease-in-out; /* 为位置变化添加动画 */
@@ -117,7 +116,7 @@ body.tab-bar-is-hidden {
 
 /* 当 Tab 栏隐藏时，按钮移动到屏幕底部 */
 body.tab-bar-is-hidden .tab-toggle-btn {
-    bottom: 5px;
+    bottom: 1px;
 }
 
 .toggle-icon.icon-down {
