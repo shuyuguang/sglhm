@@ -4,6 +4,10 @@ import { ALL_APP_DB_KEYS } from '../config/app.config.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
 import { PROFILE_DB_KEYS } from '../config/profile.config.js';
 
+// ▼▼▼ 新增：定义图片存储前缀 ▼▼▼
+const CHAT_PHOTO_PREFIX = 'chat-photo/';
+// ▲▲▲ 新增结束 ▲▲▲
+
 document.addEventListener('DOMContentLoaded', () => {
     // ====================【数据库和配置】====================
     const db = new Dexie('userSettingsDB');
@@ -67,6 +71,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const zip = new JSZip();
             const imageFiles = new Map(); // 用于收集所有需要写入文件的图片Blob
 
+            // --- 0. [新增] 导出聊天图片 ---
+            const chatPhotoFolder = zip.folder("chat-photo");
+            if (chatPhotoFolder) {
+                for (const key in allData) {
+                    if (key.startsWith(CHAT_PHOTO_PREFIX)) {
+                        const filename = key.substring(CHAT_PHOTO_PREFIX.length);
+                        const blob = dataURLtoBlob(allData[key]);
+                        if (blob) {
+                            chatPhotoFolder.file(filename, blob);
+                        }
+                        delete allData[key];
+                    }
+                }
+            }
+
             // --- 1. 处理 Profile 数据 ---
             const profileFolder = zip.folder("profile");
             if (profileFolder) {
@@ -105,7 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
             Object.values(PROFILE_DB_KEYS).forEach(key => delete allData[key]);
 
             // --- 2. 处理 Chat 数据 ---
-            const chatFolder = zip.folder("chat");
+            const chatFolder = zip.folder("achat");
+     
             if (chatFolder) {
                 // 2.1 导出 Active Chat List 到 public.json
                 if (allData[CHAT_DB_KEYS.ACTIVE_CHAT_LIST]) {
@@ -215,8 +235,29 @@ document.addEventListener('DOMContentLoaded', () => {
             const zip = await JSZip.loadAsync(file);
             let importedData = {};
             const imageBase64Map = new Map();
+            const dataToPut = []; // 将所有要写入DB的数据收集到这里
 
-            // --- 1. 预加载所有图片为 DataURL ---
+            // --- 0. [新增] 预加载聊天图片到待写入列表 ---
+            const chatPhotoFolder = zip.folder("chat-photo");
+            if (chatPhotoFolder) {
+                const photoPromises = [];
+                chatPhotoFolder.forEach((relativePath, photoFile) => {
+                    const promise = photoFile.async("blob").then(blob => new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve({
+                            key: `${CHAT_PHOTO_PREFIX}${relativePath}`,
+                            value: reader.result
+                        });
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    }));
+                    photoPromises.push(promise);
+                });
+                const chatPhotos = await Promise.all(photoPromises);
+                dataToPut.push(...chatPhotos);
+            }
+
+            // --- 1. 预加载所有嵌入式图片为 DataURL ---
             const imageFolders = ["profile/image/", "chat/emoji/image/", "chat/backgrounds/image/", "images/"];
             const imagePromises = [];
             for (const folderPrefix of imageFolders) {
@@ -271,20 +312,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // 3.2 导入 Chat
-            const chatPublicFile = zip.file("chat/public.json");
+            const chatPublicFile = zip.file("achat/public.json");
+            // ▲▲▲ 修改结束 ▲▲▲
             if (chatPublicFile) {
                 importedData[CHAT_DB_KEYS.ACTIVE_CHAT_LIST] = JSON.parse(await chatPublicFile.async("string"));
             }
-            const emojiFile = zip.file("chat/emoji/emoji.json");
+            // ▼▼▼ 修改点 ▼▼▼
+            const emojiFile = zip.file("achat/emoji/emoji.json");
+            // ▲▲▲ 修改结束 ▲▲▲
             if (emojiFile) {
                 importedData[CHAT_DB_KEYS.EMOJIS] = JSON.parse(await emojiFile.async("string"));
             }
-            const backgroundsFile = zip.file("chat/backgrounds/backgrounds.json");
+            // ▼▼▼ 修改点 ▼▼▼
+            const backgroundsFile = zip.file("achat/backgrounds/backgrounds.json");
+            // ▲▲▲ 修改结束 ▲▲▲
             if(backgroundsFile) {
                  importedData[CHAT_DB_KEYS.GLOBAL_BACKGROUNDS] = JSON.parse(await backgroundsFile.async("string"));
             }
             
-            const chatHistoryFolders = zip.folder("chat").filter((path, file) => file.dir);
+            // ▼▼▼ 修改点 ▼▼▼
+            const chatHistoryFolders = zip.folder("achat").filter((path, file) => file.dir);
+            // ▲▲▲ 修改结束 ▲▲▲
             for (const folder of chatHistoryFolders) {
                 // 排除 emoji 和 backgrounds 文件夹
                 if (folder.name.endsWith('emoji/') || folder.name.endsWith('backgrounds/')) continue;
@@ -310,7 +358,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // --- 4. 最终处理和写入 ---
             const finalData = reconstructData(importedData);
             
-            const dataToPut = [];
             const allKnownKeys = new Set(await getKeysToProcess());
             for (const key in finalData) {
                 if (allKnownKeys.has(key) || key.startsWith(CHAT_DB_KEYS.CHAT_HISTORY) || key.startsWith('relia-chat-')) {
