@@ -6,73 +6,121 @@
     <title>星绪</title>
     <!-- 引入 Font Awesome 图标库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- ▼▼▼ 核心改造：引入聊天室所需的所有CSS ▼▼▼ -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+    <link rel="stylesheet" href="./achat/chat-room.css">
+    <link rel="stylesheet" href="./achat/chat-header-menu.css">
+    <link rel="stylesheet" href="./achat/chat-modals.css">
+    <link rel="stylesheet" href="./achat/chat-components.css">
+    <link rel="stylesheet" href="./profile/base.css">
+    <link rel="stylesheet" href="./profile/components.css">
+    <link rel="stylesheet" href="./profile/modals.css">
+    <!-- ▲▲▲ 改造结束 ▲▲▲ -->
+
     <link rel="stylesheet" href="xingxu.css">
 </head>
 <body>
 
-    <header class="header">
-        <button class="header-action-btn" id="menu-btn"><i class="fa-solid fa-bars"></i></button>
-        <div class="header-actions">
-            <button class="header-action-btn" id="game-redirect-btn"><i class="fa-solid fa-gamepad"></i></button>
-            <button class="header-action-btn" id="add-chat-btn"><i class="fa-solid fa-plus"></i></button>
-        </div>
-    </header>
-
-    <main class="content-container">
-        <div id="chat-page" class="page active">
-            <div id="chat-list-area">
-                <!-- 聊天列表将由 JS 动态生成到这里 -->
+    <!-- ▼▼▼ 核心改造：创建两个视图容器 ▼▼▼ -->
+    <!-- 星绪主界面容器 -->
+    <div id="xingxu-wrapper">
+        <header class="header">
+            <button class="header-action-btn" id="menu-btn"><i class="fa-solid fa-bars"></i></button>
+            <div class="header-actions">
+                <button class="header-action-btn" id="game-redirect-btn"><i class="fa-solid fa-gamepad"></i></button>
+                <button class="header-action-btn" id="add-chat-btn"><i class="fa-solid fa-plus"></i></button>
             </div>
-        </div>
+        </header>
 
-        <div id="moments-page" class="page">
-            <h1>动态区</h1>
-            <p>此功能待开发</p>
-        </div>
-
-        <div id="profile-page" class="page">
-            <h1>我的</h1>
-            <p>个人中心功能待开发</p>
-        </div>
-    </main>
-
-    <div class="modal-overlay" id="char-select-overlay">
-        <div class="modal-panel">
-            <div class="modal-tabs">
-                <button class="modal-tab active" data-tab="single-chat">单人</button>
-                <button class="modal-tab disabled" data-tab="group-chat">群聊</button>
+        <main class="content-container">
+            <div id="chat-page" class="page active">
+                <div id="chat-list-area">
+                    <!-- 聊天列表将由 JS 动态生成到这里 -->
+                </div>
             </div>
-            <div class="modal-content-container">
-                <div id="single-chat-content" class="modal-tab-content active">
-                    <div class="sheet-body-list" id="char-list-container">
-                        <!-- 角色列表将由 JS 动态生成到这里 -->
+
+            <div id="moments-page" class="page">
+                <h1>动态区</h1>
+                <p>此功能待开发</p>
+            </div>
+
+            <div id="profile-page" class="page">
+                <h1>我的</h1>
+                <p>个人中心功能待开发</p>
+            </div>
+        </main>
+
+        <!-- 角色选择面板保持不变 -->
+        <div class="modal-overlay" id="char-select-overlay">
+            <div class="modal-panel">
+                <div class="modal-tabs">
+                    <button class="modal-tab active" data-tab="single-chat">单人</button>
+                    <button class="modal-tab disabled" data-tab="group-chat">群聊</button>
+                </div>
+                <div class="modal-content-container">
+                    <div id="single-chat-content" class="modal-tab-content active">
+                        <div class="sheet-body-list" id="char-list-container"></div>
+                    </div>
+                    <div id="group-chat-content" class="modal-tab-content">
+                        <p class="no-char-message">群聊功能开发中...</p>
                     </div>
                 </div>
-                <div id="group-chat-content" class="modal-tab-content">
-                    <p class="no-char-message">群聊功能开发中...</p>
+                <div class="sheet-footer">
+                    <button class="sheet-btn sheet-btn-cancel" id="cancel-selection-btn">取消</button>
+                    <button class="sheet-btn sheet-btn-confirm" id="confirm-selection-btn">确定</button>
                 </div>
             </div>
-            <div class="sheet-footer">
-                <button class="sheet-btn sheet-btn-cancel" id="cancel-selection-btn">取消</button>
-                <button class="sheet-btn sheet-btn-confirm" id="confirm-selection-btn">确定</button>
-            </div>
         </div>
+
+        <nav class="tab-bar">
+            <a href="#" class="tab-item active" data-page="chat-page">
+                <i class="fa-solid fa-comment-dots icon"></i>
+            </a>
+            <a href="#" class="tab-item" data-page="moments-page">
+                <i class="fa-solid fa-compass icon"></i>
+            </a>
+            <a href="#" class="tab-item" data-page="profile-page">
+                <i class="fa-solid fa-user icon"></i>
+            </a>
+        </nav>
     </div>
 
-    <nav class="tab-bar">
-        <a href="#" class="tab-item active" data-page="chat-page">
-            <i class="fa-solid fa-comment-dots icon"></i>
-        </a>
-        <a href="#" class="tab-item" data-page="moments-page">
-            <i class="fa-solid fa-compass icon"></i>
-        </a>
-        <a href="#" class="tab-item" data-page="profile-page">
-            <i class="fa-solid fa-user icon"></i>
-        </a>
-    </nav>
+    <!-- 聊天室容器 (默认隐藏) -->
+    <div id="chat-room-wrapper" style="display: none;">
+        <!-- 聊天室UI将由JS动态生成到这里 -->
+    </div>
+    <!-- ▲▲▲ 改造结束 ▲▲▲ -->
+
 
     <!-- JS 库 -->
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+
+    <!-- ▼▼▼ 核心改造：引入聊天室所需的所有JS模块 ▼▼▼ -->
+    <!-- profile 模块 -->
+    <script src="./config/profile.config.js" type="module"></script>
+    <script src="./profile/profile.ui.js" type="module"></script>
+    <script src="./profile/profile.events.js" type="module"></script>
+    
+    <!-- chat 模块 -->
+    <script src="./achat/chat-editor-bridge.js" type="module"></script>
+    <script src="./achat/message-edit.js" type="module"></script>
+    <script src="./achat/chat-prompt.js" type="module"></script>
+    <script src="./achat/chat-ui.js" type="module"></script>
+    <script src="./achat/chat-memory.js" type="module"></script>
+    <script src="./achat/chat-model-selector.js" type="module"></script>
+    <script src="./achat/chat-api.js" type="module"></script>
+    <script src="./achat/chat-emoji.js" type="module"></script>
+    <script src="./achat/chat-header.js" type="module"></script>
+    <script src="./achat/chat-theme.js" type="module"></script>
+    <script src="./achat/chat-input-handler.js" type="module"></script>
+    <script src="./achat/chat-image-sender.js" type="module"></script>
+    <script src="./achat/chat-link-sender.js" type="module"></script>
+    <script src="./achat/chat-room.js" type="module"></script> <!-- 主文件 -->
+    <!-- ▲▲▲ 改造结束 ▲▲▲ -->
+
     <script src="xingxu.js" type="module"></script>
 
 </body>
