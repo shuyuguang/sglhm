@@ -6,19 +6,19 @@
     <title>星绪</title>
     <!-- 引入 Font Awesome 图标库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- [!] 引入新的 xingxu.css 文件 -->
     <link rel="stylesheet" href="xingxu.css">
 </head>
 <body>
 
-    <!-- [!] 修改：顶部标题栏，增加了加号按钮 -->
     <header class="header">
-        <span>星绪</span>
-        <button class="header-action-btn" id="add-chat-btn"><i class="fa-solid fa-plus"></i></button>
+        <button class="header-action-btn" id="menu-btn"><i class="fa-solid fa-bars"></i></button>
+        <div class="header-actions">
+            <button class="header-action-btn" id="game-redirect-btn"><i class="fa-solid fa-gamepad"></i></button>
+            <button class="header-action-btn" id="add-chat-btn"><i class="fa-solid fa-plus"></i></button>
+        </div>
     </header>
 
     <main class="content-container">
-        <!-- [!] 修改：聊天页面现在是聊天列表的容器 -->
         <div id="chat-page" class="page active">
             <div id="chat-list-area">
                 <!-- 聊天列表将由 JS 动态生成到这里 -->
@@ -30,55 +30,49 @@
             <p>此功能待开发</p>
         </div>
 
-        <div id="game-page" class="page">
-            <h1>游戏区</h1>
-            <p>此功能待开发</p>
+        <div id="profile-page" class="page">
+            <h1>我的</h1>
+            <p>个人中心功能待开发</p>
         </div>
     </main>
 
-    <!-- [!] 新增：从 relia-chat.js 迁移过来的聊天选择面板HTML -->
     <div class="modal-overlay" id="char-select-overlay">
-        <div class="modal-panel" id="char-select-panel">
+        <div class="modal-panel">
             <div class="modal-tabs">
-                <button class="modal-tab active" data-tab="single-chat">选择单聊</button>
-                <button class="modal-tab disabled" data-tab="create-group">创建群聊</button>
-                <button class="modal-tab" data-tab="select-group">选择群聊</button>
+                <button class="modal-tab active" data-tab="single-chat">单人</button>
+                <button class="modal-tab disabled" data-tab="group-chat">群聊</button>
             </div>
             <div class="modal-content-container">
-                <div class="modal-tab-content active" id="single-chat-content">
-                    <div class="sheet-body-list" id="char-list-container"></div>
+                <div id="single-chat-content" class="modal-tab-content active">
+                    <div class="sheet-body-list" id="char-list-container">
+                        <!-- 角色列表将由 JS 动态生成到这里 -->
+                    </div>
                 </div>
-                <div class="modal-tab-content" id="select-group-content">
-                    <p class="no-char-message">此页面存放已创建的群聊（该功能尚未完成）</p>
+                <div id="group-chat-content" class="modal-tab-content">
+                    <p class="no-char-message">群聊功能开发中...</p>
                 </div>
             </div>
             <div class="sheet-footer">
                 <button class="sheet-btn sheet-btn-cancel" id="cancel-selection-btn">取消</button>
-                <button class="sheet-btn sheet-btn-confirm" id="confirm-selection-btn">确认</button>
+                <button class="sheet-btn sheet-btn-confirm" id="confirm-selection-btn">确定</button>
             </div>
         </div>
     </div>
 
-    <!-- 底部 Tab 栏 (保持不变) -->
     <nav class="tab-bar">
         <a href="#" class="tab-item active" data-page="chat-page">
             <i class="fa-solid fa-comment-dots icon"></i>
-            <span class="label">聊天</span>
         </a>
         <a href="#" class="tab-item" data-page="moments-page">
             <i class="fa-solid fa-compass icon"></i>
-            <span class="label">动态</span>
         </a>
-        <a href="#" class="tab-item" data-page="game-page">
-            <i class="fa-solid fa-gamepad icon"></i>
-            <span class="label">游戏</span>
+        <a href="#" class="tab-item" data-page="profile-page">
+            <i class="fa-solid fa-user icon"></i>
         </a>
     </nav>
 
     <!-- JS 库 -->
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
-    
-    <!-- [!] 引入新的 xingxu.js 文件 -->
     <script src="xingxu.js" type="module"></script>
 
 </body>

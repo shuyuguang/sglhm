@@ -6,14 +6,13 @@ import { CHAT_DB_KEYS } from './config/chat.config.js';
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    // ==================== 1. UI 元素引用 ====================
+    // ▼▼▼ UI 元素引用 (已修改) ▼▼▼
     let ui = {
         // Tab切换相关
         tabItems: document.querySelectorAll('.tab-item'),
         pages: document.querySelectorAll('.page'),
         
         // 聊天列表相关
-        addChatBtn: document.getElementById('add-chat-btn'),
         chatListArea: document.getElementById('chat-list-area'),
 
         // 角色选择面板相关
@@ -23,10 +22,16 @@ document.addEventListener('DOMContentLoaded', function() {
         cancelBtn: document.getElementById('cancel-selection-btn'),
         tabsContainer: document.querySelector('.modal-tabs'),
         tabs: document.querySelectorAll('.modal-tab'),
-        tabContents: document.querySelectorAll('.modal-tab-content')
-    };
+        tabContents: document.querySelectorAll('.modal-tab-content'),
 
-    // ==================== 2. 功能函数 (大部分来自 relia-chat.js) ====================
+        // 顶部按钮 (已重新组织)
+        menuBtn: document.getElementById('menu-btn'),
+        gameRedirectBtn: document.getElementById('game-redirect-btn'),
+        addChatBtn: document.getElementById('add-chat-btn')
+    };
+    // ▲▲▲ 修改结束 ▲▲▲
+
+    // ==================== 2. 功能函数 ====================
 
     function renderChatList(chatList) {
         if (!ui.chatListArea) return;
@@ -176,6 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
             event.preventDefault();
             const currentActiveTab = document.querySelector('.tab-item.active');
             if (currentActiveTab === this) return;
+            
             const targetPageId = this.getAttribute('data-page');
 
             ui.tabItems.forEach(item => item.classList.remove('active'));
@@ -185,6 +191,13 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById(targetPageId).classList.add('active');
         });
     });
+
+    // 顶部游戏按钮跳转
+    if (ui.gameRedirectBtn) {
+        ui.gameRedirectBtn.addEventListener('click', () => {
+            window.location.href = 'felotus.html';
+        });
+    }
 
     // 聊天选择面板相关事件
     ui.addChatBtn.addEventListener('click', openCharacterSelector);
@@ -214,9 +227,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (card) {
                 const charId = card.dataset.charId;
                 if (charId) {
-                    // ▼▼▼ 核心改动：路径指向新的 achat/ 文件夹 ▼▼▼
                     window.location.href = `./achat/chat-room.html?id=${charId}`;
-                    // ▲▲▲ 修改结束 ▲▲▲
                 }
             }
         });
