@@ -3,16 +3,19 @@
 import { dbStorage } from './common/db.js';
 import { PROFILE_DB_KEYS } from './config/profile.config.js';
 import { CHAT_DB_KEYS } from './config/chat.config.js';
-// ▼▼▼ 核心改造：引入聊天室的启动函数 ▼▼▼
-import { startChat } from './achat/chat-room.js';
-// ▲▲▲ 改造结束 ▲▲▲
 
 document.addEventListener('DOMContentLoaded', function() {
 
+    // ▼▼▼ UI 元素引用 (已修改) ▼▼▼
     let ui = {
+        // Tab切换相关
         tabItems: document.querySelectorAll('.tab-item'),
         pages: document.querySelectorAll('.page'),
+        
+        // 聊天列表相关
         chatListArea: document.getElementById('chat-list-area'),
+
+        // 角色选择面板相关
         overlay: document.getElementById('char-select-overlay'),
         listContainer: document.getElementById('char-list-container'),
         confirmBtn: document.getElementById('confirm-selection-btn'),
@@ -20,18 +23,16 @@ document.addEventListener('DOMContentLoaded', function() {
         tabsContainer: document.querySelector('.modal-tabs'),
         tabs: document.querySelectorAll('.modal-tab'),
         tabContents: document.querySelectorAll('.modal-tab-content'),
+
+        // 顶部按钮 (已重新组织)
         menuBtn: document.getElementById('menu-btn'),
         gameRedirectBtn: document.getElementById('game-redirect-btn'),
-        addChatBtn: document.getElementById('add-chat-btn'),
-        // ▼▼▼ 核心改造：添加对两个主视图容器的引用 ▼▼▼
-        xingxuWrapper: document.getElementById('xingxu-wrapper'),
-        chatRoomWrapper: document.getElementById('chat-room-wrapper'),
-        // ▲▲▲ 改造结束 ▲▲▲
+        addChatBtn: document.getElementById('add-chat-btn')
     };
+    // ▲▲▲ 修改结束 ▲▲▲
 
     // ==================== 2. 功能函数 ====================
 
-    // renderChatList, loadAndRenderInitialChats, switchTab, openCharacterSelector, renderCharacterList, closePanel, handleConfirm 函数保持不变...
     function renderChatList(chatList) {
         if (!ui.chatListArea) return;
 
@@ -49,6 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="chat-card-meta">
                     <div class="chat-card-time"></div>
+                    <!-- <div class="unread-badge">1</div> -->
                 </div>
             </div>
         `).join('');
@@ -89,11 +91,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (history && history.length > 0) {
                     const lastMsg = history[history.length - 1];
                     let previewText = '';
-                    if (lastMsg.sender === 'user') {
-                        previewText = `你: ${lastMsg.text || (lastMsg.isEmoji ? `[${lastMsg.name}]` : (lastMsg.type === 'image' ? '[图片]' : `[链接] ${lastMsg.title}`))}`;
-                    } else { // character
-                        const lastReply = lastMsg.replyVersions[lastMsg.activeReplyIndex].slice(-1)[0];
-                        previewText = lastReply.text || (lastReply.isEmoji ? `[${lastReply.name}]` : `[链接] ${lastReply.title}`);
+                    if (lastMsg.text) {
+                        previewText = lastMsg.text;
+                    } else if (lastMsg.isEmoji) {
+                        previewText = `[${lastMsg.name}]`;
+                    } else if (lastMsg.type === 'image') {
+                        previewText = '[图片]';
+                    } else if (lastMsg.type === 'link') {
+                        previewText = `[链接] ${lastMsg.title}`;
                     }
                     return { ...char, lastMessage: previewText };
                 }
@@ -168,41 +173,33 @@ document.addEventListener('DOMContentLoaded', function() {
         closePanel();
     }
     
-    // ▼▼▼ 核心改造：新增返回星绪主界面的函数 ▼▼▼
-    function backToXingxu() {
-        ui.chatRoomWrapper.style.display = 'none';
-        ui.chatRoomWrapper.innerHTML = ''; // 清理内容，释放资源
-        ui.xingxuWrapper.style.display = 'block';
-        
-        // 重新加载聊天列表以更新最后一条消息
-        loadAndRenderInitialChats();
-    }
-    // ▲▲▲ 改造结束 ▲▲▲
-
     // ==================== 3. 事件绑定 ====================
 
-    // 底部Tab切换逻辑...
+    // 底部Tab切换逻辑
     ui.tabItems.forEach(tab => {
         tab.addEventListener('click', function(event) {
             event.preventDefault();
             const currentActiveTab = document.querySelector('.tab-item.active');
             if (currentActiveTab === this) return;
+            
             const targetPageId = this.getAttribute('data-page');
+
             ui.tabItems.forEach(item => item.classList.remove('active'));
             this.classList.add('active');
+
             ui.pages.forEach(page => page.classList.remove('active'));
             document.getElementById(targetPageId).classList.add('active');
         });
     });
 
-    // 顶部游戏按钮跳转...
+    // 顶部游戏按钮跳转
     if (ui.gameRedirectBtn) {
         ui.gameRedirectBtn.addEventListener('click', () => {
             window.location.href = 'felotus.html';
         });
     }
 
-    // 聊天选择面板相关事件...
+    // 聊天选择面板相关事件
     ui.addChatBtn.addEventListener('click', openCharacterSelector);
     ui.cancelBtn.addEventListener('click', closePanel);
     ui.confirmBtn.addEventListener('click', handleConfirm);
@@ -223,24 +220,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // ▼▼▼ 核心改造：修改聊天列表点击事件 ▼▼▼
+    // 聊天列表点击进入聊天室
     if (ui.chatListArea) {
         ui.chatListArea.addEventListener('click', (event) => {
             const card = event.target.closest('.chat-card');
             if (card) {
                 const charId = card.dataset.charId;
                 if (charId) {
-                    // 隐藏星绪界面，显示聊天室容器
-                    ui.xingxuWrapper.style.display = 'none';
-                    ui.chatRoomWrapper.style.display = 'block';
-                    
-                    // 调用聊天室启动函数
-                    startChat(charId, ui.chatRoomWrapper, backToXingxu);
+                    window.location.href = `./achat/chat-room.html?id=${charId}`;
                 }
             }
         });
     }
-    // ▲▲▲ 改造结束 ▲▲▲
 
     // ==================== 4. 页面初始化 ====================
     loadAndRenderInitialChats();
