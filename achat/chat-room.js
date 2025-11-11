@@ -1,11 +1,11 @@
 // 文件名: relia-chat/chat-room.js
 
-// ... imports 保持不变 ...
 import { dbStorage } from '../common/db.js';
 import { PROFILE_DB_KEYS } from '../config/profile.config.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
 import { createChatEditor } from './chat-editor-bridge.js';
 import { initializeMessageMenu } from './message-edit.js';
+
 import { renderChatRoomUI, renderMessageGroup, renderSystemMessage } from './chat-ui.js';
 import { initializeMemorySystem } from './chat-memory.js';
 import { initializeModelSelector, updateModelButtonText } from './chat-model-selector.js';
@@ -19,10 +19,12 @@ import { initializeLinkSender, openLinkSender } from './chat-link-sender.js';
 
 
 const blobUrlManager = {
-    // ... blobUrlManager 的代码保持不变 ...
     cache: new Map(),
+    
     async dataUrlToBlobUrl(dataUrl) {
-        if (this.cache.has(dataUrl)) return this.cache.get(dataUrl);
+        if (this.cache.has(dataUrl)) {
+            return this.cache.get(dataUrl);
+        }
         try {
             const response = await fetch(dataUrl);
             const blob = await response.blob();
@@ -34,6 +36,7 @@ const blobUrlManager = {
             return dataUrl;
         }
     },
+    
     cleanup() {
         for (const blobUrl of this.cache.values()) {
             URL.revokeObjectURL(blobUrl);
@@ -43,35 +46,29 @@ const blobUrlManager = {
     }
 };
 
-// ▼▼▼ 核心改造：将HTML片段加载逻辑移到外部，并用一个标志位防止重复加载 ▼▼▼
-let fragmentsLoaded = false;
 async function loadHtmlFragments(paths) {
-    if (fragmentsLoaded) return;
-    try {
-        const fetchPromises = paths.map(path => fetch(path).then(res => res.text()));
-        const htmlStrings = await Promise.all(fetchPromises);
-        document.body.insertAdjacentHTML('beforeend', htmlStrings.join(''));
-        fragmentsLoaded = true;
-    } catch (error) {
-        console.error("加载HTML片段失败:", error);
-        throw error; // 抛出错误，让调用者处理
-    }
+    const fetchPromises = paths.map(path => fetch(path).then(res => res.text()));
+    const htmlStrings = await Promise.all(fetchPromises);
+    document.body.insertAdjacentHTML('beforeend', htmlStrings.join(''));
 }
 
-// ▼▼▼ 核心改造：将整个页面逻辑包装进一个可导出的 `startChat` 函数 ▼▼▼
-export async function startChat(charId, container, onBackCallback) {
+document.addEventListener('DOMContentLoaded', async () => {
     try {
-        await loadHtmlFragments(['./achat/chat-header.html', './achat/chat-modals.html', './achat/chat-editor-panels.html']);
+        await loadHtmlFragments(['./chat-header.html', './chat-modals.html', './chat-editor-panels.html']);
     } catch (error) {
-        container.innerHTML = '页面组件加载失败，请检查网络或联系管理员。';
+        console.error("加载HTML片段失败:", error);
+        document.body.innerHTML = '页面组件加载失败，请检查网络或联系管理员。';
         return;
     }
 
-    const appContainer = container; // 使用传入的容器
+    const appContainer = document.getElementById('app-container');
+    if (!appContainer) { console.error("#app-container not found!"); return; }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const charId = urlParams.get('id');
     if (!charId) { appContainer.innerHTML = '<p>错误：未指定角色ID。</p>'; return; }
 
     try {
-        // ... 从 try 块开始，到文件末尾的整个逻辑基本不变，除了几处小修改 ...
         const [rawAllChars, rawAllUsers, currentUserId] = await Promise.all([
             dbStorage.getItem(PROFILE_DB_KEYS.CHAR_PROFILES),
             dbStorage.getItem(PROFILE_DB_KEYS.USER_PROFILES),
@@ -87,17 +84,6 @@ export async function startChat(charId, container, onBackCallback) {
 
         appContainer.innerHTML = renderChatRoomUI(character);
         
-        // ▼▼▼ 核心改造：绑定新的返回按钮 ▼▼▼
-        const backBtn = document.getElementById('chat-back-btn');
-        if (backBtn && typeof onBackCallback === 'function') {
-            backBtn.addEventListener('click', () => {
-                blobUrlManager.cleanup(); // 在返回前清理资源
-                onBackCallback();
-            });
-        }
-        // ▲▲▲ 改造结束 ▲▲▲
-
-        // ... elements, state, dbKeys 等对象的定义保持不变 ...
         const elements = {
             chatArea: document.getElementById('chat-messages-area'),
             input: document.getElementById('chat-input'),
