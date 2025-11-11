@@ -9,8 +9,9 @@ export function renderChatRoomUI(character) {
     return `
         <div class="chat-container">
             <header class="chat-header">
-                <!-- [!] 核心改动：修改返回按钮的链接 -->
-                <a href="../xingxu.html" class="chat-header-btn back-btn"><i class="fa-solid fa-chevron-left"></i></a>
+                <!-- ▼▼▼ 核心改造：将返回链接改为按钮 ▼▼▼ -->
+                <button id="chat-back-btn" class="chat-header-btn back-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                <!-- ▲▲▲ 改造结束 ▲▲▲ -->
                 <div class="chat-header-center">
                     <div class="char-info">
                         <img src="${character.avatar}" alt="${character.name}" class="char-info-avatar">
