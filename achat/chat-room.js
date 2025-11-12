@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         let character = allChars.find(c => c.id === charId);
         if (!character) { appContainer.innerHTML = `<p>错误：找不到ID为 ${charId} 的角色。</p>`; return; }
-        let user = allUsers.find(u => u.id === currentUserId) || { id: 'default-user-1', name: 'User', avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg' };
+        let user = allUsers.find(u => u.id === currentUserId) || { id: 'default-user-1', name: 'User', avatar: 'https://i.postimg.cc/Yq19VCkN/afelotus.jpg' };
 
         appContainer.innerHTML = renderChatRoomUI(character);
         
