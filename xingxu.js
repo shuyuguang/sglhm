@@ -1,4 +1,4 @@
-// xingxu.js
+// 文件名: xingxu.js
 
 import { dbStorage } from './common/db.js';
 import { PROFILE_DB_KEYS } from './config/profile.config.js';
@@ -6,10 +6,11 @@ import { CHAT_DB_KEYS } from './config/chat.config.js';
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    // ▼▼▼ 新增：注册 Service Worker ▼▼▼
+    // ▼▼▼ 核心修复：使用绝对路径注册 Service Worker ▼▼▼
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
+            // 将 './sw.js' 修改为 '/sw.js'
+            navigator.serviceWorker.register('/sw.js') 
                 .then(registration => {
                     console.log('Service Worker registered with scope:', registration.scope);
                 })
@@ -18,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
         });
     }
-    // ▲▲▲ 新增结束 ▲▲▲
+    // ▲▲▲ 修复结束 ▲▲▲
 
     // ▼▼▼ UI 元素引用 (已修改) ▼▼▼
     let ui = {
