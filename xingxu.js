@@ -27,11 +27,24 @@ document.addEventListener('DOMContentLoaded', function() {
         // 顶部按钮 (已重新组织)
         menuBtn: document.getElementById('menu-btn'),
         gameRedirectBtn: document.getElementById('game-redirect-btn'),
-        addChatBtn: document.getElementById('add-chat-btn')
+        addChatBtn: document.getElementById('add-chat-btn'),
+        
+        // 新增：侧边菜单UI元素
+        sideMenuOverlay: document.getElementById('side-menu-overlay')
     };
     // ▲▲▲ 修改结束 ▲▲▲
 
     // ==================== 2. 功能函数 ====================
+    
+    // ▼▼▼ 新增：侧边菜单功能函数 ▼▼▼
+    function openSideMenu() {
+        if (ui.sideMenuOverlay) ui.sideMenuOverlay.classList.add('active');
+    }
+
+    function closeSideMenu() {
+        if (ui.sideMenuOverlay) ui.sideMenuOverlay.classList.remove('active');
+    }
+    // ▲▲▲ 新增结束 ▲▲▲
 
     function renderChatList(chatList) {
         if (!ui.chatListArea) return;
@@ -191,6 +204,20 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById(targetPageId).classList.add('active');
         });
     });
+
+    // ▼▼▼ 新增：侧边菜单事件绑定 ▼▼▼
+    if (ui.menuBtn) {
+        ui.menuBtn.addEventListener('click', openSideMenu);
+    }
+    if (ui.sideMenuOverlay) {
+        ui.sideMenuOverlay.addEventListener('click', (event) => {
+            // 点击遮罩层本身时关闭菜单
+            if (event.target === ui.sideMenuOverlay) {
+                closeSideMenu();
+            }
+        });
+    }
+    // ▲▲▲ 新增结束 ▲▲▲
 
     // 顶部游戏按钮跳转
     if (ui.gameRedirectBtn) {

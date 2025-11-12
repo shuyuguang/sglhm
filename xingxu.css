@@ -326,3 +326,82 @@ body {
     color: #868e96;
     padding: 30px 16px;
 }
+
+
+/* ▼▼▼ 新增：侧边菜单样式 ▼▼▼ */
+.side-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 1100;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out, visibility 0.3s;
+}
+.side-menu-overlay.active {
+    visibility: visible;
+    opacity: 1;
+}
+.side-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 280px; /* 菜单宽度 */
+    background-color: var(--header-bg);
+    box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    padding-top: 55px; /* 留出顶部状态栏空间 */
+    box-sizing: border-box;
+}
+.side-menu-overlay.active .side-menu {
+    transform: translateX(0);
+}
+.side-menu-header {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+.side-menu-header .user-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 15px;
+}
+.side-menu-header .user-name {
+    font-size: 1.1em;
+    font-weight: 500;
+    color: var(--text-color);
+}
+.side-menu-list {
+    list-style: none;
+    padding: 10px 0;
+    margin: 0;
+    flex-grow: 1;
+}
+.side-menu-list li a {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    text-decoration: none;
+    color: var(--text-color);
+    font-size: 1em;
+}
+.side-menu-list li a:hover {
+    background-color: var(--bg-color);
+}
+.side-menu-list li a .icon {
+    width: 30px;
+    font-size: 1.1em;
+    color: var(--text-inactive);
+    margin-right: 15px;
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */
