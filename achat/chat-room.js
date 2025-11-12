@@ -439,7 +439,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             state.backgrounds = savedBackgrounds || [];
             state.emojis = savedEmojis || [];
 
-            const defaultBgColor = '#F8F9FB';
+            // ▼▼▼ 核心修改：将默认背景颜色从固定值改为 null (透明) ▼▼▼
+            const defaultBgColor = null;
+            // ▲▲▲ 修改结束 ▲▲▲
             await setActiveBackground(savedActiveBg || defaultBgColor);
             
             await loadAndRenderHistory();

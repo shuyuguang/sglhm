@@ -25,12 +25,12 @@ html, body {
     display: flex;
     flex-direction: column;
     height: 100dvh;
-    /* ▼▼▼ 新增：为容器设置默认背景和背景图样式 ▼▼▼ */
-    background-color: var(--page-bg);
+    /* ▼▼▼ 核心修改：默认背景色改为透明 ▼▼▼ */
+    background-color: transparent;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
     background-size: cover;
     background-position: center;
     transition: background-color 0.3s ease;
-    /* ▲▲▲ 新增结束 ▲▲▲ */
 }
 
 /* ▼▼▼ 修改点：调整了聊天室头部的布局方式和尺寸 ▼▼▼ */
@@ -49,7 +49,9 @@ html, body {
     display: flex;
     align-items: center; /* 垂直居中内部元素 */
     padding: 3px 15px 3px 3.5px; /* 修改：缩小垂直内边距，调整水平内边距 */
-    background-color: rgba(255, 255, 255, 0.4);
+    /* ▼▼▼ 核心修改：背景色改为透明 ▼▼▼ */
+    background-color: transparent;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
     border-radius: 99px;
     
 }

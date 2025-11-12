@@ -379,6 +379,10 @@ input:checked + .slider:before {
 .bg-default-preview {
     width: 100%;
     height: 100%;
+    /* ▼▼▼ 新增：为透明的默认背景预览块添加边框以便可见 ▼▼▼ */
+    box-sizing: border-box;
+    border: 1px solid #dee2e6;
+    /* ▲▲▲ 新增结束 ▲▲▲ */
 }
 .bg-thumbnail-item.disabled {
     cursor: not-allowed;
