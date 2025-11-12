@@ -1,10 +1,10 @@
-// 文件名: sw.js
+// sw.js
 
-// ▼▼▼ 核心修复：从本地加载 Dexie 库 ▼▼▼
-importScripts('./common/dexie.min.js');
-// ▲▲▲ 修复结束 ▲▲▲
+// 引入 Dexie 库，让 Service Worker 也能操作 IndexedDB
+importScripts('https://unpkg.com/dexie/dist/dexie.js');
 
-// 定义数据库连接
+// 定义数据库连接（必须和你的主应用中的 db.js 保持一致）
+// 注意：如果你的 db.js 有多个版本或更复杂的结构，这里需要同步修改
 const db = new Dexie('ReliaDB');
 db.version(1).stores({
     profiles: 'id',
@@ -18,12 +18,14 @@ db.version(1).stores({
 // Service Worker 安装时触发
 self.addEventListener('install', event => {
     console.log('Service Worker installing.');
+    // 强制新的 Service Worker 立即激活，确保更新后能立刻生效
     self.skipWaiting();
 });
 
 // Service Worker 激活时触发
 self.addEventListener('activate', event => {
     console.log('Service Worker activating.');
+    // 立即控制所有客户端（已打开的页面）
     event.waitUntil(self.clients.claim());
 });
 
@@ -31,6 +33,7 @@ self.addEventListener('activate', event => {
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'FETCH_AI_REPLY') {
         const { payload } = event.data;
+        // event.waitUntil 会让 Service Worker 保持运行状态，直到 Promise 完成
         event.waitUntil(handleAiFetch(payload, event.source.id));
     }
 });
@@ -49,6 +52,7 @@ async function handleAiFetch(payload, clientId) {
         let messagesForApi = [{ role: 'system', content: systemPrompt }];
         let historyForApi;
 
+        // --- 根据模式准备不同的API历史记录 ---
         if (mode === 'regenerate') {
             let lastUserMessageIndex = -1;
             for (let i = chatHistory.length - 1; i >= 0; i--) {
@@ -66,13 +70,14 @@ async function handleAiFetch(payload, clientId) {
             historyForApi = chatHistory;
             messagesForApi.push(...await formatChatHistoryForApi(historyForApi));
             messagesForApi.push({ role: 'user', content: '[继续]' });
-            historyForApi = []; 
+            historyForApi = []; // 防止重复添加
 
-        } else { 
+        } else { // 'new' mode
             historyForApi = chatHistory;
         }
 
         messagesForApi.push(...await formatChatHistoryForApi(historyForApi));
+        // --- 模式处理结束 ---
 
         const endpoint = (currentChatApi.baseUrl.replace(/\/$/, '')) + (currentChatApi.path || '/v1/chat/completions');
         const apiPayload = { model: currentChatApi.model, messages: messagesForApi, stream: true };
@@ -95,6 +100,7 @@ async function handleAiFetch(payload, clientId) {
             let historyWithoutThinking = currentDbHistory.filter(msg => !(msg.sender === 'system' && msg.type === 'loading'));
             let newHistory;
 
+            // --- 根据模式更新历史记录 ---
             if (mode === 'regenerate') {
                 const lastCharMessageForRegen = historyWithoutThinking.slice().reverse().find(m => m.sender === 'character');
                 if (lastCharMessageForRegen) {
@@ -110,16 +116,18 @@ async function handleAiFetch(payload, clientId) {
                     lastCharMessageForCont.replyVersions[lastCharMessageForCont.activeReplyIndex] = combinedReply;
                 }
                 newHistory = historyWithoutThinking;
-            } else { 
+            } else { // 'new' mode
                 newHistory = [
                     ...historyWithoutThinking,
                     { sender: 'character', replyVersions: [replyMessages], activeReplyIndex: 0 }
                 ];
             }
+            // --- 更新历史记录结束 ---
 
             await db.chatHistory.put(newHistory, historyKey);
             notifyClient(clientId, { type: 'AI_REPLY_COMPLETED', charId });
         } else {
+             // 如果AI没有返回任何有效消息，也要清理"思考中"
             const currentDbHistory = await db.chatHistory.get(historyKey) || [];
             const historyWithoutThinking = currentDbHistory.filter(msg => !(msg.sender === 'system' && msg.type === 'loading'));
             await db.chatHistory.put(historyWithoutThinking, historyKey);
@@ -136,8 +144,11 @@ async function handleAiFetch(payload, clientId) {
     }
 }
 
+/**
+ * 通知特定的客户端（页面）
+ */
 async function notifyClient(clientId, message) {
-    if (!clientId) {
+    if (!clientId) { // 如果没有特定客户端ID，就通知所有客户端
         const allClients = await self.clients.matchAll();
         for (const client of allClients) {
             client.postMessage(message);
@@ -150,9 +161,12 @@ async function notifyClient(clientId, message) {
     }
 }
 
+
 // ==================================================================
-// ▼▼▼ 以下所有函数为 AI 响应处理逻辑，已同步最新版本 ▼▼▼
+// ▼▼▼ 以下所有函数完整复制自 chat-api.js 以确保逻辑完全一致 ▼▼▼
 // ==================================================================
+
+// --- Helper Functions ---
 
 function isImageUrl(url) {
     if (typeof url !== 'string') return false;
@@ -173,9 +187,7 @@ function blobUrlToDataUrl(blobUrl) {
                 const reader = new FileReader();
                 reader.onloadend = () => { resolve(reader.result); };
                 reader.onerror = reject;
-                // ▼▼▼ 隐藏BUG修复：之前这里错误地写成了 file ▼▼▼
                 reader.readAsDataURL(blob);
-                // ▲▲▲ 修复结束 ▲▲▲
             })
             .catch(reject);
     });
