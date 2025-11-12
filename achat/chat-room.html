@@ -28,7 +28,6 @@
     </div>
 
     <!-- 
-      ▼▼▼ 核心修改 ▼▼▼
       所有静态的HTML面板都已移出，将由 chat-room.js 动态载入。
       这样主HTML文件就非常干净了。
     -->
@@ -46,7 +45,6 @@
     <!-- 引入本页面的专属 JS 逻辑 -->
     <script src="chat-editor-bridge.js" type="module"></script>
     <script src="message-edit.js" type="module"></script>
-    <script src="chat-prompt.js" type="module"></script>
     
     <!-- 引入拆分后的模块 -->
     <script src="chat-ui.js" type="module"></script>
@@ -57,10 +55,8 @@
     <script src="chat-header.js" type="module"></script>
     <script src="chat-theme.js" type="module"></script>
     <script src="chat-input-handler.js" type="module"></script>
-    <!-- ▼▼▼ 新增引入的模块 ▼▼▼ -->
     <script src="chat-image-sender.js" type="module"></script>
     <script src="chat-link-sender.js" type="module"></script>
-    <!-- ▲▲▲ 新增结束 ▲▲▲ -->
 
     <script src="chat-room.js" type="module"></script> <!-- 主文件最后加载 -->
 </body>
