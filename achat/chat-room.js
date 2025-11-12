@@ -84,7 +84,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         appContainer.innerHTML = renderChatRoomUI(character);
         
-        // ▼▼▼ 核心修改：将所有DOM元素引用集中到这里 ▼▼▼
         const elements = {
             // Main UI
             chatArea: document.getElementById('chat-messages-area'),
@@ -159,7 +158,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             textPreviewOverlay: document.getElementById('text-preview-overlay'),
             textPreviewContent: document.querySelector('#text-preview-overlay .text-preview-content'),
         };
-        // ▲▲▲ 修改结束 ▲▲▲
 
         const state = {
             chatHistory: [],
@@ -221,7 +219,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elements.userProfileEditName) elements.userProfileEditName.textContent = user.name;
         
         async function loadAndRenderHistory() {
-            // ... (此函数内容保持不变) ...
             const processedMessages = await Promise.all(state.chatHistory.map(async (msg) => {
                 if (msg.sender === 'user' && msg.type === 'image' && msg.data.startsWith('data:')) {
                     const blobUrl = await blobUrlManager.dataUrlToBlobUrl(msg.data);
@@ -247,14 +244,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         function updateButtonStates() {
-            // ... (此函数内容保持不变) ...
             if (!elements.input || !elements.respondBtn || !elements.sendBtn) return;
             const respondBtnIcon = elements.respondBtn.querySelector('i');
         
             if (isAiReplying) {
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
-                if (respondBtnIcon) respondBtnIcon.className = 'fa-solid fa-spinner fa-spin'; // 使用旋转图标
+                if (respondBtnIcon) respondBtnIcon.className = 'fa-solid fa-spinner fa-spin';
                 elements.respondBtn.classList.add('blinking');
                 return;
             }
@@ -274,7 +270,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         const onHistoryUpdate = async (newHistory) => {
-            // ... (此函数内容保持不变) ...
             state.chatHistory = newHistory;
             await loadAndRenderHistory();
             updateButtonStates();
@@ -292,15 +287,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         async function onSendUserMessage(message) {
-            // ... (此函数内容保持不变) ...
             state.chatHistory.push(message);
             await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
             await loadAndRenderHistory();
             updateButtonStates();
         }
 
+        // ▼▼▼ 核心修改：移除此函数末尾的 triggerAiResponse 调用 ▼▼▼
         async function handleUserSend() {
-            // ... (此函数内容保持不变) ...
             const text = elements.input.value.trim();
             if (text === '') return;
             const userMessage = { text, sender: 'user' };
@@ -309,11 +303,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             elements.input.style.height = 'auto';
             updateButtonStates();
             elements.input.focus();
-            triggerAiResponse('new');
+            // triggerAiResponse('new'); // <--- 已删除此行
         }
+        // ▲▲▲ 修改结束 ▲▲▲
 
         async function onSendEmoji(emoji) {
-            // ... (此函数内容保持不变) ...
             const emojiMessage = { sender: 'user', isEmoji: true, name: emoji.name, data: emoji.data };
             await onSendUserMessage(emojiMessage);
             triggerAiResponse('new');
@@ -333,7 +327,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elements.continueBtn) elements.continueBtn.addEventListener('click', () => triggerAiResponse('continue'));
 
         elements.chatArea.addEventListener('click', async (e) => {
-            // ... (此函数内容保持不变) ...
             const imageLink = e.target.closest('.is-image-message a');
             if (imageLink) { e.preventDefault(); }
             const previewBtn = e.target.closest('.text-photo-preview-btn');
@@ -377,7 +370,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
         
-        // ▼▼▼ 核心修改：简化所有 initializeXXX 函数的调用 ▼▼▼
         const { renderMemoryCards } = initializeMemorySystem(elements, state, dbKeys.memoryDbKey);
         initializeModelSelector(elements, state, dbKeys.selectedApiKey);
         initializeHeaderMenu(elements, { chatEditor, userEditor });
@@ -387,10 +379,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             { bgDbKey: dbKeys.bgDbKey, activeBgDbKey: dbKeys.activeBgDbKey }
         );
         initializeInputArea(elements, updateButtonStates, state, dbKeys.diyDbKey, dbStorage);
-        // ▲▲▲ 修改结束 ▲▲▲
         
         async function initializeChatState() {
-            // ... (此函数内容保持不变) ...
             const savedHistory = await dbStorage.getItem(dbKeys.historyKey) || [];
             const lastMessage = savedHistory.length > 0 ? savedHistory[savedHistory.length - 1] : null;
             isAiReplying = !!(lastMessage && lastMessage.sender === 'system' && lastMessage.type === 'loading');
@@ -426,15 +416,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             initializeMessageMenu(elements.chatArea, getChatHistory, updateChatHistory, getEmojis);
             
-            // ▼▼▼ 核心修改：简化调用 ▼▼▼
             initializeEmojiSystem(elements, state, onSendEmoji);
             initializeImageSender(elements, onSendUserMessage);
             initializeLinkSender(elements, onSendUserMessage);
-            // ▲▲▲ 修改结束 ▲▲▲
         }
 
         if ('serviceWorker' in navigator) {
-            // ... (此段落保持不变) ...
             navigator.serviceWorker.addEventListener('message', async (event) => {
                 if (event.data && event.data.charId === charId) {
                     console.log('Received message from Service Worker:', event.data);
