@@ -9,7 +9,6 @@ export function renderChatRoomUI(character) {
     return `
         <div class="chat-container">
             <header class="chat-header">
-                <!-- [!] 核心改动：修改返回按钮的链接 -->
                 <a href="../xingxu.html" class="chat-header-btn back-btn"><i class="fa-solid fa-chevron-left"></i></a>
                 <div class="chat-header-center">
                     <div class="char-info">
@@ -221,14 +220,15 @@ export function renderMessageGroup(messageGroup, index, user, character) {
                     </div>
                 `;
             } else if (messagePart.type === 'image') {
+                // ▼▼▼ 核心修复：恢复链接图的正确渲染逻辑 ▼▼▼
                 bubble.classList.add('is-image-message');
                 bubble.innerHTML = `
                     <a href="${messagePart.data}" target="_blank" title="点击查看大图">
                         <img src="${messagePart.data}" alt="角色图片" class="message-photo-img">
                     </a>
                 `;
+                // ▲▲▲ 修复结束 ▲▲▲
             } else if (messagePart.type === 'text-photo') {
-                // ▼▼▼ 核心修复：使AI的文字图渲染与用户的完全一致 ▼▼▼
                 bubble.classList.add('is-image-message');
                 bubble.innerHTML = `
                     <div class="photo-message-container">
@@ -238,7 +238,6 @@ export function renderMessageGroup(messageGroup, index, user, character) {
                         </button>
                     </div>
                 `;
-                // ▲▲▲ 修复结束 ▲▲▲
             } else if (messagePart.isEmoji) {
                 bubble.classList.add('is-emoji-message');
                 bubble.innerHTML = `<img src="${messagePart.data}" alt="emoji" class="message-emoji-img">`;
