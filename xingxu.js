@@ -6,6 +6,20 @@ import { CHAT_DB_KEYS } from './config/chat.config.js';
 
 document.addEventListener('DOMContentLoaded', function() {
 
+    // ▼▼▼ 新增：注册 Service Worker ▼▼▼
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(registration => {
+                    console.log('Service Worker registered with scope:', registration.scope);
+                })
+                .catch(error => {
+                    console.log('Service Worker registration failed:', error);
+                });
+        });
+    }
+    // ▲▲▲ 新增结束 ▲▲▲
+
     // ▼▼▼ UI 元素引用 (已修改) ▼▼▼
     let ui = {
         // Tab切换相关
@@ -104,7 +118,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (history && history.length > 0) {
                     const lastMsg = history[history.length - 1];
                     let previewText = '';
-                    if (lastMsg.text) {
+
+                    // 新增：如果最后一条是系统消息（如思考中），也进行展示
+                    if (lastMsg.sender === 'system' && lastMsg.type === 'loading') {
+                        previewText = '对方正在输入...';
+                    } else if (lastMsg.text) {
                         previewText = lastMsg.text;
                     } else if (lastMsg.isEmoji) {
                         previewText = `[${lastMsg.name}]`;
@@ -211,7 +229,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (ui.sideMenuOverlay) {
         ui.sideMenuOverlay.addEventListener('click', (event) => {
-            // 点击遮罩层本身时关闭菜单
             if (event.target === ui.sideMenuOverlay) {
                 closeSideMenu();
             }
