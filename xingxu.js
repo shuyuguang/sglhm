@@ -6,31 +6,26 @@ import { CHAT_DB_KEYS } from './config/chat.config.js';
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    // ▼▼▼ 核心修复：使用绝对路径注册 Service Worker ▼▼▼
+    // ▼▼▼ 核心修复：将 Service Worker 注册为 module 类型 ▼▼▼
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            // 将 './sw.js' 修改为 '/sw.js'
-            navigator.serviceWorker.register('/sw.js') 
+            navigator.serviceWorker.register('/sw.js', { type: 'module' }) // 添加 { type: 'module' }
                 .then(registration => {
-                    console.log('Service Worker registered with scope:', registration.scope);
+                    console.log('Service Worker (Module) registered with scope:', registration.scope);
                 })
                 .catch(error => {
-                    console.log('Service Worker registration failed:', error);
+                    // 这个错误现在会更具体，帮助我们调试
+                    console.error('Service Worker registration failed:', error);
                 });
         });
     }
     // ▲▲▲ 修复结束 ▲▲▲
 
-    // ▼▼▼ UI 元素引用 (已修改) ▼▼▼
+    // ... (文件的其余部分保持不变) ...
     let ui = {
-        // Tab切换相关
         tabItems: document.querySelectorAll('.tab-item'),
         pages: document.querySelectorAll('.page'),
-        
-        // 聊天列表相关
         chatListArea: document.getElementById('chat-list-area'),
-
-        // 角色选择面板相关
         overlay: document.getElementById('char-select-overlay'),
         listContainer: document.getElementById('char-list-container'),
         confirmBtn: document.getElementById('confirm-selection-btn'),
@@ -38,20 +33,12 @@ document.addEventListener('DOMContentLoaded', function() {
         tabsContainer: document.querySelector('.modal-tabs'),
         tabs: document.querySelectorAll('.modal-tab'),
         tabContents: document.querySelectorAll('.modal-tab-content'),
-
-        // 顶部按钮 (已重新组织)
         menuBtn: document.getElementById('menu-btn'),
         gameRedirectBtn: document.getElementById('game-redirect-btn'),
         addChatBtn: document.getElementById('add-chat-btn'),
-        
-        // 新增：侧边菜单UI元素
         sideMenuOverlay: document.getElementById('side-menu-overlay')
     };
-    // ▲▲▲ 修改结束 ▲▲▲
 
-    // ==================== 2. 功能函数 ====================
-    
-    // ▼▼▼ 新增：侧边菜单功能函数 ▼▼▼
     function openSideMenu() {
         if (ui.sideMenuOverlay) ui.sideMenuOverlay.classList.add('active');
     }
@@ -59,16 +46,13 @@ document.addEventListener('DOMContentLoaded', function() {
     function closeSideMenu() {
         if (ui.sideMenuOverlay) ui.sideMenuOverlay.classList.remove('active');
     }
-    // ▲▲▲ 新增结束 ▲▲▲
 
     function renderChatList(chatList) {
         if (!ui.chatListArea) return;
-
         if (!chatList || chatList.length === 0) {
             ui.chatListArea.innerHTML = '<p class="no-char-message">点击右上角加号按钮，选择角色开始聊天吧！ 👋</p>';
             return;
         }
-
         ui.chatListArea.innerHTML = chatList.map(char => `
             <div class="chat-card" data-char-id="${char.id}">
                 <img src="${char.avatar}" alt="${char.name}" class="chat-card-avatar">
@@ -76,10 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="chat-card-name">${char.name || '未命名'}</div>
                     <div class="chat-card-preview">${char.lastMessage || '...'}</div>
                 </div>
-                <div class="chat-card-meta">
-                    <div class="chat-card-time"></div>
-                    <!-- <div class="unread-badge">1</div> -->
-                </div>
+                <div class="chat-card-meta"><div class="chat-card-time"></div></div>
             </div>
         `).join('');
     }
@@ -97,7 +78,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const profileMap = new Map(allCharProfiles.map(p => [p.id, p]));
         let hasChanges = false;
-
         const syncedChatList = savedChatList.map(chat => {
             const latestProfile = profileMap.get(chat.id);
             if (latestProfile && (chat.name !== latestProfile.name || chat.avatar !== latestProfile.avatar)) {
@@ -115,12 +95,9 @@ document.addEventListener('DOMContentLoaded', function() {
             syncedChatList.map(async (char) => {
                 const historyKey = `${CHAT_DB_KEYS.CHAT_HISTORY}_${char.id}`;
                 const history = await dbStorage.getItem(historyKey);
-                
                 if (history && history.length > 0) {
                     const lastMsg = history[history.length - 1];
                     let previewText = '';
-
-                    // 新增：如果最后一条是系统消息（如思考中），也进行展示
                     if (lastMsg.sender === 'system' && lastMsg.type === 'loading') {
                         previewText = '对方正在输入...';
                     } else if (lastMsg.text) {
@@ -137,7 +114,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return char;
             })
         );
-        
         renderChatList(enhancedChatList);
     }
 
@@ -191,7 +167,6 @@ document.addEventListener('DOMContentLoaded', function() {
     async function handleConfirm() {
         const selectedChars = [];
         const checkboxes = ui.listContainer.querySelectorAll('input[type="checkbox"]:checked');
-        
         checkboxes.forEach(box => {
             selectedChars.push({ 
                 id: box.dataset.id, 
@@ -199,58 +174,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 avatar: box.dataset.avatar
             });
         });
-        
         await dbStorage.setItem(CHAT_DB_KEYS.ACTIVE_CHAT_LIST, selectedChars);
         await loadAndRenderInitialChats();
         closePanel();
     }
-    
-    // ==================== 3. 事件绑定 ====================
 
-    // 底部Tab切换逻辑
     ui.tabItems.forEach(tab => {
         tab.addEventListener('click', function(event) {
             event.preventDefault();
             const currentActiveTab = document.querySelector('.tab-item.active');
             if (currentActiveTab === this) return;
-            
             const targetPageId = this.getAttribute('data-page');
-
             ui.tabItems.forEach(item => item.classList.remove('active'));
             this.classList.add('active');
-
             ui.pages.forEach(page => page.classList.remove('active'));
             document.getElementById(targetPageId).classList.add('active');
         });
     });
 
-    // ▼▼▼ 新增：侧边菜单事件绑定 ▼▼▼
-    if (ui.menuBtn) {
-        ui.menuBtn.addEventListener('click', openSideMenu);
-    }
+    if (ui.menuBtn) ui.menuBtn.addEventListener('click', openSideMenu);
     if (ui.sideMenuOverlay) {
         ui.sideMenuOverlay.addEventListener('click', (event) => {
-            if (event.target === ui.sideMenuOverlay) {
-                closeSideMenu();
-            }
+            if (event.target === ui.sideMenuOverlay) closeSideMenu();
         });
     }
-    // ▲▲▲ 新增结束 ▲▲▲
-
-    // 顶部游戏按钮跳转
-    if (ui.gameRedirectBtn) {
-        ui.gameRedirectBtn.addEventListener('click', () => {
-            window.location.href = 'felotus.html';
-        });
-    }
-
-    // 聊天选择面板相关事件
+    if (ui.gameRedirectBtn) ui.gameRedirectBtn.addEventListener('click', () => { window.location.href = 'felotus.html'; });
     ui.addChatBtn.addEventListener('click', openCharacterSelector);
     ui.cancelBtn.addEventListener('click', closePanel);
     ui.confirmBtn.addEventListener('click', handleConfirm);
-    ui.overlay.addEventListener('click', (event) => {
-        if (event.target === ui.overlay) closePanel();
-    });
+    ui.overlay.addEventListener('click', (event) => { if (event.target === ui.overlay) closePanel(); });
     ui.listContainer.addEventListener('click', (event) => {
         const targetItem = event.target.closest('.char-item');
         if (targetItem) {
@@ -264,20 +216,14 @@ document.addEventListener('DOMContentLoaded', function() {
             switchTab(target.dataset.tab);
         }
     });
-
-    // 聊天列表点击进入聊天室
     if (ui.chatListArea) {
         ui.chatListArea.addEventListener('click', (event) => {
             const card = event.target.closest('.chat-card');
             if (card) {
                 const charId = card.dataset.charId;
-                if (charId) {
-                    window.location.href = `./achat/chat-room.html?id=${charId}`;
-                }
+                if (charId) window.location.href = `./achat/chat-room.html?id=${charId}`;
             }
         });
     }
-
-    // ==================== 4. 页面初始化 ====================
     loadAndRenderInitialChats();
 });
