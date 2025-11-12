@@ -39,7 +39,7 @@ export function createDataManager(db, state, ui) {
             state.profileData = loadedProfiles;
         } else {
             const defaultName = state.currentMode === 'YOU' ? 'User' : 'Felotus';
-            state.profileData = [{ id: state.getDefaultProfileId(), name: defaultName, gender: '♀（女）', bio: '', age: '', race: '', occupation: '', avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg', banner: 'https://i.postimg.cc/NjRJ5qdx/a-good.jpg', customSections: [], relationships: [] }];
+            state.profileData = [{ id: state.getDefaultProfileId(), name: defaultName, gender: '♀（女）', bio: '', age: '', race: '', occupation: '', avatar: 'https://i.postimg.cc/Yq19VCkN/afelotus.jpg', banner: 'https://i.postimg.cc/NjRJ5qdx/a-good.jpg', customSections: [], relationships: [] }];
             await dbStorage.setItem(getProfileDataKey(), state.profileData);
         }
 
@@ -125,7 +125,7 @@ export function createDataManager(db, state, ui) {
         const newProfile = {
             id: `${isYouMode ? 'user' : 'char'}-${Date.now()}`,
             name: '', gender: '♀（女）', bio: '', age: '', race: '', occupation: '',
-            avatar: 'https://i.postimg.cc/7hCmXR0s/a-felotus.jpg', banner: 'https://i.postimg.cc/NjRJ5qdx/a-good.jpg',
+            avatar: 'https://i.postimg.cc/Yq19VCkN/afelotus.jpg', banner: 'https://i.postimg.cc/NjRJ5qdx/a-good.jpg',
             customSections: [], relationships: []
         };
         state.profileData.push(newProfile);
