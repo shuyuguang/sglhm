@@ -77,7 +77,6 @@ export function renderChatRoomUI(character) {
     `;
 }
 
-// [新增] 一个简单的HTML转义函数，防止XSS攻击
 function escapeHtml(unsafe) {
     if (!unsafe) return '';
     return unsafe
@@ -196,7 +195,6 @@ export function renderMessageGroup(messageGroup, index, user, character) {
             const bubble = document.createElement('div');
             bubble.className = `chat-bubble ${sender}`;
 
-            // ▼▼▼ 核心修改：为 AI 回复添加图片和文字图的渲染逻辑 ▼▼▼
             if (messagePart.type === 'link') {
                 bubble.classList.add('is-link-message');
                 const { title, body, source, image } = messagePart;
@@ -230,17 +228,23 @@ export function renderMessageGroup(messageGroup, index, user, character) {
                     </a>
                 `;
             } else if (messagePart.type === 'text-photo') {
-                // 对于AI发送的文字图，直接用特定样式展示文本
-                bubble.classList.add('is-text-photo-message');
-                bubble.textContent = messagePart.text;
+                // ▼▼▼ 核心修复：使AI的文字图渲染与用户的完全一致 ▼▼▼
+                bubble.classList.add('is-image-message');
+                bubble.innerHTML = `
+                    <div class="photo-message-container">
+                        <img src="https://i.postimg.cc/wBtdFsGF/tpybxmnh.jpg" alt="文字图" class="message-photo-img">
+                        <button class="text-photo-preview-btn" data-text="${escapeHtml(messagePart.text)}" title="预览文字">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                `;
+                // ▲▲▲ 修复结束 ▲▲▲
             } else if (messagePart.isEmoji) {
                 bubble.classList.add('is-emoji-message');
                 bubble.innerHTML = `<img src="${messagePart.data}" alt="emoji" class="message-emoji-img">`;
             } else {
-                // 默认情况是纯文本
                 bubble.textContent = messagePart.text;
             }
-            // ▲▲▲ 修改结束 ▲▲▲
 
             messageRow.appendChild(avatar);
             messageRow.appendChild(bubble);
