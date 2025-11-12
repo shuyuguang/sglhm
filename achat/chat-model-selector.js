@@ -67,18 +67,11 @@ export function updateModelButtonText() {
     }
 }
 
-/**
- * 初始化模型选择器系统的所有功能和事件监听器。
- * @param {object} domElements - 包含所有相关DOM元素的对象。
- * @param {object} chatState - 包含共享状态（如 currentChatApi）的对象。
- * @param {string} dbKey - 用于存储此聊天所选API的数据库键。
- */
 export function initializeModelSelector(domElements, chatState, dbKey) {
-    elements = domElements;
+    elements = domElements; // 直接接收完整的 elements 对象
     state = chatState;
     selectedApiKey = dbKey;
 
-    // --- 绑定事件 ---
     if (elements.selectModelBtn) elements.selectModelBtn.addEventListener('click', openModelSelector);
     if (elements.modelSelectorOverlay) {
         elements.modelSelectorOverlay.addEventListener('click', (e) => {

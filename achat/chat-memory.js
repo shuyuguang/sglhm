@@ -6,12 +6,6 @@ let state = {};
 let elements = {};
 let memoryDbKey = '';
 
-/**
- * 打开记忆编辑器模态框。
- * @param {string} mode - 'add' 或 'edit'。
- * @param {number} index - 正在编辑的记忆的索引。
- * @param {string} text - 正在编辑的记忆的当前文本。
- */
 function openMemoryEditor(mode, index = -1, text = '') {
     elements.memoryEditorOverlay.dataset.mode = mode;
     elements.memoryEditorOverlay.dataset.index = index;
@@ -29,16 +23,10 @@ function openMemoryEditor(mode, index = -1, text = '') {
     elements.memoryEditorTextarea.focus();
 }
 
-/**
- * 关闭记忆编辑器模态框。
- */
 function closeMemoryEditor() {
     elements.memoryEditorOverlay.classList.remove('active');
 }
 
-/**
- * 从数据库加载并渲染所有记忆卡片。
- */
 async function renderMemoryCards() {
     state.memories = await dbStorage.getItem(memoryDbKey) || [];
     elements.memoryCardsContainer.innerHTML = '';
@@ -62,7 +50,7 @@ async function renderMemoryCards() {
  * @param {string} dbKey - 用于存储此聊天记忆的数据库键。
  */
 export function initializeMemorySystem(domElements, chatState, dbKey) {
-    elements = domElements;
+    elements = domElements; // 直接接收完整的 elements 对象
     state = chatState;
     memoryDbKey = dbKey;
 
@@ -121,6 +109,5 @@ export function initializeMemorySystem(domElements, chatState, dbKey) {
         });
     }
 
-    // 暴露 renderMemoryCards 以便在外部初始化时调用
     return { renderMemoryCards };
 }

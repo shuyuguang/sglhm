@@ -2,34 +2,24 @@
 
 import { dbStorage } from '../common/db.js';
 
-/**
- * 初始化聊天主题（背景）系统
- * @param {object} elements - 共享的DOM元素引用
- * @param {object} state - 共享的状态对象
- * @param {object} dbKeys - 包含 { bgDbKey, activeBgDbKey } 的对象
- */
-export function initializeThemeSystem(elements, state, dbKeys) {
-    
+export function initializeThemeSystem(domElements, chatState, dbKeys) {
+    const elements = domElements; // 直接接收完整的 elements 对象
+    const state = chatState;
+
     function renderBackgrounds() {
         if (!elements.bgThumbnailsContainer) return;
         elements.bgThumbnailsContainer.innerHTML = '';
-        // ▼▼▼ 核心修改：将默认背景颜色从固定值改为 null (透明) ▼▼▼
         const defaultBgColor = null;
-        // ▲▲▲ 修改结束 ▲▲▲
 
         const defaultItem = document.createElement('div');
         defaultItem.className = 'bg-thumbnail-item';
         defaultItem.dataset.defaultBg = 'true';
-        // ▼▼▼ 核心修改：判断 active 状态的条件变更 ▼▼▼
         if (state.activeBackground === defaultBgColor) defaultItem.classList.add('active');
-        // ▲▲▲ 修改结束 ▲▲▲
         if (state.isBgMultiSelectMode) defaultItem.classList.add('disabled');
         
         const colorPreview = document.createElement('div');
         colorPreview.className = 'bg-default-preview';
-        // ▼▼▼ 核心修改：预览块的背景也设为透明，CSS会为其添加边框 ▼▼▼
         colorPreview.style.backgroundColor = 'transparent';
-        // ▲▲▲ 修改结束 ▲▲▲
         
         defaultItem.appendChild(colorPreview);
         elements.bgThumbnailsContainer.appendChild(defaultItem);
@@ -91,7 +81,6 @@ export function initializeThemeSystem(elements, state, dbKeys) {
         renderBackgrounds();
     }
     
-    // --- 事件绑定 ---
     if (elements.addBgFromLocalBtn && elements.bgUploadInput) {
         elements.addBgFromLocalBtn.addEventListener('click', () => elements.bgUploadInput.click());
         elements.bgUploadInput.addEventListener('change', (e) => {
@@ -137,12 +126,10 @@ export function initializeThemeSystem(elements, state, dbKeys) {
             const item = e.target.closest('.bg-thumbnail-item');
             if (!item) return;
 
-            // ▼▼▼ 核心修改：点击默认背景按钮的行为统一为移除背景 ▼▼▼
             if (item.dataset.defaultBg === 'true') {
                 setActiveBackground(null);
                 return;
             }
-            // ▲▲▲ 修改结束 ▲▲▲
 
             const index = parseInt(item.dataset.index, 10);
             if (isNaN(index)) return;
@@ -181,6 +168,5 @@ export function initializeThemeSystem(elements, state, dbKeys) {
         });
     }
 
-    // 暴露需要在外部调用的函数
     return { renderBackgrounds, setActiveBackground };
 }

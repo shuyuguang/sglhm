@@ -84,7 +84,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         appContainer.innerHTML = renderChatRoomUI(character);
         
+        // ▼▼▼ 核心修改：将所有DOM元素引用集中到这里 ▼▼▼
         const elements = {
+            // Main UI
             chatArea: document.getElementById('chat-messages-area'),
             input: document.getElementById('chat-input'),
             chatInputArea: document.getElementById('chat-input-area'),
@@ -93,6 +95,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             actionsToggleBtn: document.getElementById('actions-toggle-btn'),
             emojiToggleBtn: document.getElementById('emoji-toggle-btn'),
             actionsMenu: document.getElementById('actions-menu'),
+            
+            // Header Menu
             menuBtn: document.getElementById('menu-btn'),
             headerContentPanel: document.getElementById('header-content-panel'),
             headerTabsPanel: document.getElementById('header-tabs-panel'),
@@ -103,14 +107,59 @@ document.addEventListener('DOMContentLoaded', async () => {
             userProfileEditName: document.getElementById('user-profile-edit-name'),
             charProfileEditAvatar: document.getElementById('char-profile-edit-avatar'),
             charProfileEditName: document.getElementById('char-profile-edit-name'),
-            diySwitch: document.getElementById('enable-diy-switch'),
+            
+            // Action Buttons
             regenerateBtn: document.getElementById('regenerate-btn'),
             continueBtn: document.getElementById('continue-btn'),
             imageActionBtn: document.querySelector('.action-list-item [class*="fa-image"]')?.parentElement,
             linkActionBtn: document.querySelector('.action-list-item [class*="fa-link"]')?.parentElement,
+            
+            // Memory System
+            addMemoryBtn: document.getElementById('add-memory-btn'),
+            memoryCardsContainer: document.getElementById('memory-cards-container'),
+            memoryEditorOverlay: document.getElementById('memory-editor-overlay'),
+            memoryEditorTitle: document.getElementById('memory-editor-title'),
+            memoryEditorTextarea: document.getElementById('memory-editor-textarea'),
+            memoryEditorConfirmBtn: document.getElementById('memory-editor-confirm-btn'),
+            memoryEditorCancelBtn: document.getElementById('memory-editor-cancel-btn'),
+            memoryEditorDeleteBtn: document.getElementById('memory-editor-delete-btn'),
+            memoryEditorCloseBtn: document.getElementById('memory-editor-close-btn'),
+            
+            // Model Selector
+            selectModelBtn: document.getElementById('select-model-btn'),
+            selectedModelName: document.getElementById('selected-model-name'),
+            modelSelectorOverlay: document.getElementById('model-selector-overlay'),
+            modelListContainer: document.getElementById('model-list-container'),
+            closeModelSelectorBtn: document.getElementById('close-model-selector-btn'),
+            diySwitch: document.getElementById('enable-diy-switch'),
+            
+            // Theme System
+            themeContentPane: document.getElementById('menu-content-theme'),
+            bgThumbnailsContainer: document.getElementById('bg-thumbnails-container'),
+            multiSelectBgBtn: document.getElementById('multi-select-bg-btn'),
+            deleteSelectedBgBtn: document.getElementById('delete-selected-bg-btn'),
+            addBgFromLocalBtn: document.getElementById('add-bg-from-local-btn'),
+            bgUploadInput: document.getElementById('bg-upload-input'),
+            addBgFromUrlBtn: document.getElementById('add-bg-from-url-btn'),
+            bgUrlPromptOverlay: document.getElementById('bg-url-prompt-overlay'),
+            bgUrlInput: document.getElementById('bg-url-input'),
+            cancelBgUrlBtn: document.getElementById('cancel-bg-url-btn'),
+            confirmBgUrlBtn: document.getElementById('confirm-bg-url-btn'),
+            
+            // Emoji System
+            emojiPickerBar: document.querySelector('.emoji-picker-bar'),
+            emojiManagementGridContainer: document.getElementById('emoji-management-container'),
+            emojiUploadInput: document.getElementById('emoji-upload-input'),
+            webEmojiModal: document.getElementById('web-emoji-modal'),
+            webEmojiUrlInput: document.getElementById('web-emoji-url-input'),
+            confirmWebEmojiBtn: document.getElementById('confirm-web-emoji-btn'),
+            cancelWebEmojiBtn: document.getElementById('cancel-web-emoji-btn'),
+            
+            // Misc Modals
             textPreviewOverlay: document.getElementById('text-preview-overlay'),
             textPreviewContent: document.querySelector('#text-preview-overlay .text-preview-content'),
         };
+        // ▲▲▲ 修改结束 ▲▲▲
 
         const state = {
             chatHistory: [],
@@ -172,6 +221,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elements.userProfileEditName) elements.userProfileEditName.textContent = user.name;
         
         async function loadAndRenderHistory() {
+            // ... (此函数内容保持不变) ...
             const processedMessages = await Promise.all(state.chatHistory.map(async (msg) => {
                 if (msg.sender === 'user' && msg.type === 'image' && msg.data.startsWith('data:')) {
                     const blobUrl = await blobUrlManager.dataUrlToBlobUrl(msg.data);
@@ -197,6 +247,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         function updateButtonStates() {
+            // ... (此函数内容保持不变) ...
             if (!elements.input || !elements.respondBtn || !elements.sendBtn) return;
             const respondBtnIcon = elements.respondBtn.querySelector('i');
         
@@ -222,11 +273,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         
-        // ▼▼▼ MODIFIED SECTION ▼▼▼
-        // 这个函数现在只负责更新 state 和 UI，不再处理AI回复逻辑
         const onHistoryUpdate = async (newHistory) => {
+            // ... (此函数内容保持不变) ...
             state.chatHistory = newHistory;
-            // 数据库操作由 API handler 负责，这里只更新UI
             await loadAndRenderHistory();
             updateButtonStates();
         };
@@ -241,9 +290,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             },
             onHistoryUpdate,
         });
-        // ▲▲▲ END OF MODIFIED SECTION ▲▲▲
 
         async function onSendUserMessage(message) {
+            // ... (此函数内容保持不变) ...
             state.chatHistory.push(message);
             await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
             await loadAndRenderHistory();
@@ -251,6 +300,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         async function handleUserSend() {
+            // ... (此函数内容保持不变) ...
             const text = elements.input.value.trim();
             if (text === '') return;
             const userMessage = { text, sender: 'user' };
@@ -259,14 +309,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             elements.input.style.height = 'auto';
             updateButtonStates();
             elements.input.focus();
-            // 在用户发送消息后自动触发AI回复
             triggerAiResponse('new');
         }
 
         async function onSendEmoji(emoji) {
+            // ... (此函数内容保持不变) ...
             const emojiMessage = { sender: 'user', isEmoji: true, name: emoji.name, data: emoji.data };
             await onSendUserMessage(emojiMessage);
-            // 发送表情后也自动触发AI回复
             triggerAiResponse('new');
         }
         
@@ -284,11 +333,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (elements.continueBtn) elements.continueBtn.addEventListener('click', () => triggerAiResponse('continue'));
 
         elements.chatArea.addEventListener('click', async (e) => {
+            // ... (此函数内容保持不变) ...
             const imageLink = e.target.closest('.is-image-message a');
-            if (imageLink) {
-                e.preventDefault(); 
-            }
-
+            if (imageLink) { e.preventDefault(); }
             const previewBtn = e.target.closest('.text-photo-preview-btn');
             if (previewBtn) {
                 const text = previewBtn.dataset.text;
@@ -296,16 +343,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 elements.textPreviewOverlay.classList.add('active');
                 return;
             }
-
             const pagerButton = e.target.closest('.pager-btn');
             if (pagerButton) {
                 const messageGroupContainer = pagerButton.closest('.message-group-container');
                 const index = parseInt(messageGroupContainer.dataset.index, 10);
                 const action = pagerButton.dataset.action;
                 const messageData = state.chatHistory[index];
-
                 if (!messageData) return;
-
                 let changed = false;
                 if (action === 'prev' && messageData.activeReplyIndex > 0) {
                     messageData.activeReplyIndex--;
@@ -314,10 +358,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     messageData.activeReplyIndex++;
                     changed = true;
                 }
-
                 if (changed) {
                     await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
-                    
                     const oldGroup = elements.chatArea.querySelector(`.message-group-container[data-index="${index}"]`);
                     if (oldGroup) {
                         const newGroup = renderMessageGroup(messageData, index, user, character);
@@ -335,27 +377,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
         
-        // ... 所有 initializeXXXSystem 函数的调用保持不变 ...
-        const { renderMemoryCards } = initializeMemorySystem(/* ... */);
-        initializeModelSelector(/* ... */);
+        // ▼▼▼ 核心修改：简化所有 initializeXXX 函数的调用 ▼▼▼
+        const { renderMemoryCards } = initializeMemorySystem(elements, state, dbKeys.memoryDbKey);
+        initializeModelSelector(elements, state, dbKeys.selectedApiKey);
         initializeHeaderMenu(elements, { chatEditor, userEditor });
-        const { renderBackgrounds, setActiveBackground } = initializeThemeSystem(/* ... */);
+        const { renderBackgrounds, setActiveBackground } = initializeThemeSystem(
+            elements, 
+            state, 
+            { bgDbKey: dbKeys.bgDbKey, activeBgDbKey: dbKeys.activeBgDbKey }
+        );
         initializeInputArea(elements, updateButtonStates, state, dbKeys.diyDbKey, dbStorage);
+        // ▲▲▲ 修改结束 ▲▲▲
         
         async function initializeChatState() {
-            // ▼▼▼ MODIFIED SECTION: 状态检查与UI同步 ▼▼▼
+            // ... (此函数内容保持不变) ...
             const savedHistory = await dbStorage.getItem(dbKeys.historyKey) || [];
-            
-            // 检查最后一条消息是否是“思考中”，以此判断AI是否在后台运行
             const lastMessage = savedHistory.length > 0 ? savedHistory[savedHistory.length - 1] : null;
-            if (lastMessage && lastMessage.sender === 'system' && lastMessage.type === 'loading') {
-                isAiReplying = true;
-            } else {
-                isAiReplying = false;
-            }
-
+            isAiReplying = !!(lastMessage && lastMessage.sender === 'system' && lastMessage.type === 'loading');
             state.chatHistory = savedHistory;
-
             const [savedApi, savedDiyEnabled, savedBackgrounds, savedActiveBg, savedEmojis] = await Promise.all([
                 dbStorage.getItem(dbKeys.selectedApiKey),
                 dbStorage.getItem(dbKeys.diyDbKey),
@@ -363,22 +402,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 dbStorage.getItem(dbKeys.activeBgDbKey),
                 dbStorage.getItem(dbKeys.emojiDbKey),
             ]);
-            
             if (savedApi) state.currentChatApi = savedApi;
             state.isDiyEnabled = savedDiyEnabled || false;
             if (elements.diySwitch) elements.diySwitch.checked = state.isDiyEnabled;
             state.backgrounds = savedBackgrounds || [];
             state.emojis = savedEmojis || [];
-
             const defaultBgColor = null;
             await setActiveBackground(savedActiveBg || defaultBgColor);
-            
             await loadAndRenderHistory();
             await renderMemoryCards();
             renderBackgrounds();
-            updateButtonStates(); // 使用最新的 isAiReplying 状态来更新按钮
+            updateButtonStates();
             updateModelButtonText();
-            // ▲▲▲ END OF MODIFIED SECTION ▲▲▲
             
             const getChatHistory = () => state.chatHistory;
             const getEmojis = () => state.emojis;
@@ -391,29 +426,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             initializeMessageMenu(elements.chatArea, getChatHistory, updateChatHistory, getEmojis);
             
-            initializeEmojiSystem(/* ... */);
+            // ▼▼▼ 核心修改：简化调用 ▼▼▼
+            initializeEmojiSystem(elements, state, onSendEmoji);
             initializeImageSender(elements, onSendUserMessage);
             initializeLinkSender(elements, onSendUserMessage);
+            // ▲▲▲ 修改结束 ▲▲▲
         }
 
-        // ▼▼▼ NEW SECTION: 监听 Service Worker 的消息 ▼▼▼
         if ('serviceWorker' in navigator) {
+            // ... (此段落保持不变) ...
             navigator.serviceWorker.addEventListener('message', async (event) => {
-                // 确保是发给当前聊天窗口的消息
                 if (event.data && event.data.charId === charId) {
                     console.log('Received message from Service Worker:', event.data);
                     if (event.data.type === 'AI_REPLY_COMPLETED' || event.data.type === 'AI_REPLY_FAILED') {
-                        // AI处理完成，从数据库重新加载最新历史记录
                         const newHistory = await dbStorage.getItem(dbKeys.historyKey) || [];
                         state.chatHistory = newHistory;
-                        isAiReplying = false; // 重置状态
+                        isAiReplying = false;
                         await loadAndRenderHistory();
                         updateButtonStates();
                     }
                 }
             });
         }
-        // ▲▲▲ END OF NEW SECTION ▲▲▲
 
         await initializeChatState();
 
