@@ -88,9 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ${hintCardHtml}
                 <div class="form-group"><label for="api-name">名称</label><input type="text" id="api-name" value="${config.name || ''}"></div>
                 
-                <!-- ▼▼▼ 修改点 ▼▼▼ -->
                 <div class="form-group"><label for="api-key">API Key</label><input type="password" id="api-key" value="${config.apiKey || ''}"></div>
-                <!-- ▲▲▲ 修改结束 ▲▲▲ -->
 
                 <div class="form-group"><label for="api-base-url">API Base URL</label><input type="text" id="api-base-url" value="${config.baseUrl || ''}"></div>
                 ${config.provider === 'openai' ? `<div class="form-group" id="api-path-group"><label for="api-path">API 路径</label><input type="text" id="api-path" value="${config.path || ''}"></div>` : ''}
@@ -98,7 +96,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <button type="button" class="btn-test" id="test-api-btn" title="测试此配置" disabled><i class="fa-solid fa-bolt"></i><span>测试API</span></button>
                     <button type="button" class="btn-fetch" id="fetch-models-btn"><i class="fa-solid fa-wand-magic-sparkles"></i><span>拉取模型</span></button>
                 </div>
-                <div class="form-group"><label for="selected-models-container">已选模型</label><div id="selected-models-container"></div></div>
+                <!-- ▼▼▼ 这里是修改点 ▼▼▼ -->
+                <div class="form-group"><label>已选模型</label><div id="selected-models-container"></div></div>
+                <!-- ▲▲▲ 修改结束 ▲▲▲ -->
             </form>
         </div>
     `;
