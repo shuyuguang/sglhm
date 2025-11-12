@@ -32,16 +32,6 @@ function blobUrlToDataUrl(blobUrl) {
     });
 }
 
-// 注意：AI回复解析逻辑已移至 sw.js，此处保留可能会造成混淆，因此注释掉
-/*
-function parseAiReply(fullReply, emojis) {
-    // ...
-}
-async function universalStreamHandler(context) {
-    // ...
-}
-*/
-
 // --- Core API Logic (现在是委托逻辑) ---
 
 export function createApiHandler(context) {
@@ -61,7 +51,6 @@ export function createApiHandler(context) {
             return;
         }
 
-        // ▼▼▼ 核心修改：不再是简单报错，而是会等待服务就绪 ▼▼▼
         if (!navigator.serviceWorker) {
              alert('你的浏览器不支持后台服务，AI回复功能可能无法使用。');
              return;
@@ -70,11 +59,9 @@ export function createApiHandler(context) {
         if (!navigator.serviceWorker.controller) {
             try {
                 console.warn("Service Worker controller not found. Waiting for it to become ready...");
-                // navigator.serviceWorker.ready 是一个Promise，当SW激活并准备好控制页面时，它会resolve
                 await navigator.serviceWorker.ready; 
                 console.log("Service Worker is now ready.");
                 
-                // 等待之后再次检查，如果还是没有，说明注册或激活过程出了问题
                 if (!navigator.serviceWorker.controller) {
                     throw new Error("Service Worker is active but still not controlling the page.");
                 }
@@ -84,7 +71,6 @@ export function createApiHandler(context) {
                 return;
             }
         }
-        // ▲▲▲ 修改结束 ▲▲▲
 
         if (!state.currentChatApi) {
             alert('请先点击“选择模型”按钮选择一个牵引仪模型！');
@@ -97,10 +83,17 @@ export function createApiHandler(context) {
             alert('还没有聊天记录，无法触发AI。');
             return;
         }
+        
+        // ▼▼▼ 核心修复：移除了过于严格的检查 ▼▼▼
+        /*
+        // 旧的、有问题的代码已被删除
         if (mode === 'new' && lastMessage && lastMessage.sender !== 'user') {
-            console.log("AI can only respond after a user message.");
-            return;
+             console.log("AI can only respond after a user message.");
+             return;
         }
+        */
+        // ▲▲▲ 修复结束 ▲▲▲
+        
         if (mode === 'regenerate' && lastMessage && lastMessage.sender !== 'character') {
              console.log("Last message is not from AI, cannot regenerate.");
              return;
