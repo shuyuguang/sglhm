@@ -199,6 +199,7 @@ export function renderMessageGroup(messageGroup, index, user, character) {
             const bubble = document.createElement('div');
             bubble.className = `chat-bubble ${sender}`;
 
+            // ▼▼▼ 核心修改：为 AI 回复添加图片和文字图的渲染逻辑 ▼▼▼
             if (messagePart.type === 'link') {
                 bubble.classList.add('is-link-message');
                 const { title, body, source, image } = messagePart;
@@ -224,6 +225,16 @@ export function renderMessageGroup(messageGroup, index, user, character) {
                         ${source ? `<div class="link-card-footer">${escapeHtml(source)}</div>` : ''}
                     </div>
                 `;
+            } else if (messagePart.type === 'image') {
+                bubble.classList.add('is-image-message');
+                bubble.innerHTML = `
+                    <a href="${messagePart.data}" target="_blank" title="点击查看大图">
+                        <img src="${messagePart.data}" alt="角色图片" class="message-photo-img">
+                    </a>
+                `;
+            } else if (messagePart.type === 'text-photo') {
+                bubble.classList.add('is-text-photo-message');
+                bubble.textContent = messagePart.text;
             } else if (messagePart.isEmoji) {
                 bubble.classList.add('is-emoji-message');
                 bubble.innerHTML = `<img src="${messagePart.data}" alt="emoji" class="message-emoji-img">`;

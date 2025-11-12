@@ -36,6 +36,9 @@ function parseAiReply(fullReply, emojis) {
     const messages = [];
     const mainRegex = /\[([\s\S]+?)\]|([^\[\]]+)/g;
     const emojiRegex = /^\[Emoji:\s*(.*?)\s*\]$/;
+    // ▼▼▼ 新增：用于匹配图片指令的正则表达式 ▼▼▼
+    const imageRegex = /^Image:\s*([\s\S]*?)\s*$/;
+    // ▲▲▲ 新增结束 ▲▲▲
     
     let match;
     while ((match = mainRegex.exec(fullReply)) !== null) {
@@ -75,7 +78,18 @@ function parseAiReply(fullReply, emojis) {
             } else {
                 messages.push({ sender: 'character', text: `[${potentialCardContent}]` });
             }
-
+        // ▼▼▼ 新增：解析 AI 发送的图片指令 ▼▼▼
+        } else if (potentialCardContent && imageRegex.test(potentialCardContent)) {
+            const imageMatch = potentialCardContent.match(imageRegex);
+            const imageContent = imageMatch[1];
+            if (isImageUrl(imageContent)) {
+                // 如果是链接，创建链接图消息
+                messages.push({ sender: 'character', type: 'image', data: imageContent });
+            } else {
+                // 否则，创建文字图消息
+                messages.push({ sender: 'character', type: 'text-photo', text: imageContent });
+            }
+        // ▲▲▲ 新增结束 ▲▲▲
         } else if (plainText && plainText.trim()) {
             plainText.split(/(\r\n|\n|\r)/).forEach(part => {
                 const trimmedPart = part.trim();
@@ -161,6 +175,14 @@ async function constructSystemPrompt(charProfile, userProfile) {
         prompt += `- **使用规则 (非常重要)**: 当你想发送表情时，必须使用格式 **[Emoji: 表情名称]**，并确保它**单独占据一行**。不要添加任何多余的文字或符号。\n`;
     }
 
+    // ▼▼▼ 新增：教会 AI 如何使用发送图片的工具 ▼▼▼
+    prompt += `\n### 工具：发送图片\n`;
+    prompt += `- 你可以发送图片，支持两种类型：链接图和文字图。\n`;
+    prompt += `- **使用规则 (非常重要)**: 当你想发送图片时，必须使用格式 **[Image: 内容]**，并确保它**单独占据一行**。\n`;
+    prompt += `- **链接图**: 如果“内容”是一个有效的图片URL (例如: https://example.com/image.jpg)，它将被渲染成一张图片。\n`;
+    prompt += `- **文字图**: 如果“内容”是普通文本，它将被渲染成一个包含这段文字的卡片。\n`;
+    // ▲▲▲ 新增结束 ▲▲▲
+
     prompt += `\n### 工具：发送链接卡片\n`;
     prompt += `- 你还可以发送链接卡片来分享结构化的信息，例如分享文章、推荐地点等。\n`;
     prompt += `- **使用规则 (非常重要)**: 当你想发送链接卡片时，必须严格使用以下格式，并确保它**单独占据一段**:\n`;
@@ -174,6 +196,7 @@ async function constructSystemPrompt(charProfile, userProfile) {
     return prompt;
 }
 
+// ... 文件剩余部分保持不变 ...
 async function formatChatHistoryForApi(history) {
     const formattedPromises = history.map(async (msg) => {
         if (msg.sender === 'user') {
@@ -236,6 +259,14 @@ async function formatChatHistoryForApi(history) {
                     linkContent += ']';
                     return linkContent;
                 }
+                // ▼▼▼ 新增：格式化AI历史消息中的图片信息 ▼▼▼
+                if (part.type === 'image') {
+                    return `[Image: ${part.data}]`;
+                }
+                if (part.type === 'text-photo') {
+                    return `[Image: ${part.text}]`;
+                }
+                // ▲▲▲ 新增结束 ▲▲▲
                 return part.text;
             }).join('\n');
             return { role: 'assistant', content };
