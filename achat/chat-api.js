@@ -1,4 +1,4 @@
-// 文件名: relia-chat/chat-api.js
+// 文件名: achat/chat-api.js
 
 import { dbStorage } from '../common/db.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';

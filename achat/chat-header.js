@@ -1,4 +1,4 @@
-// 文件名: relia-chat/chat-header.js
+// 文件名: achat/chat-header.js
 
 /**
  * 初始化顶部菜单系统

@@ -1,4 +1,4 @@
-// relia-chat/chat-image-sender.js
+// achat/chat-image-sender.js
 
 let elements = {};
 let onSendCallback = null;

@@ -1,4 +1,4 @@
-// relia-chat/chat-editor-bridge.js
+// achat/chat-editor-bridge.js
 
 import { GENDER_OPTIONS, LONG_PRESS_DURATION } from '../config/profile.config.js';
 import { createUiManager } from '../profile/profile.ui.js';

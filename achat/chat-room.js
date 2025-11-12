@@ -1,4 +1,4 @@
-// 文件名: relia-chat/chat-room.js
+// 文件名: achat/chat-room.js
 
 import { dbStorage } from '../common/db.js';
 import { PROFILE_DB_KEYS } from '../config/profile.config.js';

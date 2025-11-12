@@ -1,4 +1,4 @@
-// 文件名: relia-chat/chat-theme.js
+// 文件名: achat/chat-theme.js
 
 import { dbStorage } from '../common/db.js';
 

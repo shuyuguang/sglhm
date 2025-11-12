@@ -1,4 +1,4 @@
-// 文件名: relia-chat/chat-ui.js
+// 文件名: achat/chat-ui.js
 
 /**
  * 根据角色和用户信息生成聊天室的核心HTML结构。

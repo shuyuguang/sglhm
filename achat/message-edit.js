@@ -1,4 +1,4 @@
-// 文件名: relia-chat/message-edit.js
+// 文件名: achat/message-edit.js
 
 let menuOverlay, menu, chatAreaRef, getChatHistoryCallback, updateChatHistoryCallback;
 let currentTargetMessage = null;

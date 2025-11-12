@@ -1,4 +1,4 @@
-// 文件名: relia-chat/chat-link-sender.js
+// 文件名: achat/chat-link-sender.js
 
 let elements = {};
 let onSendCallback = null;

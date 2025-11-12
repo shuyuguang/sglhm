@@ -1,4 +1,4 @@
-// 文件名: relia-chat/chat-model-selector.js
+// 文件名: achat/chat-model-selector.js
 
 import { dbStorage } from '../common/db.js';
 import { API_DB_KEYS, ALL_BUILT_IN_API_DEFINITIONS } from '../config/api.config.js';

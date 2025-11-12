@@ -1,4 +1,4 @@
-// 文件名: relia-chat/chat-input-handler.js
+// 文件名: achat/chat-input-handler.js
 
 /**
  * 初始化底部输入区域的交互逻辑
