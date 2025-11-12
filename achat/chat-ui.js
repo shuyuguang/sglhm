@@ -77,7 +77,6 @@ export function renderChatRoomUI(character) {
     `;
 }
 
-// ... 文件其余部分保持不变 ...
 // [新增] 一个简单的HTML转义函数，防止XSS攻击
 function escapeHtml(unsafe) {
     if (!unsafe) return '';
@@ -99,14 +98,14 @@ function escapeHtml(unsafe) {
  * @returns {HTMLElement} - 创建的消息组容器元素。
  */
 export function renderMessageGroup(messageGroup, index, user, character) {
-    // ▼▼▼ 核心修改 ①：移除 chatArea 参数 ▼▼▼
-    const { sender, type } = messageGroup; 
+    const { sender } = messageGroup; 
     
     const messageGroupContainer = document.createElement('div');
     messageGroupContainer.className = 'message-group-container';
     messageGroupContainer.dataset.index = index;
 
     if (sender === 'user') {
+        const { type } = messageGroup;
         const messageRow = document.createElement('div');
         messageRow.className = `message-row ${sender}`;
         
@@ -150,7 +149,6 @@ export function renderMessageGroup(messageGroup, index, user, character) {
                      if (image.type === 'text-photo') {
                         imageContent = `<div class="link-card-image text-photo">${escapeHtml(image.text)}</div>`;
                     } else if (image.type === 'image') {
-                        // 使用 renderData (blob URL) 优先，否则用 data (base64)
                         const imageUrl = image.renderData || image.data;
                         imageContent = `<img src="${imageUrl}" class="link-card-image">`;
                     }
@@ -167,7 +165,6 @@ export function renderMessageGroup(messageGroup, index, user, character) {
                         ${source ? `<div class="link-card-footer">${escapeHtml(source)}</div>` : ''}
                     </div>
                 `;
-                // ▲▲▲ 修改结束 ▲▲▲
                 break;
             default: // 兼容旧的文本和表情消息
                 if (messageGroup.isEmoji) {
@@ -233,12 +230,14 @@ export function renderMessageGroup(messageGroup, index, user, character) {
                     </a>
                 `;
             } else if (messagePart.type === 'text-photo') {
+                // 对于AI发送的文字图，直接用特定样式展示文本
                 bubble.classList.add('is-text-photo-message');
                 bubble.textContent = messagePart.text;
             } else if (messagePart.isEmoji) {
                 bubble.classList.add('is-emoji-message');
                 bubble.innerHTML = `<img src="${messagePart.data}" alt="emoji" class="message-emoji-img">`;
             } else {
+                // 默认情况是纯文本
                 bubble.textContent = messagePart.text;
             }
             // ▲▲▲ 修改结束 ▲▲▲
@@ -265,9 +264,7 @@ export function renderMessageGroup(messageGroup, index, user, character) {
         }
     }
     
-    // ▼▼▼ 核心修改 ②：返回创建的元素，而不是直接添加 ▼▼▼
     return messageGroupContainer;
-    // ▲▲▲ 修改结束 ▲▲▲
 }
 
 
