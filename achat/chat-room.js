@@ -80,15 +80,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         let character = allChars.find(c => c.id === charId);
         if (!character) { appContainer.innerHTML = `<p>错误：找不到ID为 ${charId} 的角色。</p>`; return; }
-        
-        // ▼▼▼ 核心修复：更新默认用户的头像链接 ▼▼▼
         let user = allUsers.find(u => u.id === currentUserId) || { id: 'default-user-1', name: 'User', avatar: 'https://i.postimg.cc/Yq19VCkN/afelotus.jpg' };
-        // ▲▲▲ 修复结束 ▲▲▲
 
         appContainer.innerHTML = renderChatRoomUI(character);
         
         const elements = {
-            // Main UI
             chatArea: document.getElementById('chat-messages-area'),
             input: document.getElementById('chat-input'),
             chatInputArea: document.getElementById('chat-input-area'),
@@ -97,8 +93,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             actionsToggleBtn: document.getElementById('actions-toggle-btn'),
             emojiToggleBtn: document.getElementById('emoji-toggle-btn'),
             actionsMenu: document.getElementById('actions-menu'),
-            
-            // Header Menu
             menuBtn: document.getElementById('menu-btn'),
             headerContentPanel: document.getElementById('header-content-panel'),
             headerTabsPanel: document.getElementById('header-tabs-panel'),
@@ -109,55 +103,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             userProfileEditName: document.getElementById('user-profile-edit-name'),
             charProfileEditAvatar: document.getElementById('char-profile-edit-avatar'),
             charProfileEditName: document.getElementById('char-profile-edit-name'),
-            
-            // Action Buttons
+            diySwitch: document.getElementById('enable-diy-switch'),
             regenerateBtn: document.getElementById('regenerate-btn'),
             continueBtn: document.getElementById('continue-btn'),
             imageActionBtn: document.querySelector('.action-list-item [class*="fa-image"]')?.parentElement,
             linkActionBtn: document.querySelector('.action-list-item [class*="fa-link"]')?.parentElement,
-            
-            // Memory System
-            addMemoryBtn: document.getElementById('add-memory-btn'),
-            memoryCardsContainer: document.getElementById('memory-cards-container'),
-            memoryEditorOverlay: document.getElementById('memory-editor-overlay'),
-            memoryEditorTitle: document.getElementById('memory-editor-title'),
-            memoryEditorTextarea: document.getElementById('memory-editor-textarea'),
-            memoryEditorConfirmBtn: document.getElementById('memory-editor-confirm-btn'),
-            memoryEditorCancelBtn: document.getElementById('memory-editor-cancel-btn'),
-            memoryEditorDeleteBtn: document.getElementById('memory-editor-delete-btn'),
-            memoryEditorCloseBtn: document.getElementById('memory-editor-close-btn'),
-            
-            // Model Selector
-            selectModelBtn: document.getElementById('select-model-btn'),
-            selectedModelName: document.getElementById('selected-model-name'),
-            modelSelectorOverlay: document.getElementById('model-selector-overlay'),
-            modelListContainer: document.getElementById('model-list-container'),
-            closeModelSelectorBtn: document.getElementById('close-model-selector-btn'),
-            diySwitch: document.getElementById('enable-diy-switch'),
-            
-            // Theme System
-            themeContentPane: document.getElementById('menu-content-theme'),
-            bgThumbnailsContainer: document.getElementById('bg-thumbnails-container'),
-            multiSelectBgBtn: document.getElementById('multi-select-bg-btn'),
-            deleteSelectedBgBtn: document.getElementById('delete-selected-bg-btn'),
-            addBgFromLocalBtn: document.getElementById('add-bg-from-local-btn'),
-            bgUploadInput: document.getElementById('bg-upload-input'),
-            addBgFromUrlBtn: document.getElementById('add-bg-from-url-btn'),
-            bgUrlPromptOverlay: document.getElementById('bg-url-prompt-overlay'),
-            bgUrlInput: document.getElementById('bg-url-input'),
-            cancelBgUrlBtn: document.getElementById('cancel-bg-url-btn'),
-            confirmBgUrlBtn: document.getElementById('confirm-bg-url-btn'),
-            
-            // Emoji System
-            emojiPickerBar: document.querySelector('.emoji-picker-bar'),
-            emojiManagementGridContainer: document.getElementById('emoji-management-container'),
-            emojiUploadInput: document.getElementById('emoji-upload-input'),
-            webEmojiModal: document.getElementById('web-emoji-modal'),
-            webEmojiUrlInput: document.getElementById('web-emoji-url-input'),
-            confirmWebEmojiBtn: document.getElementById('confirm-web-emoji-btn'),
-            cancelWebEmojiBtn: document.getElementById('cancel-web-emoji-btn'),
-            
-            // Misc Modals
             textPreviewOverlay: document.getElementById('text-preview-overlay'),
             textPreviewContent: document.querySelector('#text-preview-overlay .text-preview-content'),
         };
@@ -175,6 +125,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
         
         let isAiReplying = false;
+        let currentAbortController = null;
 
         const dbKeys = {
             historyKey: `${CHAT_DB_KEYS.CHAT_HISTORY}_${charId}`,
@@ -248,12 +199,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         function updateButtonStates() {
             if (!elements.input || !elements.respondBtn || !elements.sendBtn) return;
+        
             const respondBtnIcon = elements.respondBtn.querySelector('i');
         
             if (isAiReplying) {
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
-                if (respondBtnIcon) respondBtnIcon.className = 'fa-solid fa-spinner fa-spin';
+                if (respondBtnIcon) respondBtnIcon.className = 'fa-solid fa-stop';
                 elements.respondBtn.classList.add('blinking');
                 return;
             }
@@ -266,27 +218,70 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (hasText) {
                 elements.respondBtn.style.display = 'none';
                 elements.sendBtn.style.display = 'flex';
-            } else {
+            } 
+            else {
                 elements.respondBtn.style.display = 'flex';
                 elements.sendBtn.style.display = 'none';
             }
         }
         
-        const onHistoryUpdate = async (newHistory) => {
-            state.chatHistory = newHistory;
-            await loadAndRenderHistory();
-            updateButtonStates();
+        const onAiReply = async (action) => {
+            const { mode, data: replyMessages } = action;
+            let shouldReRender = false;
+
+            const thinkingMessage = elements.chatArea.querySelector('.message-row.system.loading');
+            if (thinkingMessage) thinkingMessage.remove();
+            
+            switch (mode) {
+                case 'new':
+                    if (replyMessages && replyMessages.length > 0) {
+                        state.chatHistory.push({
+                            sender: 'character',
+                            replyVersions: [replyMessages],
+                            activeReplyIndex: 0
+                        });
+                        shouldReRender = true;
+                    }
+                    break;
+                case 'regenerate':
+                    const lastCharMessageForRegen = state.chatHistory.slice().reverse().find(m => m.sender === 'character');
+                    if (lastCharMessageForRegen && replyMessages && replyMessages.length > 0) {
+                        lastCharMessageForRegen.replyVersions.push(replyMessages);
+                        lastCharMessageForRegen.activeReplyIndex = lastCharMessageForRegen.replyVersions.length - 1;
+                        shouldReRender = true;
+                    }
+                    break;
+                case 'continue':
+                    const lastCharMessageForCont = state.chatHistory[state.chatHistory.length - 1];
+                    if (lastCharMessageForCont && lastCharMessageForCont.sender === 'character' && replyMessages && replyMessages.length > 0) {
+                        const currentReply = lastCharMessageForCont.replyVersions[lastCharMessageForCont.activeReplyIndex];
+                        const combinedReply = [...currentReply, ...replyMessages];
+                        lastCharMessageForCont.replyVersions[lastCharMessageForCont.activeReplyIndex] = combinedReply;
+                         shouldReRender = true;
+                    }
+                    break;
+                case 'ui_update':
+                case 'clear_thinking':
+                    shouldReRender = true;
+                    break;
+            }
+            
+            if (shouldReRender) {
+                await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
+                await loadAndRenderHistory();
+                updateButtonStates();
+            }
         };
 
         const triggerAiResponse = createApiHandler({
             state, elements, character, user,
-            renderSystemMessage, updateButtonStates,
+            renderSystemMessage, updateButtonStates, onAiReply,
             getIsAiReplying: () => isAiReplying,
             setIsAiReplying: (value) => { 
                 isAiReplying = value; 
                 updateButtonStates();
             },
-            onHistoryUpdate,
+            setAbortController: (controller) => { currentAbortController = controller; }
         });
 
         async function onSendUserMessage(message) {
@@ -310,14 +305,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         async function onSendEmoji(emoji) {
             const emojiMessage = { sender: 'user', isEmoji: true, name: emoji.name, data: emoji.data };
             await onSendUserMessage(emojiMessage);
-            triggerAiResponse('new');
         }
         
         if (elements.sendBtn) elements.sendBtn.addEventListener('click', handleUserSend);
         if (elements.respondBtn) {
             elements.respondBtn.addEventListener('click', () => {
                 if (isAiReplying) {
-                    console.log("AI is replying in the background. Abort function is disabled.");
+                    currentAbortController?.abort();
                 } else {
                     triggerAiResponse('new');
                 }
@@ -328,7 +322,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         elements.chatArea.addEventListener('click', async (e) => {
             const imageLink = e.target.closest('.is-image-message a');
-            if (imageLink) { e.preventDefault(); }
+            if (imageLink) {
+                e.preventDefault(); 
+            }
+
             const previewBtn = e.target.closest('.text-photo-preview-btn');
             if (previewBtn) {
                 const text = previewBtn.dataset.text;
@@ -336,13 +333,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 elements.textPreviewOverlay.classList.add('active');
                 return;
             }
+
             const pagerButton = e.target.closest('.pager-btn');
             if (pagerButton) {
                 const messageGroupContainer = pagerButton.closest('.message-group-container');
                 const index = parseInt(messageGroupContainer.dataset.index, 10);
                 const action = pagerButton.dataset.action;
                 const messageData = state.chatHistory[index];
+
                 if (!messageData) return;
+
                 let changed = false;
                 if (action === 'prev' && messageData.activeReplyIndex > 0) {
                     messageData.activeReplyIndex--;
@@ -351,8 +351,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     messageData.activeReplyIndex++;
                     changed = true;
                 }
+
                 if (changed) {
                     await dbStorage.setItem(dbKeys.historyKey, state.chatHistory);
+                    
                     const oldGroup = elements.chatArea.querySelector(`.message-group-container[data-index="${index}"]`);
                     if (oldGroup) {
                         const newGroup = renderMessageGroup(messageData, index, user, character);
@@ -369,36 +371,79 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
         }
-        
-        const { renderMemoryCards } = initializeMemorySystem(elements, state, dbKeys.memoryDbKey);
-        initializeModelSelector(elements, state, dbKeys.selectedApiKey);
+
+        const { renderMemoryCards } = initializeMemorySystem(
+            { ...elements, ...{
+                addMemoryBtn: document.getElementById('add-memory-btn'),
+                memoryCardsContainer: document.getElementById('memory-cards-container'),
+                memoryEditorOverlay: document.getElementById('memory-editor-overlay'),
+                memoryEditorTitle: document.getElementById('memory-editor-title'),
+                memoryEditorTextarea: document.getElementById('memory-editor-textarea'),
+                memoryEditorConfirmBtn: document.getElementById('memory-editor-confirm-btn'),
+                memoryEditorCancelBtn: document.getElementById('memory-editor-cancel-btn'),
+                memoryEditorDeleteBtn: document.getElementById('memory-editor-delete-btn'),
+                memoryEditorCloseBtn: document.getElementById('memory-editor-close-btn'),
+            }},
+            state,
+            dbKeys.memoryDbKey
+        );
+
+        initializeModelSelector(
+            { ...elements, ...{
+                selectModelBtn: document.getElementById('select-model-btn'),
+                selectedModelName: document.getElementById('selected-model-name'),
+                modelSelectorOverlay: document.getElementById('model-selector-overlay'),
+                modelListContainer: document.getElementById('model-list-container'),
+                closeModelSelectorBtn: document.getElementById('close-model-selector-btn'),
+            }},
+            state,
+            dbKeys.selectedApiKey
+        );
+
         initializeHeaderMenu(elements, { chatEditor, userEditor });
+        
         const { renderBackgrounds, setActiveBackground } = initializeThemeSystem(
-            elements, 
-            state, 
+            { ...elements, ...{
+                themeContentPane: document.getElementById('menu-content-theme'),
+                bgThumbnailsContainer: document.getElementById('bg-thumbnails-container'),
+                multiSelectBgBtn: document.getElementById('multi-select-bg-btn'),
+                deleteSelectedBgBtn: document.getElementById('delete-selected-bg-btn'),
+                addBgFromLocalBtn: document.getElementById('add-bg-from-local-btn'),
+                bgUploadInput: document.getElementById('bg-upload-input'),
+                addBgFromUrlBtn: document.getElementById('add-bg-from-url-btn'),
+                bgUrlPromptOverlay: document.getElementById('bg-url-prompt-overlay'),
+                bgUrlInput: document.getElementById('bg-url-input'),
+                cancelBgUrlBtn: document.getElementById('cancel-bg-url-btn'),
+                confirmBgUrlBtn: document.getElementById('confirm-bg-url-btn'),
+            }},
+            state,
             { bgDbKey: dbKeys.bgDbKey, activeBgDbKey: dbKeys.activeBgDbKey }
         );
+
         initializeInputArea(elements, updateButtonStates, state, dbKeys.diyDbKey, dbStorage);
         
         async function initializeChatState() {
-            const savedHistory = await dbStorage.getItem(dbKeys.historyKey) || [];
-            const lastMessage = savedHistory.length > 0 ? savedHistory[savedHistory.length - 1] : null;
-            isAiReplying = !!(lastMessage && lastMessage.sender === 'system' && lastMessage.type === 'loading');
-            state.chatHistory = savedHistory;
-            const [savedApi, savedDiyEnabled, savedBackgrounds, savedActiveBg, savedEmojis] = await Promise.all([
+            const [savedHistory, savedApi, savedDiyEnabled, savedBackgrounds, savedActiveBg, savedEmojis] = await Promise.all([
+                dbStorage.getItem(dbKeys.historyKey),
                 dbStorage.getItem(dbKeys.selectedApiKey),
                 dbStorage.getItem(dbKeys.diyDbKey),
                 dbStorage.getItem(dbKeys.bgDbKey),
                 dbStorage.getItem(dbKeys.activeBgDbKey),
                 dbStorage.getItem(dbKeys.emojiDbKey),
             ]);
+            
+            state.chatHistory = (savedHistory && Array.isArray(savedHistory)) ? savedHistory : [];
             if (savedApi) state.currentChatApi = savedApi;
             state.isDiyEnabled = savedDiyEnabled || false;
             if (elements.diySwitch) elements.diySwitch.checked = state.isDiyEnabled;
             state.backgrounds = savedBackgrounds || [];
             state.emojis = savedEmojis || [];
+
+            // ▼▼▼ 核心修改：将默认背景颜色从固定值改为 null (透明) ▼▼▼
             const defaultBgColor = null;
+            // ▲▲▲ 修改结束 ▲▲▲
             await setActiveBackground(savedActiveBg || defaultBgColor);
+            
             await loadAndRenderHistory();
             await renderMemoryCards();
             renderBackgrounds();
@@ -416,36 +461,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             initializeMessageMenu(elements.chatArea, getChatHistory, updateChatHistory, getEmojis);
             
-            initializeEmojiSystem(elements, state, onSendEmoji);
+            initializeEmojiSystem(
+                { ...elements, ...{
+                    emojiPickerBar: document.querySelector('.emoji-picker-bar'),
+                    emojiManagementGridContainer: document.getElementById('emoji-management-container'),
+                    emojiUploadInput: document.getElementById('emoji-upload-input'),
+                    webEmojiModal: document.getElementById('web-emoji-modal'),
+                    webEmojiUrlInput: document.getElementById('web-emoji-url-input'),
+                    confirmWebEmojiBtn: document.getElementById('confirm-web-emoji-btn'),
+                    cancelWebEmojiBtn: document.getElementById('cancel-web-emoji-btn'),
+                }},
+                state, 
+                onSendEmoji
+            );
+        
             initializeImageSender(elements, onSendUserMessage);
             initializeLinkSender(elements, onSendUserMessage);
         }
-
-        if ('serviceWorker' in navigator) {
-            // ▼▼▼ 核心修复：添加 Controller Change 监听器 ▼▼▼
-            let reloading = false;
-            navigator.serviceWorker.addEventListener('controllerchange', () => {
-                if (reloading) return;
-                reloading = true;
-                console.log("New service worker has taken control. Reloading for a clean state...");
-                window.location.reload();
-            });
-            // ▲▲▲ 修复结束 ▲▲▲
-
-            navigator.serviceWorker.addEventListener('message', async (event) => {
-                if (event.data && event.data.charId === charId) {
-                    console.log('Received message from Service Worker:', event.data);
-                    if (event.data.type === 'AI_REPLY_COMPLETED' || event.data.type === 'AI_REPLY_FAILED') {
-                        const newHistory = await dbStorage.getItem(dbKeys.historyKey) || [];
-                        state.chatHistory = newHistory;
-                        isAiReplying = false;
-                        await loadAndRenderHistory();
-                        updateButtonStates();
-                    }
-                }
-            });
-        }
-
         await initializeChatState();
 
         if (elements.imageActionBtn) {
