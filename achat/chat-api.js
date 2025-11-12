@@ -3,19 +3,6 @@
 import { dbStorage } from '../common/db.js';
 import { CHAT_DB_KEYS } from '../config/chat.config.js';
 
-// --- Helper Functions (保留，以防其他地方需要) ---
-
-function isImageUrl(url) {
-    if (typeof url !== 'string') return false;
-    return url.toLowerCase().startsWith('http') && /\.(jpeg|jpg|gif|png|webp)$/i.test(url);
-}
-
-function isBase64(str) {
-    if (typeof str !== 'string' || !str) return false;
-    const base64Regex = /^[A-Za-z0-9+/=]+$/;
-    return str.length > 50 && str.length % 4 === 0 && base64Regex.test(str);
-}
-
 function blobUrlToDataUrl(blobUrl) {
     return new Promise((resolve, reject) => {
         fetch(blobUrl)
@@ -26,13 +13,13 @@ function blobUrlToDataUrl(blobUrl) {
                     resolve(reader.result);
                 };
                 reader.onerror = reject;
-                reader.readAsDataURL(file);
+                // ▼▼▼ 隐藏BUG修复：之前这里错误地写成了 file ▼▼▼
+                reader.readAsDataURL(blob);
+                // ▲▲▲ 修复结束 ▲▲▲
             })
             .catch(reject);
     });
 }
-
-// --- Core API Logic (现在是委托逻辑) ---
 
 export function createApiHandler(context) {
     const {
@@ -41,10 +28,6 @@ export function createApiHandler(context) {
         getIsAiReplying, setIsAiReplying, onHistoryUpdate,
     } = context;
 
-    /**
-     * 将AI请求任务委托给Service Worker
-     * @param {string} mode - 'new', 'regenerate', 'continue'
-     */
     async function handleSendMessage(mode = 'new') {
         if (getIsAiReplying()) {
             console.log("AI is already replying. New request blocked.");
@@ -83,16 +66,6 @@ export function createApiHandler(context) {
             alert('还没有聊天记录，无法触发AI。');
             return;
         }
-        
-        // ▼▼▼ 核心修复：移除了过于严格的检查 ▼▼▼
-        /*
-        // 旧的、有问题的代码已被删除
-        if (mode === 'new' && lastMessage && lastMessage.sender !== 'user') {
-             console.log("AI can only respond after a user message.");
-             return;
-        }
-        */
-        // ▲▲▲ 修复结束 ▲▲▲
         
         if (mode === 'regenerate' && lastMessage && lastMessage.sender !== 'character') {
              console.log("Last message is not from AI, cannot regenerate.");
