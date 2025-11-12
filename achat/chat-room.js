@@ -293,7 +293,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             updateButtonStates();
         }
 
-        // ▼▼▼ 核心修改：移除此函数末尾的 triggerAiResponse 调用 ▼▼▼
         async function handleUserSend() {
             const text = elements.input.value.trim();
             if (text === '') return;
@@ -303,9 +302,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             elements.input.style.height = 'auto';
             updateButtonStates();
             elements.input.focus();
-            // triggerAiResponse('new'); // <--- 已删除此行
         }
-        // ▲▲▲ 修改结束 ▲▲▲
 
         async function onSendEmoji(emoji) {
             const emojiMessage = { sender: 'user', isEmoji: true, name: emoji.name, data: emoji.data };
@@ -422,6 +419,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if ('serviceWorker' in navigator) {
+            // ▼▼▼ 核心修复：添加 Controller Change 监听器 ▼▼▼
+            let reloading = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (reloading) return;
+                reloading = true;
+                console.log("New service worker has taken control. Reloading for a clean state...");
+                window.location.reload();
+            });
+            // ▲▲▲ 修复结束 ▲▲▲
+
             navigator.serviceWorker.addEventListener('message', async (event) => {
                 if (event.data && event.data.charId === charId) {
                     console.log('Received message from Service Worker:', event.data);
