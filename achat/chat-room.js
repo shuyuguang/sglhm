@@ -80,7 +80,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         let character = allChars.find(c => c.id === charId);
         if (!character) { appContainer.innerHTML = `<p>错误：找不到ID为 ${charId} 的角色。</p>`; return; }
+        
+        // ▼▼▼ 核心修复：更新默认用户的头像链接 ▼▼▼
         let user = allUsers.find(u => u.id === currentUserId) || { id: 'default-user-1', name: 'User', avatar: 'https://i.postimg.cc/Yq19VCkN/afelotus.jpg' };
+        // ▲▲▲ 修复结束 ▲▲▲
 
         appContainer.innerHTML = renderChatRoomUI(character);
         
