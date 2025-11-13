@@ -11,32 +11,30 @@
     --border-color: #e9ecef;
 }
 
+/* ▼▼▼ 核心修复 #1：重构页面滚动逻辑 ▼▼▼ */
+html, body {
+    height: 100%;
+    overflow: hidden; /* 禁止body滚动，将滚动控制权交给内容容器 */
+    position: relative;
+}
+
 body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
-    padding-top: 55px;
-    padding-bottom: 70px;
-    /* ▼▼▼ 核心修复 #1：移除此处的 overflow: hidden; ▼▼▼ */
-    /* overflow: hidden; */ /* <- 移除这一行 */
-    /* ▲▲▲ 修复结束 ▲▲▲ */
+    /* 移除 padding-top 和 padding-bottom */
 }
 
-/* ▼▼▼ 核心修复 #1：将 overflow: hidden; 移动到这里，仅在聊天室激活时生效 ▼▼▼ */
 body.chat-active {
     overflow: hidden;
 }
-/* ▲▲▲ 修复结束 ▲▲▲ */
 
-/* ▼▼▼ 新增：当聊天室激活时，隐藏主界面元素 ▼▼▼ */
 body.chat-active > .header,
 body.chat-active > .content-container,
 body.chat-active > .tab-bar {
     visibility: hidden;
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */
-
 
 .header {
     background-color: var(--header-bg);
@@ -49,13 +47,25 @@ body.chat-active > .tab-bar {
     top: 0;
     left: 0;
     right: 0;
-    z-index: 10; /* [Z-Index Optimize] 100 -> 10 */
+    z-index: 10;
 }
 .header-actions { display: flex; align-items: center; gap: 8px; }
 .header-action-btn { background: none; border: none; font-size: 1.2rem; color: var(--accent-color); cursor: pointer; padding: 8px; display: flex; align-items: center; }
 #game-redirect-btn { font-size: 1.35rem; }
 
-.content-container { padding-top: 0; }
+.content-container {
+    /* 设置为绝对定位，填充header和tab-bar之间的区域 */
+    position: absolute;
+    top: 55px;    /* 顶部预留header高度 */
+    bottom: 70px; /* 底部预留tab-bar高度 */
+    left: 0;
+    right: 0;
+    overflow-y: auto; /* 允许内容容器垂直滚动 */
+    -webkit-overflow-scrolling: touch; /* 在iOS上实现平滑滚动 */
+}
+/* ▲▲▲ 修复结束 ▲▲▲ */
+
+
 .page { display: none; animation: fadeIn 0.3s ease-in-out; }
 .page.active { display: block; }
 .page h1 { font-weight: 300; font-size: 2.5em; color: var(--accent-color); text-align: center; margin-top: 40px; }
@@ -80,23 +90,38 @@ body.chat-active > .tab-bar {
 .unread-badge { margin-top: 10px; background-color: var(--accent-color); color: white; font-size: 0.75em; font-weight: bold; min-width: 20px; height: 20px; border-radius: 10px; display: flex; justify-content: center; align-items: center; padding: 0 6px; }
 
 /* --- 模态框/面板样式 --- */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); display: none; justify-content: center; align-items: center; z-index: 20; /* [Z-Index Optimize] 1000 -> 20 */ }
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); display: none; justify-content: center; align-items: center; z-index: 20; }
 .modal-overlay.active { display: flex; }
-.modal-panel { background-color: #ffffff; width: 90vw; max-width: 500px; max-height: 80vh; border-radius: 16px; display: flex; flex-direction: column; animation: zoomIn 0.3s ease-out; box-shadow: 0 4px 20px rgba(0,0,0,0.15); overflow: hidden; }
+
+/* ▼▼▼ 核心修复 #2：移除固定的最大高度，让面板自适应内容 ▼▼▼ */
+.modal-panel {
+    background-color: #ffffff;
+    width: 90vw;
+    max-width: 500px;
+    /* max-height: 80vh; */ /* <- 移除这一行，解决底部空白问题 */
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    animation: zoomIn 0.3s ease-out;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    overflow: hidden;
+}
+/* ▲▲▲ 修复结束 ▲▲▲ */
+
 @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 .modal-tabs { display: flex; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
-.modal-tab { flex: 1; /* ▼▼▼ 核心修复 #2：减小顶部Tab的垂直内边距 ▼▼▼ */ padding: 12px 10px; /* 原: 14px 10px */ border: none; background-color: transparent; font-size: 1em; font-weight: 500; color: #868e96; cursor: pointer; transition: color 0.2s; position: relative; }
+.modal-tab { flex: 1; padding: 12px 10px; border: none; background-color: transparent; font-size: 1em; font-weight: 500; color: #868e96; cursor: pointer; transition: color 0.2s; position: relative; }
 .modal-tab.active { color: var(--accent-color); }
 .modal-tab.disabled { color: #ced4da; cursor: not-allowed; }
-.modal-content-container { flex-grow: 1; position: relative; overflow-y: auto; }
+.modal-content-container { flex-grow: 1; position: relative; overflow-y: auto; max-height: 60vh; } /* 增加max-height防止列表过长时撑爆屏幕 */
 .modal-tab-content { display: none; }
 .modal-tab-content.active { display: block; }
-.sheet-body-list { /* ▼▼▼ 核心修复 #2：减小列表区域的垂直内边距 ▼▼▼ */ padding: 4px 16px; /* 原: 8px 16px */ }
+.sheet-body-list { padding: 4px 16px; }
 .char-item { display: flex; align-items: center; padding: 8px 0; cursor: pointer; }
 .char-item .avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; margin-right: 12px; }
 .char-item .name { flex-grow: 1; font-size: 1em; color: #495057; pointer-events: none; }
 .char-item input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent-color); flex-shrink: 0; pointer-events: none; }
-.sheet-footer { /* ▼▼▼ 核心修复 #2：减小底部按钮区域的垂直内边距 ▼▼▼ */ padding: 12px 16px; /* 原: 16px */ display: flex; gap: 10px; border-top: 1px solid var(--border-color); flex-shrink: 0; }
+.sheet-footer { padding: 12px 16px; display: flex; gap: 10px; border-top: 1px solid var(--border-color); flex-shrink: 0; }
 .sheet-btn { flex-grow: 1; padding: 12px; border: none; border-radius: 8px; font-size: 1em; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
 .sheet-btn-cancel { background-color: #f1f3f5; color: #495057; }
 .sheet-btn-cancel:hover { background-color: #e9ecef; }
@@ -105,7 +130,7 @@ body.chat-active > .tab-bar {
 .no-char-message { text-align: center; color: #868e96; padding: 30px 16px; }
 
 /* --- 侧边菜单样式 --- */
-.side-menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); z-index: 30; /* [Z-Index Optimize] 1100 -> 30 */ visibility: hidden; opacity: 0; transition: opacity 0.3s ease-in-out, visibility 0.3s; }
+.side-menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); z-index: 30; visibility: hidden; opacity: 0; transition: opacity 0.3s ease-in-out, visibility 0.3s; }
 .side-menu-overlay.active { visibility: visible; opacity: 1; }
 .side-menu { position: fixed; top: 0; left: 0; height: 100%; width: 280px; background-color: var(--header-bg); box-shadow: 2px 0 15px rgba(0,0,0,0.1); transform: translateX(-100%); transition: transform 0.3s ease-in-out; display: flex; flex-direction: column; padding-top: 55px; box-sizing: border-box; }
 .side-menu-overlay.active .side-menu { transform: translateX(0); }
@@ -117,15 +142,15 @@ body.chat-active > .tab-bar {
 .side-menu-list li a:hover { background-color: var(--bg-color); }
 .side-menu-list li a .icon { width: 30px; font-size: 1.1em; color: var(--text-inactive); margin-right: 15px; }
 
-/* ▼▼▼ 新增：SPA 聊天室容器样式 ▼▼▼ */
+/* --- SPA 聊天室容器样式 --- */
 #chat-room-container {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 40; /* [Z-Index Optimize] 1200 -> 40 */
-    background-color: var(--bg-color); /* 背景色，防止主页面透出 */
+    z-index: 40;
+    background-color: var(--bg-color);
     transform: translateX(100%);
     transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     pointer-events: none;
@@ -151,4 +176,3 @@ body.chat-active #chat-room-container {
     0% { transform: translate(-50%, -50%) rotate(0deg); }
     100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
-/* ▲▲▲ 新增结束 ▲▲▲ */
