@@ -23,9 +23,7 @@
 <body>
 
     <header class="header">
-        <!-- ▼▼▼ 核心修改：将 id 从 menu-btn 改为 side-menu-trigger-btn ▼▼▼ -->
         <button class="header-action-btn" id="side-menu-trigger-btn"><i class="fa-solid fa-bars"></i></button>
-        <!-- ▲▲▲ 修改结束 ▲▲▲ -->
         <div class="header-actions">
             <button class="header-action-btn" id="game-redirect-btn"><i class="fa-solid fa-gamepad"></i></button>
             <button class="header-action-btn" id="add-chat-btn"><i class="fa-solid fa-plus"></i></button>
@@ -40,20 +38,43 @@
         <div id="profile-page" class="page"><h1>我的</h1><p>个人中心功能待开发</p></div>
     </main>
 
+    <!-- ▼▼▼ 新增：添加聊天页面 ▼▼▼ -->
+    <div id="add-chat-page" class="page fullscreen-page">
+        <header class="add-chat-header">
+            <button class="header-action-btn" id="back-to-chat-list-btn"><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="add-chat-tabs">
+                <button class="add-chat-tab active" data-tab="friends-tab-content">好友</button>
+                <button class="add-chat-tab" data-tab="groups-tab-content">群聊</button>
+            </div>
+            <!-- 添加一个占位按钮，使tabs居中 -->
+            <button class="header-action-btn placeholder"><i class="fa-solid fa-chevron-left"></i></button>
+        </header>
+        <main class="add-chat-content">
+            <div id="friends-tab-content" class="add-chat-tab-content active">
+                <div class="content-header">
+                    <h3 class="content-title">管理好友</h3>
+                    <button class="content-action-btn" id="save-chat-selection-btn">完成</button>
+                </div>
+                <div class="char-list-container" id="add-friends-list-container">
+                    <!-- 好友列表将由JS动态生成到这里 -->
+                </div>
+            </div>
+            <div id="groups-tab-content" class="add-chat-tab-content">
+                 <button class="create-group-btn"><i class="fa-solid fa-plus"></i> 创建新群聊</button>
+                 <h3 class="content-title">管理群聊</h3>
+                 <div class="group-list-container">
+                     <p class="no-char-message">群聊功能开发中...</p>
+                 </div>
+            </div>
+        </main>
+    </div>
+    <!-- ▲▲▲ 新增结束 ▲▲▲ -->
+
     <!-- SPA 聊天室容器 -->
     <div id="chat-room-container"></div>
 
-    <!-- 角色选择模态框 -->
-    <div class="modal-overlay" id="char-select-overlay">
-        <div class="modal-panel">
-            <div class="modal-tabs"><button class="modal-tab active" data-tab="single-chat">单聊</button><button class="modal-tab disabled" data-tab="group-chat">群聊</button></div>
-            <div class="modal-content-container">
-                <div id="single-chat-content" class="modal-tab-content active"><div class="sheet-body-list" id="char-list-container"></div></div>
-                <div id="group-chat-content" class="modal-tab-content"><p class="no-char-message">群聊功能开发中...</p></div>
-            </div>
-            <div class="sheet-footer"><button class="sheet-btn sheet-btn-cancel" id="cancel-selection-btn">取消</button><button class="sheet-btn sheet-btn-confirm" id="confirm-selection-btn">确定</button></div>
-        </div>
-    </div>
+    <!-- ▼▼▼ 已删除：旧的角色选择模态框 ▼▼▼ -->
+    <!-- <div class="modal-overlay" id="char-select-overlay"> ... </div> -->
 
     <!-- 底部 Tab 栏 -->
     <nav class="tab-bar">
@@ -74,47 +95,25 @@
         </div>
     </div>
 
-    <!-- ▼▼▼ 【核心修复】所有 HTML 片段完整内容 ▼▼▼ -->
-
-    <!-- ======================= From: achat/chat-header.html ======================= -->
+    <!-- 集中管理的HTML片段 -->
+    <!-- From: achat/chat-header.html -->
     <div class="header-menu-overlay" id="header-menu-overlay"></div>
     <div class="header-panel" id="header-content-panel">
         <div id="menu-content-memory" class="secondary-content-pane active">
-            <div class="memory-switches-container">
-                <div class="memory-switch-item"><div class="switch-text-content"><span class="switch-title">启用记忆</span><span class="switch-subtitle">AI可读取</span></div><label class="switch-control"><input type="checkbox" id="enable-memory-switch" checked><span class="slider round"></span></label></div>
-                <div class="memory-switch-item"><div class="switch-text-content"><span class="switch-title">AI辅助记忆</span><span class="switch-subtitle">AI可编辑</span></div><label class="switch-control"><input type="checkbox" id="ai-edit-memory-switch"><span class="slider round"></span></label></div>
-            </div>
+            <div class="memory-switches-container"><div class="memory-switch-item"><div class="switch-text-content"><span class="switch-title">启用记忆</span><span class="switch-subtitle">AI可读取</span></div><label class="switch-control"><input type="checkbox" id="enable-memory-switch" checked><span class="slider round"></span></label></div><div class="memory-switch-item"><div class="switch-text-content"><span class="switch-title">AI辅助记忆</span><span class="switch-subtitle">AI可编辑</span></div><label class="switch-control"><input type="checkbox" id="ai-edit-memory-switch"><span class="slider round"></span></label></div></div>
             <div class="memory-management-header"><h4 class="memory-title">管理记忆</h4><button class="add-memory-btn" id="add-memory-btn" title="添加记忆"><i class="fa-solid fa-plus"></i></button></div>
             <div class="memory-cards-container" id="memory-cards-container"></div>
         </div>
-        <div id="menu-content-edit" class="secondary-content-pane">
-            <div class="profile-group-container">
-                <div class="profile-group"><h4 class="profile-group-title">用户设定</h4><div class="profile-group-content" id="edit-user-profile-trigger"><img src="" alt="用户头像" class="profile-edit-avatar" id="user-profile-edit-avatar"><span class="profile-edit-name" id="user-profile-edit-name"></span></div></div>
-                <div class="profile-group"><h4 class="profile-group-title">角色设定</h4><div class="profile-group-content" id="edit-char-profile-trigger"><img src="" alt="角色头像" class="profile-edit-avatar" id="char-profile-edit-avatar"><span class="profile-edit-name" id="char-profile-edit-name"></span></div></div>
-            </div>
-        </div>
-        <div id="menu-content-model" class="secondary-content-pane">
-            <div class="model-selection-group"><h4 class="panel-section-title">当前模型</h4><button id="select-model-btn" class="send-action-btn model-select-btn"><span id="selected-model-name">选择模型</span></button></div>
-            <div class="mode-panel-item"><span class="mode-panel-item-title">是否开启DIY</span><label class="switch-control"><input type="checkbox" id="enable-diy-switch"><span class="slider round"></span></label></div>
-        </div>
+        <div id="menu-content-edit" class="secondary-content-pane"><div class="profile-group-container"><div class="profile-group"><h4 class="profile-group-title">用户设定</h4><div class="profile-group-content" id="edit-user-profile-trigger"><img src="" alt="用户头像" class="profile-edit-avatar" id="user-profile-edit-avatar"><span class="profile-edit-name" id="user-profile-edit-name"></span></div></div><div class="profile-group"><h4 class="profile-group-title">角色设定</h4><div class="profile-group-content" id="edit-char-profile-trigger"><img src="" alt="角色头像" class="profile-edit-avatar" id="char-profile-edit-avatar"><span class="profile-edit-name" id="char-profile-edit-name"></span></div></div></div></div>
+        <div id="menu-content-model" class="secondary-content-pane"><div class="model-selection-group"><h4 class="panel-section-title">当前模型</h4><button id="select-model-btn" class="send-action-btn model-select-btn"><span id="selected-model-name">选择模型</span></button></div><div class="mode-panel-item"><span class="mode-panel-item-title">是否开启DIY</span><label class="switch-control"><input type="checkbox" id="enable-diy-switch"><span class="slider round"></span></label></div></div>
         <div id="menu-content-emoji" class="secondary-content-pane"><div id="emoji-management-container"></div></div>
-        <div id="menu-content-inspiration" class="secondary-content-pane">这里是灵感内容区</div>
-        <div id="menu-content-prompt" class="secondary-content-pane">这里是指令内容区</div>
-        <div id="menu-content-theme" class="secondary-content-pane">
-            <div class="theme-section placeholder-section"><h4 class="panel-section-title">聊天气泡</h4></div><div class="theme-section placeholder-section"><h4 class="panel-section-title">头像挂件</h4></div>
-            <div class="theme-section">
-                <div class="theme-section-header"><h4 class="panel-section-title">聊天背景</h4><div class="theme-actions"><button class="theme-action-btn" id="multi-select-bg-btn" title="多选"><i class="fa-solid fa-check-double"></i></button><button class="theme-action-btn" id="delete-selected-bg-btn" title="删除选中"><i class="fa-solid fa-trash-can"></i></button><button class="theme-action-btn" id="add-bg-from-url-btn" title="添加网络图片"><i class="fa-solid fa-link"></i></button><button class="theme-action-btn" id="add-bg-from-local-btn" title="上传本地图片"><i class="fa-solid fa-plus"></i></button><input type="file" id="bg-upload-input" accept="image/*" style="display: none;"></div></div>
-                <div class="bg-thumbnails-container" id="bg-thumbnails-container"></div>
-            </div>
-        </div>
+        <div id="menu-content-inspiration" class="secondary-content-pane">这里是灵感内容区</div><div id="menu-content-prompt" class="secondary-content-pane">这里是指令内容区</div>
+        <div id="menu-content-theme" class="secondary-content-pane"><div class="theme-section placeholder-section"><h4 class="panel-section-title">聊天气泡</h4></div><div class="theme-section placeholder-section"><h4 class="panel-section-title">头像挂件</h4></div><div class="theme-section"><div class="theme-section-header"><h4 class="panel-section-title">聊天背景</h4><div class="theme-actions"><button class="theme-action-btn" id="multi-select-bg-btn" title="多选"><i class="fa-solid fa-check-double"></i></button><button class="theme-action-btn" id="delete-selected-bg-btn" title="删除选中"><i class="fa-solid fa-trash-can"></i></button><button class="theme-action-btn" id="add-bg-from-url-btn" title="添加网络图片"><i class="fa-solid fa-link"></i></button><button class="theme-action-btn" id="add-bg-from-local-btn" title="上传本地图片"><i class="fa-solid fa-plus"></i></button><input type="file" id="bg-upload-input" accept="image/*" style="display: none;"></div></div><div class="bg-thumbnails-container" id="bg-thumbnails-container"></div></div></div>
     </div>
     <div class="header-panel" id="header-tabs-panel">
-        <ul class="header-menu-list">
-            <li class="header-menu-item"><a href="#" class="active" data-target="menu-content-memory"><span>记忆</span></a></li><li class="header-menu-item"><a href="#" data-target="menu-content-edit"><span>设定</span></a></li><li class="header-menu-item"><a href="#" data-target="menu-content-model"><span>模式</span></a></li><li class="header-menu-item"><a href="#" data-target="menu-content-emoji"><span>表情</span></a></li><li class="header-menu-item"><a href="#" data-target="menu-content-inspiration"><span>灵感</span></a></li><li class="header-menu-item"><a href="#" data-target="menu-content-prompt"><span>指令</span></a></li><li class="header-menu-item"><a href="#" data-target="menu-content-theme"><span>主题</span></a></li>
-        </ul>
+        <ul class="header-menu-list"><li class="header-menu-item"><a href="#" class="active" data-target="menu-content-memory"><span>记忆</span></a></li><li class="header-menu-item"><a href="#" data-target="menu-content-edit"><span>设定</span></a></li><li class="header-menu-item"><a href="#" data-target="menu-content-model"><span>模式</span></a></li><li class="header-menu-item"><a href="#" data-target="menu-content-emoji"><span>表情</span></a></li><li class="header-menu-item"><a href="#" data-target="menu-content-inspiration"><span>灵感</span></a></li><li class="header-menu-item"><a href="#" data-target="menu-content-prompt"><span>指令</span></a></li><li class="header-menu-item"><a href="#" data-target="menu-content-theme"><span>主题</span></a></li></ul>
     </div>
-    
-    <!-- ======================= From: achat/chat-modals.html ======================= -->
+    <!-- From: achat/chat-modals.html -->
     <div class="modal-overlay" id="model-selector-overlay"><div class="modal-panel model-selector-panel"><div class="modal-header"><h3 class="modal-title">选择牵引仪模型</h3><button class="modal-close" id="close-model-selector-btn" title="关闭">&times;</button></div><div class="modal-body"><div class="model-list-container" id="model-list-container"></div></div></div></div>
     <div class="modal-overlay" id="memory-editor-overlay"><div class="modal-panel memory-editor-panel"><div class="modal-header"><h3 class="modal-title" id="memory-editor-title">管理记忆</h3><button class="modal-close" id="memory-editor-close-btn" title="关闭">&times;</button></div><div class="modal-body"><textarea id="memory-editor-textarea" placeholder="在此输入记忆内容..."></textarea></div><div class="modal-footer"><button class="modal-btn-delete" id="memory-editor-delete-btn">删除</button><button class="modal-btn-cancel" id="memory-editor-cancel-btn">取消</button><button class="modal-btn-confirm" id="memory-editor-confirm-btn">确认</button></div></div></div>
     <div class="prompt-overlay" id="bg-url-prompt-overlay"><div class="prompt-box"><h4>添加图片URL作为背景</h4><input type="text" id="bg-url-input" placeholder="https://example.com/image.png"><div class="prompt-actions"><button id="cancel-bg-url-btn" class="prompt-btn">取消</button><button id="confirm-bg-url-btn" class="prompt-btn">确认</button></div></div></div>
@@ -124,8 +123,7 @@
     <div class="modal-overlay" id="image-sender-overlay"><div class="modal-panel image-sender-panel"><div class="modal-header"><h3 class="modal-title">发送图片</h3><button class="modal-close" id="close-image-sender-btn" title="关闭">&times;</button></div><div class="modal-body"><div class="image-input-area"><div class="input-area-header"><label for="multi-purpose-image-input">输入文本或链接</label><button class="help-icon-btn" id="image-sender-help-btn" title="帮助"><i class="fa-solid fa-question-circle"></i></button></div><textarea id="multi-purpose-image-input" rows="3" placeholder="在这里输入..."></textarea><div class="input-help-tooltip" id="image-sender-help-tooltip"><p>文字图请输入文本并点击“A字键”，链接图请输入单个图片链接并点击“链接键”，上传本地图片请点击“上传键”，文字图可多个，链接图/本地图不宜多</p></div></div><div class="add-buttons-container"><div class="image-add-buttons"><button class="add-btn small" id="add-text-photo-btn" title="添加文字图"><i class="fa-solid fa-font"></i></button><button class="add-btn small" id="add-url-photo-btn" title="添加链接图"><i class="fa-solid fa-link"></i></button><button class="add-btn small" id="add-local-photo-btn" title="添加本地图"><i class="fa-solid fa-upload"></i></button></div><button class="modal-btn-confirm" id="send-image-btn" disabled title="发送"><i class="fa-solid fa-location-arrow"></i></button><input type="file" id="local-photo-upload" accept="image/*" style="display: none;"></div><div class="image-multi-preview-area"><div id="image-multi-preview-container"></div><div id="image-multi-preview-placeholder"><i class="fa-regular fa-images"></i><span>待发送的图片将在这里预览</span></div></div></div></div></div>
     <div class="modal-overlay simple-text-overlay" id="text-preview-overlay"><div class="text-preview-content"></div></div>
     <div class="modal-overlay" id="link-sender-overlay"><div class="modal-panel link-sender-panel"><div class="modal-header"><h3 class="modal-title">发送链接</h3><button class="modal-close" id="close-link-sender-btn" title="关闭">&times;</button></div><div class="modal-body"><div class="form-group"><div class="form-group-header"><label for="link-title-input">标题</label><button class="modal-btn-confirm send-inline-btn" id="confirm-link-send-btn" disabled title="发送"><i class="fa-solid fa-location-arrow"></i></button></div><textarea id="link-title-input" rows="1" placeholder="输入链接标题（必填）"></textarea></div><div class="form-group"><label for="link-body-input">正文</label><textarea id="link-body-input" rows="3" placeholder="输入正文内容（必填）"></textarea></div><div class="form-group"><label for="link-source-input">来源</label><textarea id="link-source-input" rows="1" placeholder="（选填）输入来源，如网站名"></textarea></div><div class="link-image-section"><div class="form-group"><label>配图</label><div class="link-image-controls"><textarea id="link-image-input" rows="1" placeholder="（选填）输入文本或图片URL"></textarea><div class="image-add-buttons"><button class="add-btn small" id="add-link-text-photo-btn" title="添加文字图"><i class="fa-solid fa-font"></i></button><button class="add-btn small" id="add-link-url-photo-btn" title="添加链接图"><i class="fa-solid fa-link"></i></button><button class="add-btn small" id="add-link-local-photo-btn" title="添加本地图"><i class="fa-solid fa-upload"></i></button><input type="file" id="link-local-photo-upload" accept="image/*" style="display: none;"></div></div></div><div class="link-card-preview-area" id="link-card-preview"></div></div></div></div></div>
-
-    <!-- ======================= From: achat/chat-editor-panels.html ======================= -->
+    <!-- From: achat/chat-editor-panels.html -->
     <div class="modal-overlay" id="edit-modal-overlay"><div class="modal-panel"><div class="modal-header"><h3 class="modal-title">编辑角色档案</h3><div class="modal-header-actions"><button class="btn-help" id="help-btn" title="帮助"><i class="fa-solid fa-question"></i></button><button class="modal-close" id="close-modal-btn" title="关闭">&times;</button><button class="btn-save" id="save-btn" title="保存"><i class="fa-solid fa-check"></i></button></div></div><div id="help-tooltip" class="help-tooltip"><p>在这里修改的设定将实时同步。</p></div><div class="modal-body"><div class="modal-sidebar"><div class="sidebar-nav-list"><button class="modal-nav-button fixed-nav-button active" data-target="modal-section-visuals"><span>头像背景</span></button><button class="modal-nav-button fixed-nav-button" data-target="modal-section-basic-info"><span>基础信息</span></button><button class="modal-nav-button fixed-nav-button" data-target="modal-section-relationship"><span>关系范围</span></button></div><button class="add-section-btn" id="add-section-btn"><i class="fa-solid fa-plus"></i><span>添加栏目</span></button></div><div class="modal-main-content"><div id="modal-section-visuals" class="modal-section-pane active"><div class="visual-edit-item"><div class="form-row"><label for="edit-avatar-url">头像</label><input type="text" id="edit-avatar-url" placeholder="输入图片 URL 或点击下方图片上传"></div><div class="visual-preview-container"><div class="visual-preview-wrapper avatar-wrapper"><img src="" alt="Avatar Preview" id="avatar-preview-img" class="visual-preview"></div><div class="edit-icon-overlay"><i class="fa-solid fa-pencil"></i></div></div><input type="file" id="avatar-upload-input" accept="image/*" style="display: none;"></div><div class="visual-edit-item"><div class="form-row"><label for="edit-banner-url">背景</label><input type="text" id="edit-banner-url" placeholder="输入图片 URL 或点击下方图片上传"></div><div class="visual-preview-container"><div class="visual-preview-wrapper banner-wrapper"><img src="" alt="Banner Preview" id="banner-preview-img" class="visual-preview"></div><div class="edit-icon-overlay"><i class="fa-solid fa-pencil"></i></div></div><input type="file" id="banner-upload-input" accept="image/*" style="display: none;"></div></div><div id="modal-section-basic-info" class="modal-section-pane"><div class="form-group"><label for="edit-username">角色名</label><input type="text" id="edit-username" placeholder="名称限1-10字符" maxlength="10"></div><div class="form-group"><label>性别</label><div class="form-group-clickable" id="edit-gender-trigger"><span class="value-display"></span><i class="fa-solid fa-arrows-rotate"></i></div></div><div class="form-group"><label>年龄</label><div class="form-group-clickable" id="edit-age-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div><div class="form-group"><label>种族</label><div class="form-group-clickable" id="edit-race-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div><div class="form-group"><label>职业</label><div class="form-group-clickable" id="edit-occupation-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div><div class="form-group"><label>简介</label><div class="form-group-clickable" id="edit-bio-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div></div><div id="modal-section-relationship" class="modal-section-pane"></div></div></div><div class="sub-editor-panel" id="sub-editor-panel"><div class="sep-header"><button class="sep-btn" id="sep-back-btn"><i class="fa-solid fa-chevron-left"></i></button><h3 class="sep-title" id="sep-title">编辑</h3><button class="sep-btn sep-btn-save" id="sep-save-btn"><i class="fa-solid fa-check"></i></button></div><div class="sep-body"><textarea id="sep-textarea"></textarea></div></div><div class="sub-editor-panel" id="item-editor-panel"><div class="sep-header"><button class="sep-btn" id="item-editor-back-btn"><i class="fa-solid fa-chevron-left"></i></button><h3 class="sep-title" id="item-editor-title-header">编辑条目</h3><button class="sep-btn sep-btn-save" id="item-editor-save-btn"><i class="fa-solid fa-check"></i></button></div><div class="sep-body iep-body"><input type="text" id="item-editor-title-input" placeholder="在此填入标题" maxlength="10"><textarea id="item-editor-value-textarea"></textarea></div></div></div></div>
     <div class="prompt-overlay" id="name-prompt-overlay"><div class="prompt-box"><h4>为新栏目命名</h4><input type="text" id="new-section-name-input" placeholder="请输入 2-4 个字符" maxlength="4"><div class="prompt-actions"><button id="cancel-prompt-btn" class="prompt-btn">取消</button><button id="confirm-prompt-btn" class="prompt-btn">确认</button></div></div></div>
     <div class="bottom-sheet-overlay" id="custom-section-options-overlay"><div class="bottom-sheet"><ul class="bottom-sheet-actions"><li><button class="action-button" data-action="rename">编辑栏目名称</button></li><li><button class="action-button action-delete" data-action="delete">删除此栏目</button></li></ul><button class="bottom-sheet-cancel" id="cancel-options-sheet-btn">取消</button></div></div>
@@ -136,8 +134,6 @@
     <div class="bottom-sheet-overlay" id="user-custom-section-options-overlay"><div class="bottom-sheet"><ul class="bottom-sheet-actions"><li><button class="action-button" data-action="rename">编辑栏目名称</button></li><li><button class="action-button action-delete" data-action="delete">删除此栏目</button></li></ul><button class="bottom-sheet-cancel" id="user-cancel-options-sheet-btn">取消</button></div></div>
     <div class="bottom-sheet-overlay" id="user-add-section-sheet-overlay"><div class="bottom-sheet"><div class="preset-tags-container" id="user-preset-tags-container"><button class="preset-tag preset-tag-custom" data-action="custom"><i class="fa-solid fa-plus"></i><span>自定义栏目</span></button></div><button class="bottom-sheet-cancel" id="user-cancel-add-sheet-btn">取消</button></div></div>
     <div class="cropper-overlay" id="user-cropper-overlay"><div class="cropper-container"><div class="cropper-image-container"><img id="user-cropper-image" src=""></div><div class="cropper-actions"><button id="user-cancel-crop-btn" class="prompt-btn">取消</button><button id="user-confirm-crop-btn" class="prompt-btn">确认</button></div></div></div>
-
-    <!-- ▲▲▲ HTML 片段结束 ▲▲▲ -->
 
     <!-- JS 库 -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>

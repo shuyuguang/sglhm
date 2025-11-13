@@ -3,29 +3,27 @@
 import { dbStorage } from './common/db.js';
 import { PROFILE_DB_KEYS } from './config/profile.config.js';
 import { CHAT_DB_KEYS } from './config/chat.config.js';
-// ▼▼▼ 核心修改：引入新的聊天室模块 ▼▼▼
 import { initializeAndOpenChatRoom, closeChatRoom } from './achat/chat-room-spa.js';
-// ▲▲▲ 修改结束 ▲▲▲
 
 document.addEventListener('DOMContentLoaded', function() {
 
     let ui = {
+        // 主页面元素
         tabItems: document.querySelectorAll('.tab-item'),
-        pages: document.querySelectorAll('.page'),
+        mainPages: document.querySelectorAll('.content-container > .page'),
         chatListArea: document.getElementById('chat-list-area'),
-        overlay: document.getElementById('char-select-overlay'),
-        listContainer: document.getElementById('char-list-container'),
-        confirmBtn: document.getElementById('confirm-selection-btn'),
-        cancelBtn: document.getElementById('cancel-selection-btn'),
-        tabsContainer: document.querySelector('.modal-tabs'),
-        tabs: document.querySelectorAll('.modal-tab'),
-        tabContents: document.querySelectorAll('.modal-tab-content'),
-        // ▼▼▼ 核心修改：使用新的 ID 来获取侧边栏菜单按钮 ▼▼▼
         sideMenuBtn: document.getElementById('side-menu-trigger-btn'),
-        // ▲▲▲ 修改结束 ▲▲▲
         gameRedirectBtn: document.getElementById('game-redirect-btn'),
         addChatBtn: document.getElementById('add-chat-btn'),
-        sideMenuOverlay: document.getElementById('side-menu-overlay')
+        sideMenuOverlay: document.getElementById('side-menu-overlay'),
+        
+        // 新增：添加聊天页面元素
+        addChatPage: document.getElementById('add-chat-page'),
+        backToChatListBtn: document.getElementById('back-to-chat-list-btn'),
+        saveChatSelectionBtn: document.getElementById('save-chat-selection-btn'),
+        addChatTabs: document.querySelectorAll('.add-chat-tab'),
+        addChatTabContents: document.querySelectorAll('.add-chat-tab-content'),
+        addFriendsListContainer: document.getElementById('add-friends-list-container'),
     };
     
     function openSideMenu() {
@@ -88,23 +86,13 @@ document.addEventListener('DOMContentLoaded', function() {
         );
         renderChatList(enhancedChatList);
     }
-
-    function switchTab(targetTabId) {
-        ui.tabs.forEach(tab => tab.classList.remove('active'));
-        ui.tabContents.forEach(content => content.classList.remove('active'));
-        const targetTab = document.querySelector(`.modal-tab[data-tab="${targetTabId}"]`);
-        const targetContent = document.getElementById(`${targetTabId}-content`);
-        if (targetTab && targetContent) {
-            targetTab.classList.add('active');
-            targetContent.classList.add('active');
-        }
-        ui.confirmBtn.style.display = (targetTabId === 'single-chat') ? '' : 'none';
-    }
-
-    async function openCharacterSelector() {
-        switchTab('single-chat');
-        ui.listContainer.innerHTML = '<p class="no-char-message">正在加载角色...</p>';
-        ui.overlay.classList.add('active');
+    
+    // --- 新页面逻辑 ---
+    
+    async function openAddChatPage() {
+        ui.addChatPage.classList.add('active');
+        ui.addFriendsListContainer.innerHTML = '<p class="no-char-message">正在加载角色...</p>';
+        
         try {
             const characters = await dbStorage.getItem(PROFILE_DB_KEYS.CHAR_PROFILES) || [];
             const currentChatList = await dbStorage.getItem(CHAT_DB_KEYS.ACTIVE_CHAT_LIST) || [];
@@ -112,16 +100,20 @@ document.addEventListener('DOMContentLoaded', function() {
             renderCharacterList(characters, currentChatIds);
         } catch (error) {
             console.error("加载角色数据失败:", error);
-            ui.listContainer.innerHTML = '<p class="no-char-message">加载失败，请检查控制台。</p>';
+            ui.addFriendsListContainer.innerHTML = '<p class="no-char-message">加载失败，请检查控制台。</p>';
         }
+    }
+
+    function closeAddChatPage() {
+        ui.addChatPage.classList.remove('active');
     }
 
     function renderCharacterList(characters, selectedIds = new Set()) {
         if (!characters || characters.length === 0) {
-            ui.listContainer.innerHTML = '<p class="no-char-message">还没有创建任何TA角色哦</p>';
+            ui.addFriendsListContainer.innerHTML = '<p class="no-char-message">还没有创建任何TA角色哦</p>';
             return;
         }
-        ui.listContainer.innerHTML = characters.map(char => {
+        ui.addFriendsListContainer.innerHTML = characters.map(char => {
             const isChecked = selectedIds.has(char.id) ? 'checked' : '';
             return `
                 <div class="char-item" data-char-id="${char.id}">
@@ -132,21 +124,30 @@ document.addEventListener('DOMContentLoaded', function() {
         }).join('');
     }
 
-    function closePanel() {
-        ui.overlay.classList.remove('active');
-    }
-
-    async function handleConfirm() {
+    async function handleSaveSelection() {
         const selectedChars = [];
-        const checkboxes = ui.listContainer.querySelectorAll('input[type="checkbox"]:checked');
+        const checkboxes = ui.addFriendsListContainer.querySelectorAll('input[type="checkbox"]:checked');
         checkboxes.forEach(box => {
             selectedChars.push({ id: box.dataset.id, name: box.dataset.name, avatar: box.dataset.avatar });
         });
         await dbStorage.setItem(CHAT_DB_KEYS.ACTIVE_CHAT_LIST, selectedChars);
         await loadAndRenderInitialChats();
-        closePanel();
+        closeAddChatPage();
     }
     
+    function switchAddChatTab(targetTabId) {
+        ui.addChatTabs.forEach(tab => tab.classList.remove('active'));
+        ui.addChatTabContents.forEach(content => content.classList.remove('active'));
+        
+        const targetTab = document.querySelector(`.add-chat-tab[data-tab="${targetTabId}"]`);
+        const targetContent = document.getElementById(targetTabId);
+        
+        if (targetTab && targetContent) {
+            targetTab.classList.add('active');
+            targetContent.classList.add('active');
+        }
+    }
+
     // --- 事件绑定 ---
     ui.tabItems.forEach(tab => tab.addEventListener('click', function(e) {
         e.preventDefault();
@@ -155,35 +156,33 @@ document.addEventListener('DOMContentLoaded', function() {
         const targetPageId = this.getAttribute('data-page');
         ui.tabItems.forEach(item => item.classList.remove('active'));
         this.classList.add('active');
-        ui.pages.forEach(page => page.classList.remove('active'));
+        ui.mainPages.forEach(page => page.classList.remove('active'));
         document.getElementById(targetPageId).classList.add('active');
     }));
 
-    // ▼▼▼ 核心修改：将事件绑定到新的 sideMenuBtn 上 ▼▼▼
     if (ui.sideMenuBtn) ui.sideMenuBtn.addEventListener('click', openSideMenu);
-    // ▲▲▲ 修改结束 ▲▲▲
-    
     if (ui.sideMenuOverlay) ui.sideMenuOverlay.addEventListener('click', (e) => {
         if (e.target === ui.sideMenuOverlay) closeSideMenu();
     });
     if (ui.gameRedirectBtn) ui.gameRedirectBtn.addEventListener('click', () => { window.location.href = 'felotus.html'; });
 
-    ui.addChatBtn.addEventListener('click', openCharacterSelector);
-    ui.cancelBtn.addEventListener('click', closePanel);
-    ui.confirmBtn.addEventListener('click', handleConfirm);
-    ui.overlay.addEventListener('click', (e) => { if (e.target === ui.overlay) closePanel(); });
-    ui.listContainer.addEventListener('click', (e) => {
+    // 绑定新页面事件
+    ui.addChatBtn.addEventListener('click', openAddChatPage);
+    ui.backToChatListBtn.addEventListener('click', closeAddChatPage);
+    ui.saveChatSelectionBtn.addEventListener('click', handleSaveSelection);
+
+    ui.addFriendsListContainer.addEventListener('click', (e) => {
         const targetItem = e.target.closest('.char-item');
         if (targetItem) {
             const checkbox = targetItem.querySelector('input[type="checkbox"]');
             if (checkbox) checkbox.checked = !checkbox.checked;
         }
     });
-    ui.tabsContainer.addEventListener('click', (e) => {
-        const target = e.target;
-        if (target.classList.contains('modal-tab') && !target.classList.contains('disabled')) {
-            switchTab(target.dataset.tab);
-        }
+
+    ui.addChatTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            switchAddChatTab(tab.dataset.tab);
+        });
     });
 
     if (ui.chatListArea) {
