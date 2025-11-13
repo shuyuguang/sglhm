@@ -78,7 +78,14 @@
 
     <!-- 底部 Tab 栏 -->
     <nav class="tab-bar">
-        <a href="#" class="tab-item active" data-page="chat-page"><i class="fa-solid fa-comment-dots icon"></i></a>
+        <!-- ▼▼▼ 修改：更新聊天图标 ▼▼▼ -->
+        <a href="#" class="tab-item active" data-page="chat-page">
+            <span class="fa-stack xingxu-icon icon">
+                <i class="fa-regular fa-comment fa-stack-2x"></i>
+                <i class="fa-solid fa-star fa-stack-1x"></i>
+            </span>
+        </a>
+        <!-- ▲▲▲ 修改结束 ▲▲▲ -->
         <a href="#" class="tab-item" data-page="moments-page"><i class="fa-solid fa-compass icon"></i></a>
         <a href="#" class="tab-item" data-page="profile-page"><i class="fa-solid fa-user icon"></i></a>
     </nav>

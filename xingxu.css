@@ -239,3 +239,15 @@ body.chat-active #chat-room-container {
     0% { transform: translate(-50%, -50%) rotate(0deg); }
     100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
+
+/* --- ▼▼▼ 新增：自定义“星绪”组合图标样式 ▼▼▼ --- */
+.xingxu-icon.fa-stack {
+    /* fa-stack-2x 的大小约等于 font-size 的 2 倍，所以 11px -> 22px，与其它图标大小接近 */
+    font-size: 11px;
+    line-height: inherit; /* 继承按钮的行高设置 */
+}
+
+.xingxu-icon .fa-star {
+    transform: translate(0%, 50%); /* 调整星星位置 */
+    font-size: 0.9em; /* 调整星星大小 */
+}
