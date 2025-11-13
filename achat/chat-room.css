@@ -13,15 +13,6 @@
     --danger-color: #e53e3e;
 }
 
-/* ▼▼▼ 核心修复：删除了此处错误的全局 html, body 样式 ▼▼▼ */
-/* 
-   之前这里有一段针对 html, body 的样式，它错误地设置了 overflow: hidden，
-   导致了主页面的聊天列表无法滑动。现在已将其完全移除。
-   主页面的滚动行为将由 xingxu.css 文件正确管理。
-*/
-/* ▲▲▲ 修复结束 ▲▲▲ */
-
-
 .chat-container {
     display: flex;
     flex-direction: column;
