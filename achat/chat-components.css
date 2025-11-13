@@ -8,7 +8,7 @@
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.2);
-    z-index: 210; /* [Z-Index Optimize] */
+    z-index: 50; /* [Z-Index Optimize] 1250 -> 50 */
     display: none;
 }
 

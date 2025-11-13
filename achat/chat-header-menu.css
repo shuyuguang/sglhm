@@ -7,7 +7,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 220; /* [Z-Index Optimize] */
+    z-index: 60; /* [Z-Index Optimize] 1290 -> 60 */
     display: none;
 }
 .header-menu-overlay.active {
@@ -22,7 +22,7 @@
     background-color: #fff;
     border-radius: 12px;
     border: 1px solid var(--border-color);
-    z-index: 230; /* [Z-Index Optimize] */
+    z-index: 70; /* [Z-Index Optimize] 1300 -> 70 */
     opacity: 0;
     transform: translateY(-10px);
     pointer-events: none;
