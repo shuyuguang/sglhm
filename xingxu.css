@@ -16,8 +16,10 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
-    padding-top: 55px;
-    padding-bottom: 70px;
+    /* ▼▼▼ 核心修复1：移除 body 的 padding，将布局控制权交给 content-container ▼▼▼ */
+    /* padding-top: 55px; */
+    /* padding-bottom: 70px; */
+    /* ▲▲▲ 修复结束 ▲▲▲ */
 }
 
 /* 仅在聊天室激活时，才锁定主页面的滚动 */
@@ -48,7 +50,16 @@ body.chat-active > .tab-bar {
 .header-action-btn { background: none; border: none; font-size: 1.2rem; color: var(--accent-color); cursor: pointer; padding: 8px; display: flex; align-items: center; }
 #game-redirect-btn { font-size: 1.35rem; }
 
-.content-container { padding-top: 0; }
+/* ▼▼▼ 核心修复1：让 content-container 成为可滚动的主体区域 ▼▼▼ */
+.content-container {
+    height: 100vh;
+    box-sizing: border-box;
+    overflow-y: auto;
+    padding-top: 55px;
+    padding-bottom: 70px;
+}
+/* ▲▲▲ 修复结束 ▲▲▲ */
+
 .page { display: none; animation: fadeIn 0.3s ease-in-out; }
 .page.active { display: block; }
 .page h1 { font-weight: 300; font-size: 2.5em; color: var(--accent-color); text-align: center; margin-top: 40px; }
@@ -82,7 +93,7 @@ body.chat-active > .tab-bar {
 .modal-tab.active { color: var(--accent-color); }
 .modal-tab.disabled { color: #ced4da; cursor: not-allowed; }
 .modal-content-container {
-    /* ▼▼▼ 核心修复：恢复 flex-grow: 1，让内容区填满可用空间 ▼▼▼ */
+    /* ▼▼▼ 核心修复2：添加 flex-grow: 1，让内容区填满可用空间，解决空白问题 ▼▼▼ */
     flex-grow: 1;
     position: relative;
     overflow-y: auto;
