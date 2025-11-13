@@ -90,20 +90,19 @@ body.chat-active > .tab-bar {
     border-radius: 16px;
     animation: zoomIn 0.3s ease-out;
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    /* 让面板自己处理滚动，而不是内部的某个div */
-    overflow-y: auto;
+    
+    /* 1. 让面板成为一个垂直的弹性盒子 */
+    display: flex;
+    flex-direction: column;
+    /* 2. 隐藏面板自身的滚动条 */
+    overflow: hidden;
 }
 @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; } }
 
 .modal-tabs {
-    /* 使用 "sticky" 定位，让它在滚动时固定在顶部 */
-    position: sticky;
-    top: 0;
-    background-color: #ffffff; /* 必须加背景色，否则滚动内容会透过来 */
-    z-index: 1; /* 确保它在滚动内容之上 */
-    
     display: flex;
     border-bottom: 1px solid var(--border-color);
+    /* 3. 不允许Tabs收缩 */
     flex-shrink: 0;
 }
 .modal-tab { flex: 1; padding: 12px 10px; border: none; background-color: transparent; font-size: 1em; font-weight: 500; color: #868e96; cursor: pointer; transition: color 0.2s; position: relative; }
@@ -111,8 +110,11 @@ body.chat-active > .tab-bar {
 .modal-tab.disabled { color: #ced4da; cursor: not-allowed; }
 
 .modal-content-container {
-    /* 移除所有布局控制，让它成为一个普通的、可以被滚动的div */
-    position: relative;
+    /* 4. 让内容区占据所有剩余空间 */
+    flex-grow: 1;
+    /* 5. 内容区自己负责滚动 */
+    overflow-y: auto;
+    /* 6. flex布局中的一个重要技巧，防止内容溢出 */
     min-height: 0;
 }
 .modal-tab-content { display: none; }
@@ -124,16 +126,11 @@ body.chat-active > .tab-bar {
 .char-item input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent-color); flex-shrink: 0; pointer-events: none; }
 
 .sheet-footer {
-    /* 使用 "sticky" 定位，让它在滚动时固定在底部 */
-    position: sticky;
-    bottom: 0;
-    background-color: #ffffff; /* 必须加背景色 */
-    z-index: 1; /* 确保它在滚动内容之上 */
-
     padding: 12px 16px;
     display: flex;
     gap: 10px;
     border-top: 1px solid var(--border-color);
+    /* 7. 不允许Footer收缩 */
     flex-shrink: 0;
 }
 /* ▲▲▲ 核心修改区域 End ▲▲▲ */
