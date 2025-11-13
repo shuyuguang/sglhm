@@ -11,7 +11,9 @@
     display: flex;
     justify-content: center;
     align-items: center; 
-    z-index: 200;
+    /* ▼▼▼ 核心修改：提高基础 z-index ▼▼▼ */
+    z-index: 1400;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
@@ -35,7 +37,9 @@
 
 /* --- 模型选择面板 --- */
 #model-selector-overlay {
-    z-index: 210;
+    /* ▼▼▼ 核心修改：提高 z-index ▼▼▼ */
+    z-index: 1410;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
 }
 
 .model-selector-panel {
@@ -155,7 +159,9 @@
 
 /* --- 记忆编辑器模态框 --- */
 #memory-editor-overlay {
-    z-index: 250;
+    /* ▼▼▼ 核心修改：提高 z-index ▼▼▼ */
+    z-index: 1450;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
 }
 .memory-editor-panel {
     width: 90%;
@@ -227,24 +233,27 @@
     background-color: rgba(229, 62, 62, 0.1);
 }
 
-/* --- 编辑器 Z-Index 修正 --- */
 #edit-modal-overlay,
 #user-edit-modal-overlay {
-    z-index: 300;
+    /* ▼▼▼ 核心修改：大幅提高 z-index ▼▼▼ */
+    z-index: 1500;
 }
 #cropper-overlay,
 #user-cropper-overlay,
 .prompt-overlay,
 .bottom-sheet-overlay {
-    z-index: 400;
+    z-index: 1600;
 }
 #bg-url-prompt-overlay {
-    z-index: 401; /* 确保在所有其他遮罩之上 */
+    z-index: 1610; /* 确保在所有其他遮罩之上 */
+    /* ▲▲▲ 修改结束 ▲▲▲ */
 }
 
 /* --- 网络表情添加模态框 --- */
 #web-emoji-modal {
-    z-index: 260; 
+    /* ▼▼▼ 核心修改：提高 z-index ▼▼▼ */
+    z-index: 1460;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
 }
 .web-emoji-panel {
     width: 90%;
@@ -298,8 +307,11 @@
     flex-shrink: 0; 
 }
 /* --- ▼▼▼ 图片发送面板样式 ▼▼▼ --- */
-#image-sender-overlay { z-index: 270; }
-
+#image-sender-overlay {
+    /* ▼▼▼ 核心修改：提高 z-index ▼▼▼ */
+    z-index: 1470;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
+}
 .image-sender-panel {
     width: 90%;
     max-width: 380px;
@@ -387,10 +399,6 @@
     align-items: center;
     flex-shrink: 0;
 }
-/* ▲▲▲ 修改结束 ▲▲▲ */
-
-/* ▼▼▼ 核心修改：删除旧的 .add-btn 样式 ▼▼▼ */
-/* .add-btn { ... } */
 /* ▲▲▲ 修改结束 ▲▲▲ */
 
 #send-image-btn {
@@ -530,7 +538,11 @@
     border: 1px solid var(--border-color); 
 }
 /* --- ▼▼▼ 发送链接模态框样式 ▼▼▼ --- */
-#link-sender-overlay { z-index: 280; }
+#link-sender-overlay {
+    /* ▼▼▼ 核心修改：提高 z-index ▼▼▼ */
+    z-index: 1480;
+    /* ▲▲▲ 修改结束 ▲▲▲ */
+}
 
 .link-sender-panel {
     width: 90%;
