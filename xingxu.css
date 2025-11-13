@@ -93,10 +93,12 @@ body.chat-active > .tab-bar {
 .modal-tab.active { color: var(--accent-color); }
 .modal-tab.disabled { color: #ced4da; cursor: not-allowed; }
 .modal-content-container {
-    /* ▼▼▼ 核心修复2：添加 flex-grow: 1，让内容区填满可用空间，解决空白问题 ▼▼▼ */
+    /* ▼▼▼ 核心修复：恢复 flex-grow: 1，让内容区填满可用空间 ▼▼▼ */
     flex-grow: 1;
     position: relative;
     overflow-y: auto;
+    /* ▼▼▼ 新增修复：解决flex子元素无法收缩导致空白的问题 ▼▼▼ */
+    min-height: 0;
 }
 .modal-tab-content { display: none; }
 .modal-tab-content.active { display: block; }
