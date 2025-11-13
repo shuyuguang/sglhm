@@ -11,7 +11,7 @@
     <!-- 主页面 CSS -->
     <link rel="stylesheet" href="xingxu.css">
     
-    <!-- ▼▼▼ 核心修改：引入所有聊天室相关的 CSS ▼▼▼ -->
+    <!-- 聊天室相关 CSS -->
     <link rel="stylesheet" href="achat/chat-room.css">
     <link rel="stylesheet" href="achat/chat-header-menu.css">
     <link rel="stylesheet" href="achat/chat-modals.css">
@@ -19,7 +19,6 @@
     <link rel="stylesheet" href="profile/base.css">
     <link rel="stylesheet" href="profile/components.css">
     <link rel="stylesheet" href="profile/modals.css">
-    <!-- ▲▲▲ 修改结束 ▲▲▲ -->
 </head>
 <body>
 
@@ -39,12 +38,10 @@
         <div id="profile-page" class="page"><h1>我的</h1><p>个人中心功能待开发</p></div>
     </main>
 
-    <!-- ▼▼▼ 新增：聊天室容器 ▼▼▼ -->
-    <div id="chat-room-container">
-        <!-- 聊天室UI将由JS动态生成到这里 -->
-    </div>
-    <!-- ▲▲▲ 新增结束 ▲▲▲ -->
+    <!-- SPA 聊天室容器 -->
+    <div id="chat-room-container"></div>
 
+    <!-- 角色选择模态框 -->
     <div class="modal-overlay" id="char-select-overlay">
         <div class="modal-panel">
             <div class="modal-tabs"><button class="modal-tab active" data-tab="single-chat">单聊</button><button class="modal-tab disabled" data-tab="group-chat">群聊</button></div>
@@ -56,12 +53,14 @@
         </div>
     </div>
 
+    <!-- 底部 Tab 栏 -->
     <nav class="tab-bar">
         <a href="#" class="tab-item active" data-page="chat-page"><i class="fa-solid fa-comment-dots icon"></i></a>
         <a href="#" class="tab-item" data-page="moments-page"><i class="fa-solid fa-compass icon"></i></a>
         <a href="#" class="tab-item" data-page="profile-page"><i class="fa-solid fa-user icon"></i></a>
     </nav>
     
+    <!-- 侧边菜单 -->
     <div class="side-menu-overlay" id="side-menu-overlay">
         <div class="side-menu" id="side-menu">
             <div class="side-menu-header"><img src="https://i.postimg.cc/Yq19VCkN/afelotus.jpg" alt="User Avatar" class="user-avatar"><span class="user-name">程序员小C</span></div>
@@ -73,8 +72,9 @@
         </div>
     </div>
 
-    <!-- ▼▼▼ 核心修改：将所有 HTML 片段直接包含进来 ▼▼▼ -->
-    <!-- From: achat/chat-header.html -->
+    <!-- ▼▼▼ 【核心修复】所有 HTML 片段完整内容 ▼▼▼ -->
+
+    <!-- ======================= From: achat/chat-header.html ======================= -->
     <div class="header-menu-overlay" id="header-menu-overlay"></div>
     <div class="header-panel" id="header-content-panel">
         <div id="menu-content-memory" class="secondary-content-pane active">
@@ -111,134 +111,44 @@
             <li class="header-menu-item"><a href="#" class="active" data-target="menu-content-memory"><span>记忆</span></a></li><li class="header-menu-item"><a href="#" data-target="menu-content-edit"><span>设定</span></a></li><li class="header-menu-item"><a href="#" data-target="menu-content-model"><span>模式</span></a></li><li class="header-menu-item"><a href="#" data-target="menu-content-emoji"><span>表情</span></a></li><li class="header-menu-item"><a href="#" data-target="menu-content-inspiration"><span>灵感</span></a></li><li class="header-menu-item"><a href="#" data-target="menu-content-prompt"><span>指令</span></a></li><li class="header-menu-item"><a href="#" data-target="menu-content-theme"><span>主题</span></a></li>
         </ul>
     </div>
-    <!-- From: achat/chat-modals.html & achat/chat-editor-panels.html -->
-    <!-- (此处省略了所有模态框和编辑器的HTML，请将 chat-modals.html 和 chat-editor-panels.html 的内容完整粘贴到这里) -->
-    <!-- 为了简洁，我只放一个例子，实际使用时请把所有面板都复制过来 -->
-    <div class="modal-overlay" id="model-selector-overlay">...</div>
-    <div class="modal-overlay" id="memory-editor-overlay">...</div>
-    <!-- ... and so on for all panels ... -->
+    
+    <!-- ======================= From: achat/chat-modals.html ======================= -->
+    <div class="modal-overlay" id="model-selector-overlay"><div class="modal-panel model-selector-panel"><div class="modal-header"><h3 class="modal-title">选择牵引仪模型</h3><button class="modal-close" id="close-model-selector-btn" title="关闭">&times;</button></div><div class="modal-body"><div class="model-list-container" id="model-list-container"></div></div></div></div>
+    <div class="modal-overlay" id="memory-editor-overlay"><div class="modal-panel memory-editor-panel"><div class="modal-header"><h3 class="modal-title" id="memory-editor-title">管理记忆</h3><button class="modal-close" id="memory-editor-close-btn" title="关闭">&times;</button></div><div class="modal-body"><textarea id="memory-editor-textarea" placeholder="在此输入记忆内容..."></textarea></div><div class="modal-footer"><button class="modal-btn-delete" id="memory-editor-delete-btn">删除</button><button class="modal-btn-cancel" id="memory-editor-cancel-btn">取消</button><button class="modal-btn-confirm" id="memory-editor-confirm-btn">确认</button></div></div></div>
+    <div class="prompt-overlay" id="bg-url-prompt-overlay"><div class="prompt-box"><h4>添加图片URL作为背景</h4><input type="text" id="bg-url-input" placeholder="https://example.com/image.png"><div class="prompt-actions"><button id="cancel-bg-url-btn" class="prompt-btn">取消</button><button id="confirm-bg-url-btn" class="prompt-btn">确认</button></div></div></div>
+    <div class="modal-overlay" id="web-emoji-modal"><div class="modal-panel web-emoji-panel"><div class="modal-header"><h3 class="modal-title">批量添加网络表情</h3></div><div class="modal-body"><p class="modal-description">请按 <strong>链接+名称</strong> 的格式粘贴，每行一个。</p><textarea id="web-emoji-url-input" placeholder="例如:&#10;https://.../cat.png 猫猫&#10;https://.../dog.gif 狗狗"></textarea></div><div class="modal-footer"><button class="modal-btn-cancel" id="cancel-web-emoji-btn">取消</button><button class="modal-btn-confirm" id="confirm-web-emoji-btn">确认</button></div></div></div>
+    <input type="file" id="emoji-upload-input" accept="image/*,image/gif" multiple style="display: none;">
+    <div class="message-menu-overlay" id="message-menu-overlay"><div class="message-menu" id="message-menu"></div></div>
+    <div class="modal-overlay" id="image-sender-overlay"><div class="modal-panel image-sender-panel"><div class="modal-header"><h3 class="modal-title">发送图片</h3><button class="modal-close" id="close-image-sender-btn" title="关闭">&times;</button></div><div class="modal-body"><div class="image-input-area"><div class="input-area-header"><label for="multi-purpose-image-input">输入文本或链接</label><button class="help-icon-btn" id="image-sender-help-btn" title="帮助"><i class="fa-solid fa-question-circle"></i></button></div><textarea id="multi-purpose-image-input" rows="3" placeholder="在这里输入..."></textarea><div class="input-help-tooltip" id="image-sender-help-tooltip"><p>文字图请输入文本并点击“A字键”，链接图请输入单个图片链接并点击“链接键”，上传本地图片请点击“上传键”，文字图可多个，链接图/本地图不宜多</p></div></div><div class="add-buttons-container"><div class="image-add-buttons"><button class="add-btn small" id="add-text-photo-btn" title="添加文字图"><i class="fa-solid fa-font"></i></button><button class="add-btn small" id="add-url-photo-btn" title="添加链接图"><i class="fa-solid fa-link"></i></button><button class="add-btn small" id="add-local-photo-btn" title="添加本地图"><i class="fa-solid fa-upload"></i></button></div><button class="modal-btn-confirm" id="send-image-btn" disabled title="发送"><i class="fa-solid fa-location-arrow"></i></button><input type="file" id="local-photo-upload" accept="image/*" style="display: none;"></div><div class="image-multi-preview-area"><div id="image-multi-preview-container"></div><div id="image-multi-preview-placeholder"><i class="fa-regular fa-images"></i><span>待发送的图片将在这里预览</span></div></div></div></div></div>
+    <div class="modal-overlay simple-text-overlay" id="text-preview-overlay"><div class="text-preview-content"></div></div>
+    <div class="modal-overlay" id="link-sender-overlay"><div class="modal-panel link-sender-panel"><div class="modal-header"><h3 class="modal-title">发送链接</h3><button class="modal-close" id="close-link-sender-btn" title="关闭">&times;</button></div><div class="modal-body"><div class="form-group"><div class="form-group-header"><label for="link-title-input">标题</label><button class="modal-btn-confirm send-inline-btn" id="confirm-link-send-btn" disabled title="发送"><i class="fa-solid fa-location-arrow"></i></button></div><textarea id="link-title-input" rows="1" placeholder="输入链接标题（必填）"></textarea></div><div class="form-group"><label for="link-body-input">正文</label><textarea id="link-body-input" rows="3" placeholder="输入正文内容（必填）"></textarea></div><div class="form-group"><label for="link-source-input">来源</label><textarea id="link-source-input" rows="1" placeholder="（选填）输入来源，如网站名"></textarea></div><div class="link-image-section"><div class="form-group"><label>配图</label><div class="link-image-controls"><textarea id="link-image-input" rows="1" placeholder="（选填）输入文本或图片URL"></textarea><div class="image-add-buttons"><button class="add-btn small" id="add-link-text-photo-btn" title="添加文字图"><i class="fa-solid fa-font"></i></button><button class="add-btn small" id="add-link-url-photo-btn" title="添加链接图"><i class="fa-solid fa-link"></i></button><button class="add-btn small" id="add-link-local-photo-btn" title="添加本地图"><i class="fa-solid fa-upload"></i></button><input type="file" id="link-local-photo-upload" accept="image/*" style="display: none;"></div></div></div><div class="link-card-preview-area" id="link-card-preview"></div></div></div></div></div>
 
-    <!-- ==================== 角色编辑面板 (Character Editor) ==================== -->
-<div class="modal-overlay" id="edit-modal-overlay">
-    <div class="modal-panel">
-        <div class="modal-header">
-            <h3 class="modal-title">编辑角色档案</h3>
-            <div class="modal-header-actions">
-                <button class="btn-help" id="help-btn" title="帮助"><i class="fa-solid fa-question"></i></button>
-                <button class="modal-close" id="close-modal-btn" title="关闭">&times;</button>
-                <button class="btn-save" id="save-btn" title="保存"><i class="fa-solid fa-check"></i></button>
-            </div>
-        </div>
-        <div id="help-tooltip" class="help-tooltip"><p>在这里修改的设定将实时同步。</p></div>
-        <div class="modal-body">
-            <div class="modal-sidebar">
-                <div class="sidebar-nav-list">
-                    <button class="modal-nav-button fixed-nav-button active" data-target="modal-section-visuals"><span>头像背景</span></button>
-                    <button class="modal-nav-button fixed-nav-button" data-target="modal-section-basic-info"><span>基础信息</span></button>
-                    <button class="modal-nav-button fixed-nav-button" data-target="modal-section-relationship"><span>关系范围</span></button>
-                </div>
-                <button class="add-section-btn" id="add-section-btn"><i class="fa-solid fa-plus"></i><span>添加栏目</span></button>
-            </div>
-            <div class="modal-main-content">
-                <div id="modal-section-visuals" class="modal-section-pane active">
-                    <div class="visual-edit-item">
-                        <div class="form-row"><label for="edit-avatar-url">头像</label><input type="text" id="edit-avatar-url" placeholder="输入图片 URL 或点击下方图片上传"></div>
-                        <div class="visual-preview-container"><div class="visual-preview-wrapper avatar-wrapper"><img src="" alt="Avatar Preview" id="avatar-preview-img" class="visual-preview"></div><div class="edit-icon-overlay"><i class="fa-solid fa-pencil"></i></div></div>
-                        <input type="file" id="avatar-upload-input" accept="image/*" style="display: none;">
-                    </div>
-                    <div class="visual-edit-item">
-                        <div class="form-row"><label for="edit-banner-url">背景</label><input type="text" id="edit-banner-url" placeholder="输入图片 URL 或点击下方图片上传"></div>
-                        <div class="visual-preview-container"><div class="visual-preview-wrapper banner-wrapper"><img src="" alt="Banner Preview" id="banner-preview-img" class="visual-preview"></div><div class="edit-icon-overlay"><i class="fa-solid fa-pencil"></i></div></div>
-                        <input type="file" id="banner-upload-input" accept="image/*" style="display: none;">
-                    </div>
-                </div>
-                <div id="modal-section-basic-info" class="modal-section-pane">
-                    <div class="form-group"><label for="edit-username">角色名</label><input type="text" id="edit-username" placeholder="名称限1-10字符" maxlength="10"></div>
-                    <div class="form-group"><label>性别</label><div class="form-group-clickable" id="edit-gender-trigger"><span class="value-display"></span><i class="fa-solid fa-arrows-rotate"></i></div></div>
-                    <div class="form-group"><label>年龄</label><div class="form-group-clickable" id="edit-age-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div>
-                    <div class="form-group"><label>种族</label><div class="form-group-clickable" id="edit-race-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div>
-                    <div class="form-group"><label>职业</label><div class="form-group-clickable" id="edit-occupation-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div>
-                    <div class="form-group"><label>简介</label><div class="form-group-clickable" id="edit-bio-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div>
-                </div>
-                <div id="modal-section-relationship" class="modal-section-pane"></div>
-            </div>
-        </div>
-        <div class="sub-editor-panel" id="sub-editor-panel"><div class="sep-header"><button class="sep-btn" id="sep-back-btn"><i class="fa-solid fa-chevron-left"></i></button><h3 class="sep-title" id="sep-title">编辑</h3><button class="sep-btn sep-btn-save" id="sep-save-btn"><i class="fa-solid fa-check"></i></button></div><div class="sep-body"><textarea id="sep-textarea"></textarea></div></div>
-        <div class="sub-editor-panel" id="item-editor-panel"><div class="sep-header"><button class="sep-btn" id="item-editor-back-btn"><i class="fa-solid fa-chevron-left"></i></button><h3 class="sep-title" id="item-editor-title-header">编辑条目</h3><button class="sep-btn sep-btn-save" id="item-editor-save-btn"><i class="fa-solid fa-check"></i></button></div><div class="sep-body iep-body"><input type="text" id="item-editor-title-input" placeholder="在此填入标题" maxlength="10"><textarea id="item-editor-value-textarea"></textarea></div></div>
-    </div>
-</div>
-<div class="prompt-overlay" id="name-prompt-overlay"><div class="prompt-box"><h4>为新栏目命名</h4><input type="text" id="new-section-name-input" placeholder="请输入 2-4 个字符" maxlength="4"><div class="prompt-actions"><button id="cancel-prompt-btn" class="prompt-btn">取消</button><button id="confirm-prompt-btn" class="prompt-btn">确认</button></div></div></div>
-<div class="bottom-sheet-overlay" id="custom-section-options-overlay"><div class="bottom-sheet"><ul class="bottom-sheet-actions"><li><button class="action-button" data-action="rename">编辑栏目名称</button></li><li><button class="action-button action-delete" data-action="delete">删除此栏目</button></li></ul><button class="bottom-sheet-cancel" id="cancel-options-sheet-btn">取消</button></div></div>
-<div class="bottom-sheet-overlay" id="add-section-sheet-overlay"><div class="bottom-sheet"><div class="preset-tags-container" id="preset-tags-container"><button class="preset-tag preset-tag-custom" data-action="custom"><i class="fa-solid fa-plus"></i><span>自定义栏目</span></button></div><button class="bottom-sheet-cancel" id="cancel-add-sheet-btn">取消</button></div></div>
-<div class="cropper-overlay" id="cropper-overlay"><div class="cropper-container"><div class="cropper-image-container"><img id="cropper-image" src=""></div><div class="cropper-actions"><button id="cancel-crop-btn" class="prompt-btn">取消</button><button id="confirm-crop-btn" class="prompt-btn">确认</button></div></div></div>
+    <!-- ======================= From: achat/chat-editor-panels.html ======================= -->
+    <div class="modal-overlay" id="edit-modal-overlay"><div class="modal-panel"><div class="modal-header"><h3 class="modal-title">编辑角色档案</h3><div class="modal-header-actions"><button class="btn-help" id="help-btn" title="帮助"><i class="fa-solid fa-question"></i></button><button class="modal-close" id="close-modal-btn" title="关闭">&times;</button><button class="btn-save" id="save-btn" title="保存"><i class="fa-solid fa-check"></i></button></div></div><div id="help-tooltip" class="help-tooltip"><p>在这里修改的设定将实时同步。</p></div><div class="modal-body"><div class="modal-sidebar"><div class="sidebar-nav-list"><button class="modal-nav-button fixed-nav-button active" data-target="modal-section-visuals"><span>头像背景</span></button><button class="modal-nav-button fixed-nav-button" data-target="modal-section-basic-info"><span>基础信息</span></button><button class="modal-nav-button fixed-nav-button" data-target="modal-section-relationship"><span>关系范围</span></button></div><button class="add-section-btn" id="add-section-btn"><i class="fa-solid fa-plus"></i><span>添加栏目</span></button></div><div class="modal-main-content"><div id="modal-section-visuals" class="modal-section-pane active"><div class="visual-edit-item"><div class="form-row"><label for="edit-avatar-url">头像</label><input type="text" id="edit-avatar-url" placeholder="输入图片 URL 或点击下方图片上传"></div><div class="visual-preview-container"><div class="visual-preview-wrapper avatar-wrapper"><img src="" alt="Avatar Preview" id="avatar-preview-img" class="visual-preview"></div><div class="edit-icon-overlay"><i class="fa-solid fa-pencil"></i></div></div><input type="file" id="avatar-upload-input" accept="image/*" style="display: none;"></div><div class="visual-edit-item"><div class="form-row"><label for="edit-banner-url">背景</label><input type="text" id="edit-banner-url" placeholder="输入图片 URL 或点击下方图片上传"></div><div class="visual-preview-container"><div class="visual-preview-wrapper banner-wrapper"><img src="" alt="Banner Preview" id="banner-preview-img" class="visual-preview"></div><div class="edit-icon-overlay"><i class="fa-solid fa-pencil"></i></div></div><input type="file" id="banner-upload-input" accept="image/*" style="display: none;"></div></div><div id="modal-section-basic-info" class="modal-section-pane"><div class="form-group"><label for="edit-username">角色名</label><input type="text" id="edit-username" placeholder="名称限1-10字符" maxlength="10"></div><div class="form-group"><label>性别</label><div class="form-group-clickable" id="edit-gender-trigger"><span class="value-display"></span><i class="fa-solid fa-arrows-rotate"></i></div></div><div class="form-group"><label>年龄</label><div class="form-group-clickable" id="edit-age-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div><div class="form-group"><label>种族</label><div class="form-group-clickable" id="edit-race-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div><div class="form-group"><label>职业</label><div class="form-group-clickable" id="edit-occupation-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div><div class="form-group"><label>简介</label><div class="form-group-clickable" id="edit-bio-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div></div><div id="modal-section-relationship" class="modal-section-pane"></div></div></div><div class="sub-editor-panel" id="sub-editor-panel"><div class="sep-header"><button class="sep-btn" id="sep-back-btn"><i class="fa-solid fa-chevron-left"></i></button><h3 class="sep-title" id="sep-title">编辑</h3><button class="sep-btn sep-btn-save" id="sep-save-btn"><i class="fa-solid fa-check"></i></button></div><div class="sep-body"><textarea id="sep-textarea"></textarea></div></div><div class="sub-editor-panel" id="item-editor-panel"><div class="sep-header"><button class="sep-btn" id="item-editor-back-btn"><i class="fa-solid fa-chevron-left"></i></button><h3 class="sep-title" id="item-editor-title-header">编辑条目</h3><button class="sep-btn sep-btn-save" id="item-editor-save-btn"><i class="fa-solid fa-check"></i></button></div><div class="sep-body iep-body"><input type="text" id="item-editor-title-input" placeholder="在此填入标题" maxlength="10"><textarea id="item-editor-value-textarea"></textarea></div></div></div></div>
+    <div class="prompt-overlay" id="name-prompt-overlay"><div class="prompt-box"><h4>为新栏目命名</h4><input type="text" id="new-section-name-input" placeholder="请输入 2-4 个字符" maxlength="4"><div class="prompt-actions"><button id="cancel-prompt-btn" class="prompt-btn">取消</button><button id="confirm-prompt-btn" class="prompt-btn">确认</button></div></div></div>
+    <div class="bottom-sheet-overlay" id="custom-section-options-overlay"><div class="bottom-sheet"><ul class="bottom-sheet-actions"><li><button class="action-button" data-action="rename">编辑栏目名称</button></li><li><button class="action-button action-delete" data-action="delete">删除此栏目</button></li></ul><button class="bottom-sheet-cancel" id="cancel-options-sheet-btn">取消</button></div></div>
+    <div class="bottom-sheet-overlay" id="add-section-sheet-overlay"><div class="bottom-sheet"><div class="preset-tags-container" id="preset-tags-container"><button class="preset-tag preset-tag-custom" data-action="custom"><i class="fa-solid fa-plus"></i><span>自定义栏目</span></button></div><button class="bottom-sheet-cancel" id="cancel-add-sheet-btn">取消</button></div></div>
+    <div class="cropper-overlay" id="cropper-overlay"><div class="cropper-container"><div class="cropper-image-container"><img id="cropper-image" src=""></div><div class="cropper-actions"><button id="cancel-crop-btn" class="prompt-btn">取消</button><button id="confirm-crop-btn" class="prompt-btn">确认</button></div></div></div>
+    <div class="modal-overlay" id="user-edit-modal-overlay"><div class="modal-panel"><div class="modal-header"><h3 class="modal-title">编辑用户档案</h3><div class="modal-header-actions"><button class="btn-help" id="user-help-btn" title="帮助"><i class="fa-solid fa-question"></i></button><button class="modal-close" id="user-close-modal-btn" title="关闭">&times;</button><button class="btn-save" id="user-save-btn" title="保存"><i class="fa-solid fa-check"></i></button></div></div><div id="user-help-tooltip" class="help-tooltip"><p>在这里修改的用户设定将同步到所有聊天中。</p></div><div class="modal-body"><div class="modal-sidebar"><div class="sidebar-nav-list"><button class="modal-nav-button fixed-nav-button active" data-target="user-modal-section-visuals"><span>头像背景</span></button><button class="modal-nav-button fixed-nav-button" data-target="user-modal-section-basic-info"><span>基础信息</span></button><button class="modal-nav-button fixed-nav-button" data-target="user-modal-section-relationship"><span>关系范围</span></button></div><button class="add-section-btn" id="user-add-section-btn"><i class="fa-solid fa-plus"></i><span>添加栏目</span></button></div><div class="modal-main-content"><div id="user-modal-section-visuals" class="modal-section-pane active"><div class="visual-edit-item"><div class="form-row"><label for="user-edit-avatar-url">头像</label><input type="text" id="user-edit-avatar-url" placeholder="输入图片 URL 或点击下方图片上传"></div><div class="visual-preview-container"><div class="visual-preview-wrapper avatar-wrapper"><img src="" alt="Avatar Preview" id="user-avatar-preview-img" class="visual-preview"></div><div class="edit-icon-overlay"><i class="fa-solid fa-pencil"></i></div></div><input type="file" id="user-avatar-upload-input" accept="image/*" style="display: none;"></div><div class="visual-edit-item"><div class="form-row"><label for="user-edit-banner-url">背景</label><input type="text" id="user-edit-banner-url" placeholder="输入图片 URL 或点击下方图片上传"></div><div class="visual-preview-container"><div class="visual-preview-wrapper banner-wrapper"><img src="" alt="Banner Preview" id="user-banner-preview-img" class="visual-preview"></div><div class="edit-icon-overlay"><i class="fa-solid fa-pencil"></i></div></div><input type="file" id="user-banner-upload-input" accept="image/*" style="display: none;"></div></div><div id="user-modal-section-basic-info" class="modal-section-pane"><div class="form-group"><label for="user-edit-username">用户名</label><input type="text" id="user-edit-username" placeholder="名称限1-10字符" maxlength="10"></div><div class="form-group"><label>性别</label><div class="form-group-clickable" id="user-edit-gender-trigger"><span class="value-display"></span><i class="fa-solid fa-lock"></i></div></div><div class="form-group"><label>年龄</label><div class="form-group-clickable" id="user-edit-age-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div><div class="form-group"><label>种族</label><div class="form-group-clickable" id="user-edit-race-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div><div class="form-group"><label>职业</label><div class="form-group-clickable" id="user-edit-occupation-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div><div class="form-group"><label>简介</label><div class="form-group-clickable" id="user-edit-bio-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div></div><div id="user-modal-section-relationship" class="modal-section-pane"></div></div></div><div class="sub-editor-panel" id="user-sub-editor-panel"><div class="sep-header"><button class="sep-btn" id="user-sep-back-btn"><i class="fa-solid fa-chevron-left"></i></button><h3 class="sep-title" id="user-sep-title">编辑</h3><button class="sep-btn sep-btn-save" id="user-sep-save-btn"><i class="fa-solid fa-check"></i></button></div><div class="sep-body"><textarea id="user-sep-textarea"></textarea></div></div><div class="sub-editor-panel" id="user-item-editor-panel"><div class="sep-header"><button class="sep-btn" id="user-item-editor-back-btn"><i class="fa-solid fa-chevron-left"></i></button><h3 class="sep-title" id="user-item-editor-title-header">编辑条目</h3><button class="sep-btn sep-btn-save" id="user-item-editor-save-btn"><i class="fa-solid fa-check"></i></button></div><div class="sep-body iep-body"><input type="text" id="user-item-editor-title-input" placeholder="在此填入标题" maxlength="10"><textarea id="user-item-editor-value-textarea"></textarea></div></div></div></div>
+    <div class="prompt-overlay" id="user-name-prompt-overlay"><div class="prompt-box"><h4>为新栏目命名</h4><input type="text" id="user-new-section-name-input" placeholder="请输入 2-4 个字符" maxlength="4"><div class="prompt-actions"><button id="user-cancel-prompt-btn" class="prompt-btn">取消</button><button id="user-confirm-prompt-btn" class="prompt-btn">确认</button></div></div></div>
+    <div class="bottom-sheet-overlay" id="user-custom-section-options-overlay"><div class="bottom-sheet"><ul class="bottom-sheet-actions"><li><button class="action-button" data-action="rename">编辑栏目名称</button></li><li><button class="action-button action-delete" data-action="delete">删除此栏目</button></li></ul><button class="bottom-sheet-cancel" id="user-cancel-options-sheet-btn">取消</button></div></div>
+    <div class="bottom-sheet-overlay" id="user-add-section-sheet-overlay"><div class="bottom-sheet"><div class="preset-tags-container" id="user-preset-tags-container"><button class="preset-tag preset-tag-custom" data-action="custom"><i class="fa-solid fa-plus"></i><span>自定义栏目</span></button></div><button class="bottom-sheet-cancel" id="user-cancel-add-sheet-btn">取消</button></div></div>
+    <div class="cropper-overlay" id="user-cropper-overlay"><div class="cropper-container"><div class="cropper-image-container"><img id="user-cropper-image" src=""></div><div class="cropper-actions"><button id="user-cancel-crop-btn" class="prompt-btn">取消</button><button id="user-confirm-crop-btn" class="prompt-btn">确认</button></div></div></div>
 
-<!-- ==================== 用户编辑面板 (User Editor) ==================== -->
-<div class="modal-overlay" id="user-edit-modal-overlay">
-    <div class="modal-panel">
-        <div class="modal-header">
-            <h3 class="modal-title">编辑用户档案</h3>
-            <div class="modal-header-actions">
-                <button class="btn-help" id="user-help-btn" title="帮助"><i class="fa-solid fa-question"></i></button>
-                <button class="modal-close" id="user-close-modal-btn" title="关闭">&times;</button>
-                <button class="btn-save" id="user-save-btn" title="保存"><i class="fa-solid fa-check"></i></button>
-            </div>
-        </div>
-        <div id="user-help-tooltip" class="help-tooltip"><p>在这里修改的用户设定将同步到所有聊天中。</p></div>
-        <div class="modal-body">
-            <div class="modal-sidebar">
-                <div class="sidebar-nav-list">
-                    <button class="modal-nav-button fixed-nav-button active" data-target="user-modal-section-visuals"><span>头像背景</span></button>
-                    <button class="modal-nav-button fixed-nav-button" data-target="user-modal-section-basic-info"><span>基础信息</span></button>
-                    <button class="modal-nav-button fixed-nav-button" data-target="user-modal-section-relationship"><span>关系范围</span></button>
-                </div>
-                <button class="add-section-btn" id="user-add-section-btn"><i class="fa-solid fa-plus"></i><span>添加栏目</span></button>
-            </div>
-            <div class="modal-main-content">
-                <div id="user-modal-section-visuals" class="modal-section-pane active">
-                    <div class="visual-edit-item">
-                        <div class="form-row"><label for="user-edit-avatar-url">头像</label><input type="text" id="user-edit-avatar-url" placeholder="输入图片 URL 或点击下方图片上传"></div>
-                        <div class="visual-preview-container"><div class="visual-preview-wrapper avatar-wrapper"><img src="" alt="Avatar Preview" id="user-avatar-preview-img" class="visual-preview"></div><div class="edit-icon-overlay"><i class="fa-solid fa-pencil"></i></div></div>
-                        <input type="file" id="user-avatar-upload-input" accept="image/*" style="display: none;">
-                    </div>
-                    <div class="visual-edit-item">
-                        <div class="form-row"><label for="user-edit-banner-url">背景</label><input type="text" id="user-edit-banner-url" placeholder="输入图片 URL 或点击下方图片上传"></div>
-                        <div class="visual-preview-container"><div class="visual-preview-wrapper banner-wrapper"><img src="" alt="Banner Preview" id="user-banner-preview-img" class="visual-preview"></div><div class="edit-icon-overlay"><i class="fa-solid fa-pencil"></i></div></div>
-                        <input type="file" id="user-banner-upload-input" accept="image/*" style="display: none;">
-                    </div>
-                </div>
-                <div id="user-modal-section-basic-info" class="modal-section-pane">
-                    <div class="form-group"><label for="user-edit-username">用户名</label><input type="text" id="user-edit-username" placeholder="名称限1-10字符" maxlength="10"></div>
-                    <div class="form-group"><label>性别</label><div class="form-group-clickable" id="user-edit-gender-trigger"><span class="value-display"></span><i class="fa-solid fa-lock"></i></div></div>
-                    <div class="form-group"><label>年龄</label><div class="form-group-clickable" id="user-edit-age-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div>
-                    <div class="form-group"><label>种族</label><div class="form-group-clickable" id="user-edit-race-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div>
-                    <div class="form-group"><label>职业</label><div class="form-group-clickable" id="user-edit-occupation-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div>
-                    <div class="form-group"><label>简介</label><div class="form-group-clickable" id="user-edit-bio-trigger"><span class="value-display placeholder"></span><i class="fa-solid fa-chevron-right"></i></div></div>
-                </div>
-                <div id="user-modal-section-relationship" class="modal-section-pane"></div>
-            </div>
-        </div>
-        <div class="sub-editor-panel" id="user-sub-editor-panel"><div class="sep-header"><button class="sep-btn" id="user-sep-back-btn"><i class="fa-solid fa-chevron-left"></i></button><h3 class="sep-title" id="user-sep-title">编辑</h3><button class="sep-btn sep-btn-save" id="user-sep-save-btn"><i class="fa-solid fa-check"></i></button></div><div class="sep-body"><textarea id="user-sep-textarea"></textarea></div></div>
-        <div class="sub-editor-panel" id="user-item-editor-panel"><div class="sep-header"><button class="sep-btn" id="user-item-editor-back-btn"><i class="fa-solid fa-chevron-left"></i></button><h3 class="sep-title" id="user-item-editor-title-header">编辑条目</h3><button class="sep-btn sep-btn-save" id="user-item-editor-save-btn"><i class="fa-solid fa-check"></i></button></div><div class="sep-body iep-body"><input type="text" id="user-item-editor-title-input" placeholder="在此填入标题" maxlength="10"><textarea id="user-item-editor-value-textarea"></textarea></div></div>
-    </div>
-</div>
-<div class="prompt-overlay" id="user-name-prompt-overlay"><div class="prompt-box"><h4>为新栏目命名</h4><input type="text" id="user-new-section-name-input" placeholder="请输入 2-4 个字符" maxlength="4"><div class="prompt-actions"><button id="user-cancel-prompt-btn" class="prompt-btn">取消</button><button id="user-confirm-prompt-btn" class="prompt-btn">确认</button></div></div></div>
-<div class="bottom-sheet-overlay" id="user-custom-section-options-overlay"><div class="bottom-sheet"><ul class="bottom-sheet-actions"><li><button class="action-button" data-action="rename">编辑栏目名称</button></li><li><button class="action-button action-delete" data-action="delete">删除此栏目</button></li></ul><button class="bottom-sheet-cancel" id="user-cancel-options-sheet-btn">取消</button></div></div>
-<div class="bottom-sheet-overlay" id="user-add-section-sheet-overlay"><div class="bottom-sheet"><div class="preset-tags-container" id="user-preset-tags-container"><button class="preset-tag preset-tag-custom" data-action="custom"><i class="fa-solid fa-plus"></i><span>自定义栏目</span></button></div><button class="bottom-sheet-cancel" id="user-cancel-add-sheet-btn">取消</button></div></div>
-<div class="cropper-overlay" id="user-cropper-overlay"><div class="cropper-container"><div class="cropper-image-container"><img id="user-cropper-image" src=""></div><div class="cropper-actions"><button id="user-cancel-crop-btn" class="prompt-btn">取消</button><button id="user-confirm-crop-btn" class="prompt-btn">确认</button></div></div></div>
-    <!-- ▲▲▲ 修改结束 ▲▲▲ -->
+    <!-- ▲▲▲ HTML 片段结束 ▲▲▲ -->
 
     <!-- JS 库 -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
     
-    <!-- ▼▼▼ 核心修改：引入所有模块化JS文件 ▼▼▼ -->
-    <!-- profile 模块 -->
+    <!-- 应用 JS 模块 -->
+    <script src="common/db.js" type="module"></script>
     <script src="config/profile.config.js" type="module"></script>
+    <script src="config/chat.config.js" type="module"></script>
+    <script src="config/api.config.js" type="module"></script>
     <script src="profile/profile.ui.js" type="module"></script>
     <script src="profile/profile.events.js" type="module"></script>
-    
-    <!-- 聊天室子模块 -->
     <script src="achat/chat-editor-bridge.js" type="module"></script>
     <script src="achat/message-edit.js" type="module"></script>
     <script src="achat/chat-ui.js" type="module"></script>
@@ -251,11 +161,8 @@
     <script src="achat/chat-input-handler.js" type="module"></script>
     <script src="achat/chat-image-sender.js" type="module"></script>
     <script src="achat/chat-link-sender.js" type="module"></script>
-    
-    <!-- 新的主逻辑文件 -->
     <script src="achat/chat-room-spa.js" type="module"></script>
     <script src="xingxu-spa.js" type="module"></script>
-    <!-- ▲▲▲ 修改结束 ▲▲▲ -->
 
 </body>
 </html>
