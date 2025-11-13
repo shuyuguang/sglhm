@@ -93,19 +93,18 @@ body.chat-active > .tab-bar {
 .modal-tab.active { color: var(--accent-color); }
 .modal-tab.disabled { color: #ced4da; cursor: not-allowed; }
 .modal-content-container {
-    flex-grow: 1;
+    /* ▼▼▼ 核心修复：移除 flex-grow，改为 overflow-y: auto ▼▼▼ */
+    /* flex-grow: 1; */
+    overflow-y: auto;
+    /* ▲▲▲ 修复结束 ▲▲▲ */
     position: relative;
     min-height: 0;
-    /* ▼▼▼ 核心修复：将其自身变为flex容器，以便管理其子元素 ▼▼▼ */
-    display: flex;
-    flex-direction: column;
 }
 .modal-tab-content { display: none; }
 .modal-tab-content.active {
     display: block;
-    /* ▼▼▼ 核心修复：让活动的tab内容充满其父容器，并负责滚动 ▼▼▼ */
-    flex-grow: 1;
-    overflow-y: auto;
+    /* ▼▼▼ 核心修复：移除这里的 flex-grow 和 overflow ▼▼▼ */
+    /* ▲▲▲ 修复结束 ▲▲▲ */
 }
 .sheet-body-list { padding: 4px 16px; }
 .char-item { display: flex; align-items: center; padding: 8px 0; cursor: pointer; }
