@@ -91,19 +91,18 @@ body.chat-active > .tab-bar {
     animation: zoomIn 0.3s ease-out;
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     
-    /* 1. 将面板设置为 Flex 容器，垂直排列 */
+    /* 1. 让面板成为一个垂直的弹性盒子 */
     display: flex;
     flex-direction: column;
-    /* 2. 面板自身不滚动，交由内部处理 */
+    /* 2. 隐藏面板自身的滚动条 */
     overflow: hidden;
 }
 @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; } }
 
 .modal-tabs {
-    /* 移除 sticky 定位 */
     display: flex;
     border-bottom: 1px solid var(--border-color);
-    /* 3. 不允许 Tab 栏收缩 */
+    /* 3. 不允许Tabs收缩 */
     flex-shrink: 0;
 }
 .modal-tab { flex: 1; padding: 12px 10px; border: none; background-color: transparent; font-size: 1em; font-weight: 500; color: #868e96; cursor: pointer; transition: color 0.2s; position: relative; }
@@ -111,11 +110,11 @@ body.chat-active > .tab-bar {
 .modal-tab.disabled { color: #ced4da; cursor: not-allowed; }
 
 .modal-content-container {
-    /* 4. 占据所有剩余空间 */
+    /* 4. 让内容区占据所有剩余空间 */
     flex-grow: 1;
     /* 5. 内容区自己负责滚动 */
     overflow-y: auto;
-    /* 6. Flex 布局中的重要修复，防止内容溢出 */
+    /* 6. flex布局中的一个重要技巧，防止内容溢出 */
     min-height: 0;
 }
 .modal-tab-content { display: none; }
@@ -127,14 +126,12 @@ body.chat-active > .tab-bar {
 .char-item input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent-color); flex-shrink: 0; pointer-events: none; }
 
 .sheet-footer {
-    /* 移除 sticky 定位 */
     padding: 12px 16px;
     display: flex;
     gap: 10px;
     border-top: 1px solid var(--border-color);
-    /* 7. 不允许页脚收缩 */
+    /* 7. 不允许Footer收缩 */
     flex-shrink: 0;
-    background-color: #ffffff; /* 保留背景色 */
 }
 /* ▲▲▲ 核心修改区域 End ▲▲▲ */
 
