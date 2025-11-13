@@ -11,9 +11,7 @@
     display: flex;
     justify-content: center;
     align-items: center; 
-    /* ▼▼▼ 核心修改：提高基础 z-index ▼▼▼ */
-    z-index: 1400;
-    /* ▲▲▲ 修改结束 ▲▲▲ */
+    z-index: 500; /* [Z-Index Optimize] Base for standard modals */
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
@@ -37,9 +35,7 @@
 
 /* --- 模型选择面板 --- */
 #model-selector-overlay {
-    /* ▼▼▼ 核心修改：提高 z-index ▼▼▼ */
-    z-index: 1410;
-    /* ▲▲▲ 修改结束 ▲▲▲ */
+    z-index: 510; /* [Z-Index Optimize] */
 }
 
 .model-selector-panel {
@@ -159,9 +155,7 @@
 
 /* --- 记忆编辑器模态框 --- */
 #memory-editor-overlay {
-    /* ▼▼▼ 核心修改：提高 z-index ▼▼▼ */
-    z-index: 1450;
-    /* ▲▲▲ 修改结束 ▲▲▲ */
+    z-index: 550; /* [Z-Index Optimize] */
 }
 .memory-editor-panel {
     width: 90%;
@@ -235,25 +229,25 @@
 
 #edit-modal-overlay,
 #user-edit-modal-overlay {
-    /* ▼▼▼ 核心修改：大幅提高 z-index ▼▼▼ */
-    z-index: 1500;
+    z-index: 600; /* [Z-Index Optimize] */
 }
 #cropper-overlay,
-#user-cropper-overlay,
-.prompt-overlay,
+#user-cropper-overlay {
+    z-index: 610; /* [Z-Index Optimize] */
+}
+.prompt-overlay {
+    z-index: 700; /* [Z-Index Optimize] */
+}
 .bottom-sheet-overlay {
-    z-index: 1600;
+    z-index: 720; /* [Z-Index Optimize] */
 }
 #bg-url-prompt-overlay {
-    z-index: 1610; /* 确保在所有其他遮罩之上 */
-    /* ▲▲▲ 修改结束 ▲▲▲ */
+    z-index: 710; /* [Z-Index Optimize] Ensure on top of header panel */
 }
 
 /* --- 网络表情添加模态框 --- */
 #web-emoji-modal {
-    /* ▼▼▼ 核心修改：提高 z-index ▼▼▼ */
-    z-index: 1460;
-    /* ▲▲▲ 修改结束 ▲▲▲ */
+    z-index: 540; /* [Z-Index Optimize] */
 }
 .web-emoji-panel {
     width: 90%;
@@ -308,9 +302,7 @@
 }
 /* --- ▼▼▼ 图片发送面板样式 ▼▼▼ --- */
 #image-sender-overlay {
-    /* ▼▼▼ 核心修改：提高 z-index ▼▼▼ */
-    z-index: 1470;
-    /* ▲▲▲ 修改结束 ▲▲▲ */
+    z-index: 520; /* [Z-Index Optimize] */
 }
 .image-sender-panel {
     width: 90%;
@@ -516,7 +508,7 @@
 
 /* --- 文字图预览模态框样式 --- */
 .simple-text-overlay {
-    z-index: 300;
+    z-index: 240; /* [Z-Index Optimize] */
     background-color: transparent; 
     backdrop-filter: none; 
     padding: 20px;
@@ -539,9 +531,7 @@
 }
 /* --- ▼▼▼ 发送链接模态框样式 ▼▼▼ --- */
 #link-sender-overlay {
-    /* ▼▼▼ 核心修改：提高 z-index ▼▼▼ */
-    z-index: 1480;
-    /* ▲▲▲ 修改结束 ▲▲▲ */
+    z-index: 530; /* [Z-Index Optimize] */
 }
 
 .link-sender-panel {
