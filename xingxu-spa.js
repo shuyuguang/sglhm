@@ -20,7 +20,9 @@ document.addEventListener('DOMContentLoaded', function() {
         tabsContainer: document.querySelector('.modal-tabs'),
         tabs: document.querySelectorAll('.modal-tab'),
         tabContents: document.querySelectorAll('.modal-tab-content'),
-        menuBtn: document.getElementById('menu-btn'),
+        // ▼▼▼ 核心修改：使用新的 ID 来获取侧边栏菜单按钮 ▼▼▼
+        sideMenuBtn: document.getElementById('side-menu-trigger-btn'),
+        // ▲▲▲ 修改结束 ▲▲▲
         gameRedirectBtn: document.getElementById('game-redirect-btn'),
         addChatBtn: document.getElementById('add-chat-btn'),
         sideMenuOverlay: document.getElementById('side-menu-overlay')
@@ -157,7 +159,10 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById(targetPageId).classList.add('active');
     }));
 
-    if (ui.menuBtn) ui.menuBtn.addEventListener('click', openSideMenu);
+    // ▼▼▼ 核心修改：将事件绑定到新的 sideMenuBtn 上 ▼▼▼
+    if (ui.sideMenuBtn) ui.sideMenuBtn.addEventListener('click', openSideMenu);
+    // ▲▲▲ 修改结束 ▲▲▲
+    
     if (ui.sideMenuOverlay) ui.sideMenuOverlay.addEventListener('click', (e) => {
         if (e.target === ui.sideMenuOverlay) closeSideMenu();
     });
@@ -181,22 +186,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // ▼▼▼ 核心修改：聊天列表点击事件 ▼▼▼
     if (ui.chatListArea) {
         ui.chatListArea.addEventListener('click', (event) => {
             const card = event.target.closest('.chat-card');
             if (card) {
                 const charId = card.dataset.charId;
                 if (charId) {
-                    initializeAndOpenChatRoom(charId); // 调用新函数
+                    initializeAndOpenChatRoom(charId);
                 }
             }
         });
     }
 
-    // ▼▼▼ 新增：监听从聊天室发出的刷新事件 ▼▼▼
     document.addEventListener('refreshChatList', loadAndRenderInitialChats);
-    // ▲▲▲ 新增结束 ▲▲▲
 
     loadAndRenderInitialChats();
 });
