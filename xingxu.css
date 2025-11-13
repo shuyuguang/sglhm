@@ -16,10 +16,6 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
-    /* ▼▼▼ 核心修复1：移除 body 的 padding，将布局控制权交给 content-container ▼▼▼ */
-    /* padding-top: 55px; */
-    /* padding-bottom: 70px; */
-    /* ▲▲▲ 修复结束 ▲▲▲ */
 }
 
 /* 仅在聊天室激活时，才锁定主页面的滚动 */
@@ -50,7 +46,6 @@ body.chat-active > .tab-bar {
 .header-action-btn { background: none; border: none; font-size: 1.2rem; color: var(--accent-color); cursor: pointer; padding: 8px; display: flex; align-items: center; }
 #game-redirect-btn { font-size: 1.35rem; }
 
-/* ▼▼▼ 核心修复1：让 content-container 成为可滚动的主体区域 ▼▼▼ */
 .content-container {
     height: 100vh;
     box-sizing: border-box;
@@ -58,7 +53,6 @@ body.chat-active > .tab-bar {
     padding-top: 55px;
     padding-bottom: 70px;
 }
-/* ▲▲▲ 修复结束 ▲▲▲ */
 
 .page { display: none; animation: fadeIn 0.3s ease-in-out; }
 .page.active { display: block; }
@@ -86,41 +80,64 @@ body.chat-active > .tab-bar {
 /* --- 模态框/面板样式 --- */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); display: none; justify-content: center; align-items: center; z-index: 20; }
 .modal-overlay.active { display: flex; }
+
+/* ▼▼▼ 核心修改区域 Start ▼▼▼ */
 .modal-panel {
     background-color: #ffffff;
     width: 90vw;
     max-width: 500px;
     max-height: 80vh;
-    /* ▼▼▼ 核心修复：让面板高度自适应内容，而不是撑满 ▼▼▼ */
-    height: fit-content;
-    /* ▲▲▲ 修复结束 ▲▲▲ */
     border-radius: 16px;
-    display: flex;
-    flex-direction: column;
     animation: zoomIn 0.3s ease-out;
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    overflow: hidden;
+    /* 让面板自己处理滚动，而不是内部的某个div */
+    overflow-y: auto;
 }
-@keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-.modal-tabs { display: flex; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+@keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; } }
+
+.modal-tabs {
+    /* 使用 "sticky" 定位，让它在滚动时固定在顶部 */
+    position: sticky;
+    top: 0;
+    background-color: #ffffff; /* 必须加背景色，否则滚动内容会透过来 */
+    z-index: 1; /* 确保它在滚动内容之上 */
+    
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
 .modal-tab { flex: 1; padding: 12px 10px; border: none; background-color: transparent; font-size: 1em; font-weight: 500; color: #868e96; cursor: pointer; transition: color 0.2s; position: relative; }
 .modal-tab.active { color: var(--accent-color); }
 .modal-tab.disabled { color: #ced4da; cursor: not-allowed; }
+
 .modal-content-container {
-    overflow-y: auto;
+    /* 移除所有布局控制，让它成为一个普通的、可以被滚动的div */
     position: relative;
     min-height: 0;
 }
 .modal-tab-content { display: none; }
-.modal-tab-content.active {
-    display: block;
-}
+.modal-tab-content.active { display: block; }
 .sheet-body-list { padding: 4px 16px; }
 .char-item { display: flex; align-items: center; padding: 8px 0; cursor: pointer; }
 .char-item .avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; margin-right: 12px; }
 .char-item .name { flex-grow: 1; font-size: 1em; color: #495057; pointer-events: none; }
 .char-item input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent-color); flex-shrink: 0; pointer-events: none; }
-.sheet-footer { padding: 12px 16px; display: flex; gap: 10px; border-top: 1px solid var(--border-color); flex-shrink: 0; }
+
+.sheet-footer {
+    /* 使用 "sticky" 定位，让它在滚动时固定在底部 */
+    position: sticky;
+    bottom: 0;
+    background-color: #ffffff; /* 必须加背景色 */
+    z-index: 1; /* 确保它在滚动内容之上 */
+
+    padding: 12px 16px;
+    display: flex;
+    gap: 10px;
+    border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+/* ▲▲▲ 核心修改区域 End ▲▲▲ */
+
 .sheet-btn { flex-grow: 1; padding: 12px; border: none; border-radius: 8px; font-size: 1em; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
 .sheet-btn-cancel { background-color: #f1f3f5; color: #495057; }
 .sheet-btn-cancel:hover { background-color: #e9ecef; }
