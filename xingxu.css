@@ -18,12 +18,22 @@ body {
     color: var(--text-color);
     padding-top: 55px;
     padding-bottom: 70px;
+    /* ▼▼▼ 新增：防止聊天室弹出时主页面滚动 ▼▼▼ */
+    overflow: hidden;
 }
 
-/* ▼▼▼ 顶部标题栏样式 (已修改) ▼▼▼ */
+/* ▼▼▼ 新增：当聊天室激活时，隐藏主界面元素 ▼▼▼ */
+body.chat-active > .header,
+body.chat-active > .content-container,
+body.chat-active > .tab-bar {
+    visibility: hidden;
+}
+/* ▲▲▲ 新增结束 ▲▲▲ */
+
+
 .header {
     background-color: var(--header-bg);
-    padding: 0 12px; /* 修改：减小左右内边距，让图标更靠近边缘 */
+    padding: 0 12px;
     height: 55px;
     display: flex;
     align-items: center;
@@ -34,374 +44,104 @@ body {
     right: 0;
     z-index: 100;
 }
+.header-actions { display: flex; align-items: center; gap: 8px; }
+.header-action-btn { background: none; border: none; font-size: 1.2rem; color: var(--accent-color); cursor: pointer; padding: 8px; display: flex; align-items: center; }
+#game-redirect-btn { font-size: 1.35rem; }
 
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.header-action-btn {
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    color: var(--accent-color);
-    cursor: pointer;
-    padding: 8px;
-    display: flex;
-    align-items: center;
-}
-/* 单独放大游戏图标 */
-#game-redirect-btn {
-    font-size: 1.35rem; 
-}
-/* ▲▲▲ 修改结束 ▲▲▲ */
+.content-container { padding-top: 0; }
+.page { display: none; animation: fadeIn 0.3s ease-in-out; }
+.page.active { display: block; }
+.page h1 { font-weight: 300; font-size: 2.5em; color: var(--accent-color); text-align: center; margin-top: 40px; }
+.page p { text-align: center; color: var(--text-inactive); }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+.tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 70px; background-color: transparent; display: flex; justify-content: space-around; align-items: center; }
+.tab-item { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background-color: rgba(40, 40, 40, 0.08); color: var(--text-inactive); text-decoration: none; transition: all 0.3s ease; }
+.tab-item:active { transform: scale(0.9); }
+.tab-item .icon { font-size: 18px; }
+.tab-item.active { background-color: var(--accent-color); color: white; transform: scale(1.05); }
 
-.content-container {
-    padding-top: 0;
-}
+/* --- 聊天列表和卡片样式 --- */
+#chat-list-area { padding: 10px 15px; }
+.chat-card { display: flex; align-items: center; padding: 12px; margin-bottom: 12px; background-color: #fff; border-radius: 12px; cursor: pointer; border: 1px solid #e0e6ec; }
+.chat-card-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-right: 12px; flex-shrink: 0; }
+.chat-card-main { flex-grow: 1; display: flex; flex-direction: column; min-width: 0; }
+.chat-card-name { font-size: 1.1em; font-weight: 500; color: #394950; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-card-preview { font-size: 0.9em; color: #868e96; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chat-card-meta { display: flex; flex-direction: column; align-items: flex-end; margin-left: 12px; flex-shrink: 0; }
+.chat-card-time { font-size: 0.8em; color: #adb5bd; position: relative; top: -2px; }
+.unread-badge { margin-top: 10px; background-color: var(--accent-color); color: white; font-size: 0.75em; font-weight: bold; min-width: 20px; height: 20px; border-radius: 10px; display: flex; justify-content: center; align-items: center; padding: 0 6px; }
 
-.page {
-    display: none;
-    animation: fadeIn 0.3s ease-in-out;
-}
-.page.active {
-    display: block;
-}
-.page h1 {
-    font-weight: 300;
-    font-size: 2.5em;
-    color: var(--accent-color);
-    text-align: center;
-    margin-top: 40px;
-}
-.page p {
-    text-align: center;
-    color: var(--text-inactive);
-}
+/* --- 模态框/面板样式 --- */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); display: none; justify-content: center; align-items: center; z-index: 1000; }
+.modal-overlay.active { display: flex; }
+.modal-panel { background-color: #ffffff; width: 90vw; max-width: 500px; max-height: 80vh; border-radius: 16px; display: flex; flex-direction: column; animation: zoomIn 0.3s ease-out; box-shadow: 0 4px 20px rgba(0,0,0,0.15); overflow: hidden; }
+@keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+.modal-tabs { display: flex; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+.modal-tab { flex: 1; padding: 14px 10px; border: none; background-color: transparent; font-size: 1em; font-weight: 500; color: #868e96; cursor: pointer; transition: color 0.2s; position: relative; }
+.modal-tab.active { color: var(--accent-color); }
+.modal-tab.disabled { color: #ced4da; cursor: not-allowed; }
+.modal-content-container { flex-grow: 1; position: relative; overflow-y: auto; }
+.modal-tab-content { display: none; }
+.modal-tab-content.active { display: block; }
+.sheet-body-list { padding: 8px 16px; }
+.char-item { display: flex; align-items: center; padding: 8px 0; cursor: pointer; }
+.char-item .avatar { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; margin-right: 12px; }
+.char-item .name { flex-grow: 1; font-size: 1em; color: #495057; pointer-events: none; }
+.char-item input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent-color); flex-shrink: 0; pointer-events: none; }
+.sheet-footer { padding: 16px; display: flex; gap: 10px; border-top: 1px solid var(--border-color); flex-shrink: 0; }
+.sheet-btn { flex-grow: 1; padding: 12px; border: none; border-radius: 8px; font-size: 1em; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
+.sheet-btn-cancel { background-color: #f1f3f5; color: #495057; }
+.sheet-btn-cancel:hover { background-color: #e9ecef; }
+.sheet-btn-confirm { background-color: var(--accent-color); color: white; }
+.sheet-btn-confirm:hover { background-color: #627ca0; }
+.no-char-message { text-align: center; color: #868e96; padding: 30px 16px; }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
+/* --- 侧边菜单样式 --- */
+.side-menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); z-index: 1100; visibility: hidden; opacity: 0; transition: opacity 0.3s ease-in-out, visibility 0.3s; }
+.side-menu-overlay.active { visibility: visible; opacity: 1; }
+.side-menu { position: fixed; top: 0; left: 0; height: 100%; width: 280px; background-color: var(--header-bg); box-shadow: 2px 0 15px rgba(0,0,0,0.1); transform: translateX(-100%); transition: transform 0.3s ease-in-out; display: flex; flex-direction: column; padding-top: 55px; box-sizing: border-box; }
+.side-menu-overlay.active .side-menu { transform: translateX(0); }
+.side-menu-header { padding: 20px; display: flex; align-items: center; border-bottom: 1px solid var(--border-color); }
+.side-menu-header .user-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-right: 15px; }
+.side-menu-header .user-name { font-size: 1.1em; font-weight: 500; color: var(--text-color); }
+.side-menu-list { list-style: none; padding: 10px 0; margin: 0; flex-grow: 1; }
+.side-menu-list li a { display: flex; align-items: center; padding: 15px 20px; text-decoration: none; color: var(--text-color); font-size: 1em; }
+.side-menu-list li a:hover { background-color: var(--bg-color); }
+.side-menu-list li a .icon { width: 30px; font-size: 1.1em; color: var(--text-inactive); margin-right: 15px; }
 
-.tab-bar {
+/* ▼▼▼ 新增：SPA 聊天室容器样式 ▼▼▼ */
+#chat-room-container {
     position: fixed;
-    bottom: 0;
+    top: 0;
     left: 0;
-    right: 0;
-    height: 70px;
-    background-color: transparent;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
+    width: 100%;
+    height: 100%;
+    z-index: 1200;
+    background-color: var(--bg-color); /* 背景色，防止主页面透出 */
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    pointer-events: none;
+    overflow: hidden;
 }
-.tab-item {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+body.chat-active #chat-room-container {
+    transform: translateX(0);
+    pointer-events: auto;
+}
+.loading-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
     width: 40px;
     height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--accent-color);
     border-radius: 50%;
-    background-color: rgba(40, 40, 40, 0.08);
-    color: var(--text-inactive);
-    text-decoration: none;
-    transition: all 0.3s ease;
+    animation: spin 1s linear infinite;
+    transform: translate(-50%, -50%);
 }
-.tab-item:active {
-    transform: scale(0.9);
-}
-.tab-item .icon {
-    font-size: 18px;
-}
-.tab-item.active {
-    background-color: var(--accent-color);
-    color: white;
-    transform: scale(1.05);
-}
-
-
-/* --- 聊天列表和卡片样式 (保持不变) --- */
-#chat-list-area {
-    padding: 10px 15px;
-}
-.chat-card {
-    display: flex;
-    align-items: center;
-    padding: 12px;
-    margin-bottom: 12px;
-    background-color: #fff;
-    border-radius: 12px;
-    cursor: pointer;
-    border: 1px solid #e0e6ec;
-}
-.chat-card-avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-right: 12px;
-    flex-shrink: 0;
-}
-.chat-card-main {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-}
-.chat-card-name {
-    font-size: 1.1em;
-    font-weight: 500;
-    color: #394950;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.chat-card-preview {
-    font-size: 0.9em;
-    color: #868e96;
-    margin-top: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.chat-card-meta {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    margin-left: 12px;
-    flex-shrink: 0;
-}
-.chat-card-time {
-    font-size: 0.8em;
-    color: #adb5bd;
-    position: relative;
-    top: -2px;
-}
-.unread-badge {
-    margin-top: 10px;
-    background-color: var(--accent-color);
-    color: white;
-    font-size: 0.75em;
-    font-weight: bold;
-    min-width: 20px;
-    height: 20px;
-    border-radius: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0 6px;
-}
-
-
-/* --- 模态框/面板样式 (保持不变) --- */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-.modal-overlay.active {
-    display: flex;
-}
-.modal-panel {
-    background-color: #ffffff;
-    width: 90vw;
-    max-width: 500px;
-    max-height: 80vh;
-    border-radius: 16px;
-    display: flex;
-    flex-direction: column;
-    animation: zoomIn 0.3s ease-out;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    overflow: hidden;
-}
-@keyframes zoomIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-}
-.modal-tabs {
-    display: flex;
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
-}
-.modal-tab {
-    flex: 1;
-    padding: 14px 10px;
-    border: none;
-    background-color: transparent;
-    font-size: 1em;
-    font-weight: 500;
-    color: #868e96;
-    cursor: pointer;
-    transition: color 0.2s;
-    position: relative;
-}
-.modal-tab.active {
-    color: var(--accent-color);
-}
-.modal-tab.disabled {
-    color: #ced4da;
-    cursor: not-allowed;
-}
-.modal-content-container {
-    flex-grow: 1;
-    position: relative;
-    overflow-y: auto;
-}
-.modal-tab-content {
-    display: none;
-}
-.modal-tab-content.active {
-    display: block;
-}
-.sheet-body-list {
-    padding: 8px 16px;
-}
-.char-item {
-    display: flex;
-    align-items: center;
-    padding: 8px 0;
-    cursor: pointer;
-}
-.char-item .avatar {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-right: 12px;
-}
-.char-item .name {
-    flex-grow: 1;
-    font-size: 1em;
-    color: #495057;
-    pointer-events: none;
-}
-.char-item input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    accent-color: var(--accent-color);
-    flex-shrink: 0;
-    pointer-events: none;
-}
-.sheet-footer {
-    padding: 16px;
-    display: flex;
-    gap: 10px;
-    border-top: 1px solid var(--border-color);
-    flex-shrink: 0;
-}
-.sheet-btn {
-    flex-grow: 1;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1em;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-.sheet-btn-cancel {
-    background-color: #f1f3f5;
-    color: #495057;
-}
-.sheet-btn-cancel:hover {
-    background-color: #e9ecef;
-}
-.sheet-btn-confirm {
-    background-color: var(--accent-color);
-    color: white;
-}
-.sheet-btn-confirm:hover {
-    background-color: #627ca0;
-}
-.no-char-message {
-    text-align: center;
-    color: #868e96;
-    padding: 30px 16px;
-}
-
-
-/* ▼▼▼ 新增：侧边菜单样式 ▼▼▼ */
-.side-menu-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
-    z-index: 1100;
-    visibility: hidden;
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out, visibility 0.3s;
-}
-.side-menu-overlay.active {
-    visibility: visible;
-    opacity: 1;
-}
-.side-menu {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 280px; /* 菜单宽度 */
-    background-color: var(--header-bg);
-    box-shadow: 2px 0 15px rgba(0,0,0,0.1);
-    transform: translateX(-100%);
-    transition: transform 0.3s ease-in-out;
-    display: flex;
-    flex-direction: column;
-    padding-top: 55px; /* 留出顶部状态栏空间 */
-    box-sizing: border-box;
-}
-.side-menu-overlay.active .side-menu {
-    transform: translateX(0);
-}
-.side-menu-header {
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid var(--border-color);
-}
-.side-menu-header .user-avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-right: 15px;
-}
-.side-menu-header .user-name {
-    font-size: 1.1em;
-    font-weight: 500;
-    color: var(--text-color);
-}
-.side-menu-list {
-    list-style: none;
-    padding: 10px 0;
-    margin: 0;
-    flex-grow: 1;
-}
-.side-menu-list li a {
-    display: flex;
-    align-items: center;
-    padding: 15px 20px;
-    text-decoration: none;
-    color: var(--text-color);
-    font-size: 1em;
-}
-.side-menu-list li a:hover {
-    background-color: var(--bg-color);
-}
-.side-menu-list li a .icon {
-    width: 30px;
-    font-size: 1.1em;
-    color: var(--text-inactive);
-    margin-right: 15px;
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
 /* ▲▲▲ 新增结束 ▲▲▲ */
