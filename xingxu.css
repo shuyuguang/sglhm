@@ -42,7 +42,7 @@ body.chat-active > .tab-bar {
     top: 0;
     left: 0;
     right: 0;
-    z-index: 100;
+    z-index: 10; /* [Z-Index Optimize] 100 -> 10 */
 }
 .header-actions { display: flex; align-items: center; gap: 8px; }
 .header-action-btn { background: none; border: none; font-size: 1.2rem; color: var(--accent-color); cursor: pointer; padding: 8px; display: flex; align-items: center; }
@@ -73,7 +73,7 @@ body.chat-active > .tab-bar {
 .unread-badge { margin-top: 10px; background-color: var(--accent-color); color: white; font-size: 0.75em; font-weight: bold; min-width: 20px; height: 20px; border-radius: 10px; display: flex; justify-content: center; align-items: center; padding: 0 6px; }
 
 /* --- 模态框/面板样式 --- */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); display: none; justify-content: center; align-items: center; z-index: 1000; }
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); display: none; justify-content: center; align-items: center; z-index: 20; /* [Z-Index Optimize] 1000 -> 20 */ }
 .modal-overlay.active { display: flex; }
 .modal-panel { background-color: #ffffff; width: 90vw; max-width: 500px; max-height: 80vh; border-radius: 16px; display: flex; flex-direction: column; animation: zoomIn 0.3s ease-out; box-shadow: 0 4px 20px rgba(0,0,0,0.15); overflow: hidden; }
 @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
@@ -98,7 +98,7 @@ body.chat-active > .tab-bar {
 .no-char-message { text-align: center; color: #868e96; padding: 30px 16px; }
 
 /* --- 侧边菜单样式 --- */
-.side-menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); z-index: 1100; visibility: hidden; opacity: 0; transition: opacity 0.3s ease-in-out, visibility 0.3s; }
+.side-menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); z-index: 30; /* [Z-Index Optimize] 1100 -> 30 */ visibility: hidden; opacity: 0; transition: opacity 0.3s ease-in-out, visibility 0.3s; }
 .side-menu-overlay.active { visibility: visible; opacity: 1; }
 .side-menu { position: fixed; top: 0; left: 0; height: 100%; width: 280px; background-color: var(--header-bg); box-shadow: 2px 0 15px rgba(0,0,0,0.1); transform: translateX(-100%); transition: transform 0.3s ease-in-out; display: flex; flex-direction: column; padding-top: 55px; box-sizing: border-box; }
 .side-menu-overlay.active .side-menu { transform: translateX(0); }
@@ -117,7 +117,7 @@ body.chat-active > .tab-bar {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 1200;
+    z-index: 40; /* [Z-Index Optimize] 1200 -> 40 */
     background-color: var(--bg-color); /* 背景色，防止主页面透出 */
     transform: translateX(100%);
     transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
