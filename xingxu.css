@@ -81,7 +81,12 @@ body.chat-active > .tab-bar {
 .modal-tab { flex: 1; padding: 12px 10px; border: none; background-color: transparent; font-size: 1em; font-weight: 500; color: #868e96; cursor: pointer; transition: color 0.2s; position: relative; }
 .modal-tab.active { color: var(--accent-color); }
 .modal-tab.disabled { color: #ced4da; cursor: not-allowed; }
-.modal-content-container { /* ▼▼▼ 核心修复：恢复 flex-grow: 1，让内容区填满可用空间 ▼▼▼ */ flex-grow: 1; position: relative; overflow-y: auto; }
+.modal-content-container {
+    /* ▼▼▼ 核心修复：恢复 flex-grow: 1，让内容区填满可用空间 ▼▼▼ */
+    flex-grow: 1;
+    position: relative;
+    overflow-y: auto;
+}
 .modal-tab-content { display: none; }
 .modal-tab-content.active { display: block; }
 .sheet-body-list { padding: 4px 16px; }
