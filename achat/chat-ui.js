@@ -9,9 +9,7 @@ export function renderChatRoomUI(character) {
     return `
         <div class="chat-container">
             <header class="chat-header">
-                <!-- ▼▼▼ 核心修改：将 <a> 标签改为 <button> ▼▼▼ -->
                 <button class="chat-header-btn back-btn" id="chat-back-btn"><i class="fa-solid fa-chevron-left"></i></button>
-                <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                 <div class="chat-header-center">
                     <div class="char-info">
                         <img src="${character.avatar}" alt="${character.name}" class="char-info-avatar">
@@ -83,7 +81,7 @@ function escapeHtml(unsafe) {
     return unsafe
          .replace(/&/g, "&amp;")
          .replace(/</g, "&lt;")
-         .replace(/>g, "&gt;")
+         .replace(/>/g, "&gt;")
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#039;");
 }
@@ -222,14 +220,12 @@ export function renderMessageGroup(messageGroup, index, user, character) {
                     </div>
                 `;
             } else if (messagePart.type === 'image') {
-                // ▼▼▼ 核心修复：恢复链接图的正确渲染逻辑 ▼▼▼
                 bubble.classList.add('is-image-message');
                 bubble.innerHTML = `
                     <a href="${messagePart.data}" target="_blank" title="点击查看大图">
                         <img src="${messagePart.data}" alt="角色图片" class="message-photo-img">
                     </a>
                 `;
-                // ▲▲▲ 修复结束 ▲▲▲
             } else if (messagePart.type === 'text-photo') {
                 bubble.classList.add('is-image-message');
                 bubble.innerHTML = `
@@ -256,15 +252,21 @@ export function renderMessageGroup(messageGroup, index, user, character) {
         if (messageGroup.replyVersions.length > 1) {
             const pager = document.createElement('div');
             pager.className = 'reply-pager';
+            
+            // ▼▼▼ 核心修复：将 / 放在字符串中，避免解析错误 ▼▼▼
+            const pagerText = `${activeReplyIndex + 1} / ${messageGroup.replyVersions.length}`;
+            
             pager.innerHTML = `
                 <button class="pager-btn" data-action="prev" ${activeReplyIndex === 0 ? 'disabled' : ''}>
                     <i class="fa-solid fa-chevron-left"></i>
                 </button>
-                <span class="pager-text">${activeReplyIndex + 1} / ${messageGroup.replyVersions.length}</span>
+                <span class="pager-text">${pagerText}</span>
                 <button class="pager-btn" data-action="next" ${activeReplyIndex === messageGroup.replyVersions.length - 1 ? 'disabled' : ''}>
                     <i class="fa-solid fa-chevron-right"></i>
                 </button>
             `;
+            // ▲▲▲ 修复结束 ▲▲▲
+            
             messageGroupContainer.appendChild(pager);
         }
     }
