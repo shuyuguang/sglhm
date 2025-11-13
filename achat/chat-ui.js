@@ -9,7 +9,9 @@ export function renderChatRoomUI(character) {
     return `
         <div class="chat-container">
             <header class="chat-header">
-                <a href="../xingxu.html" class="chat-header-btn back-btn"><i class="fa-solid fa-chevron-left"></i></a>
+                <!-- ▼▼▼ 核心修改：将 <a> 标签改为 <button> ▼▼▼ -->
+                <button class="chat-header-btn back-btn" id="chat-back-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                <!-- ▲▲▲ 修改结束 ▲▲▲ -->
                 <div class="chat-header-center">
                     <div class="char-info">
                         <img src="${character.avatar}" alt="${character.name}" class="char-info-avatar">
@@ -81,7 +83,7 @@ function escapeHtml(unsafe) {
     return unsafe
          .replace(/&/g, "&amp;")
          .replace(/</g, "&lt;")
-         .replace(/>/g, "&gt;")
+         .replace(/>g, "&gt;")
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#039;");
 }
