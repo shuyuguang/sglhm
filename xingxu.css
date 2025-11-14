@@ -64,7 +64,7 @@ body.chat-active > .tab-bar {
 .tab-item { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background-color: rgba(40, 40, 40, 0.08); color: var(--text-inactive); text-decoration: none; transition: all 0.3s ease; }
 .tab-item:active { transform: scale(0.9); }
 .tab-item .icon { font-size: 18px; }
-.tab-item.active { background-color: var(--accent-color); color: white; transform: scale(1.05); }
+.tab-item.active { background-color: var(--accent-color); color: white;  }
 
 /* --- 聊天列表和卡片样式 --- */
 #chat-list-area { padding: 10px 15px; }
@@ -242,12 +242,11 @@ body.chat-active #chat-room-container {
 
 /* --- ▼▼▼ 新增：自定义“星绪”组合图标样式 ▼▼▼ --- */
 .xingxu-icon.fa-stack {
-    /* fa-stack-2x 的大小约等于 font-size 的 2 倍，所以 11px -> 22px，与其它图标大小接近 */
     font-size: 10px;
     line-height: inherit; /* 继承按钮的行高设置 */
 }
 
 .xingxu-icon .fa-star {
     transform: translate(0%, 16%); /* 调整星星位置 */
-    font-size: 0.8em; /* 调整星星大小 */
+    font-size: 0.85em; /* 调整星星大小 */
 }
