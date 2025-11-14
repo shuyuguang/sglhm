@@ -121,7 +121,12 @@
         <div class="side-panel-content">
             <div class="side-panel-item">
                 <a href="./xingxu.html" class="capsule-nav-button">
-                    <i class="fa-solid fa-star"></i>
+                    <!-- ▼▼▼ 核心变更：将原来的 <i class="fa-solid fa-star"></i> 替换为下面的 span 结构 ▼▼▼ -->
+                    <span class="fa-stack xingxu-icon">
+                        <i class="fa-regular fa-comment fa-stack-2x"></i>
+                        <i class="fa-solid fa-star fa-stack-1x"></i>
+                    </span>
+                    <!-- ▲▲▲ 变更结束 ▲▲▲ -->
                     <span>星绪</span>
                 </a>
                 <p class="item-description">*星绪：专注聊天和动态</p>
